@@ -1,0 +1,151 @@
+{
+  "project_info": {
+    "project_number": "635604110866",
+    "firebase_url": "https://clair-52652.firebaseio.com",
+    "project_id": "clair-52652",
+    "storage_bucket": "clair-52652.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:635604110866:android:6a8952ebcc8d748ba192cb",
+        "android_client_info": {
+          "package_name": "com.mobymagic.clairediary"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "635604110866-fq7fbnglj9chm9n7nhft186l6tvccd0n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqAxwbuxkB1YsSikehL8MKrxr2f5DFAkQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "635604110866-fq7fbnglj9chm9n7nhft186l6tvccd0n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "635604110866-avcdmvvsdhqsbeikbb3u76ck722bdfvc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mobymagic.clairediary"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:635604110866:android:b08a16b376e63929a192cb",
+        "android_client_info": {
+          "package_name": "com.mobymagic.clairediary"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "635604110866-fq7fbnglj9chm9n7nhft186l6tvccd0n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqAxwbuxkB1YsSikehL8MKrxr2f5DFAkQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "635604110866-fq7fbnglj9chm9n7nhft186l6tvccd0n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "635604110866-avcdmvvsdhqsbeikbb3u76ck722bdfvc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mobymagic.clairediary"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:635604110866:android:dd1cb1947da04b0d",
+        "android_client_info": {
+          "package_name": "com.mobymagic.clairediary"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "635604110866-2k1ev1fu7836plqol8vi07cqvogu5ovv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mobymagic.clairediary",
+            "certificate_hash": "835378d2d82b7fb417b8d8a089607a5979334865"
+          }
+        },
+        {
+          "client_id": "635604110866-37pj2ujukk0lr33ce5il3dfumm30ecoj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mobymagic.clairediary",
+            "certificate_hash": "01c58d81c6accab444fa6c5a7aa0496ad3085ed9"
+          }
+        },
+        {
+          "client_id": "635604110866-98c83r1rgs3010oppli5p1udqckp51as.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mobymagic.clairediary",
+            "certificate_hash": "eae48b43242ea1db208e1b25255698738fc1ffee"
+          }
+        },
+        {
+          "client_id": "635604110866-t1k4ie5pstq8471kg3ulu7cqcptg532e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mobymagic.clairediary",
+            "certificate_hash": "609810b0fd828fdbba3b7ebe1652b473a74df276"
+          }
+        },
+        {
+          "client_id": "635604110866-fq7fbnglj9chm9n7nhft186l6tvccd0n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqAxwbuxkB1YsSikehL8MKrxr2f5DFAkQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "635604110866-fq7fbnglj9chm9n7nhft186l6tvccd0n.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "635604110866-avcdmvvsdhqsbeikbb3u76ck722bdfvc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mobymagic.clairediary"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

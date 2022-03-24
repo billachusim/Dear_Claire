@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "algolia": "^0.0.0"
+  }
+}

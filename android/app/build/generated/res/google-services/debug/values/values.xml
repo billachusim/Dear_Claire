@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_web_client_id" translatable="false">143816858937-pn2pj1fde5i7l25cnptujhsgvrobeod1.apps.googleusercontent.com</string>
+    <string name="firebase_database_url" translatable="false">https://claire-412b8-default-rtdb.firebaseio.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">143816858937</string>
+    <string name="google_api_key" translatable="false">AIzaSyBYcEcWRwf18zBETKCePv5VtQouFW9GeSE</string>
+    <string name="google_app_id" translatable="false">1:143816858937:android:7bffaa51480e1f014f9ce8</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBYcEcWRwf18zBETKCePv5VtQouFW9GeSE</string>
+    <string name="google_storage_bucket" translatable="false">claire-412b8.appspot.com</string>
+    <string name="project_id" translatable="false">claire-412b8</string>
+</resources>

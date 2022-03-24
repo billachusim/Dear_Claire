@@ -1,0 +1,296 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dear_claire/ui/alter_ego/widgets/alter_ego_mode_session_detail.dart';
+import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
+import 'package:dear_claire/utils/color.dart';
+import 'package:dear_claire/utils/constant.dart';
+import 'package:dear_claire/utils/mood.dart';
+import 'package:dear_claire/widgets/comments_button.dart';
+import 'package:dear_claire/widgets/metoo_button.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:dear_claire/ui/routes/page_router_animation.dart';
+import 'package:dear_claire/ui/featured/model/session.dart';
+import 'package:dear_claire/utils/helper.dart';
+import 'package:flutter/cupertino.dart';
+
+class AlterEgoModeSessionCard extends StatelessWidget {
+  Session element;
+
+  AlterEgoModeSessionCard({Key? key, required this.element}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoButton(
+      onPressed: () => PageRouter.gotoWidget(
+          AlterEgoModeSessionDetail(featuredSessionModel: element),
+          context),
+      padding: EdgeInsets.zero,
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(25),
+            color: HexColor.fromHex(element.colorHex!)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                CachedNetworkImage(
+                    width: 48,
+                    height: 48,
+                    imageUrl: element.userAvatarUrl!,
+                    imageBuilder: (context, imageProvider) => Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: imageProvider,
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                    placeholder: (context, url) => CircularProgressIndicator(),
+                    errorWidget: (context, url, error) => Image.asset(
+                      "assets/images/brown_boy_mask.png",
+                      width: 48,
+                      height: 48,
+                    ) //Icon(Icons.error),
+                ),
+                SizedBox(
+                  width: 8,
+                ),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(element.userNickname!,
+                          textAlign: TextAlign.start,
+                          maxLines: 1,
+                          style: GoogleFonts.lato(
+                              fontSize: 18.0,
+                              color: Pallet.colorWhite,
+                              fontWeight: FontWeight.w800)),
+                      SizedBox(
+                        height: 4,
+                      ),
+                      Text(timeConverter(element.timeCreated!),
+                          textAlign: TextAlign.start,
+                          maxLines: 1,
+                          style: GoogleFonts.lato(
+                              fontSize: 12.0,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+
+                      Text(Mood.getMood(element.moodId) ?? "${Mood.getMood(1)}",
+                          textAlign: TextAlign.end,
+                          maxLines: 1,
+                          style: GoogleFonts.lato(
+                              fontSize: 13.0,
+                              color: Pallet.colorWhite,
+                              fontWeight: FontWeight.w700)),
+                      SizedBox(
+                        height: 3,
+                      ),
+                      FutureBuilder<Widget>(
+                          future: firebaseServices.showUserLocation(),
+                          builder: (BuildContext context,
+                              AsyncSnapshot<Widget> snapshot) {
+                            if (snapshot.hasData) {
+                              print('Location: ${snapshot.hasData}');
+                              return snapshot.data!;
+                            } else {
+                              return Text('',
+                                  textAlign: TextAlign.end,
+                                  maxLines: 1,
+                                  style: GoogleFonts.lato(
+                                      fontSize: 12.0,
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.w700));
+                            }
+                          }),
+                    ],
+                  ),
+                )
+              ],
+            ),
+            SizedBox(
+              height: 6,
+            ),
+            Center(
+              child: Text(element.title!,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  style: GoogleFonts.lato(
+                      fontSize: 18.0,
+                      color: Pallet.colorWhite,
+                      fontWeight: FontWeight.w800)),
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Column(
+              children: [
+                Text(
+                  element.message!,
+                  textAlign: TextAlign.start,
+                  maxLines: element.imageUrls!.isNotEmpty ? 4 : 6,
+                  style: GoogleFonts.lato(
+                      fontSize: 15.0,
+                      color: Pallet.colorWhite,
+                      fontWeight: FontWeight.normal),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(
+                  height: 6,
+                ),
+                Container(
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Row(
+                      children: [
+                        Visibility(
+                            visible: element.imageUrls!.isNotEmpty,
+                            child: CachedNetworkImage(
+                                height: 90,
+                                width: 90,
+                                imageUrl: element.imageUrls!.isNotEmpty
+                                    ? element.imageUrls!.first
+                                    : '',
+                                imageBuilder: (context, imageProvider) => Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(25),
+                                        image: DecorationImage(
+                                          image: imageProvider,
+                                          fit: BoxFit.fill,
+                                        ),
+                                      ),
+                                    ),
+                                placeholder: (context, url) =>
+                                    Center(child: CircularProgressIndicator()),
+                                errorWidget: (context, url, error) => Image.asset(
+                                  "assets/images/brown_boy_mask.png",
+                                  width: 48,
+                                  height: 48,
+                                ) //Icon(Icons.error),
+                            )),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            Row(
+              children: [
+                MetooButton(
+                    cheers: element.meToos!.length,
+                    thanks: element.meLove!.length,
+                    sorry: element.meHiFive!.length,
+                    me2: element.meFlower!.length,
+                    color: Pallet.colorWhite,
+                    onReactionChanged: (reaction, index) async {
+                      final _userModel = await firebaseServices.getUserInfo();
+                      firebaseServices.addUsersReactionToASession(
+                          context, index,
+                          session: element, sender: _userModel.nickname ?? '');
+                    }),
+                new Spacer(),
+                StreamBuilder(
+                    stream: firebaseServices
+                        .getFeaturedSessionsComments(element.sessionId!),
+                    builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                      if (snapShot.hasError) {
+                        return Container();
+                      }
+                      if (snapShot.hasData) {
+                        return CommentsButton(
+                          count: snapShot.data!.docs.length,
+                          onPressed: () => PageRouter.gotoWidget(
+                              AlterEgoModeSessionDetail(featuredSessionModel: element),
+                              context),);
+                      }
+                      return Container();
+                    }),
+              ],
+            ),
+            const Divider(
+              thickness: 1,
+              indent: 0,
+              endIndent: 0,
+              color: Colors.white70,
+              height: 3,
+            ),
+            StreamBuilder(
+                stream: firebaseServices
+                    .getFeaturedSessionsComments(element.sessionId!),
+                builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                  if (snapShot.hasError) {
+                    return Container();
+                  }
+
+                  List<CommentSessionModel> _commentSessionList = [];
+
+                  if (snapShot.hasData) {
+                    _commentSessionList.clear();
+
+                    /// clear list
+                    snapShot.data!.docs
+                        .map((e) => _commentSessionList
+                        .add(CommentSessionModel.fromJson(e.data())))
+                        .toList();
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+
+                        Text(
+                          _returnComment(_commentSessionList).message ?? '',
+                          textAlign: TextAlign.start,
+                          maxLines: 2,
+                          style: GoogleFonts.lato(
+                            fontSize: 12.0,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    );
+                  }
+                  return Container();
+                }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  CommentSessionModel _returnComment(
+      List<CommentSessionModel> _commentSessionList) {
+    try {
+      final _filter = _commentSessionList
+          .where((element) =>
+      _commentSessionList.isNotEmpty &&
+          element.isUserAdmin &&
+          element.alterEgoId == "claire" &&
+          element.userId == "fSMVS2DY8ngblW3LlUYowgPkdR83")
+          .toList();
+      return _filter.last;
+    } catch (e) {
+      return CommentSessionModel();
+    }
+  }
+}
