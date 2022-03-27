@@ -245,17 +245,18 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                 new Spacer(),
                 GestureDetector(
                   onTap: () {
-                   // isFeatured = element.featured;
-                   // changeFeature();
                     if (element.featured == false)
                       setToFeatured();
                     else removeFromFeatured();
                   },
                   child: Container(
-                    child: Icon(
-                      Icons.notifications_active_rounded,
-                      color: Pallet.colorWhite,
-                      size: 26,
+                    child: Visibility(
+                      visible: element.repliesEnabled == true,
+                      child: Icon(
+                        element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
+                        color: Pallet.colorWhite,
+                        size: 26,
+                      ),
                     ),
                   ),
                 ),
