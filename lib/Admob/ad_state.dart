@@ -20,6 +20,61 @@ class AdState {
     }
   }
 
+  // Create interstitial ad unit whenever clairevatar is changed.
+  String get newClairevatarInterstitialAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-3940256099942544/1033173712";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-3940256099942544/4411468910";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+  // Create interstitial ad unit whenever ego name is changed.
+  String get newEgoNameInterstitialAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-3940256099942544/1033173712";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-3940256099942544/4411468910";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+  // Create interstitial ad unit whenever a mantra is created.
+  String get newMantraInterstitialAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-3940256099942544/1033173712";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-3940256099942544/4411468910";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+  // Create interstitial ad unit whenever there is switch to alter ego mode.
+  String get switchAlterEgoInterstitialAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-3940256099942544/1033173712";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-3940256099942544/4411468910";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+  // Create interstitial ad unit whenever there is switch to ego mode.
+  String get switchEgoInterstitialAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-3940256099942544/1033173712";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-3940256099942544/4411468910";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
   // Create Ego Mode top of comments banner ad unit.
   String get egoModeTopCommentBannerAdUnitId {
     if (Platform.isAndroid) {
