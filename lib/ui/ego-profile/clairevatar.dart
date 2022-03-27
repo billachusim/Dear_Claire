@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
@@ -10,8 +12,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../widgets/toast.dart';
+import '../create_session/create_session_page.dart';
 import '../routes/routes.dart';
 
 
@@ -26,6 +30,19 @@ class _EditClairevatarState extends State<EditClairevatar> {
   User? currentUser = FirebaseAuth.instance.currentUser;
   late final String avatarUrl;
 
+
+  @override
+  void initState() {
+    super.initState();
+    _createInterstitialAd();
+  }
+
+
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   /// Query Clairevatars from Firestore
 
@@ -64,6 +81,49 @@ class _EditClairevatarState extends State<EditClairevatar> {
     logger.d('Successfully saved new clairevatar');
 
     getUserClairevatar();
+  }
+
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+
+  // Create interstitial ad.
+
+  void _createInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-3940256099942544/1033173712" :
+      Platform.isIOS? "ca-app-pub-3940256099942544/4411468910" :
+      '',      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _interstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+    }
   }
 
   @override
@@ -136,6 +196,9 @@ class _EditClairevatarState extends State<EditClairevatar> {
                         onTap: () {
                           avatarUrl = data['imageUrl'];
                           changeClairevatar();
+                          Future.delayed(Duration(seconds: 1), () {
+                            _showInterstitialAd();
+                          });
                           Navigator.of(context)
                               .pushReplacementNamed(AppRoutes.home);
                           showToast(AppString.nice_clairevatar);

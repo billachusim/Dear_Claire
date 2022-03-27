@@ -14,10 +14,31 @@ import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:flutter/cupertino.dart';
 
+import '../../../services/firebase_services.dart';
+
 class AlterEgoModeSessionCard extends StatelessWidget {
   Session element;
+  bool? isFeatured;
 
   AlterEgoModeSessionCard({Key? key, required this.element}) : super(key: key);
+  //bool? isFeatured;
+
+
+  /// Edit feature
+
+  Future<bool?> changeFeature() async {
+    final value = isFeatured;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(element.sessionId)
+        .update({
+      "featured": value,
+    },
+    );
+    logger.d('Successfully saved new nickname');
+    print('Is Featured?: $value');
+    return value;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -207,6 +228,25 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                           session: element, sender: _userModel.nickname ?? '');
                     }),
                 new Spacer(),
+                GestureDetector(
+                  onTap: () {
+                    //isFeatured = element.featured;
+                    changeFeature();
+                    if (isFeatured == false) {
+                      changeFeature();
+                    }
+                    else isFeatured = true;
+                  },
+                  child: Container(
+                    child: Icon(
+                      Icons.notifications_active_rounded,
+                      color: Pallet.colorWhite,
+                      size: 26,
+                    ),
+                  ),
+                ),
+                new Spacer(),
+
                 StreamBuilder(
                     stream: firebaseServices
                         .getFeaturedSessionsComments(element.sessionId!),

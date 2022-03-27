@@ -117,7 +117,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   /// Save Ego mantra
 
-  Future<void> saveEgoMessage() async {
+  Future<void> saveEgoMantra() async {
     final egoMessage = _mantraController.text;
     final egoTime = FieldValue.serverTimestamp();
     final egoName = userModel.nickname;
@@ -701,7 +701,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                       onPressed: () {
                                         if (userModel.nickname != null)
                                           if (_mantraController.text.isNotEmpty)
-                                          saveEgoMessage();
+                                          saveEgoMantra();
                                         _mantraController.clear();
                                         if(cardKey.currentState != null) { //null safety
                                             cardKey.currentState!.toggleCard();
