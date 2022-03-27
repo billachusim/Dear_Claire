@@ -21,13 +21,11 @@ class AlterEgoModeSessionCard extends StatelessWidget {
   bool? isFeatured;
 
   AlterEgoModeSessionCard({Key? key, required this.element}) : super(key: key);
-  //bool? isFeatured;
-
 
   /// Edit feature
 
-  Future<bool?> changeFeature() async {
-    final value = isFeatured;
+  Future<bool?> setToFeatured() async {
+    final value = true;
     FirebaseFirestore.instance
         .collection('sessions')
         .doc(element.sessionId)
@@ -35,8 +33,25 @@ class AlterEgoModeSessionCard extends StatelessWidget {
       "featured": value,
     },
     );
-    logger.d('Successfully saved new nickname');
+    logger.d('Successfully changed feature');
     print('Is Featured?: $value');
+    isFeatured = value;
+    return value;
+  }
+
+
+  Future<bool?> removeFromFeatured() async {
+    final value = false;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(element.sessionId)
+        .update({
+      "featured": value,
+    },
+    );
+    logger.d('Successfully changed feature');
+    print('Is Featured?: $value');
+    isFeatured = value;
     return value;
   }
 
@@ -230,12 +245,11 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                 new Spacer(),
                 GestureDetector(
                   onTap: () {
-                    //isFeatured = element.featured;
-                    changeFeature();
-                    if (isFeatured == false) {
-                      changeFeature();
-                    }
-                    else isFeatured = true;
+                   // isFeatured = element.featured;
+                   // changeFeature();
+                    if (element.featured == false)
+                      setToFeatured();
+                    else removeFromFeatured();
                   },
                   child: Container(
                     child: Icon(
