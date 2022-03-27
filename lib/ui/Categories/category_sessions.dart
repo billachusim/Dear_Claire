@@ -28,7 +28,7 @@ class CategorySessions extends StatelessWidget {
     return FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
         .where("category1", isEqualTo: visitedCategory.toString())
-        .where("featured", isEqualTo: true)
+        .where("repliesEnabled", isEqualTo: true)
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(AppString.appSessionLength)

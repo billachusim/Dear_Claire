@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/utils/helper.dart';
@@ -25,8 +27,10 @@ import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
 import 'package:dear_claire/utils/textFormatter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../Search/search_page.dart';
+import '../create_session/create_session_page.dart';
 import 'clairevatar.dart';
 
 
@@ -56,12 +60,16 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     _tabController.addListener(() {
       print(_tabController.index);
     });
+    _createEgoNameInterstitialAd();
+    _createEgoMantraInterstitialAd();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+    _interstitialAd?.dispose();
+    _interstitialAd2?.dispose();
   }
 
   int currentTabIndex = 0;
@@ -132,10 +140,96 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   }
 
+  InterstitialAd? _interstitialAd;
+  InterstitialAd? _interstitialAd2;
+  int _interstitialLoadAttempts = 0;
+
+  // Create interstitial ad.
+
+  void _createEgoNameInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-3940256099942544/1033173712" :
+      Platform.isIOS? "ca-app-pub-3940256099942544/4411468910" :
+      '',
+      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _interstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createEgoNameInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _createEgoMantraInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-3940256099942544/1033173712" :
+      Platform.isIOS? "ca-app-pub-3940256099942544/4411468910" :
+      '',
+      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd2 = ad;
+          _interstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd2 = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createEgoMantraInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showEgoNameInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createEgoNameInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createEgoNameInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+    }
+  }
+
+
+  void _showEgoMantraInterstitialAd() {
+    if (_interstitialAd2 != null) {
+      _interstitialAd2!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createEgoMantraInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createEgoMantraInterstitialAd();
+        },
+      );
+      _interstitialAd2!.show();
+    }
+  }
 
 
 
-/// Profile Cover header
+
+
+  /// Profile Cover header
 
   Widget _pageHeader(
       {String? avatarUrl, String? userName, String? userType,
@@ -451,6 +545,10 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
                                         });
                                         showToast(AppString.change_ego_name);
+
+                                        Future.delayed(Duration(seconds: 3), () {
+                                          _showEgoNameInterstitialAd();
+                                        });
                                       }
                                       ),
 
@@ -609,7 +707,10 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                             cardKey.currentState!.toggleCard();
                                         }
                                         showToast(AppString.change_ego_mantra);
-                                      },
+
+                                        Future.delayed(Duration(seconds: 3), () {
+                                          _showEgoMantraInterstitialAd();
+                                        });                                      },
                                       mini: true,
                                       backgroundColor: Pallet.colorWhite,
                                       child: SvgPicture.asset(

@@ -262,7 +262,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                     Navigator.of(context).pop();
                     createSession();
                     showToast(AppString.started_new_session);
-                    Future.delayed(Duration(seconds: 1), () {
+                    Future.delayed(Duration(seconds: 2), () {
                       _showInterstitialAd();
                     });
                   } else {
@@ -896,8 +896,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   void _createInterstitialAd() {
     InterstitialAd.load(
-      adUnitId: "ca-app-pub-3940256099942544/1033173712",
-      request: AdRequest(),
+      adUnitId:  Platform.isAndroid? "ca-app-pub-3940256099942544/1033173712" :
+      Platform.isIOS? "ca-app-pub-3940256099942544/4411468910" :
+      '',      request: AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
           _interstitialAd = ad;
