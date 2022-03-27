@@ -5,8 +5,10 @@ import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/mood.dart';
+import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/comments_button.dart';
 import 'package:dear_claire/widgets/metoo_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
@@ -15,12 +17,15 @@ import 'package:dear_claire/utils/helper.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../../../services/firebase_services.dart';
+import '../../../services/user_model.dart';
 
 class AlterEgoModeSessionCard extends StatelessWidget {
   Session element;
   bool? isFeatured;
 
   AlterEgoModeSessionCard({Key? key, required this.element}) : super(key: key);
+  UserModel userModel = UserModel();
+  User? currentUser = FirebaseAuth.instance.currentUser;
 
   /// Edit feature
 
@@ -246,16 +251,19 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                 GestureDetector(
                   onTap: () {
                     if (element.featured == false)
-                      setToFeatured();
-                    else removeFromFeatured();
+                      featureAlertDialog(context);
+                    else unfeatureAlertDialog(context);
                   },
-                  child: Container(
-                    child: Visibility(
-                      visible: element.repliesEnabled == true,
-                      child: Icon(
-                        element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
-                        color: Pallet.colorWhite,
-                        size: 26,
+                  child: Visibility(
+                    visible: currentUser?.email == "thesocialfaculty@gmail.com",
+                    child: Container(
+                      child: Visibility(
+                        visible: element.repliesEnabled == true,
+                        child: Icon(
+                          element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
+                          color: Pallet.colorWhite,
+                          size: 26,
+                        ),
                       ),
                     ),
                   ),
@@ -348,4 +356,80 @@ class AlterEgoModeSessionCard extends StatelessWidget {
       return CommentSessionModel();
     }
   }
+
+
+  featureAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Feature!"),
+      onPressed:  () {
+        setToFeatured();
+        Navigator.pushReplacementNamed(context, AppRoutes.alterEgoHomepage);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Feature This Session?"),
+      content: Text(AppString.feature_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
+  unfeatureAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.pushReplacementNamed(context, AppRoutes.alterEgoHomepage);
+      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Unfeature"),
+      onPressed:  () {
+        removeFromFeatured();
+        Navigator.pushReplacementNamed(context, AppRoutes.alterEgoHomepage);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Unfeature This Session?"),
+      content: Text(AppString.unfeature_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
 }

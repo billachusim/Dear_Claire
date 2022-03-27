@@ -17,6 +17,8 @@ class AppString{
   static const String appChats = "chats";
 
   static const String featuredPageNote = "Featured Sessions! \n Your session won't appear here unless you allow. \n Please contribute positive vibes only and no ads.";
+  static const String feature_alert_note = "💡 This session is not featured\nWould you like to feature it?";
+  static const String unfeature_alert_note = "💡 This session is featured!\nWould you like to unfeature it?";
 
 
   static const String sessionCategories = "categories";
