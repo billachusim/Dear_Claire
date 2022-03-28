@@ -163,7 +163,7 @@ class AppRouter {
 
       case AppRoutes.visitedUserEgoPage:
         return MaterialPageRoute<dynamic>(
-          builder: (_) => VisitedUserEgoProfilePage(visitedUsersID: ""),
+          builder: (_) => VisitedUserEgoProfilePage(visitedUsersID: "", visitedEgoName: '',),
           settings: settings,
           fullscreenDialog: true,
         );

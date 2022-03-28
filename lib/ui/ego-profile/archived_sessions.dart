@@ -27,7 +27,7 @@ class _ArchivedSessionsState extends State<ArchivedSessions> {
     body: (widget.sessions.length!=0) ?ListView(
       children: [
         ...widget.sessions
-            .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '',))
+            .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
             .toList(),
       ],
     ):

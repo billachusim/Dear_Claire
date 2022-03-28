@@ -49,7 +49,7 @@ class _DairyPageState extends State<DairyPage> {
             return ListView(
               children: [
                 ...session.data!
-                    .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '',))
+                    .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                     .toList(),
               ],
             );

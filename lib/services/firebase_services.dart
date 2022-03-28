@@ -13,7 +13,6 @@ import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
-import 'package:dear_claire/ui/visited_user_ego_page/visited_user_ego_page.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
@@ -31,8 +30,6 @@ import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../ui/visited_user_ego_page/visited_profile_page_model.dart';
-import '../ui/visited_user_ego_page/visited_user_model.dart';
 import 'data/notification_model.dart' as pushNotification;
 import 'user_model.dart';
 
@@ -48,12 +45,10 @@ class FirebaseServices extends ChangeNotifier {
 
   User? currentUser = FirebaseAuth.instance.currentUser;
   final String usersKey = 'user';
-  final String visitedUsersKey = 'visitedUser';
   final String alterEgoKey = 'alterEgo';
   final String alterEgoAccessCodeKey = 'alterEgoAccessCodeKey';
   final String userLocationKey = 'location';
   String? _usersID;
-  String? visitedUsersID;
   String? _usersEgo;
 
   //var sharedPreference = SharedPreference.instance;
@@ -62,9 +57,6 @@ class FirebaseServices extends ChangeNotifier {
   var address;
   UserModel? user;
   UserModel userModel = UserModel();
-
-  VisitedUserModel? visitedUserInfo;
- // VisitedUserModel visitedUserModel = VisitedUserModel();
 
   Future<Placemark?> determinePosition() async {
     bool serviceEnabled;
@@ -1175,70 +1167,6 @@ class FirebaseServices extends ChangeNotifier {
 
   }
 
-
-
-
-  /// Get visited users Id
-
-  Future<String> getVisitedUsersId() async {
-   // visitedUsersID = VisitedUserEgoProfilePage(visitedUserModel: visitedUsersID).toString();
-    DocumentSnapshot response = await FirebaseFirestore.instance
-        .collection(AppString.users)
-        .doc(visitedUsersID)
-        .get();
-
-    var userId = VisitedUserModel.fromFirestore(response.data() as Map<String, dynamic>);
-    logger.d('Successfully got the visited user id');
-    print('Visited userId is: $userId');
-    return userId.toString();
-  }
-
-
-  /// Get Visited Ego User info
-  Future<VisitedUserModel> getVisitedUserInfo() async {
-   // visitedUsersID = VisitedUserEgoProfilePage(visitedUserModel: visitedUsersID).toString();
-    DocumentSnapshot response = await FirebaseFirestore.instance
-        .collection(AppString.users)
-        .doc(visitedUsersID)
-        .get();
-
-    var visitedUser = VisitedUserModel.fromFirestore(response.data() as Map<String, dynamic>);
-    logger.d('Successfully got the visited user model');
-    print('Visited user is: $visitedUser');
-    return visitedUser;
-  }
-
-  /// get visited user
-
-  Future<VisitedUserModel> getVisitedUser() async {
-    var avatar = prefs!.getString(Constant.PREF_KEY_USER_AVATAR_URL) ?? '';
-    var nickname = prefs!.getString(Constant.PREF_KEY_USER_NICKNAME) ?? '';
-    var secretCode = prefs!.getString(Constant.PREF_KEY_USER_SECRET_CODE) ?? '';
-    var email = prefs!.getString(Constant.PREF_KEY_USER_EMAIL) ?? '';
-    var uid = prefs!.getString(Constant.PREF_KEY_USER_FCM_ID) ?? '';
-    var gender = prefs!.getString(Constant.PREF_KEY_USER_GENDER) ?? '';
-    var userId = prefs!.getString(Constant.PREF_KEY_USER_ID) ?? '';
-    var userType = prefs!.getString(Constant.PREF_KEY_USER_USER_TYPE) ?? '';
-    var alterEgoId = prefs!.getString(Constant.PREF_KEY_ALTER_EGO_ID) ?? '';
-    var alterEgoAccessCode =
-        prefs!.getString(Constant.PREF_KEY_ALTER_EGO_ACCESS_CODE) ?? '';
-    //var timeRegistered = prefs!.getString(Constant.PREF_KEY_USER_TIME_REGISTERED) ?? '';
-    //var timeLastUnlocked = prefs!.getString(Constant.PREF_KEY_USER_LAST_UNLOCKED) ?? '';
-    return VisitedUserModel(
-      alterEgoAccessCode: alterEgoAccessCode,
-      alterEgoId: alterEgoId,
-      avatarUrl: avatar,
-      email: email,
-      fcmId: uid,
-      nickname: nickname,
-      secretCode: secretCode,
-      timeLastUnlocked: null,
-      timeRegistered: null,
-      gender: gender,
-      userId: userId,
-      userType: userType,
-    );
-  }
 
 
 

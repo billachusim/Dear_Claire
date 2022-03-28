@@ -52,7 +52,7 @@ class _FollowedPageState extends State<FollowedPage> {
             child: ListView(
               children: [
                 ..._sessionList!
-                    .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '',))
+                    .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                     .toList(),
               ],
             ),

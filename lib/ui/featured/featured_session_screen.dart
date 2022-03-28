@@ -58,7 +58,7 @@ class _FeaturedPageState extends State<FeaturedPage> {
               children: [
                 CategoryStreams(),
                 ..._sessionList!
-                    .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '',))
+                    .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                     .toList(),
                 CategoryStreams(),
               ],

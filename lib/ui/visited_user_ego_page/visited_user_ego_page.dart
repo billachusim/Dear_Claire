@@ -9,10 +9,7 @@ import 'package:flip_card/flip_card.dart';
 import 'package:flutter_svg/svg.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dear_claire/data/models/profile_page_model.dart';
 import 'package:dear_claire/data/models/session_model.dart';
-import 'package:dear_claire/services/user_model.dart';
-import 'package:dear_claire/ui/chats/chatrooms.dart';
 import 'package:dear_claire/ui/ego-profile/acvitity.dart';
 import 'package:dear_claire/ui/ego-profile/archive.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
@@ -25,19 +22,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+import '../../services/user_activity_model.dart';
 import '../../utils/constant.dart';
-import '../../utils/constant.dart';
-import '../../utils/constant.dart';
+import '../../widgets/ego_mode_session_card.dart';
 import '../Search/search_page.dart';
 import '../featured/model/comment_session_model.dart';
 import '../featured/model/session.dart';
 
 class VisitedUserEgoProfilePage extends StatefulWidget {
   final String visitedUsersID;
+  final String visitedEgoName;
 
   VisitedUserEgoProfilePage(
-      {Key? key, required this.visitedUsersID})
+      {Key? key, required this.visitedUsersID, required this.visitedEgoName})
       : super(key: key);
 
   @override
@@ -78,6 +77,8 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   User? currentUser = FirebaseAuth.instance.currentUser;
   VisitedUserModel? visitedUser = VisitedUserModel();
   String? visitedUsersID;
+  List<Session>? _sessionList = [];
+
 
 
   getVisitedUser() async {
@@ -138,6 +139,41 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
         .collection(AppString.appFeaturedSessions)
         .doc(widget.visitedUsersID)
         .get();
+  }
+
+  /// Get visited user's sessions that have been featured or marked for replies.
+  Stream<QuerySnapshot<Map<String, dynamic>>> visitedUsersSessions() {
+    return FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .where("userId", isEqualTo: widget.visitedUsersID)
+        .where("repliesEnabled", isEqualTo: true)
+        .where("archived", isEqualTo: false)
+        .where("flagged", isEqualTo: false)
+        .limit(AppString.appSessionLength)
+    //.orderBy('timeLastActivity', descending: true)
+        .snapshots();
+  }
+
+  /// [User Activity] -> get visited user activities.
+  Future<List<UserActivityModel>> getActivityByVisitedUser() async {
+    List<UserActivityModel> _userActivityList = [];
+    visitedUser = await getVisitedUserInfo();
+    try {
+      final _value = await FirebaseFirestore.instance
+          .collection(AppString.userActivity)
+          .where("clientId", isEqualTo: widget.visitedUsersID)
+          .orderBy('dateCreated', descending: true)
+          .limit(AppString.allSessionLength)
+          .get();
+
+      _value.docs
+          .map((e) =>
+          _userActivityList.addAll([UserActivityModel.fromJson(e.data())]))
+          .toList();
+    } catch (e) {
+      logger.e(e);
+    }
+    return _userActivityList;
   }
 
 
@@ -487,7 +523,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                               color: Colors.white,
                             ),
                           ),
-                          topBarWidget(),
                         ],
                       ),
                     ),
@@ -722,7 +757,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title: Text(widget.visitedUsersID,
+          title: Text(widget.visitedEgoName,
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w600,
@@ -863,7 +898,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        "Archive",
+                                        "Sessions",
                                         style: TextStyle(
                                           color: currentTabIndex != 1
                                               ? Pallet.deepGreen
@@ -946,8 +981,100 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                     child: TabBarView(
                       controller: _tabController,
                       children: [
-                        ActivityWidget(),
-                        ArchiveWidget(),
+
+
+
+                        FutureBuilder(
+                        future: getActivityByVisitedUser(),
+                      builder: (context, AsyncSnapshot<List<UserActivityModel>> userActivity) {
+                        if (userActivity.connectionState == ConnectionState.waiting) {
+                          return RotateImage(70, 70);
+                        }
+                        if (!userActivity.hasData) {
+                          return Center(
+                            child: Text("There are no activities yet",
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.lato(
+                                    fontSize: 15.0,
+                                    color: Pallet.colorBlack,
+                                    //fontStyle: FontStyle.normal,
+                                    fontWeight: FontWeight.w600)),
+                          );
+                        }
+
+                        if (userActivity.hasError) {
+                          return Container(
+                            child: Text(userActivity.error.toString(),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.lato(
+                                    fontSize: 15.0,
+                                    color: Pallet.colorBlack,
+                                    //fontStyle: FontStyle.normal,
+                                    fontWeight: FontWeight.w600)),
+                          );
+                        }
+
+                        if (userActivity.hasData) {
+                          return ListView(
+                            children: [
+                              ...userActivity.data!
+                                  .map((element) => VisitedUserActivityCard(element: element,)
+                              )
+                                  .toList(),
+                            ],
+                          );
+                        }
+                        return Container();
+                      }
+                  ),
+
+
+
+                        StreamBuilder(
+                          stream: visitedUsersSessions(),
+                          builder: (context, AsyncSnapshot<QuerySnapshot> session) {
+                            if (session.connectionState == ConnectionState.waiting) {
+                              return RotateImage(70, 70);
+                            }
+                            if (!session.hasData) {
+                              return Center(
+                                child: Text("No Session data",
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.lato(
+                                        fontSize: 15.0,
+                                        color: Pallet.colorBlack,
+                                        //fontStyle: FontStyle.normal,
+                                        fontWeight: FontWeight.w600)),
+                              );
+                            }
+                            if (session.hasData) {
+                              // clear list
+                              _sessionList!.clear();
+
+                              session.data!.docs.map((e) {
+                                _sessionList!.add(Session.fromJson(e.data()));
+                              }).toList();
+
+                              return Scrollbar(
+                                child: ListView(
+                                  children: [
+                                    ..._sessionList!
+                                        .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
+                                        .toList(),
+                                  ],
+                                ),
+                              );
+                            }
+                            return Container();
+                          },
+                        ),
+
                         SearchPage(title: 'Search Claire',),
                       ],
                     ),
@@ -961,61 +1088,68 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   }
 }
 
-/// A top bar widget for logout and switch ego. Might remove soon.
 
-class topBarWidget extends StatelessWidget {
-  const topBarWidget({
-    Key? key,
-  }) : super(key: key);
+
+
+
+
+
+class VisitedUserActivityCard extends StatelessWidget {
+  UserActivityModel element;
+  VisitedUserModel visiteduserModel = VisitedUserModel();
+
+  VisitedUserActivityCard({Key? key, required this.element}) : super(key: key);
+
+  getUser() async{
+    userModel = await firebaseServices.getUserInfo();
+  }
 
   @override
   Widget build(BuildContext context) {
+    getUser();
+    print("show User info $userModel");
     return Container(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FocusedMenuHolder(
-              menuWidth: MediaQuery.of(context).size.width * 0.30,
-              menuItemExtent: 45,
-              menuBoxDecoration: BoxDecoration(
-                  color: Pallet.colorPrimary,
-                  borderRadius: BorderRadius.all(Radius.circular(15.0))),
-              duration: Duration(milliseconds: 100),
-              animateMenuItems: true,
-              blurBackgroundColor: Pallet.colorPrimary,
-              openWithTap: true,
-              // Open Focused-Menu on Tap rather than Long Press
-              menuOffset: 10.0,
-              // Offset value to show menuItem from the selected item
-              bottomOffsetHeight: 80.0,
-              // Offset height to consider, for showing the menu item ( for example bottom navigation bar), so that the popup menu will be shown on top of selected item.
-              menuItems: <FocusedMenuItem>[
-                FocusedMenuItem(title: Text("< SWITCH >", style: TextStyle(color: Pallet.colorSecondary),),
-                  onPressed: () async {
-                    String id = await sharedPreference.getAlterEgoId();
-                    String accessCode = await sharedPreference.getAlterEgoAccessCode();
-                    print("Show Alter details:: $id || $accessCode");
-                    id.isNotEmpty && accessCode.isNotEmpty ? await firebaseServices.getUserAlterEgo(context,id, accessCode)
-                        : Navigator.of(context)
-                        .pushNamed(AppRoutes.alterEgoLogin);
-                  },),
-                FocusedMenuItem(
-                    title: Text(
-                      "Lock Out",
-                      style: TextStyle(color: Colors.redAccent),
-                    ),
-                    onPressed: () async =>
-                        firebaseServices.logUserOut(context)),
-              ],
-              onPressed: () {},
-              child: Icon(Icons.unfold_more_sharp,
-                color: Pallet.colorWhite,
-                size: 19,
-              )
-          )
-        ],
+      margin: EdgeInsets.all(5),
+      child: Material(
+        borderRadius: BorderRadius.all(Radius.circular(35)),
+        elevation: 20,
+        child: GestureDetector(
+          //onTap: () => PageRouter.gotoWidget(
+          //   EgoModeSessionDetail(featuredSessionModel: element),
+          //   context),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+            ),
+            padding: EdgeInsets.all(8),
+            child: Row(children: [
+              Icon(
+                Icons.notifications_active_rounded,
+                color: Pallet.colorPrimary,
+                size: 26,
+              ),
+              SizedBox(width: 8.w,),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  element.userId == userModel.userId && element.clientId == userModel.userId ?
+                  Text("You ${element.activityType}ed a session",
+                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
+                      : element.userId == userModel.userId && element.clientId == userModel.userId ?
+                  Text("Someone ${element.activityType}ed your session",
+                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
+                      : Text("${element.clientNickname} ${element.activityType}ed your session",
+                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,)),
+                  Text(timeConverter(element.dateCreated!),
+                      style: TextStyle(fontSize: 11.sp, color: Pallet.colorTextGray)),
+                ],)
+            ],),
+          ),
+        ),
       ),
     );
   }
+
 }
+

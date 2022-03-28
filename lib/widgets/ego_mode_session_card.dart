@@ -22,8 +22,9 @@ import '../utils/strings.dart';
 class EgoModeSessionCard extends StatelessWidget {
   Session element;
 
-  EgoModeSessionCard({Key? key, required this.element, required this.visitedUsersID}) : super(key: key);
+  EgoModeSessionCard({Key? key, required this.element, required this.visitedUsersID, required this.visitedEgoName}) : super(key: key);
   late String visitedUsersID;
+  late String visitedEgoName;
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +50,11 @@ class EgoModeSessionCard extends StatelessWidget {
                 GestureDetector(
                   onTap: (){
                     visitedUsersID = element.userId!;
+                    visitedEgoName = element.userNickname!;
+                    String thisEgoName = visitedEgoName;
                     String thisUser = visitedUsersID;
                     PageRouter.gotoWidget(
-                        VisitedUserEgoProfilePage(visitedUsersID: thisUser,),
+                        VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
                         context);
                     print("Visited User ID::: $visitedUsersID");
                     },
