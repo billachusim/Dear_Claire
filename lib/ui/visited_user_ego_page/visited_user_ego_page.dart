@@ -493,6 +493,8 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                     ),
                 ),
 
+                Spacer(flex: 1,),
+
 
                 /// Here is the Ego badge showing user's usertype
 
@@ -501,8 +503,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
+                      margin: EdgeInsets.only(right: 6),
                       padding: EdgeInsets.only(
-                          left: 8, right: 4, top: 4, bottom: 4),
+                          left: 8, right: 4, top: 4, bottom: 4,),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: userType == 'REGULAR'? Pallet.colorPrimary
@@ -526,7 +529,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                         ],
                       ),
                     ),
-                    SizedBox(width: 6,)
                   ],
                 ),
               ],
@@ -553,7 +555,10 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                     Container(
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(25),
-                          color: Pallet.colorPrimary),
+                        color: userType == 'REGULAR'? Pallet.colorPrimary
+                            : userType == 'ADMIN'? Pallet.colorSecondary
+                            : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
+                            :Pallet.colorBlue,                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
@@ -661,8 +666,8 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(25)),
                         color: userType == 'REGULAR'? Pallet.colorPrimary
-                            : userType == 'ADMIN'? Pallet.colorPrimary
-                            : userType == 'SUPER_ADMIN'?  Pallet.colorPrimary
+                            : userType == 'ADMIN'? Pallet.colorSecondary
+                            : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
                             :Pallet.colorBlue,
                       ),
                     ),
@@ -807,7 +812,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
             Expanded(
                 child: DefaultTabController(
-                  length: 3, child: Column(children: [
+                  length: 3, child:
+                Column(
+                    children: [
                   SizedBox(height: 7.h),
                   Container(
                     // margin: EdgeInsets.all(4),
@@ -831,65 +838,11 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                 decoration: BoxDecoration(
                                     border: currentTabIndex != 0
                                         ? Border.all(
-                                        color: Pallet.colorPrimary, width: 3)
-                                        : Border.all(
-                                        color: Pallet.colorPrimary, width: 6),
-                                    borderRadius: BorderRadius.circular(25),
-                                    color: currentTabIndex != 0
-                                        ? Pallet.colorWhite
-                                        : null),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        "Activity",
-                                        style: TextStyle(
-                                          color: currentTabIndex != 0
-                                              ? Pallet.colorPrimary
-                                              : Pallet.colorPrimary,
-                                          fontWeight: currentTabIndex != 0
-                                              ? FontWeight.w500
-                                              : FontWeight.w700,
-                                          fontSize: currentTabIndex != 0 ? 14 : 14,
-                                        ),
-                                      ),
-                                      SizedBox(width: 14),
-                                      currentTabIndex != 0
-                                          ? SizedBox.shrink()
-                                          : Icon(Icons.circle_notifications,
-                                          color: Pallet.colorPrimary)
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-
-
-                          /// Second tab is Archive Tab
-
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _tabController.animateTo(1);
-                                  currentTabIndex = 1;
-                                });
-                              },
-                              child: Container(
-                                margin: EdgeInsets.only(bottom: 8),
-                                height: 43,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                    border: currentTabIndex != 1
-                                        ? Border.all(
                                         color: Pallet.deepGreen, width: 3)
                                         : Border.all(
                                         color: Pallet.deepGreen, width: 6),
                                     borderRadius: BorderRadius.circular(25),
-                                    color: currentTabIndex != 1
+                                    color: currentTabIndex != 0
                                         ? Pallet.colorWhite
                                         : null),
                                 child: Padding(
@@ -910,10 +863,64 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                         ),
                                       ),
                                       SizedBox(width: 14),
-                                      currentTabIndex != 1
+                                      currentTabIndex != 0
                                           ? SizedBox.shrink()
                                           : Icon(Icons.archive_rounded,
                                           color: Pallet.deepGreen)
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+
+                          /// Second tab is Activities Tab
+
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _tabController.animateTo(1);
+                                  currentTabIndex = 1;
+                                });
+                              },
+                              child: Container(
+                                margin: EdgeInsets.only(bottom: 8),
+                                height: 43,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                    border: currentTabIndex != 1
+                                        ? Border.all(
+                                        color: Pallet.colorPrimary, width: 3)
+                                        : Border.all(
+                                        color: Pallet.colorPrimary, width: 6),
+                                    borderRadius: BorderRadius.circular(25),
+                                    color: currentTabIndex != 1
+                                        ? Pallet.colorWhite
+                                        : null),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(3.0),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        "Activities",
+                                        style: TextStyle(
+                                          color: currentTabIndex != 0
+                                              ? Pallet.colorPrimary
+                                              : Pallet.colorPrimary,
+                                          fontWeight: currentTabIndex != 0
+                                              ? FontWeight.w500
+                                              : FontWeight.w700,
+                                          fontSize: currentTabIndex != 0 ? 14 : 14,
+                                        ),
+                                      ),
+                                      SizedBox(width: 14),
+                                      currentTabIndex != 1
+                                          ? SizedBox.shrink()
+                                          : Icon(Icons.circle_notifications,
+                                          color: Pallet.colorPrimary)
                                     ],
                                   ),
                                 ),
@@ -984,6 +991,51 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
 
 
+
+
+                        StreamBuilder(
+                          stream: visitedUsersSessions(),
+                          builder: (context, AsyncSnapshot<QuerySnapshot> session) {
+                            if (session.connectionState == ConnectionState.waiting) {
+                              return RotateImage(70, 70);
+                            }
+                            if (!session.hasData) {
+                              return Center(
+                                child: Text("No Session data",
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.lato(
+                                        fontSize: 15.0,
+                                        color: Pallet.colorBlack,
+                                        //fontStyle: FontStyle.normal,
+                                        fontWeight: FontWeight.w600)),
+                              );
+                            }
+                            if (session.hasData) {
+                              // clear list
+                              _sessionList!.clear();
+
+                              session.data!.docs.map((e) {
+                                _sessionList!.add(Session.fromJson(e.data()));
+                              }).toList();
+
+                              return Scrollbar(
+                                child: ListView(
+                                  children: [
+                                    ..._sessionList!
+                                        .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
+                                        .toList(),
+                                  ],
+                                ),
+                              );
+                            }
+                            return Container();
+                          },
+                        ),
+
+
+
                         FutureBuilder(
                         future: getActivityByVisitedUser(),
                       builder: (context, AsyncSnapshot<List<UserActivityModel>> userActivity) {
@@ -1033,47 +1085,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                   ),
 
 
-
-                        StreamBuilder(
-                          stream: visitedUsersSessions(),
-                          builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                            if (session.connectionState == ConnectionState.waiting) {
-                              return RotateImage(70, 70);
-                            }
-                            if (!session.hasData) {
-                              return Center(
-                                child: Text("No Session data",
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.lato(
-                                        fontSize: 15.0,
-                                        color: Pallet.colorBlack,
-                                        //fontStyle: FontStyle.normal,
-                                        fontWeight: FontWeight.w600)),
-                              );
-                            }
-                            if (session.hasData) {
-                              // clear list
-                              _sessionList!.clear();
-
-                              session.data!.docs.map((e) {
-                                _sessionList!.add(Session.fromJson(e.data()));
-                              }).toList();
-
-                              return Scrollbar(
-                                child: ListView(
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              );
-                            }
-                            return Container();
-                          },
-                        ),
 
                         SearchPage(title: 'Search Claire',),
                       ],
