@@ -358,7 +358,7 @@ class _SearchPageState extends State<SearchPage> {
                                   children: [
                                     ..._sessionList!
                                         .map((element) =>
-                                        CustomSearchCard(element: element))
+                                        CustomSearchCard(element: element, visitedEgoName: '', visitedUsersID: '',))
                                         .toList(),
                                   ],
                                 ),
@@ -437,7 +437,7 @@ class _SearchPageState extends State<SearchPage> {
                                   children: [
                                     ..._sessionList!
                                         .map((element) =>
-                                        CustomSearchCard(element: element))
+                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                                         .toList(),
                                   ],
                                 ),
@@ -517,7 +517,7 @@ class _SearchPageState extends State<SearchPage> {
                                   children: [
                                     ..._sessionList!
                                         .map((element) =>
-                                        CustomSearchCard(element: element))
+                                        CustomSearchCard(element: element, visitedEgoName: '', visitedUsersID: '',))
                                         .toList(),
                                   ],
                                 ),
@@ -606,7 +606,7 @@ class _SearchPageState extends State<SearchPage> {
                                   children: [
                                     ..._sessionList!
                                         .map((element) =>
-                                        CustomSearchCard(element: element))
+                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                                         .toList(),
                                   ],
                                 ),
@@ -685,7 +685,7 @@ class _SearchPageState extends State<SearchPage> {
                                   children: [
                                     ..._sessionList!
                                         .map((element) =>
-                                        CustomSearchCard(element: element))
+                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                                         .toList(),
                                   ],
                                 ),
@@ -765,7 +765,7 @@ class _SearchPageState extends State<SearchPage> {
                                   children: [
                                     ..._sessionList!
                                         .map((element) =>
-                                        CustomSearchCard(element: element))
+                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                                         .toList(),
                                   ],
                                 ),

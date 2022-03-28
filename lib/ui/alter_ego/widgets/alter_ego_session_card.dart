@@ -18,12 +18,15 @@ import 'package:flutter/cupertino.dart';
 
 import '../../../services/firebase_services.dart';
 import '../../../services/user_model.dart';
+import '../../visited_user_ego_page/visited_user_ego_page.dart';
 
 class AlterEgoModeSessionCard extends StatelessWidget {
   Session element;
   bool? isFeatured;
 
-  AlterEgoModeSessionCard({Key? key, required this.element}) : super(key: key);
+  AlterEgoModeSessionCard({Key? key, required this.element, required this.visitedUsersID, required this.visitedEgoName}) : super(key: key);
+  late String visitedUsersID;
+  late String visitedEgoName;
   UserModel userModel = UserModel();
   User? currentUser = FirebaseAuth.instance.currentUser;
 
@@ -81,24 +84,36 @@ class AlterEgoModeSessionCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CachedNetworkImage(
-                    width: 48,
-                    height: 48,
-                    imageUrl: element.userAvatarUrl!,
-                    imageBuilder: (context, imageProvider) => Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: imageProvider,
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
-                    placeholder: (context, url) => CircularProgressIndicator(),
-                    errorWidget: (context, url, error) => Image.asset(
-                      "assets/images/brown_boy_mask.png",
+                GestureDetector(
+                  onTap: (){
+                    visitedUsersID = element.userId!;
+                    visitedEgoName = element.userNickname!;
+                    String thisEgoName = visitedEgoName;
+                    String thisUser = visitedUsersID;
+                    PageRouter.gotoWidget(
+                        VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                        context);
+                    print("Visited User ID::: $visitedUsersID");
+                  },
+                  child: CachedNetworkImage(
                       width: 48,
                       height: 48,
-                    ) //Icon(Icons.error),
+                      imageUrl: element.userAvatarUrl!,
+                      imageBuilder: (context, imageProvider) => Container(
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: imageProvider,
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                      ),
+                      placeholder: (context, url) => CircularProgressIndicator(),
+                      errorWidget: (context, url, error) => Image.asset(
+                        "assets/images/brown_boy_mask.png",
+                        width: 48,
+                        height: 48,
+                      ) //Icon(Icons.error),
+                  ),
                 ),
                 SizedBox(
                   width: 8,
@@ -108,13 +123,25 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(element.userNickname!,
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 18.0,
-                              color: Pallet.colorWhite,
-                              fontWeight: FontWeight.w800)),
+                      GestureDetector(
+                        onTap: (){
+                          visitedUsersID = element.userId!;
+                          visitedEgoName = element.userNickname!;
+                          String thisEgoName = visitedEgoName;
+                          String thisUser = visitedUsersID;
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                              context);
+                          print("Visited User ID::: $visitedUsersID");
+                        },
+                        child: Text(element.userNickname!,
+                            textAlign: TextAlign.start,
+                            maxLines: 1,
+                            style: GoogleFonts.lato(
+                                fontSize: 18.0,
+                                color: Pallet.colorWhite,
+                                fontWeight: FontWeight.w800)),
+                      ),
                       SizedBox(
                         height: 4,
                       ),

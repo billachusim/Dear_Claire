@@ -312,6 +312,14 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                         height: 22,
                         width: 20,
                         margin: EdgeInsets.only(left: 4),
+
+                        child: Icon(
+                          visitedUser?.userType == "ADMIN" ? Icons.star_half_rounded
+                          : visitedUser?.userType == "SUPER_ADMIN" ? Icons.star
+                              : Icons.star_border_rounded,
+                          color: Pallet.colorWhite,
+                          size: 20,
+                        ),
                       ),
 
                       //Clairevatar Container is here
@@ -489,6 +497,16 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                             ],
                           ),
                         ),
+
+                        Icon(
+                          visitedUser?.userType == "ADMIN" ? Icons.star_half_rounded
+                              : visitedUser?.userType == "SUPER_ADMIN" ? Icons.star
+                          : Icons.star_border_rounded,
+
+                          color: Pallet.colorWhite,
+                          size: 20,
+                        ),
+
                       ],
                     ),
                 ),

@@ -55,7 +55,7 @@ class _AllDiariesPageState extends State<AllDiariesPage> {
             return ListView(
               children: [
                 ...session.data!
-                    .map((element) => AlterEgoModeSessionCard(element: element))
+                    .map((element) => AlterEgoModeSessionCard(element: element, visitedEgoName: '', visitedUsersID: '',))
                     .toList(),
               ],
             );

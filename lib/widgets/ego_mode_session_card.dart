@@ -86,13 +86,25 @@ class EgoModeSessionCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(element.userNickname!,
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 18.0,
-                              color: Pallet.colorWhite,
-                              fontWeight: FontWeight.w800)),
+                      GestureDetector(
+                        onTap: (){
+                          visitedUsersID = element.userId!;
+                          visitedEgoName = element.userNickname!;
+                          String thisEgoName = visitedEgoName;
+                          String thisUser = visitedUsersID;
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                              context);
+                          print("Visited User ID::: $visitedUsersID");
+                        },
+                        child: Text(element.userNickname!,
+                            textAlign: TextAlign.start,
+                            maxLines: 1,
+                            style: GoogleFonts.lato(
+                                fontSize: 18.0,
+                                color: Pallet.colorWhite,
+                                fontWeight: FontWeight.w800)),
+                      ),
                       SizedBox(
                         height: 4,
                       ),

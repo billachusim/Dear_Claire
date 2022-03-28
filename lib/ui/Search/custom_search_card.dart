@@ -16,11 +16,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../utils/strings.dart';
 import '../../widgets/toast.dart';
+import '../visited_user_ego_page/visited_user_ego_page.dart';
 
 class CustomSearchCard extends StatelessWidget {
   Session element;
 
-  CustomSearchCard({Key? key, required this.element}) : super(key: key);
+  CustomSearchCard({Key? key, required this.element, required this.visitedUsersID, required this.visitedEgoName}) : super(key: key);
+  late String visitedUsersID;
+  late String visitedEgoName;
 
   @override
   Widget build(BuildContext context) {
@@ -46,10 +49,15 @@ class CustomSearchCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 GestureDetector(
-                  onTap: () {
-                    Navigator.of(context)
-                        .pushReplacementNamed(AppRoutes.visitedUserEgoPage);
-                    showToast(AppString.change_ego_name);
+                  onTap: (){
+                    visitedUsersID = element.userId!;
+                    visitedEgoName = element.userNickname!;
+                    String thisEgoName = visitedEgoName;
+                    String thisUser = visitedUsersID;
+                    PageRouter.gotoWidget(
+                        VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                        context);
+                    print("Visited User ID::: $visitedUsersID");
                   },
                   child: CachedNetworkImage(
                       width: 33,
@@ -79,13 +87,25 @@ class CustomSearchCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(element.userNickname!,
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 15.0,
-                              color: Pallet.colorWhite,
-                              fontWeight: FontWeight.w700)),
+                      GestureDetector(
+                        onTap: (){
+                          visitedUsersID = element.userId!;
+                          visitedEgoName = element.userNickname!;
+                          String thisEgoName = visitedEgoName;
+                          String thisUser = visitedUsersID;
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                              context);
+                          print("Visited User ID::: $visitedUsersID");
+                        },
+                        child: Text(element.userNickname!,
+                            textAlign: TextAlign.start,
+                            maxLines: 1,
+                            style: GoogleFonts.lato(
+                                fontSize: 15.0,
+                                color: Pallet.colorWhite,
+                                fontWeight: FontWeight.w700)),
+                      ),
                       SizedBox(
                         height: 1,
                       ),

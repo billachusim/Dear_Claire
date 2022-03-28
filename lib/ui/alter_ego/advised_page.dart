@@ -45,7 +45,7 @@ class _AdvisedPageState extends State<AdvisedPage> {
             return ListView(
               children: [
                 ...session.data!
-                    .map((element) => AlterEgoModeSessionCard(element: element))
+                    .map((element) => AlterEgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                     .toList(),
               ],
             );
