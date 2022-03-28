@@ -16,7 +16,7 @@ const List<Destination> allDestinations = <Destination>[
   Destination('Followed', "assets/images/ic_follow.svg",
       "assets/images/ic_followed_select.svg", Color(0xFF131418), 1),
   Destination('Dairy', "assets/images/ic_dairy.svg",
-      "assets/images/ic_dairy_selected.svg", Color(0xFF131418), 2),
+      "assets/images/ic_diary_selected.svg", Color(0xFF131418), 2),
   Destination('Chatrooms', "assets/images/ic_chat_rooms.svg",
       "assets/images/ic_rooms_select.svg", Color(0xFF131418), 3),
   Destination('Ego', "assets/images/ic_ego.svg",

@@ -1,6 +1,6 @@
 import 'package:dear_claire/services/notification.dart';
 import 'package:dear_claire/ui/chats/chatrooms.dart';
-import 'package:dear_claire/ui/dairy/dairy.dart';
+import 'package:dear_claire/ui/dairy/diary.dart';
 import 'package:dear_claire/ui/ego-profile/profile.dart';
 import 'package:dear_claire/ui/followed/followed.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
@@ -37,7 +37,7 @@ class _HomeDashboardPageState extends State<HomePage>
   List<Widget> _body = [
     FeaturedPage(title: 'Dear Claire'),
     FollowedPage(title: 'Dear Claire'),
-    DairyPage(title: 'Dear Claire'),
+    DiaryPage(title: 'Dear Claire'),
     ChatRoomsPage(),
     EgoProfilePage(),
   ];

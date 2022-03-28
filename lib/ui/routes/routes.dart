@@ -1,8 +1,10 @@
 import 'package:dear_claire/data/models/profile_page_model.dart';
 import 'package:dear_claire/ui/Categories/category_sessions.dart';
+import 'package:dear_claire/ui/alter_ego/advised_page.dart';
 import 'package:dear_claire/ui/alter_ego/alter_ego_homepage.dart';
 import 'package:dear_claire/ui/alter_ego/alter_ego_login.dart';
 import 'package:dear_claire/ui/alter_ego/alter_ego_registration.dart';
+import 'package:dear_claire/ui/alter_ego/new_diaries_page.dart';
 import 'package:dear_claire/ui/auth/auth_selection.dart';
 import 'package:dear_claire/ui/bottom_nav/stack_index_home.dart';
 import 'package:dear_claire/ui/create_session/create_session_page.dart';
@@ -25,6 +27,7 @@ import '../visited_user_ego_page/visited_user_ego_page.dart';
 class AppRoutes {
   static const home = '/featured';
   static const archivedSessions = '/archived_sessions';
+  static const newDiaries = '/newDiaries';
   static const login = '/login';
   static const signUp = '/signUp';
   static const authSelection = '/authSelection';
@@ -55,6 +58,14 @@ class AppRouter {
           settings: settings,
           fullscreenDialog: true,
         );
+
+      case AppRoutes.newDiaries:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => NewDiariesPage(),
+          settings: settings,
+          fullscreenDialog: true,
+        );
+
       case AppRoutes.login:
         return MaterialPageRoute<dynamic>(
           builder: (_) => LoginPage(),
