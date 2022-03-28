@@ -26,13 +26,18 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
 
+import '../../utils/constant.dart';
+import '../../utils/constant.dart';
+import '../../utils/constant.dart';
 import '../Search/search_page.dart';
+import '../featured/model/comment_session_model.dart';
+import '../featured/model/session.dart';
 
 class VisitedUserEgoProfilePage extends StatefulWidget {
-  var visitedUserModel;
+  final String visitedUsersID;
 
   VisitedUserEgoProfilePage(
-      {Key? key, required this.visitedUserModel})
+      {Key? key, required this.visitedUsersID})
       : super(key: key);
 
   @override
@@ -71,23 +76,13 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   //VisitedUserModel visitedUser = VisitedUserModel();
   SessionModel sessionModel = SessionModel();
   User? currentUser = FirebaseAuth.instance.currentUser;
-  VisitedUserModel? visitedUser;
+  VisitedUserModel? visitedUser = VisitedUserModel();
   String? visitedUsersID;
 
 
-
-
-
   getVisitedUser() async {
-    visitedUserModel = await firebaseServices.getVisitedUserInfo();
+    visitedUserModel = await getVisitedUserInfo();
   }
-
-
-  getVisitedUserId() async {
-    visitedUsersID = await firebaseServices.getVisitedUsersId();
-  }
-
-
 
 
   /// Query Ego stream from Firestore
@@ -121,6 +116,128 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     );
     logger.d('Successfully saved an Ego message');
     print('Ego Message: $egoMessage');
+
+  }
+
+  /// Get Visited Ego User info
+  Future<VisitedUserModel> getVisitedUserInfo() async {
+    DocumentSnapshot response = await FirebaseFirestore.instance
+        .collection(AppString.users)
+        .doc(widget.visitedUsersID)
+        .get();
+
+    var visitedUser = VisitedUserModel.fromFirestore(response.data() as Map<String, dynamic>);
+    logger.d('Successfully got the visited user model');
+    print('Visited user is: $visitedUser');
+    return visitedUser;
+  }
+
+  /// Get sessions from the category and have been featured
+  Future<DocumentSnapshot<Map<String, dynamic>>> getVisitedUserProfile() {
+    return FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .doc(widget.visitedUsersID)
+        .get();
+  }
+
+
+  /// Visited User Ego Profile Info Here
+
+
+  Future<VisitedEgoProfileInfo> getVisitedUserEgoProfileInfo()async{
+    VisitedEgoProfileInfo visitedProfileInfo = VisitedEgoProfileInfo();
+    //visitedUsersID = VisitedUserEgoProfilePage(visitedUserModel: visitedUsersID) as String;
+
+    //get user profile Info
+    //visitedUserInfo = await getVisitedUserInfo();
+
+    //visitedProfileInfo = VisitedEgoProfileInfo();
+
+
+
+    //get user session count
+    List<Session> _sessionList = [];
+    try {
+      final _value = await FirebaseFirestore.instance
+          .collection(AppString.appFeaturedSessions)
+          .where("userId", isEqualTo: widget.visitedUsersID)
+      // .limit(AppString.appSessionLength)
+          .get();
+
+
+      debugPrint(
+          " This is the number of sessions by date for this visited user ${_value.docs.length}");
+      _value.docs
+          .map((e) => _sessionList.addAll([Session.fromJson(e.data())]))
+          .toList();
+
+      debugPrint(
+          " This is the number of sessions by date for this visited user ${_sessionList.length}");
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+
+    //get advises count
+
+    List<CommentSessionModel> _advisesList = [];
+
+
+    try {
+      final _value = await FirebaseFirestore.instance
+          .collection(AppString.appFeaturedSessionsComments)
+          .where("userId", isEqualTo: widget.visitedUsersID)
+      //  .limit(AppString.appSessionLength)
+          .get();
+
+
+      debugPrint(
+          " This is the number of advises given by this visited user ${_value.docs.length}");
+      _value.docs
+          .map((e) => _advisesList.addAll([CommentSessionModel.fromJson(e.data())]))
+          .toList();
+
+      debugPrint(
+          " This is the number of advises given by this visited user ${_advisesList.length}");
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+
+    //get follows count
+
+    List<VisitedUserModel> _followsList = [];
+
+
+    try {
+      final _value = await FirebaseFirestore.instance
+          .collection(AppString.users)
+          .where("userId", isEqualTo: widget.visitedUsersID)
+      // .limit(AppString.appCommentLength)
+          .get();
+
+
+      debugPrint(
+          " This is the number of follows given to this visited user ${_value.docs.length}");
+      _value.docs
+          .map((e) => _followsList.addAll([VisitedUserModel.fromJson(e.data())]))
+          .toList();
+
+      debugPrint(
+          " This is the number of follows given to this visited user ${_followsList.length}");
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+
+
+    visitedProfileInfo = VisitedEgoProfileInfo(
+      visitedUserModel: visitedUser,
+     // sessionCount: _sessionList.length.toString(),
+      advisesCount: _advisesList.length.toString(),
+     // followCount: _followsList.length.toString(),
+    );
+    return visitedProfileInfo;
 
   }
 
@@ -605,7 +722,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title: Text(widget.visitedUserModel,
+          title: Text(widget.visitedUsersID,
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w600,
@@ -619,9 +736,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
             Material(
               elevation: 10,
               child: FutureBuilder(
-                  future: firebaseServices.getVisitedUserEgoProfileInfo(),
+                  future: getVisitedUserInfo(),
                   builder:
-                      (context, AsyncSnapshot<VisitedEgoProfileInfo> visitedProfileInfo) {
+                      (context, AsyncSnapshot<VisitedUserModel> visitedProfileInfo) {
                     if (visitedProfileInfo.connectionState ==
                         ConnectionState.waiting) {
                       return RotateImage(50, 50);
@@ -636,12 +753,12 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
                     if (visitedProfileInfo.hasData) {
                       return _visitedPageHeader(
-                        userName: visitedProfileInfo.data!.visitedUserModel!.nickname,
-                        sessionCount: visitedProfileInfo.data!.sessionCount,
-                        advisesCount: visitedProfileInfo.data!.advisesCount,
-                        followCount: visitedProfileInfo.data!.followCount,
-                        userType: visitedProfileInfo.data!.visitedUserModel!.userType,
-                        avatarUrl: visitedProfileInfo.data!.visitedUserModel!.avatarUrl,
+                        userName: visitedProfileInfo.data?.nickname,
+                       // sessionCount: visitedProfileInfo.data!.sessionCount,
+                      //  advisesCount: visitedProfileInfo.data!.advisesCount,
+                       // followCount: visitedProfileInfo.data!.followCount,
+                        userType: visitedProfileInfo.data?.userType,
+                        avatarUrl: visitedProfileInfo.data?.avatarUrl,
                       );
                     }
                     return Container();

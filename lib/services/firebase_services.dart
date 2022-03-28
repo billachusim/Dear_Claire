@@ -1181,7 +1181,7 @@ class FirebaseServices extends ChangeNotifier {
   /// Get visited users Id
 
   Future<String> getVisitedUsersId() async {
-    visitedUsersID = VisitedUserEgoProfilePage(visitedUserModel: visitedUsersID).toString();
+   // visitedUsersID = VisitedUserEgoProfilePage(visitedUserModel: visitedUsersID).toString();
     DocumentSnapshot response = await FirebaseFirestore.instance
         .collection(AppString.users)
         .doc(visitedUsersID)
@@ -1196,7 +1196,7 @@ class FirebaseServices extends ChangeNotifier {
 
   /// Get Visited Ego User info
   Future<VisitedUserModel> getVisitedUserInfo() async {
-    visitedUsersID = VisitedUserEgoProfilePage(visitedUserModel: visitedUsersID).toString();
+   // visitedUsersID = VisitedUserEgoProfilePage(visitedUserModel: visitedUsersID).toString();
     DocumentSnapshot response = await FirebaseFirestore.instance
         .collection(AppString.users)
         .doc(visitedUsersID)
@@ -1240,104 +1240,6 @@ class FirebaseServices extends ChangeNotifier {
     );
   }
 
-/// Visited User Ego Profile Info Here
 
-
-  Future<VisitedEgoProfileInfo> getVisitedUserEgoProfileInfo()async{
-    VisitedEgoProfileInfo visitedProfileInfo = VisitedEgoProfileInfo();
-    visitedUsersID = VisitedUserEgoProfilePage(visitedUserModel: visitedUsersID) as String;
-
-    //get user profile Info
-    visitedUserInfo = await getVisitedUserInfo();
-
-    visitedProfileInfo = VisitedEgoProfileInfo(visitedUserModel: visitedUserInfo);
-
-
-
-    //get user session count
-    List<Session> _sessionList = [];
-    try {
-      final _value = await _firebaseFirestore
-          .collection(AppString.appFeaturedSessions)
-          .where("userId", isEqualTo: visitedUsersID)
-      // .limit(AppString.appSessionLength)
-          .get();
-
-
-      debugPrint(
-          " This is the number of sessions by date for this visited user ${_value.docs.length}");
-      _value.docs
-          .map((e) => _sessionList.addAll([Session.fromJson(e.data())]))
-          .toList();
-
-      debugPrint(
-          " This is the number of sessions by date for this visited user ${_sessionList.length}");
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-
-
-    //get advises count
-
-    List<CommentSessionModel> _advisesList = [];
-
-
-    try {
-      final _value = await _firebaseFirestore
-          .collection(AppString.appFeaturedSessionsComments)
-          .where("userId", isEqualTo: visitedUsersID)
-      //  .limit(AppString.appSessionLength)
-          .get();
-
-
-      debugPrint(
-          " This is the number of advises given by this visited user ${_value.docs.length}");
-      _value.docs
-          .map((e) => _advisesList.addAll([CommentSessionModel.fromJson(e.data())]))
-          .toList();
-
-      debugPrint(
-          " This is the number of advises given by this visited user ${_advisesList.length}");
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-
-
-    //get follows count
-
-    List<VisitedUserModel> _followsList = [];
-
-
-    try {
-      final _value = await _firebaseFirestore
-          .collection(AppString.users)
-          .where("userId", isEqualTo: visitedUsersID)
-      // .limit(AppString.appCommentLength)
-          .get();
-
-
-      debugPrint(
-          " This is the number of follows given to this visited user ${_value.docs.length}");
-      _value.docs
-          .map((e) => _followsList.addAll([VisitedUserModel.fromJson(e.data())]))
-          .toList();
-
-      debugPrint(
-          " This is the number of follows given to this visited user ${_followsList.length}");
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-
-
-
-    visitedProfileInfo = VisitedEgoProfileInfo(
-      visitedUserModel: visitedUserInfo,
-      sessionCount: _sessionList.length.toString(),
-      advisesCount: _advisesList.length.toString(),
-      followCount: _followsList.length.toString(),
-    );
-    return visitedProfileInfo;
-
-  }
 
 }

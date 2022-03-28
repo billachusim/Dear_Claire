@@ -47,14 +47,14 @@ class EgoModeSessionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 GestureDetector(
-                  onTap: () {
+                  onTap: (){
                     visitedUsersID = element.userId!;
+                    String thisUser = visitedUsersID;
                     PageRouter.gotoWidget(
-                        VisitedUserEgoProfilePage(visitedUserModel: visitedUsersID,),
+                        VisitedUserEgoProfilePage(visitedUsersID: thisUser,),
                         context);
                     print("Visited User ID::: $visitedUsersID");
-
-                  },
+                    },
                   child: CachedNetworkImage(
                       width: 48,
                       height: 48,
