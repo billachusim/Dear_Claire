@@ -69,7 +69,6 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
             ),
             body: Stack(
               children: [
-                CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
                 PageView(
                 controller: _pageController,
                 onPageChanged: (index) {

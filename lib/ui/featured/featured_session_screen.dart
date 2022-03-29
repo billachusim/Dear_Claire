@@ -5,6 +5,7 @@ import 'package:dear_claire/ui/Categories/category_streams2.dart';
 import 'package:dear_claire/ui/featured/ego_stream.dart';
 import 'package:dear_claire/ui/featured/model/featured_session_model.dart';
 import 'package:dear_claire/ui/featured/public_sessions.dart';
+import 'package:dear_claire/ui/splash_screen/custom_rotate_bacground.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
@@ -12,6 +13,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../utils/helper.dart';
 import 'model/session.dart';
 import '../../widgets/ego_mode_session_card.dart';
 
@@ -30,15 +32,21 @@ class _FeaturedPageState extends State<FeaturedPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        body: Column(
+        body: Stack(
           children: [
+            CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
-           TheFeaturedSessions(),
+            Column(
+            children: [
 
-            CategoryStreams2(),
+             TheFeaturedSessions(),
 
-            LoveAndRelationshipSessions(),
+              CategoryStreams2(),
 
+              LoveAndRelationshipSessions(),
+
+      ],
+          ),
       ],
         ),
       ),

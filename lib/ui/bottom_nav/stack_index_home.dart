@@ -117,7 +117,6 @@ class _HomeDashboardPageState extends State<HomePage>
         ),
         body: Stack(
           children: [
-            RotateImage(getDeviceHeight(context), getDeviceWidth(context)),
             PageView(
             controller: _pageController,
             onPageChanged: (index){

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/helper.dart';
 import '../routes/routes.dart';
+import '../splash_screen/custom_rotate_bacground.dart';
 
 class ChatRooms extends StatefulWidget {
   const ChatRooms({ Key? key }) : super(key: key);
@@ -21,8 +23,14 @@ class _ChatRoomsState extends State<ChatRooms> {
           return Future.value(false);
         },
         child: Scaffold(
-          body: Container(
+          body: Stack(
+            children:[
+              CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
+              Container(
+
+            ),
+          ]
           ),
         ),
       ),

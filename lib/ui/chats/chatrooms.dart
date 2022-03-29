@@ -3,7 +3,9 @@ import 'package:dear_claire/utils/color.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../utils/helper.dart';
 import '../routes/routes.dart';
+import '../splash_screen/custom_rotate_bacground.dart';
 import 'data/roomdata.dart';
 
 class ChatRoomsPage extends StatelessWidget {
@@ -20,8 +22,14 @@ class ChatRoomsPage extends StatelessWidget {
           return Future.value(false);
         },
         child: Scaffold(
-          body: ListView(
-            children: RoomData.room().map((room) => ChatRoomWidget(element: room)).toList(),
+          body: Stack(
+            children: [
+              CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
+
+              ListView(
+              children: RoomData.room().map((room) => ChatRoomWidget(element: room)).toList(),
+            ),
+        ]
           ),
         ),
       ),
