@@ -30,6 +30,8 @@ import '../../widgets/ego_mode_session_card.dart';
 import '../Search/search_page.dart';
 import '../featured/model/comment_session_model.dart';
 import '../featured/model/session.dart';
+import '../featured/widget/post_details_widget.dart';
+import '../routes/page_router_animation.dart';
 
 class VisitedUserEgoProfilePage extends StatefulWidget {
   final String visitedUsersID;
@@ -1143,9 +1145,9 @@ class VisitedUserActivityCard extends StatelessWidget {
         borderRadius: BorderRadius.all(Radius.circular(35)),
         elevation: 20,
         child: GestureDetector(
-          //onTap: () => PageRouter.gotoWidget(
-          //   EgoModeSessionDetail(featuredSessionModel: element),
-          //   context),
+          onTap: () => PageRouter.gotoWidget(
+              PostDetailsWidget(sessionId: element.sessionId),
+              context),
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -1163,12 +1165,12 @@ class VisitedUserActivityCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   element.userId == userModel.userId && element.clientId == userModel.userId ?
-                  Text("You ${element.activityType}ed a session",
+                  Text("You ${element.activityType}ed on this session",
                       style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
                       : element.userId == userModel.userId && element.clientId == userModel.userId ?
-                  Text("Someone ${element.activityType}ed your session",
+                  Text("Someone ${element.activityType}ed on your session",
                       style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
-                      : Text("${element.clientNickname} ${element.activityType}ed your session",
+                      : Text("${element.clientNickname} ${element.activityType}ed on this session",
                       style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,)),
                   Text(timeConverter(element.dateCreated!),
                       style: TextStyle(fontSize: 11.sp, color: Pallet.colorTextGray)),

@@ -1,6 +1,7 @@
 import 'package:dear_claire/services/user_activity_model.dart';
 import 'package:dear_claire/services/user_model.dart';
 import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
+import 'package:dear_claire/ui/featured/widget/post_details_widget.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
@@ -85,9 +86,9 @@ class UserActivityCard extends StatelessWidget {
         borderRadius: BorderRadius.all(Radius.circular(35)),
         elevation: 20,
         child: GestureDetector(
-          //onTap: () => PageRouter.gotoWidget(
-           //   EgoModeSessionDetail(featuredSessionModel: element),
-           //   context),
+          onTap: () => PageRouter.gotoWidget(
+            PostDetailsWidget(sessionId: element.sessionId),
+              context),
           child: Container(
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -110,7 +111,7 @@ class UserActivityCard extends StatelessWidget {
                   : element.userId == userModel.userId && element.clientId == userModel.userId ?
                   Text("Someone ${element.activityType}ed your session",
                       style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
-                  : Text("${element.clientNickname} ${element.activityType}ed your session",
+                  : Text("${element.clientNickname} ${element.activityType}ed on this session",
                       style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,)),
                   Text(timeConverter(element.dateCreated!),
                       style: TextStyle(fontSize: 11.sp, color: Pallet.colorTextGray)),
