@@ -368,7 +368,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                followCount ?? "---",
+                                advisesCount ?? "---",
                                 style: TextStyle(
                                     fontSize: 23,
                                     fontWeight: FontWeight.w700,
@@ -376,7 +376,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                               ),
 
                               Text(
-                                "Follows",
+                                "Advises",
                                 style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
@@ -392,7 +392,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                advisesCount ?? "---",
+                                followCount ?? "---",
                                 style: TextStyle(
                                     fontSize: 23,
                                     fontWeight: FontWeight.w700,
@@ -400,7 +400,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                               ),
 
                               Text(
-                                "Advises",
+                                "Loves",
                                 style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
@@ -1024,7 +1024,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        "Claire Love",
+                                        "Loves",
                                         style: TextStyle(
                                           color: currentTabIndex != 2
                                               ? Pallet.colorSecondary
