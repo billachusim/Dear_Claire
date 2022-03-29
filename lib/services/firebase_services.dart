@@ -303,7 +303,7 @@ class FirebaseServices extends ChangeNotifier {
         .where("featured", isEqualTo: true)
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
+        .limit(50)
         .orderBy('timeLastActivity', descending: true)
         .snapshots();
   }

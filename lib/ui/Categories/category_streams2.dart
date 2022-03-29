@@ -7,15 +7,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../routes/page_router_animation.dart';
 import '../routes/routes.dart';
 
-class CategoryStreams extends StatefulWidget {
+class CategoryStreams2 extends StatefulWidget {
 
-  CategoryStreams({Key? key,}) : super(key: key);
+  CategoryStreams2({Key? key,}) : super(key: key);
 
   @override
-  _CategoryStreamsState createState() => _CategoryStreamsState();
+  _CategoryStreams2State createState() => _CategoryStreams2State();
 }
 
-class _CategoryStreamsState extends State<CategoryStreams> {
+class _CategoryStreams2State extends State<CategoryStreams2> {
 
   @override
   Widget build(BuildContext context) {
@@ -27,249 +27,6 @@ class _CategoryStreamsState extends State<CategoryStreams> {
           scrollDirection: Axis.horizontal,
           children: <Widget>[
 
-
-            GestureDetector(onTap: (){
-              setState(() {
-                String featuredCategory1 = "childhood and memory";
-                String thisCategory = featuredCategory1;
-                PageRouter.gotoWidget(
-                    CategorySessions(visitedCategory: thisCategory,),
-                    context);
-              });
-            },
-              child: Container(
-                width: 90.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(15)
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 3,),
-                    Align(
-                        alignment: Alignment.center,
-                        child: Text("Childhood",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontStyle: FontStyle.italic,
-                            fontSize: 17,
-                          ),
-                        )),
-                  ],
-                ),
-              ),
-            ),
-
-
-            GestureDetector(onTap: (){
-              setState(() {
-                String featuredCategory1 = "love and relationship";
-                String thisCategory = featuredCategory1;
-                PageRouter.gotoWidget(
-                    CategorySessions(visitedCategory: thisCategory,),
-                    context);
-              });
-            },
-              child: Container(
-                width: 90.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(15)
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 3,),
-                    Align(
-                        alignment: Alignment.center,
-                        child: Text("Love",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontStyle: FontStyle.italic,
-                            fontSize: 17,
-                          ),
-                        )),
-                  ],
-                ),
-              ),
-            ),
-
-            GestureDetector(onTap: (){
-              setState(() {
-                String featuredCategory2 = "school and education";
-                String thisCategory = featuredCategory2;
-                PageRouter.gotoWidget(
-                    CategorySessions(visitedCategory: thisCategory,),
-                    context);
-              });
-            },
-              child: Container(
-                width: 90.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(15)
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 3,),
-                    Align(
-                        alignment: Alignment.center,
-                        child: Text("School",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontStyle: FontStyle.italic,
-                            fontSize: 17,
-                          ),
-                        )),
-                  ],
-                ),
-              ),
-            ),
-
-
-            GestureDetector(onTap: (){
-              setState(() {
-                String featuredCategory3 = "hate and abuse";
-                String thisCategory = featuredCategory3;
-                PageRouter.gotoWidget(
-                    CategorySessions(visitedCategory: thisCategory,),
-                    context);
-              });
-            },
-              child: Container(
-                width: 90.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.purple,
-                    borderRadius: BorderRadius.circular(15)
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 3,),
-                    Align(
-                        alignment: Alignment.center,
-                        child: Text("Hate",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontStyle: FontStyle.italic,
-                            fontSize: 17,
-                          ),
-                        )),
-                  ],
-                ),
-              ),
-            ),
-
-
-            GestureDetector(onTap: (){
-              setState(() {
-                String featuredCategory4 = "happy and blessed";
-                String thisCategory = featuredCategory4;
-                PageRouter.gotoWidget(
-                    CategorySessions(visitedCategory: thisCategory,),
-                    context);
-              });
-            },
-              child: Container(
-                width: 90.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.amber,
-                    borderRadius: BorderRadius.circular(15)
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 3,),
-                    Align(
-                        alignment: Alignment.center,
-                        child: Text("Happy",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontStyle: FontStyle.italic,
-                            fontSize: 17,
-                          ),
-                        )),
-                  ],
-                ),
-              ),
-            ),
-
-
-            GestureDetector(onTap: (){
-              setState(() {
-                String featuredCategory5 = "sad and depressed";
-                String thisCategory = featuredCategory5;
-                PageRouter.gotoWidget(
-                    CategorySessions(visitedCategory: thisCategory,),
-                    context);
-              });
-            },
-              child: Container(
-                width: 90.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.indigo,
-                    borderRadius: BorderRadius.circular(15)
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 3,),
-                    Align(
-                        alignment: Alignment.center,
-                        child: Text("Depression",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontStyle: FontStyle.italic,
-                            fontSize: 17,
-                          ),
-                        )),
-                  ],
-                ),
-              ),
-            ),
-
-
-            GestureDetector(onTap: (){
-              setState(() {
-                String featuredCategory1 = "sex and dating";
-                String thisCategory = featuredCategory1;
-                PageRouter.gotoWidget(
-                    CategorySessions(visitedCategory: thisCategory,),
-                    context);
-              });
-            },
-              child: Container(
-                width: 90.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(15)
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 3,),
-                    Align(
-                        alignment: Alignment.center,
-                        child: Text("Sex",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontStyle: FontStyle.italic,
-                            fontSize: 17,
-                          ),
-                        )),
-                  ],
-                ),
-              ),
-            ),
 
 
             GestureDetector(onTap: (){
@@ -516,6 +273,249 @@ class _CategoryStreamsState extends State<CategoryStreams> {
               ),
             ),
 
+
+            GestureDetector(onTap: (){
+              setState(() {
+                String featuredCategory1 = "childhood and memory";
+                String thisCategory = featuredCategory1;
+                PageRouter.gotoWidget(
+                    CategorySessions(visitedCategory: thisCategory,),
+                    context);
+              });
+            },
+              child: Container(
+                width: 90.0,
+                margin: EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(15)
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 3,),
+                    Align(
+                        alignment: Alignment.center,
+                        child: Text("Childhood",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.italic,
+                            fontSize: 17,
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+
+
+            GestureDetector(onTap: (){
+              setState(() {
+                String featuredCategory1 = "love and relationship";
+                String thisCategory = featuredCategory1;
+                PageRouter.gotoWidget(
+                    CategorySessions(visitedCategory: thisCategory,),
+                    context);
+              });
+            },
+              child: Container(
+                width: 90.0,
+                margin: EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(15)
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 3,),
+                    Align(
+                        alignment: Alignment.center,
+                        child: Text("Love",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.italic,
+                            fontSize: 17,
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+
+            GestureDetector(onTap: (){
+              setState(() {
+                String featuredCategory2 = "school and education";
+                String thisCategory = featuredCategory2;
+                PageRouter.gotoWidget(
+                    CategorySessions(visitedCategory: thisCategory,),
+                    context);
+              });
+            },
+              child: Container(
+                width: 90.0,
+                margin: EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(15)
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 3,),
+                    Align(
+                        alignment: Alignment.center,
+                        child: Text("School",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.italic,
+                            fontSize: 17,
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+
+
+            GestureDetector(onTap: (){
+              setState(() {
+                String featuredCategory3 = "hate and abuse";
+                String thisCategory = featuredCategory3;
+                PageRouter.gotoWidget(
+                    CategorySessions(visitedCategory: thisCategory,),
+                    context);
+              });
+            },
+              child: Container(
+                width: 90.0,
+                margin: EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                    color: Colors.purple,
+                    borderRadius: BorderRadius.circular(15)
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 3,),
+                    Align(
+                        alignment: Alignment.center,
+                        child: Text("Hate",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.italic,
+                            fontSize: 17,
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+
+
+            GestureDetector(onTap: (){
+              setState(() {
+                String featuredCategory4 = "happy and blessed";
+                String thisCategory = featuredCategory4;
+                PageRouter.gotoWidget(
+                    CategorySessions(visitedCategory: thisCategory,),
+                    context);
+              });
+            },
+              child: Container(
+                width: 90.0,
+                margin: EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(15)
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 3,),
+                    Align(
+                        alignment: Alignment.center,
+                        child: Text("Happy",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.italic,
+                            fontSize: 17,
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+
+
+            GestureDetector(onTap: (){
+              setState(() {
+                String featuredCategory5 = "sad and depressed";
+                String thisCategory = featuredCategory5;
+                PageRouter.gotoWidget(
+                    CategorySessions(visitedCategory: thisCategory,),
+                    context);
+              });
+            },
+              child: Container(
+                width: 90.0,
+                margin: EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                    color: Colors.indigo,
+                    borderRadius: BorderRadius.circular(15)
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 3,),
+                    Align(
+                        alignment: Alignment.center,
+                        child: Text("Depression",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.italic,
+                            fontSize: 17,
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+
+
+            GestureDetector(onTap: (){
+              setState(() {
+                String featuredCategory1 = "sex and dating";
+                String thisCategory = featuredCategory1;
+                PageRouter.gotoWidget(
+                    CategorySessions(visitedCategory: thisCategory,),
+                    context);
+              });
+            },
+              child: Container(
+                width: 90.0,
+                margin: EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(15)
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 3,),
+                    Align(
+                        alignment: Alignment.center,
+                        child: Text("Sex",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.italic,
+                            fontSize: 17,
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       );
