@@ -33,8 +33,6 @@ class _FeaturedPageState extends State<FeaturedPage> {
         body: Column(
           children: [
 
-            CategoryStreams(),
-
            TheFeaturedSessions(),
 
             CategoryStreams2(),

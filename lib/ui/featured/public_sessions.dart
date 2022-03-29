@@ -60,6 +60,7 @@ class TheFeaturedSessions extends StatelessWidget {
               return Scrollbar(
                 child: ListView(
                   children: [
+                    CategoryStreams(),
                     ..._sessionList!
                         .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                         .toList(),

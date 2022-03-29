@@ -27,42 +27,6 @@ class _CategoryStreamsState extends State<CategoryStreams> {
           scrollDirection: Axis.horizontal,
           children: <Widget>[
 
-
-            GestureDetector(onTap: (){
-              setState(() {
-                String featuredCategory1 = "childhood and memory";
-                String thisCategory = featuredCategory1;
-                PageRouter.gotoWidget(
-                    CategorySessions(visitedCategory: thisCategory,),
-                    context);
-              });
-            },
-              child: Container(
-                width: 90.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(15)
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 3,),
-                    Align(
-                        alignment: Alignment.center,
-                        child: Text("Childhood",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontStyle: FontStyle.italic,
-                            fontSize: 17,
-                          ),
-                        )),
-                  ],
-                ),
-              ),
-            ),
-
-
             GestureDetector(onTap: (){
               setState(() {
                 String featuredCategory1 = "love and relationship";
@@ -504,6 +468,40 @@ class _CategoryStreamsState extends State<CategoryStreams> {
                     Align(
                         alignment: Alignment.center,
                         child: Text("Single",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.italic,
+                            fontSize: 17,
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+
+            GestureDetector(onTap: (){
+              setState(() {
+                String featuredCategory1 = "childhood and memory";
+                String thisCategory = featuredCategory1;
+                PageRouter.gotoWidget(
+                    CategorySessions(visitedCategory: thisCategory,),
+                    context);
+              });
+            },
+              child: Container(
+                width: 90.0,
+                margin: EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(15)
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 3,),
+                    Align(
+                        alignment: Alignment.center,
+                        child: Text("Childhood",
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
