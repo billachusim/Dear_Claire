@@ -350,6 +350,19 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     return Obx(
       () => SafeArea(
         child: Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            backgroundColor:
+            Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
+            title: Text("Start A Diary Session",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 22,
+              color: Pallet.colorWhite,
+            ),
+            ),
+            elevation: 0,
+          ),
           resizeToAvoidBottomInset: false,
           backgroundColor:
               Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
