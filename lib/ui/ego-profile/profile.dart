@@ -367,13 +367,35 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Text(
-                                advisesCount ?? "---",
-                                style: TextStyle(
-                                    fontSize: 23,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.black),
-                              ),
+
+
+
+                            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                              future: FirebaseFirestore.instance
+                              .collection("user_comment_counters")
+                              .doc(userModel.userId)
+                              .get(),
+                            builder: (_, snapshot) {
+                              if (snapshot.hasData) {
+                                var data = snapshot.data!.data();
+                                var advisesCount = data!["numberOfComments"];
+                               // _advisesCount = advisesCount;
+                                debugPrint(
+                                    " This is the COUNT of advises given by this user ${advisesCount.toString()}");
+                                return  Text(
+                                  advisesCount.toString() ?? "---",
+                                  style: TextStyle(
+                                      fontSize: 23,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black),
+                                );
+                              }
+
+                              return Center(child: CircularProgressIndicator());
+                            },
+                          ),
+
+
 
                               Text(
                                 "Advises",

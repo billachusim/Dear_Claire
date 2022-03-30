@@ -79,6 +79,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   User? currentUser = FirebaseAuth.instance.currentUser;
   VisitedUserModel? visitedUser = VisitedUserModel();
   String? visitedUsersID;
+  String? _visitedUsersId;
   List<Session>? _sessionList = [];
 
 
@@ -184,12 +185,11 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
   Future<VisitedEgoProfileInfo> getVisitedUserEgoProfileInfo()async{
     VisitedEgoProfileInfo visitedProfileInfo = VisitedEgoProfileInfo();
-    //visitedUsersID = VisitedUserEgoProfilePage(visitedUserModel: visitedUsersID) as String;
-
-    //get user profile Info
+    _visitedUsersId = widget.visitedUsersID;
+    visitedUser = await getVisitedUserInfo();
     //visitedUserInfo = await getVisitedUserInfo();
 
-    //visitedProfileInfo = VisitedEgoProfileInfo();
+    visitedProfileInfo = VisitedEgoProfileInfo(visitedUserModel: visitedUser);
 
 
 
@@ -223,7 +223,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
     try {
       final _value = await FirebaseFirestore.instance
-          .collection(AppString.appFeaturedSessionsComments)
+          .collection("user_comment_counters")
           .where("userId", isEqualTo: widget.visitedUsersID)
       //  .limit(AppString.appSessionLength)
           .get();
@@ -271,9 +271,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
     visitedProfileInfo = VisitedEgoProfileInfo(
       visitedUserModel: visitedUser,
-     // sessionCount: _sessionList.length.toString(),
+      sessionCount: _sessionList.length.toString(),
       advisesCount: _advisesList.length.toString(),
-     // followCount: _followsList.length.toString(),
+      followCount: _followsList.length.toString(),
     );
     return visitedProfileInfo;
 
@@ -402,7 +402,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              followCount ?? "---",
+                              advisesCount ?? "---",
                               style: TextStyle(
                                   fontSize: 23,
                                   fontWeight: FontWeight.w700,
@@ -410,7 +410,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                             ),
 
                             Text(
-                              "Follows",
+                              "Advises",
                               style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -426,7 +426,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              advisesCount ?? "---",
+                              followCount ?? "---",
                               style: TextStyle(
                                   fontSize: 23,
                                   fontWeight: FontWeight.w700,
@@ -434,7 +434,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                             ),
 
                             Text(
-                              "Advises",
+                              "Loves",
                               style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -796,9 +796,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
             Material(
               elevation: 10,
               child: FutureBuilder(
-                  future: getVisitedUserInfo(),
+                  future: getVisitedUserEgoProfileInfo(),
                   builder:
-                      (context, AsyncSnapshot<VisitedUserModel> visitedProfileInfo) {
+                      (context, AsyncSnapshot<VisitedEgoProfileInfo> visitedProfileInfo) {
                     if (visitedProfileInfo.connectionState ==
                         ConnectionState.waiting) {
                       return RotateImage(50, 50);
@@ -813,12 +813,12 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
                     if (visitedProfileInfo.hasData) {
                       return _visitedPageHeader(
-                        userName: visitedProfileInfo.data?.nickname,
-                       // sessionCount: visitedProfileInfo.data!.sessionCount,
-                      //  advisesCount: visitedProfileInfo.data!.advisesCount,
-                       // followCount: visitedProfileInfo.data!.followCount,
+                        userName: visitedProfileInfo.data?.visitedUserModel?.nickname,
+                        sessionCount: visitedProfileInfo.data!.sessionCount,
+                        advisesCount: visitedProfileInfo.data!.advisesCount,
+                        followCount: visitedProfileInfo.data!.followCount,
                         userType: visitedProfileInfo.data?.userType,
-                        avatarUrl: visitedProfileInfo.data?.avatarUrl,
+                        avatarUrl: visitedProfileInfo.data?.visitedUserModel?.avatarUrl,
                       );
                     }
                     return Container();

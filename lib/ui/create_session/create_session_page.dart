@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/Admob/ad_state.dart';
 import 'package:dear_claire/data/models/session_model.dart';
 import 'package:dear_claire/services/firebase_services.dart';
@@ -115,6 +116,71 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     super.dispose();
     _interstitialAd?.dispose();
   }
+
+  /// Increase session count when user creates new session.
+
+  Future<void> incrementSessionCount() async {
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser!.uid)
+        .update({
+      'sessionCount': FieldValue.increment(1),
+    },
+    //SetOptions(merge: true),
+    );
+    logger.d('Successfully increased session count');
+    print('Session Count is: $FieldValue');
+
+  }
+
+  /// Increase advise counter when user creates new comment.
+
+  Future<void> incrementAdviseCount() async {
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser?.uid)
+        .set({
+      'adviseCount': FieldValue.increment(1),
+    },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully increased advise count');
+    print('Session Count is: $FieldValue');
+
+  }
+
+  /// Increase total love count when user creates new session or comment.
+
+  Future<void> incrementTotalLoveCount() async {
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser?.uid)
+        .set({
+      'totalLoveCount': FieldValue.increment(1),
+    },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully increased total love count');
+    print('Session Count is: $FieldValue');
+
+  }
+
+  /// Increase current love count when user creates new session or comment.
+
+  Future<void> incrementCurrentLoveCount() async {
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser?.uid)
+        .set({
+      'currentLoveCount': FieldValue.increment(1),
+    },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully saved new nickname');
+    print('Session Count is: $FieldValue');
+
+  }
+
 
 //show up when user clicks on the FAB to create a session
   Future<void> _showCardDialog() async {
@@ -870,7 +936,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     sessionObject.message = sessionTextEditingController.text;
     sessionObject.colorHex = Constant.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
     sessionObject.sessionId = uuid.v1();
-    sessionObject.userId = currentUser!.uid;
+    sessionObject.userId = userModel.userId;
     sessionObject.moodId = Constant.USER_SESSION_MOODS.indexOf(c.sessionMood.value);
     sessionObject.location = _location;
 
@@ -884,8 +950,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     navigateToNewSession(await _firebaseServices.getSingleSession(
         sessionId: sessionObject.sessionId));
 
-    // navigateToNewSession(await _firebaseServices.getSingleSession(
-    //     sessionId: sessionObject.sessionId));
+
   }
 
   InterstitialAd? _interstitialAd;

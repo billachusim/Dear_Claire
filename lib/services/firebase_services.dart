@@ -465,6 +465,23 @@ class FirebaseServices extends ChangeNotifier {
         .add(map)
         .whenComplete(() =>
             notificationService.sendNotification(_notificationModel.toJson()));
+    incrementAdviseCount();
+
+  }
+
+  /// Increase advise counter when user creates new comment.
+
+  Future<void> incrementAdviseCount() async {
+    FirebaseFirestore.instance
+        .collection("user_comment_counters")
+        .doc(userModel.userId)
+        .update({
+      'numberOfComments': FieldValue.increment(1),
+    },
+    );
+    logger.d('Successfully increased advise count');
+    print('Session Count is: $FieldValue');
+
   }
 
   /// [featured Session Comments] -> get users featured sessions comments
@@ -549,25 +566,6 @@ class FirebaseServices extends ChangeNotifier {
   }
 
   /// Authenticate the AlterEgo in
-  Future<bool> signInAlterEgo(String email, String secretCode) async {
-    try {
-      await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: secretCode);
-      return true;
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'wrong-password') {
-        showToast(
-            'The password is invalid or the user does not have a password.');
-      } else if (e.code == 'wrong-email') {
-        showToast('The email is invalid or the user does not have an email.');
-      }
-      print(e);
-      return false;
-    } catch (e) {
-      print(e);
-      return false;
-    }
-  }
 
   getUserAlterEgo(BuildContext context, String alterEgoId,
       String alterEgoAccessCode) async {
@@ -668,6 +666,10 @@ class FirebaseServices extends ChangeNotifier {
       final avatarUrl = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fpink_girl_mask.png?alt=media&token=ec5ed423-a990-4e2c-84cf-e2019621455f";
       final userId = _user.user?.uid;
       final gender = _gender;
+      final sessionCount = "";
+      final adviseCount = "";
+      final totalLoveCount = "";
+      final currentLoveCount = "";
       FirebaseFirestore.instance
           .collection("users")
           .doc(_user.user!.uid)
@@ -684,6 +686,10 @@ class FirebaseServices extends ChangeNotifier {
         "timeLastUnlocked": timeLastUnlocked,
         "timeRegistered": timeRegistered,
         "userType": userType,
+        "sessionCount": sessionCount,
+        "adviseCount": adviseCount,
+        "totalLoveCount": totalLoveCount,
+        "currentLoveCount": currentLoveCount,
 
       },
         //SetOptions(merge: true)
@@ -1049,22 +1055,6 @@ class FirebaseServices extends ChangeNotifier {
         " This is the number of followers for this user ${query.docs}");
   }
 
-  ///* get session counter by user Id
-  ///*/
-
-  Future<void> getUserSessionCounter() async {
-    _usersID = await getUsersId();
-    final query = await _firebaseFirestore
-        .collection(AppString.COLLECTION_USER_SESSION_COUNTERS)
-        .where("userId", isEqualTo: _usersID)
-      //  .limit(50)
-        .get();
-
-
-    debugPrint(
-        " This is the number of session for this user ${query.docs}");
-  }
-
 
 
 
@@ -1111,7 +1101,7 @@ class FirebaseServices extends ChangeNotifier {
 
     try {
     final _value = await _firebaseFirestore
-        .collection(AppString.appFeaturedSessionsComments)
+        .collection("user_comment_counters")
         .where("userId", isEqualTo: _usersID)
       //  .limit(AppString.appSessionLength)
         .get();

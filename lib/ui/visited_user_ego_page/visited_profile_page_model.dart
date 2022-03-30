@@ -7,12 +7,17 @@ class VisitedEgoProfileInfo{
   var followCount;
   var advisesCount;
   var userType;
+  var totalLoveCount;
+  var currentLoveCount;
 
   VisitedEgoProfileInfo(
       { this.visitedUserModel,
         this.sessionCount,
         this.followCount,
         this.advisesCount,
-        this.userType});
+        this.userType,
+        this.totalLoveCount,
+        this.currentLoveCount,
+      });
 
 }

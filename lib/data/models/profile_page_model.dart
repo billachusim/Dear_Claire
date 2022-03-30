@@ -7,12 +7,17 @@ class EgoProfileInfo{
    var followCount;
    var advisesCount;
    var userType;
+   var totalLoveCount;
+   var currentLoveCount;
 
   EgoProfileInfo(
       { this.userModel,
        this.sessionCount,
        this.followCount,
        this.advisesCount,
-       this.userType});
+       this.userType,
+       this.totalLoveCount,
+       this.currentLoveCount,
+      });
 
 }

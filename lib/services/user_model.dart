@@ -14,6 +14,10 @@ class UserModel {
   Timestamp? timeRegistered;
   String? userId;
   String? userType;
+  String? sessionCount;
+  String? adviseCount;
+  String? totalLoveCount;
+  String? currentLoveCount;
 
   UserModel({
     this.alterEgoAccessCode,
@@ -28,6 +32,10 @@ class UserModel {
     this.gender,
     this.userId,
     this.userType,
+    this.sessionCount,
+    this.adviseCount,
+    this.totalLoveCount,
+    this.currentLoveCount,
   });
 
   factory UserModel.fromJson(json) {
@@ -44,6 +52,10 @@ class UserModel {
       timeRegistered: json['timeRegistered'] ?? '',
       userId: json['userId'] ?? '',
       userType: json['userType'] ?? '',
+      sessionCount: json['sessionCount'] ?? '',
+      adviseCount: json['adviseCount'] ?? '',
+      totalLoveCount: json['totalLoveCount'] ?? '',
+      currentLoveCount: json['currentLoveCount'] ?? '',
     );
   }
 
@@ -61,6 +73,10 @@ class UserModel {
       timeRegistered: json['timeRegistered'] ?? '',
       userId: json['userId'] ?? '',
       userType: json['userType'] ?? '',
+      sessionCount: json['sessionCount'] ?? '',
+      adviseCount: json['adviseCount'] ?? '',
+      totalLoveCount: json['totalLoveCount'] ?? '',
+      currentLoveCount: json['currentLoveCount'] ?? '',
     );
   }
 
@@ -77,5 +93,9 @@ class UserModel {
         'timeRegistered': timeRegistered,
         'userId': userId,
         'userType': userType,
+        'sessionCount': sessionCount,
+        'adviseCount': adviseCount,
+        'totalLoveCount': totalLoveCount,
+        'currentLoveCount': currentLoveCount,
   };
 }

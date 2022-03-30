@@ -7,6 +7,7 @@ import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:dear_claire/widgets/toast.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -37,6 +38,8 @@ class _EgoModeSessionDetailState
   _EgoModeSessionDetailState(this.featuredSessionModel);
 
   List<CommentSessionModel> _commentSessionList = [];
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
 
   // Admob Ad Units.
   late BannerAd egoModeSessionDetailTopBanner;
@@ -79,6 +82,23 @@ class _EgoModeSessionDetailState
         )..load();
       });
     });
+  }
+
+
+
+  /// Increase advise counter when user creates new comment.
+
+  Future<void> incrementAdviseCount() async {
+    FirebaseFirestore.instance
+        .collection("user_comment_counters")
+        .doc(currentUser?.uid)
+        .update({
+      "numberOfComments": FieldValue.increment(1),
+    },
+    );
+    logger.d('Successfully increased advise count');
+    print('Session Count is: $FieldValue');
+
   }
 
   @override
@@ -184,8 +204,11 @@ class _EgoModeSessionDetailState
     firebaseServices.addComment(
         title: session.title ?? '',
         docId: session.sessionId!,
-        sender: _userModel.userType == 'ADMIN' ? 'Claire' : _userModel.nickname!,
+        sender: _userModel.userType == 'ADMIN' ? 'Claire' :
+        _userModel.userType == 'SUPER_ADMIN' ? 'Claire' :
+        _userModel.nickname!,
         map: _commentModel.toJson());
+    incrementAdviseCount();
   }
 
   void _updateReaction(
