@@ -12,8 +12,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../routes/page_router_animation.dart';
+import '../../visited_user_ego_page/visited_user_ego_page.dart';
+
 class PostDetailsWidget extends StatelessWidget {
   String? sessionId;
+  late String visitedUsersID;
+  late String visitedEgoName;
 
   PostDetailsWidget({Key? key, required this.sessionId}) : super(key: key);
 
@@ -41,26 +46,38 @@ class PostDetailsWidget extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          CachedNetworkImage(
-                              width: 48,
-                              height: 48,
-                              imageUrl: _session.userAvatarUrl!,
-                              imageBuilder: (context, imageProvider) => Container(
-                                    decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                        image: imageProvider,
-                                        fit: BoxFit.fill,
+                          GestureDetector(
+                            onTap: (){
+                              visitedUsersID = _session.userId!;
+                              visitedEgoName = _session.userNickname!;
+                              String thisEgoName = _session.userNickname.toString();
+                              String thisUser = _session.userId.toString();
+                              PageRouter.gotoWidget(
+                                  VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                  context);
+                              print("Visited User ID::: $thisEgoName");
+                            },
+                            child: CachedNetworkImage(
+                                width: 48,
+                                height: 48,
+                                imageUrl: _session.userAvatarUrl!,
+                                imageBuilder: (context, imageProvider) => Container(
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: imageProvider,
+                                          fit: BoxFit.fill,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                              placeholder: (context, url) =>
-                                  Center(child: CircularProgressIndicator()),
-                              errorWidget: (context, url, error) => Image.asset(
-                                    "assets/images/brown_boy_mask.png",
-                                    width: 48,
-                                    height: 48,
-                                  ) //Icon(Icons.error),
-                              ),
+                                placeholder: (context, url) =>
+                                    Center(child: CircularProgressIndicator()),
+                                errorWidget: (context, url, error) => Image.asset(
+                                      "assets/images/brown_boy_mask.png",
+                                      width: 48,
+                                      height: 48,
+                                    ) //Icon(Icons.error),
+                                ),
+                          ),
                           SizedBox(
                             width: 8,
                           ),
@@ -69,13 +86,25 @@ class PostDetailsWidget extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(_session.userNickname!,
-                                    textAlign: TextAlign.start,
-                                    maxLines: 1,
-                                    style: GoogleFonts.lato(
-                                        fontSize: 18.0,
-                                        color: Pallet.colorWhite,
-                                        fontWeight: FontWeight.w700)),
+                                GestureDetector(
+                                  onTap: (){
+                                    visitedUsersID = _session.userId!;
+                                    visitedEgoName = _session.userNickname!;
+                                    String thisEgoName = _session.userNickname.toString();
+                                    String thisUser = _session.userId.toString();
+                                    PageRouter.gotoWidget(
+                                        VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                        context);
+                                    print("Visited User ID::: $thisEgoName");
+                                  },
+                                  child: Text(_session.userNickname!,
+                                      textAlign: TextAlign.start,
+                                      maxLines: 1,
+                                      style: GoogleFonts.lato(
+                                          fontSize: 18.0,
+                                          color: Pallet.colorWhite,
+                                          fontWeight: FontWeight.w700)),
+                                ),
                                 SizedBox(
                                   height: 5,
                                 ),
