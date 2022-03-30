@@ -378,12 +378,12 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             builder: (_, snapshot) {
                               if (snapshot.hasData) {
                                 var data = snapshot.data!.data();
-                                var advisesCount = data!["numberOfComments"];
+                                var advisesCount = data?["numberOfComments"] ?? "0";
                                // _advisesCount = advisesCount;
                                 debugPrint(
                                     " This is the COUNT of advises given by this user ${advisesCount.toString()}");
                                 return  Text(
-                                  advisesCount.toString() ?? "---",
+                                  advisesCount.toString(),
                                   style: TextStyle(
                                       fontSize: 23,
                                       fontWeight: FontWeight.w700,

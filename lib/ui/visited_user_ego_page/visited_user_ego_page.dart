@@ -401,12 +401,31 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              advisesCount ?? "---",
-                              style: TextStyle(
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.black),
+
+
+                            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                              future: FirebaseFirestore.instance
+                                  .collection("user_comment_counters")
+                                  .doc(widget.visitedUsersID)
+                                  .get(),
+                              builder: (_, snapshot) {
+                                if (snapshot.hasData) {
+                                  var data = snapshot.data!.data();
+                                  var advisesCount = data?["numberOfComments"] ?? "0";
+                                  // _advisesCount = advisesCount;
+                                  debugPrint(
+                                      " This is the COUNT of advises given by this visited user ${advisesCount.toString()}");
+                                  return  Text(
+                                    advisesCount.toString(),
+                                    style: TextStyle(
+                                        fontSize: 23,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black),
+                                  );
+                                }
+
+                                return Center(child: CircularProgressIndicator());
+                              },
                             ),
 
                             Text(
@@ -817,7 +836,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                         sessionCount: visitedProfileInfo.data!.sessionCount,
                         advisesCount: visitedProfileInfo.data!.advisesCount,
                         followCount: visitedProfileInfo.data!.followCount,
-                        userType: visitedProfileInfo.data?.userType,
+                        userType: visitedProfileInfo.data?.visitedUserModel?.userType,
                         avatarUrl: visitedProfileInfo.data?.visitedUserModel?.avatarUrl,
                       );
                     }
