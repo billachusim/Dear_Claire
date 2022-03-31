@@ -363,7 +363,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
             ),
             elevation: 0,
           ),
-          resizeToAvoidBottomInset: false,
           backgroundColor:
               Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
           body: isLoading

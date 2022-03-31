@@ -7,6 +7,7 @@ class Mood {
 
   static final MOODS = [
     Mood(-1, "💕"),
+    Mood(0, "💕"),
     Mood(1, "is feeling happy \uD83D\uDE0A"),
     Mood(2, "is feeling sad \uD83D\uDE14"),
     Mood(3, "is feeling excited \uD83D\uDE01"),
