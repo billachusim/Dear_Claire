@@ -10,10 +10,15 @@ import 'package:dear_claire/widgets/thanks_button.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../ui/routes/page_router_animation.dart';
+import '../ui/visited_user_ego_page/visited_user_ego_page.dart';
+
 class CommentWidget extends StatelessWidget {
   CommentSessionModel? commentSessionModel;
   final Function()? onPressed;
   final Function()? onShare;
+  late String visitedUsersID;
+  late String visitedEgoName;
   CommentWidget(
       {Key? key,
       this.onPressed,
@@ -36,26 +41,38 @@ class CommentWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CachedNetworkImage(
-                  width: 40,
-                  height: 40,
-                  imageUrl: commentSessionModel!.userAvatarUrl ?? '',
-                  imageBuilder: (context, imageProvider) => Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: imageProvider,
-                            fit: BoxFit.fill,
+              GestureDetector(
+                onTap: (){
+                  visitedUsersID = commentSessionModel!.userId!;
+                  visitedEgoName = commentSessionModel!.userNickname!;
+                  String thisEgoName = commentSessionModel!.userNickname.toString();
+                  String thisUser = commentSessionModel!.userId.toString();
+                  PageRouter.gotoWidget(
+                      VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                      context);
+                  print("Visited User ID::: $thisEgoName");
+                },
+                child: CachedNetworkImage(
+                    width: 40,
+                    height: 40,
+                    imageUrl: commentSessionModel!.userAvatarUrl ?? '',
+                    imageBuilder: (context, imageProvider) => Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: imageProvider,
+                              fit: BoxFit.fill,
+                            ),
                           ),
                         ),
-                      ),
-                  placeholder: (context, url) =>
-                      Center(child: CircularProgressIndicator()),
-                  errorWidget: (context, url, error) => Image.asset(
-                        "assets/images/brown_boy_mask.png",
-                        width: 40,
-                        height: 40,
-                      ) //Icon(Icons.error),
-                  ),
+                    placeholder: (context, url) =>
+                        Center(child: CircularProgressIndicator()),
+                    errorWidget: (context, url, error) => Image.asset(
+                          "assets/images/brown_boy_mask.png",
+                          width: 40,
+                          height: 40,
+                        ) //Icon(Icons.error),
+                    ),
+              ),
               SizedBox(
                 width: 4,
               ),
@@ -64,13 +81,25 @@ class CommentWidget extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(commentSessionModel!.userNickname!,
-                        textAlign: TextAlign.start,
-                        maxLines: 1,
-                        style: GoogleFonts.lato(
-                            fontSize: 14.0,
-                            color: Pallet.colorBlack,
-                            fontWeight: FontWeight.w800)),
+                    GestureDetector(
+                      onTap: (){
+                        visitedUsersID = commentSessionModel!.userId!;
+                        visitedEgoName = commentSessionModel!.userNickname!;
+                        String thisEgoName = commentSessionModel!.userNickname.toString();
+                        String thisUser = commentSessionModel!.userId.toString();
+                        PageRouter.gotoWidget(
+                            VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                            context);
+                        print("Visited User ID::: $thisEgoName");
+                      },
+                      child: Text(commentSessionModel!.userNickname!,
+                          textAlign: TextAlign.start,
+                          maxLines: 1,
+                          style: GoogleFonts.lato(
+                              fontSize: 14.0,
+                              color: Pallet.colorBlack,
+                              fontWeight: FontWeight.w800)),
+                    ),
                     SizedBox(
                       height: 2,
                     ),

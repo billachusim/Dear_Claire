@@ -275,22 +275,21 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                           session: element, sender: _userModel.nickname ?? '');
                     }),
                 new Spacer(),
+
+                if (currentUser?.email == "thesocialfaculty@gmail.com")
                 GestureDetector(
                   onTap: () {
                     if (element.featured == false)
                       featureAlertDialog(context);
                     else unfeatureAlertDialog(context);
                   },
-                  child: Visibility(
-                    visible: currentUser?.email == "thesocialfaculty@gmail.com",
-                    child: Container(
-                      child: Visibility(
-                        visible: element.repliesEnabled == true,
-                        child: Icon(
-                          element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
-                          color: Pallet.colorWhite,
-                          size: 26,
-                        ),
+                  child: Container(
+                    child: Visibility(
+                      visible: element.repliesEnabled == true,
+                      child: Icon(
+                        element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
+                        color: Pallet.colorWhite,
+                        size: 26,
                       ),
                     ),
                   ),

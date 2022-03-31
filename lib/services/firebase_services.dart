@@ -828,7 +828,7 @@ class FirebaseServices extends ChangeNotifier {
   /// Get user info
 
   Future<UserModel> getUserInfo() async {
-    _usersID = await getUsersId();
+    _usersID = currentUser?.uid;
     DocumentSnapshot response = await _firebaseFirestore
         .collection(AppString.users)
         .doc(_usersID)
@@ -1061,13 +1061,13 @@ class FirebaseServices extends ChangeNotifier {
 
   Future<EgoProfileInfo> getEgoProfileInfo()async{
     EgoProfileInfo profileInfo= EgoProfileInfo();
-    _usersID = await getUsersId();
+    _usersID = currentUser?.uid;
 
 
     //get user profile Info
     user = await getUserInfo();
 
-    profileInfo= EgoProfileInfo(userModel: user);
+    profileInfo = EgoProfileInfo(userModel: user);
 
 
 
