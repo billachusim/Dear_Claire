@@ -359,7 +359,7 @@ class FirebaseServices extends ChangeNotifier {
           .where("flagged", isEqualTo: false)
           .where("archived", isEqualTo: false)
           .limit(AppString.appSessionLength)
-          .orderBy('timeLastActivity', descending: false)
+          .orderBy('timeLastActivity', descending: true)
           .get();
 
       _value.docs
@@ -411,7 +411,6 @@ class FirebaseServices extends ChangeNotifier {
           .where("respondentUserId", isEqualTo: userModel.userId)
           .orderBy('timeLastActivity', descending: true)
           .limit(AppString.appSessionLength)
-          //.startAfter(['timeLastActivity'])
           .get();
 
       _value.docs
