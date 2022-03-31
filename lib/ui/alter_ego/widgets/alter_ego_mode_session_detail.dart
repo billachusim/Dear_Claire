@@ -10,9 +10,12 @@ import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
 import 'package:dear_claire/widgets/comment_widget.dart';
 import 'package:dear_claire/widgets/toast.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+
+import '../../../services/firebase_services.dart';
 
 class AlterEgoModeSessionDetail extends StatefulWidget {
   var featuredSessionModel;
@@ -31,6 +34,8 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
   _AlterEgoModeSessionDetailState(this.featuredSessionModel);
 
   List<CommentSessionModel> _commentSessionList = [];
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
 
 
   // Admob Ad Units.
@@ -177,8 +182,46 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     firebaseServices.addComment(
         title: session.title ?? '',
         docId: session.sessionId!,
-        sender: _userModel.userType == 'ADMIN' ? 'Claire' : _userModel.nickname!,
+        sender: _userModel.userType == 'ADMIN'? 'Claire' :
+        _userModel.userType == 'SUPER_ADMIN'? 'Claire' :
+        _userModel.nickname!,
         map: _commentModel.toJson());
+
+    updateSessionTimeLastActivity(session);
+    incrementAdviseCount();
+  }
+
+
+
+  /// Increase advise counter when user creates new comment.
+
+  Future<void> incrementAdviseCount() async {
+    FirebaseFirestore.instance
+        .collection("user_comment_counters")
+        .doc(currentUser?.uid)
+        .update({
+      "numberOfComments": FieldValue.increment(1),
+    },
+    );
+    logger.d('Successfully increased advise count');
+    print('Session Count is: $FieldValue');
+
+  }
+
+  /// Update a session's timeLastActivity when new comment is made.
+
+  Future<void> updateSessionTimeLastActivity(Session session) async {
+    FirebaseFirestore.instance
+        .collection("sessions")
+        .doc(session.sessionId)
+        .update({
+      'timeLastActivity': FieldValue.serverTimestamp(),
+      'respondentUserId': currentUser!.uid,
+    },
+    );
+    logger.d('Successfully increased advise count');
+    print('Session Count is: $FieldValue');
+
   }
 
   void _updateReaction(

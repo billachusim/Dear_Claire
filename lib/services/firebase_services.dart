@@ -19,6 +19,7 @@ import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
@@ -465,7 +466,6 @@ class FirebaseServices extends ChangeNotifier {
         .add(map)
         .whenComplete(() =>
             notificationService.sendNotification(_notificationModel.toJson()));
-    incrementAdviseCount();
 
   }
 

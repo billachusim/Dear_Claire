@@ -7,6 +7,7 @@ import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/widgets/share_button.dart';
 import 'package:dear_claire/widgets/thanks_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -19,6 +20,9 @@ class CommentWidget extends StatelessWidget {
   final Function()? onShare;
   late String visitedUsersID;
   late String visitedEgoName;
+
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
   CommentWidget(
       {Key? key,
       this.onPressed,
@@ -55,7 +59,11 @@ class CommentWidget extends StatelessWidget {
                 child: CachedNetworkImage(
                     width: 40,
                     height: 40,
-                    imageUrl: commentSessionModel!.userAvatarUrl ?? '',
+
+                    imageUrl: commentSessionModel?.isUserAdmin == true?
+                    "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691" :
+                    commentSessionModel!.userAvatarUrl ?? '',
+
                     imageBuilder: (context, imageProvider) => Container(
                           decoration: BoxDecoration(
                             image: DecorationImage(
@@ -92,14 +100,20 @@ class CommentWidget extends StatelessWidget {
                             context);
                         print("Visited User ID::: $thisEgoName");
                       },
-                      child: Text(commentSessionModel!.userNickname!,
+                      child: Text(
+                          commentSessionModel?.isUserAdmin == true?
+                      "Claire" :
+                      commentSessionModel!.userNickname ?? '',
+
                           textAlign: TextAlign.start,
                           maxLines: 1,
                           style: GoogleFonts.lato(
                               fontSize: 14.0,
                               color: Pallet.colorBlack,
-                              fontWeight: FontWeight.w800)),
+                              fontWeight: FontWeight.w800)
+                      ),
                     ),
+
                     SizedBox(
                       height: 2,
                     ),
@@ -118,13 +132,7 @@ class CommentWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Visibility(
-                      visible: false,
-                      child: ThanksButton(
-                        count: 3,
-                        onPressed: () {},
-                        color: Pallet.colorTextGray,
-                      )),
+
                   ThanksButton(
                     count: commentSessionModel!.thanks!.length,
                     onPressed: onPressed,
@@ -150,8 +158,22 @@ class CommentWidget extends StatelessWidget {
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
-          SizedBox(
-            height: 2,
+
+          Visibility(
+            visible: currentUser?.email == "thesocialfaculty@gmail.com",
+            child: Align(
+              alignment: Alignment.bottomRight,
+              child: Text(
+                  commentSessionModel!.alterEgoId!,
+
+                  textAlign: TextAlign.end,
+                  maxLines: 1,
+                  style: GoogleFonts.lato(
+                      fontSize: 12.0,
+                      color: Pallet.colorBlack,
+                      fontWeight: FontWeight.w800)
+              ),
+            ),
           ),
         ],
       ),

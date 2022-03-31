@@ -84,23 +84,6 @@ class _EgoModeSessionDetailState
     });
   }
 
-
-
-  /// Increase advise counter when user creates new comment.
-
-  Future<void> incrementAdviseCount() async {
-    FirebaseFirestore.instance
-        .collection("user_comment_counters")
-        .doc(currentUser?.uid)
-        .update({
-      "numberOfComments": FieldValue.increment(1),
-    },
-    );
-    logger.d('Successfully increased advise count');
-    print('Session Count is: $FieldValue');
-
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -208,7 +191,41 @@ class _EgoModeSessionDetailState
         _userModel.userType == 'SUPER_ADMIN' ? 'Claire' :
         _userModel.nickname!,
         map: _commentModel.toJson());
+    updateSessionTimeLastActivity(session);
     incrementAdviseCount();
+  }
+
+
+
+  /// Increase advise counter when user creates new comment.
+
+  Future<void> incrementAdviseCount() async {
+    FirebaseFirestore.instance
+        .collection("user_comment_counters")
+        .doc(currentUser?.uid)
+        .update({
+      "numberOfComments": FieldValue.increment(1),
+    },
+    );
+    logger.d('Successfully increased advise count');
+    print('Session Count is: $FieldValue');
+
+  }
+
+
+  /// Update a session's timeLastActivity when new comment is made.
+
+  Future<void> updateSessionTimeLastActivity(Session session) async {
+    FirebaseFirestore.instance
+        .collection("sessions")
+        .doc(session.sessionId)
+        .update({
+      'timeLastActivity': FieldValue.serverTimestamp(),
+    },
+    );
+    logger.d('Successfully increased advise count');
+    print('Session Count is: $FieldValue');
+
   }
 
   void _updateReaction(
