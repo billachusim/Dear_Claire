@@ -91,6 +91,7 @@ class CommentWidget extends StatelessWidget {
                   children: [
                     GestureDetector(
                       onTap: (){
+                        if (commentSessionModel?.isUserAdmin == true)
                         visitedUsersID = commentSessionModel!.userId!;
                         visitedEgoName = commentSessionModel!.userNickname!;
                         String thisEgoName = commentSessionModel!.userNickname.toString();

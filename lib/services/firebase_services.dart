@@ -827,7 +827,7 @@ class FirebaseServices extends ChangeNotifier {
   /// Get user info
 
   Future<UserModel> getUserInfo() async {
-    _usersID = currentUser?.uid;
+    _usersID = await getUsersId();
     DocumentSnapshot response = await _firebaseFirestore
         .collection(AppString.users)
         .doc(_usersID)
@@ -1060,7 +1060,7 @@ class FirebaseServices extends ChangeNotifier {
 
   Future<EgoProfileInfo> getEgoProfileInfo()async{
     EgoProfileInfo profileInfo= EgoProfileInfo();
-    _usersID = currentUser?.uid;
+    _usersID = await getUsersId();
 
 
     //get user profile Info
@@ -1126,20 +1126,20 @@ class FirebaseServices extends ChangeNotifier {
 
     try {
       final _value = await _firebaseFirestore
-          .collection(AppString.users)
+          .collection("user_follow_counters")
           .where("userId", isEqualTo: _usersID)
-      // .limit(AppString.appCommentLength)
+          //.limit(AppString.appCommentLength)
           .get();
 
 
       debugPrint(
-          " This is the number of follows given to this user ${_value.docs.length}");
+          " This is the number of LOVES earned by this user ${_value.docs.length}");
       _value.docs
           .map((e) => _followsList.addAll([UserModel.fromJson(e.data())]))
           .toList();
 
       debugPrint(
-          " This is the number of follows given to this user ${_followsList.length}");
+          " This is the number of LOVES earned by this user ${_followsList.length}");
     } catch (e) {
       debugPrint(e.toString());
     }
