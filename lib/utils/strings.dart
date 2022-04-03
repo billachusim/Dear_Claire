@@ -124,6 +124,8 @@ class AppString{
   static const String gender_label_text = "Gender";
   static const String gender_hint_text = "Female, Male or Any Other";
 
+  static const String how_claire_works_header = "Open Up 🌸 Write or record anything and get advise from Claire secret diary.";
+
   static const String alter_ego_login_note = "\nPlease enter the Claire ID and secret code received during your Clairentation; then tap the Switch button to switch into Alter Ego or Super Ego Mode.\n\nOr\n\nUse the Request Access button to register for an opportunity into the highly esteemed and clandestine Claire sisterhood of Alter Egos and Super Egos";
 
   static const String about_alter_ego_slide1 = "Become Claire and spread positive vibes to anonymous darlings all over the world.\nYou will earn convertible coins called Claire Love and grow your ego while at it.";

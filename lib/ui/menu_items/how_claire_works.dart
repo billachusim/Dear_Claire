@@ -1,6 +1,7 @@
 import 'package:dear_claire/ui/menu_items/view_model.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
+import 'package:dear_claire/utils/strings.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -68,7 +69,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                         height: 5,
                                       ),
                                       Text(
-                                          "Open Up 🌸 Write or record anything and get advse from Claire secret diary.",
+                                          AppString.how_claire_works_header,
                                           style: GoogleFonts.lato(
                                               fontSize: 15.0,
                                               color: Pallet.colorWhite,
@@ -120,7 +121,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                       height: 5,
                                     ),
                                     Text(
-                                        "Open Up 🌸 Write or record anything and get advse from Claire secret diary.",
+                                        "Open Up 🌸 Write or record anything and get advise from Claire secret diary.",
                                         style: GoogleFonts.lato(
                                             fontSize: 15.0,
                                             color: Pallet.colorWhite,
