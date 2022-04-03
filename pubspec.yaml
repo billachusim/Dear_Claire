@@ -65,6 +65,7 @@ dependencies:
   hive: ^2.0.5
   hive_flutter: ^1.1.0
   algolia: ^1.0.4
+  firebase_dynamic_links: ^4.1.2
 
 dev_dependencies:
   flutter_test:

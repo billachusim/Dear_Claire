@@ -810,8 +810,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     }
 
-    if (sessionTextEditingController.text.contains('prayer') &
-        sessionTextEditingController.text.contains('god')) {
+    if (sessionTextEditingController.text.contains('pray') &
+        sessionTextEditingController.text.contains('God')) {
       sessionObject.category1 = 'prayer and thanksgiving';
       sessionObject.category2 = 'life and living';
     }
