@@ -8,6 +8,7 @@ import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/widgets/share_button.dart';
 import 'package:dear_claire/widgets/thanks_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -46,24 +47,25 @@ class CommentWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: (){
+                onTap: () {
                   visitedUsersID = commentSessionModel!.userId!;
                   visitedEgoName = commentSessionModel!.userNickname!;
-                  String thisEgoName = commentSessionModel!.userNickname.toString();
+                  String thisEgoName =
+                      commentSessionModel!.userNickname.toString();
                   String thisUser = commentSessionModel!.userId.toString();
                   PageRouter.gotoWidget(
-                      VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                      VisitedUserEgoProfilePage(
+                          visitedUsersID: thisUser,
+                          visitedEgoName: thisEgoName),
                       context);
                   print("Visited User ID::: $thisEgoName");
                 },
                 child: CachedNetworkImage(
                     width: 40,
                     height: 40,
-
-                    imageUrl: commentSessionModel?.isUserAdmin == true?
-                    "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691" :
-                    commentSessionModel!.userAvatarUrl ?? '',
-
+                    imageUrl: commentSessionModel?.isUserAdmin == true
+                        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
+                        : commentSessionModel!.userAvatarUrl ?? '',
                     imageBuilder: (context, imageProvider) => Container(
                           decoration: BoxDecoration(
                             image: DecorationImage(
@@ -90,31 +92,32 @@ class CommentWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     GestureDetector(
-                      onTap: (){
+                      onTap: () {
                         if (commentSessionModel?.isUserAdmin == true)
-                        visitedUsersID = commentSessionModel!.userId!;
+                          visitedUsersID = commentSessionModel!.userId!;
                         visitedEgoName = commentSessionModel!.userNickname!;
-                        String thisEgoName = commentSessionModel!.userNickname.toString();
-                        String thisUser = commentSessionModel!.userId.toString();
+                        String thisEgoName =
+                            commentSessionModel!.userNickname.toString();
+                        String thisUser =
+                            commentSessionModel!.userId.toString();
                         PageRouter.gotoWidget(
-                            VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                            VisitedUserEgoProfilePage(
+                                visitedUsersID: thisUser,
+                                visitedEgoName: thisEgoName),
                             context);
                         print("Visited User ID::: $thisEgoName");
                       },
                       child: Text(
-                          commentSessionModel?.isUserAdmin == true?
-                      "Claire" :
-                      commentSessionModel!.userNickname ?? '',
-
+                          commentSessionModel?.isUserAdmin == true
+                              ? "Claire"
+                              : commentSessionModel!.userNickname ?? '',
                           textAlign: TextAlign.start,
                           maxLines: 1,
                           style: GoogleFonts.lato(
                               fontSize: 14.0,
                               color: Pallet.colorBlack,
-                              fontWeight: FontWeight.w800)
-                      ),
+                              fontWeight: FontWeight.w800)),
                     ),
-
                     SizedBox(
                       height: 2,
                     ),
@@ -133,23 +136,17 @@ class CommentWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-
                   ThanksButton(
                     count: commentSessionModel!.thanks!.length,
                     onPressed: onPressed,
                     color: 1 == 2 ? Pallet.colorPink : Pallet.colorTextGray,
                   ),
-                  if (commentSessionModel!.isUserAdmin)
-                    ShareButton(
-                      onPressed: onShare,
-                      color: Pallet.colorPink,
-                    ),
                 ],
               ),
             ],
           ),
           SizedBox(
-            height: 2,
+            height: 1,
           ),
           Text(
             commentSessionModel!.message!,
@@ -159,23 +156,49 @@ class CommentWidget extends StatelessWidget {
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
-
-          Visibility(
-            visible: currentUser?.email == "thesocialfaculty@gmail.com",
-            child: Align(
-              alignment: Alignment.bottomRight,
-              child: Text(
-                  commentSessionModel!.alterEgoId!,
-
-                  textAlign: TextAlign.end,
-                  maxLines: 1,
-                  style: GoogleFonts.lato(
-                      fontSize: 12.0,
-                      color: Pallet.colorBlack,
-                      fontWeight: FontWeight.w800)
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Visibility(
+              visible: currentUser?.email == "thesocialfaculty@gmail.com",
+              child: Align(
+                alignment: Alignment.bottomRight,
+                child: Text(commentSessionModel!.alterEgoId!,
+                    textAlign: TextAlign.end,
+                    maxLines: 1,
+                    style: GoogleFonts.lato(
+                        fontSize: 12.0,
+                        color: Pallet.colorBlack,
+                        fontWeight: FontWeight.w800)),
               ),
             ),
-          ),
+            if (commentSessionModel!.isUserAdmin)
+              CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Pallet.colorSecondary,
+                        )),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.share_rounded,
+                          size: 15,
+                          color: Pallet.colorSecondary,
+                        ),
+                        Text(
+                          'Share',
+                          style: GoogleFonts.lato(
+                              fontSize: 13.0,
+                              color: Pallet.colorSecondary,
+                              fontWeight: FontWeight.w800),
+                        ),
+                      ],
+                    ),
+                  ),
+                  onPressed: onShare)
+          ]),
         ],
       ),
     );

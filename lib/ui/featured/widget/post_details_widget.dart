@@ -257,13 +257,7 @@ class PostDetailsWidget extends StatelessWidget {
                           ),
                           new Spacer(),
                           ShareButton(
-                            onPressed: () =>
-                                firebaseServices.user?.alterEgoId == 'claire'
-                                    ? shareMessage(_session.message!)
-                                    : null,
-                            color: firebaseServices.user?.alterEgoId == 'claire'
-                                ? Pallet.colorWhite
-                                : Pallet.colorWhite,
+                            onPressed: () => _shareSession(_session.message!), color: Colors.white,
                           ),
                         ],
                       )
@@ -275,5 +269,14 @@ class PostDetailsWidget extends StatelessWidget {
             }),
       ),
     );
+  }
+
+
+  _shareSession(String? message) {
+    String _message = '''
+    
+     $message  
+    ''';
+    shareMessage(_message);
   }
 }

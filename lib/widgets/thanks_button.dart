@@ -24,7 +24,7 @@ class ThanksButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(15),
               border: Border.all(color: Colors.pink)),
           child: Text(
-            '$count Thanks💕',
+            '$count Thanks 💕',
             style: GoogleFonts.lato(
                 fontSize: 11.0,
                 color: Colors.pink,

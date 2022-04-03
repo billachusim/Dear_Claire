@@ -251,7 +251,7 @@ class _EgoModeSessionDetailState
 
   _share(String? message) {
     String _message = '''
-    Here is an anonymous advise from Dear Claire - Secret Diary Chat:
+    And here is the advise from Claire:
     
      $message  
     ''';
