@@ -148,7 +148,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   void _createEgoNameInterstitialAd() {
     InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-3940256099942544/1033173712" :
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/9680520067" :
       Platform.isIOS? "ca-app-pub-3940256099942544/4411468910" :
       '',
       request: AdRequest(),
@@ -171,7 +171,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   void _createEgoMantraInterstitialAd() {
     InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-3940256099942544/1033173712" :
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/2338869057" :
       Platform.isIOS? "ca-app-pub-3940256099942544/4411468910" :
       '',
       request: AdRequest(),
