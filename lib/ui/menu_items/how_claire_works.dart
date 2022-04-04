@@ -53,7 +53,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text("Read How Claire Works",
+                                      Text(AppString.read_how_claire_works,
                                           style: GoogleFonts.lato(
                                               fontSize: 15.0,
                                               color: Pallet.colorWhite,
@@ -74,13 +74,13 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                               fontSize: 15.0,
                                               color: Pallet.colorWhite,
                                               fontWeight: FontWeight.w700)),
-                                      Text(" \n 🌸 What Is Claire?",
+                                      Text(AppString.what_is_claire,
                                           style: GoogleFonts.lato(
                                               fontSize: 15.0,
                                               color: Pallet.colorWhite,
                                               fontWeight: FontWeight.w700)),
                                       Text(
-                                        "Claire is a super smart and friendly diary that can read, listen and reply to your diary texts or voice notes. It is the first interactive dear diary in the whole world.\n Claire has special skills and wisdom to respond to anything you tell her and that\'s how Claire becomes your secret companion, mentor and best friend. Millions of us write down our plans, activities, memories or challenges inside our phone\'s note, journal, or diary without expecting any reply",
+                                        AppString.how_claire_works_paragraph1,
                                         style: GoogleFonts.lato(
                                             fontSize: 15.0,
                                             color: Pallet.colorWhite,
@@ -105,7 +105,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text("Read How Claire Works",
+                                    Text(AppString.how_claire_works_header2,
                                         style: GoogleFonts.lato(
                                             fontSize: 15.0,
                                             color: Pallet.colorWhite,
@@ -121,12 +121,12 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                       height: 5,
                                     ),
                                     Text(
-                                        "Open Up 🌸 Write or record anything and get advise from Claire secret diary.",
+                                        AppString.how_claire_works_header,
                                         style: GoogleFonts.lato(
                                             fontSize: 15.0,
                                             color: Pallet.colorWhite,
                                             fontWeight: FontWeight.w700)),
-                                    Text(" \n\n 🌸 What Is Claire?",
+                                    Text(AppString.what_is_claire2,
                                         style: GoogleFonts.lato(
                                             fontSize: 15.0,
                                             color: Pallet.colorWhite,
@@ -139,60 +139,58 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                         color: Pallet.colorWhite,
                                       ),
                                       children: <TextSpan>[
-                                        // TextSpan(
-                                        //     text: ' 🌸 What Is Claire?\n \n',
-                                        //     style: TextStyle(fontWeight: FontWeight.bold)),
+
                                         TextSpan(
                                           text:
-                                              "Claire is a super smart and friendly diary that can read, listen and reply to your diary texts or voice notes. It is the first interactive dear diary in the whole world.\n Claire has special skills and wisdom to respond to anything you tell her and that\'s how Claire becomes your secret companion, mentor and best friend. Millions of us write down our plans, activities, memories or challenges inside our phone\'s note, journal, or diary without expecting any reply.\n Well, this particular diary actually replies 😊",
+                                              AppString.how_claire_works_paragraph2,
                                         ),
                                         TextSpan(
                                             text:
-                                                ' \n\n\n\n 🌸 Who Needs Claire?\n \n',
+                                                AppString.who_needs_claire,
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold)),
                                         TextSpan(
                                             text:
-                                                ' Everyone! If you have a date or interview the next day and can\'t decide what to wear. Going through a bad breakup or starting a new relationship. Feeling alone, friendless, confused or depressed. Want to make smarter decisions, stay safe and be happy in life. Having troubles in school, at home or at work. Claire is there to be your light and shine, to guide you through everything \n Claire\'s mission is for everyone to have a true friend, in need and indeed. To contribute to a happier world in these sadder times.\n\n\n\n'),
+                                                AppString.how_claire_works_paragraph3),
                                         TextSpan(
                                             text:
-                                                ' 🌸 How Does Claire Work?\n \n',
+                                                AppString.how_does_claire_work,
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold)),
                                         TextSpan(
                                             text:
-                                                ' Simple! Unlock your Claire diary app, type or record a new note starting with the phrase "Dear Claire” Go on, write or speak to Claire about how you feel at the moment. You can also tell her about your yesterday and what you are up to tomorrow, etc. Save and Send your note.\n Claire will carefully go through your diary, read or listen to your notes and in no long time, you will receive friendly Advise, secret tips, personal opinions and wise guidance from Claire on how best to go about things.'),
+                                                AppString.how_claire_works_paragraph4),
                                         TextSpan(
                                             text:
-                                                ' \n\n\n\n Creator\'s Quote \n \n',
+                                                AppString.creators_quote_how_claire_works,
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold)),
                                         TextSpan(
                                             text:
-                                                ' "YOUR SECRETS STAY SECRET NO MATTER WHAT because YOU ARE COMPLETELY ANONYMOUS. Nobody, not even the developers or Claire can know who you are because you only sign in with nickname and password and you can change that nickname anytime you want without losing any content of your diary." - Bill Achusim'),
+                                                AppString.how_claire_works_paragraph5),
                                         TextSpan(
                                             text:
-                                                ' \n\n\n\n\n\n Quick Tips 👇 \n',
+                                                AppString.quick_tips,
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold)),
                                         TextSpan(
                                             text:
-                                                '🌸 Open the app menu and tap the Claire icon to switch to Alter-Ego Mode.\n\n'),
+                                                AppString.how_claire_works_paragraph6),
                                         TextSpan(
                                             text:
-                                                '💕 Browse featured Sessions to read Claire\'s best kept secrets and contribute positive vibes only..\n\n'),
+                                                AppString.how_claire_works_paragraph7),
                                         TextSpan(
                                             text:
-                                                '🌸 Claire is not an instant messenger or artificial intelligence, Claire is your real fairy friend. It takes between 5 minutes to 59 minutes to get your first reply, but it gets faster and better from there.\n\n'),
+                                                AppString.how_claire_works_paragraph8),
                                         TextSpan(
                                             text:
-                                                '🌸 💕 Claire will remain completely FREE to use without showing any adverts but you can donate to support Claire.\n\n'),
+                                                AppString.how_claire_works_paragraph9),
                                         TextSpan(
                                             text:
-                                                '🚫 No form of abuse is allowed in the Claire app. Two time offenders will completely and irrevocably lose access to Claire.\n\n'),
+                                                AppString.how_claire_works_paragraph10),
                                         TextSpan(
                                             text:
-                                                'Congratulations as you use Claire 🌸 You\'ll never be not truly loved.\n\n'),
+                                                AppString.how_claire_works_paragraph11),
                                         TextSpan(
                                             text:
                                                 '© #DearClaire #SocialFaculty #ClaireToTheWorld 17-11-17.\n\n'),
@@ -279,7 +277,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                 height: 10,
               ),
               Text(
-                "💕Claire will remain completely FREE to use without disturbing you with adverts but you can donate as little as 200 Naira (less than 1 Dollar) so your Dear Claire can drink some juice to enable her reply you faster, introduce new features and continue to be there for you.💕",
+                "💕Claire will remain completely FREE to use but you can donate as little as 200 Naira (less than 1 Dollar) so your Dear Claire can drink some juice to enable her reply you faster, introduce new features and continue to be there for you.💕",
                 style: GoogleFonts.lato(
                     fontSize: 15.0,
                     color: Pallet.colorWhite,
