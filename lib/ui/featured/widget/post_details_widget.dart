@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
@@ -10,17 +11,27 @@ import 'package:dear_claire/widgets/metoo_button.dart';
 import 'package:dear_claire/widgets/share_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../create_session/sound/play_sound_widget.dart';
 import '../../routes/page_router_animation.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 
-class PostDetailsWidget extends StatelessWidget {
+class PostDetailsWidget extends StatefulWidget {
+  PostDetailsWidget({Key? key, required this.sessionId}) : super(key: key);
   String? sessionId;
+
+  @override
+  _PostDetailsWidgetState createState() => _PostDetailsWidgetState();
+}
+
+class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   late String visitedUsersID;
   late String visitedEgoName;
 
-  PostDetailsWidget({Key? key, required this.sessionId}) : super(key: key);
+  //initialize the audio record file that stores user audio record. null by default
+  String? recordFile;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +39,7 @@ class PostDetailsWidget extends StatelessWidget {
     return Material(
       child: SafeArea(
         child: StreamBuilder(
-            stream: firebaseServices.getSingleDocument(id: sessionId),
+            stream: firebaseServices.getSingleDocument(id: widget.sessionId),
             builder: (context,
                 AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snaps) {
               if (snaps.hasData) {
@@ -36,8 +47,8 @@ class PostDetailsWidget extends StatelessWidget {
                 return Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6.0, vertical: 5),
-                  decoration:
-                      BoxDecoration(color: HexColor.fromHex(_session.colorHex!)),
+                  decoration: BoxDecoration(
+                      color: HexColor.fromHex(_session.colorHex!)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -47,13 +58,16 @@ class PostDetailsWidget extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           GestureDetector(
-                            onTap: (){
+                            onTap: () {
                               visitedUsersID = _session.userId!;
                               visitedEgoName = _session.userNickname!;
-                              String thisEgoName = _session.userNickname.toString();
+                              String thisEgoName =
+                                  _session.userNickname.toString();
                               String thisUser = _session.userId.toString();
                               PageRouter.gotoWidget(
-                                  VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                  VisitedUserEgoProfilePage(
+                                      visitedUsersID: thisUser,
+                                      visitedEgoName: thisEgoName),
                                   context);
                               print("Visited User ID::: $thisEgoName");
                             },
@@ -61,7 +75,8 @@ class PostDetailsWidget extends StatelessWidget {
                                 width: 48,
                                 height: 48,
                                 imageUrl: _session.userAvatarUrl!,
-                                imageBuilder: (context, imageProvider) => Container(
+                                imageBuilder: (context, imageProvider) =>
+                                    Container(
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
                                           image: imageProvider,
@@ -71,7 +86,8 @@ class PostDetailsWidget extends StatelessWidget {
                                     ),
                                 placeholder: (context, url) =>
                                     Center(child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) => Image.asset(
+                                errorWidget: (context, url, error) =>
+                                    Image.asset(
                                       "assets/images/brown_boy_mask.png",
                                       width: 48,
                                       height: 48,
@@ -87,13 +103,17 @@ class PostDetailsWidget extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 GestureDetector(
-                                  onTap: (){
+                                  onTap: () {
                                     visitedUsersID = _session.userId!;
                                     visitedEgoName = _session.userNickname!;
-                                    String thisEgoName = _session.userNickname.toString();
-                                    String thisUser = _session.userId.toString();
+                                    String thisEgoName =
+                                        _session.userNickname.toString();
+                                    String thisUser =
+                                        _session.userId.toString();
                                     PageRouter.gotoWidget(
-                                        VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                        VisitedUserEgoProfilePage(
+                                            visitedUsersID: thisUser,
+                                            visitedEgoName: thisEgoName),
                                         context);
                                     print("Visited User ID::: $thisEgoName");
                                   },
@@ -183,6 +203,65 @@ class PostDetailsWidget extends StatelessWidget {
                             ),
                           ),
                           Container(
+                            alignment: Alignment.centerLeft,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                children: [
+                                  _session.audioUrl!.isNotEmpty
+                                      ? Container(
+                                          height: 60.h,
+                                          width: 60.w,
+                                          child: Stack(
+                                            fit: StackFit.expand,
+                                            children: <Widget>[
+                                              Center(
+                                                  child: IconButton(
+                                                      icon: Icon(
+                                                          Icons
+                                                              .play_circle_fill_outlined,
+                                                          color: Colors.white,
+                                                          size: 40.r),
+                                                      onPressed: () {
+                                                        recordFile = _session.audioUrl!.toString();
+                                                        showDialog<void>(
+                                                          context: context,
+                                                          barrierDismissible:
+                                                              false, // user must tap button!
+                                                          builder: (BuildContext
+                                                              context) {
+                                                            return AlertDialog(
+                                                              content:
+                                                                  PlaySoundWidget(
+                                                                filePath:
+                                                                    recordFile,
+                                                              ),
+                                                            );
+                                                          },
+                                                        );
+                                                      })),
+                                              Positioned(
+                                                  right: -5,
+                                                  top: -9,
+                                                  child: IconButton(
+                                                      icon: Icon(
+                                                        Icons.cancel,
+                                                        color: Colors.red,
+                                                        size: 24.r,
+                                                      ),
+                                                      onPressed: () =>
+                                                          setState(() {
+                                                            recordFile = null;
+                                                          })))
+                                            ],
+                                          ),
+                                        )
+                                      : SizedBox.shrink(),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Container(
                             child: Align(
                               alignment: Alignment.bottomLeft,
                               child: Row(
@@ -192,20 +271,23 @@ class PostDetailsWidget extends StatelessWidget {
                                       child: CachedNetworkImage(
                                           height: 73,
                                           width: 73,
-                                          imageUrl: _session.imageUrls!.isNotEmpty
-                                              ? _session.imageUrls!.first
-                                              : '',
-                                          imageBuilder: (context, imageProvider) =>
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  image: DecorationImage(
-                                                    image: imageProvider,
-                                                    fit: BoxFit.fill,
+                                          imageUrl:
+                                              _session.imageUrls!.isNotEmpty
+                                                  ? _session.imageUrls!.first
+                                                  : '',
+                                          imageBuilder:
+                                              (context, imageProvider) =>
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      image: DecorationImage(
+                                                        image: imageProvider,
+                                                        fit: BoxFit.fill,
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                              ),
                                           placeholder: (context, url) => Center(
-                                              child: CircularProgressIndicator()),
+                                              child:
+                                                  CircularProgressIndicator()),
                                           errorWidget: (context, url, error) =>
                                               Image.asset(
                                                 "assets/images/brown_boy_mask.png",
@@ -222,7 +304,6 @@ class PostDetailsWidget extends StatelessWidget {
                       SizedBox(
                         height: 10,
                       ),
-
                       Row(
                         children: [
                           MetooButton(
@@ -231,7 +312,8 @@ class PostDetailsWidget extends StatelessWidget {
                             sorry: _session.meHiFive!.length,
                             me2: _session.meFlower!.length,
                             onReactionChanged: (reaction, index) async {
-                              if (await firebaseServices.isUserSignIn(context)) {
+                              if (await firebaseServices
+                                  .isUserSignIn(context)) {
                                 final _userModel =
                                     await firebaseServices.getUserInfo();
 
@@ -257,7 +339,8 @@ class PostDetailsWidget extends StatelessWidget {
                           ),
                           new Spacer(),
                           ShareButton(
-                            onPressed: () => _shareSession(_session.message!), color: Colors.white,
+                            onPressed: () => _shareSession(_session.message!),
+                            color: Colors.white,
                           ),
                         ],
                       )
@@ -271,6 +354,46 @@ class PostDetailsWidget extends StatelessWidget {
     );
   }
 
+  Widget _recordFileWidget() {
+    return Container(
+      height: 60.h,
+      width: 60.w,
+      child: Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          Center(
+              child: IconButton(
+                  icon: Icon(Icons.play_circle_fill_outlined,
+                      color: Colors.white, size: 40.r),
+                  onPressed: () {
+                    showDialog<void>(
+                      context: context,
+                      barrierDismissible: false, // user must tap button!
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          content: PlaySoundWidget(
+                            filePath: recordFile,
+                          ),
+                        );
+                      },
+                    );
+                  })),
+          Positioned(
+              right: -5,
+              top: -9,
+              child: IconButton(
+                  icon: Icon(
+                    Icons.cancel,
+                    color: Colors.red,
+                    size: 24.r,
+                  ),
+                  onPressed: () => setState(() {
+                        recordFile = null;
+                      })))
+        ],
+      ),
+    );
+  }
 
   _shareSession(String? message) {
     String _message = '''

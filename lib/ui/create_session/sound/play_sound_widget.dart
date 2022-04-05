@@ -29,8 +29,8 @@ class _PlaySoundWidgetState extends State<PlaySoundWidget> {
 
   late FlutterAudioRecorder2 _audioRecorder;
 
-   var _time = 0;
-  var _duration= 0;
+  var _time = 0;
+  var _duration = 0;
   @override
   void initState() {
     super.initState();
@@ -38,73 +38,67 @@ class _PlaySoundWidgetState extends State<PlaySoundWidget> {
     _isUploading = false;
     _isRecorded = false;
     _isRecording = false;
-    
+
     _audioPlayer = AudioPlayer();
   }
 
   @override
-void dispose(){
-super.dispose();
-_audioPlayer.stop();
-_audioPlayer.dispose();
-}
+  void dispose() {
+    super.dispose();
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-        height: 80,
-        color: Pallet.colorWhite,
-        child: Column(
-          children:[
-            Align(
-              alignment:Alignment.topRight,
-              child: GestureDetector(
-                onTap:(){
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  child: Icon(Icons.close, size: 18.r),
-                  decoration:
-                      BoxDecoration(shape: BoxShape.circle, color: Colors.grey),
-                ),
-              ),
-            
-            ),
-            SizedBox(height:8.h),
-            Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            IconButton(
-              icon: Icon(
-                _isPlaying ? Icons.pause : Icons.play_arrow,
-                color: Colors.red,
-                size: 30.r,
-              ),
-              onPressed: _onPlayButtonPressed,
-            ),
-            SizedBox(width: 5.w),
-            Slider(
-              min: 0,
-              max: _time.toDouble(),
-              value: _duration.toDouble(),
-              
-              onChanged: (value) {
-                setState(() {
-                  print("on change value is $value");
-                  _audioPlayer.pause();
-                  _duration = value.toInt();
-                  _audioPlayer.seek(Duration(seconds: _duration));
-                  _audioPlayer.resume();
-                  // _audioPlayer.seek(Duration(milliseconds: _duration));
-
-                });
+        height: 70,
+        child: Column(children: [
+          Align(
+            alignment: Alignment.topRight,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
               },
+              child: Container(
+                child: Icon(Icons.close, size: 18.r, color: Colors.white,),
+                decoration:
+                    BoxDecoration(shape: BoxShape.circle, color: Colors.red),
+              ),
             ),
-          ],
-        )
-          ]
-        ));
+          ),
+          SizedBox(height: 1.h),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                icon: Icon(
+                  _isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: Colors.red,
+                  size: 35.r,
+                ),
+                onPressed: _onPlayButtonPressed,
+              ),
+              SizedBox(width: 5.w),
+              Slider(
+                min: 0,
+                max: _time.toDouble(),
+                value: _duration.toDouble(),
+                onChanged: (value) {
+                  setState(() {
+                    print("on change value is $value");
+                    _audioPlayer.pause();
+                    _duration = value.toInt();
+                    _audioPlayer.seek(Duration(seconds: _duration));
+                    _audioPlayer.resume();
+                    // _audioPlayer.seek(Duration(milliseconds: _duration));
+                  });
+                },
+              ),
+            ],
+          )
+        ]));
   }
 
   void _onPlayButtonPressed() {
@@ -112,7 +106,10 @@ _audioPlayer.dispose();
       _isPlaying = true;
 
       print("selected file path is: ${widget.filePath!}");
-      _audioPlayer.play(widget.filePath!, isLocal: true,);
+      _audioPlayer.play(
+        widget.filePath!,
+        isLocal: true,
+      );
       _audioPlayer.onDurationChanged.listen((Duration d) {
         print('Max duration: $d');
         setState(() => _time = d.inSeconds);
