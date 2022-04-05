@@ -35,6 +35,7 @@ dependencies:
   get: 4.1.4
   flutter_screenutil: ^5.0.0+2
   focused_menu: ^1.0.5
+  intl: ^0.17.0
   emoji_chooser:
     git: https://github.com/instabudgetapp/flutter-emoji-chooser
   flutter_audio_recorder2: ^0.0.2

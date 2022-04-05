@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:intl/intl.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/data/models/profile_page_model.dart';
@@ -796,14 +797,17 @@ class FirebaseServices extends ChangeNotifier {
 
   Future<String> uploadSound(File file) async {
     firebase_storage.UploadTask uploadTask;
+    DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
+    String timeStamp = dateFormat.format(DateTime.now());
+    String filename = currentUser!.uid.toString();
     // Create a Reference to the file
     firebase_storage.Reference ref =
-        firebase_storage.FirebaseStorage.instance.ref().child(AppString.audio);
+        firebase_storage.FirebaseStorage.instance.ref().child("audio/" + filename + timeStamp);
 
-    final metadata = firebase_storage.SettableMetadata(
-        contentType: 'audio/wav',
-        customMetadata: {'picked-file-path': file.path});
-    uploadTask = ref.putFile(File(file.path), metadata);
+   // final metadata = firebase_storage.SettableMetadata(
+    //    contentType: 'audio/wav',
+   //     customMetadata: {'picked-file-path': file.path});
+    uploadTask = ref.putFile(File(file.path));
     var audioUrl = await (await uploadTask).ref.getDownloadURL();
     print("The audio url is $audioUrl");
     return audioUrl;
