@@ -57,8 +57,9 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
                 ),
                 onPressed: _onPlayButtonPressed,
               ),
-              SizedBox(width: 5.w),
               Slider(
+                thumbColor: Colors.white,
+                inactiveColor: Colors.white,
                 min: 0,
                 max: _time.toDouble(),
                 value: _duration.toDouble(),
@@ -69,7 +70,6 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
                     _duration = value.toInt();
                     _audioPlayer.seek(Duration(seconds: _duration));
                     _audioPlayer.resume();
-                    // _audioPlayer.seek(Duration(milliseconds: _duration));
                   });
                 },
               ),

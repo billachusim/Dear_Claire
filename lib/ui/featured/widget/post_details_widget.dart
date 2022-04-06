@@ -12,6 +12,7 @@ import 'package:dear_claire/widgets/share_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../create_session/sound/custom_play_sound_widget.dart';
@@ -225,56 +226,62 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             children: [
                               Visibility(
                                   visible: _session.imageUrls!.isNotEmpty,
-                                  child: CachedNetworkImage(
-                                      height: 73,
-                                      width: 73,
-                                      imageUrl: _session.imageUrls!.isNotEmpty
-                                          ? _session.imageUrls!.first
-                                          : '',
-                                      imageBuilder: (context, imageProvider) =>
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: imageProvider,
-                                                fit: BoxFit.fill,
+                                  child: FullScreenWidget(
+                                    child: CachedNetworkImage(
+                                        height: 120,
+                                        width: 120,
+                                        imageUrl: _session.imageUrls!.isNotEmpty
+                                            ? _session.imageUrls!.first
+                                            : '',
+                                        imageBuilder: (context, imageProvider) =>
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(25),
+                                                image: DecorationImage(
+                                                  image: imageProvider,
+                                                  fit: BoxFit.fill,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                      placeholder: (context, url) => Center(
-                                          child: CircularProgressIndicator()),
-                                      errorWidget: (context, url, error) =>
-                                          Image.asset(
-                                            "assets/images/brown_boy_mask.png",
-                                            width: 48,
-                                            height: 48,
-                                          ) //Icon(Icons.error),
-                                      )),
+                                        placeholder: (context, url) => Center(
+                                            child: CircularProgressIndicator()),
+                                        errorWidget: (context, url, error) =>
+                                            Image.asset(
+                                              "assets/images/brown_boy_mask.png",
+                                              width: 48,
+                                              height: 48,
+                                            ) //Icon(Icons.error),
+                                        ),
+                                  )),
                               SizedBox(width: 5,),
                               Visibility(
                                   visible: _session.imageUrls!.isNotEmpty,
-                                  child: CachedNetworkImage(
-                                      height: 73,
-                                      width: 73,
-                                      imageUrl: _session.imageUrls!.isNotEmpty
-                                          ? _session.imageUrls!.last
-                                          : '',
-                                      imageBuilder: (context, imageProvider) =>
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: imageProvider,
-                                                fit: BoxFit.fill,
+                                  child: FullScreenWidget(
+                                    child: CachedNetworkImage(
+                                        height: 120,
+                                        width: 120,
+                                        imageUrl: _session.imageUrls!.isNotEmpty
+                                            ? _session.imageUrls!.last
+                                            : '',
+                                        imageBuilder: (context, imageProvider) =>
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(25),
+                                                image: DecorationImage(
+                                                  image: imageProvider,
+                                                  fit: BoxFit.fill,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                      placeholder: (context, url) => Center(
-                                          child: CircularProgressIndicator()),
-                                      errorWidget: (context, url, error) =>
-                                          Image.asset(
-                                            "assets/images/brown_boy_mask.png",
-                                            width: 48,
-                                            height: 48,
-                                          ) //Icon(Icons.error),
+                                        placeholder: (context, url) => Center(
+                                            child: CircularProgressIndicator()),
+                                        errorWidget: (context, url, error) =>
+                                            Image.asset(
+                                              "assets/images/brown_boy_mask.png",
+                                              width: 48,
+                                              height: 48,
+                                            ) //Icon(Icons.error),
+                                    ),
                                   )),
                             ],
                           ),
