@@ -9,25 +9,20 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:wave/wave.dart';
 import 'package:dear_claire/utils/color.dart';
 
-class PlaySoundWidget extends StatefulWidget {
+class CustomPlaySoundWidget extends StatefulWidget {
   final String? filePath;
-  ValueChanged<String>? onRecordComplete;
-  PlaySoundWidget({Key? key, this.filePath, this.onRecordComplete})
+  CustomPlaySoundWidget({Key? key, this.filePath})
       : super(key: key);
 
   @override
-  _PlaySoundWidgetState createState() => _PlaySoundWidgetState();
+  _CustomPlaySoundWidgetState createState() => _CustomPlaySoundWidgetState();
 }
 
-class _PlaySoundWidgetState extends State<PlaySoundWidget> {
+class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
   late bool _isPlaying;
-  late bool _isUploading;
-  late bool _isRecorded;
-  late bool _isRecording;
 
   late AudioPlayer _audioPlayer;
 
-  late FlutterAudioRecorder2 _audioRecorder;
 
   var _time = 0;
   var _duration = 0;
@@ -35,10 +30,6 @@ class _PlaySoundWidgetState extends State<PlaySoundWidget> {
   void initState() {
     super.initState();
     _isPlaying = false;
-    _isUploading = false;
-    _isRecorded = false;
-    _isRecording = false;
-
     _audioPlayer = AudioPlayer();
   }
 
@@ -54,20 +45,6 @@ class _PlaySoundWidgetState extends State<PlaySoundWidget> {
     return Container(
         height: 70,
         child: Column(children: [
-          Align(
-            alignment: Alignment.topRight,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: Container(
-                child: Icon(Icons.close, size: 18.r, color: Colors.white,),
-                decoration:
-                    BoxDecoration(shape: BoxShape.circle, color: Colors.red),
-              ),
-            ),
-          ),
-          SizedBox(height: 1.h),
           Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,8 +52,8 @@ class _PlaySoundWidgetState extends State<PlaySoundWidget> {
               IconButton(
                 icon: Icon(
                   _isPlaying ? Icons.pause : Icons.play_circle_fill_rounded,
-                  color: Colors.red,
-                  size: 35.r,
+                  color: Colors.white,
+                  size: 40.r,
                 ),
                 onPressed: _onPlayButtonPressed,
               ),
@@ -130,25 +107,4 @@ class _PlaySoundWidgetState extends State<PlaySoundWidget> {
     setState(() {});
   }
 
-  Future<void> _startRecording() async {
-    final bool? hasRecordingPermission =
-        await FlutterAudioRecorder2.hasPermissions;
-
-    if (hasRecordingPermission ?? false) {
-      Directory directory = await getApplicationDocumentsDirectory();
-      String filepath = directory.path +
-          '/' +
-          DateTime.now().millisecondsSinceEpoch.toString() +
-          '.aac';
-      _audioRecorder =
-          FlutterAudioRecorder2(filepath, audioFormat: AudioFormat.AAC);
-      await _audioRecorder.initialized;
-      _audioRecorder.start();
-      widget.onRecordComplete!(filepath);
-      setState(() {});
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Center(child: Text('Please enable recording permission'))));
-    }
-  }
 }

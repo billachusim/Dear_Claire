@@ -599,13 +599,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     String error = 'No Error Detected';
     try {
       imageList = await MultiImagePicker.pickImages(
-        maxImages: 3,
+        maxImages: 2,
         enableCamera: true,
         selectedAssets: c.images,
         cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
         materialOptions: MaterialOptions(
           actionBarColor: "#abcdef",
-          actionBarTitle: "Dear Claire",
+          actionBarTitle: "To Dear Claire",
           allViewTitle: "All Photos",
           useDetailsView: false,
           selectCircleStrokeColor: "#000000",

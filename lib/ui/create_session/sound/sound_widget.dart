@@ -115,12 +115,6 @@ _audioPlayer.dispose();
                     IconButton(icon:Icon(Icons.close, color:Colors.white, size:30.r), onPressed:(){
                       Navigator.pop(context);
                     }),
-
-                    IconButton(icon:Icon(Icons.done, color:Colors.white,size:30.r), onPressed:(){
-                      _audioPlayer.stop();
-                      print("filepath is : $_filePath");
-                    Navigator.pop(context,File(_filePath));
-                    }),
                   ],
                 ),
               ),

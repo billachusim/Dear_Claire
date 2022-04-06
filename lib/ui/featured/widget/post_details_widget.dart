@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../create_session/sound/custom_play_sound_widget.dart';
 import '../../create_session/sound/play_sound_widget.dart';
 import '../../routes/page_router_animation.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
@@ -202,104 +203,82 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   fontWeight: FontWeight.normal),
                             ),
                           ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Row(
-                                children: [
-                                  _session.audioUrl!.isNotEmpty
-                                      ? Container(
-                                          height: 60.h,
-                                          width: 60.w,
-                                          child: Stack(
-                                            fit: StackFit.expand,
-                                            children: <Widget>[
-                                              Center(
-                                                  child: IconButton(
-                                                      icon: Icon(
-                                                          Icons
-                                                              .play_circle_fill_outlined,
-                                                          color: Colors.white,
-                                                          size: 40.r),
-                                                      onPressed: () {
-                                                        recordFile = _session.audioUrl!.toString();
-                                                        showDialog<void>(
-                                                          context: context,
-                                                          barrierDismissible:
-                                                              false, // user must tap button!
-                                                          builder: (BuildContext
-                                                              context) {
-                                                            return AlertDialog(
-                                                              content:
-                                                                  PlaySoundWidget(
-                                                                filePath:
-                                                                    recordFile,
-                                                              ),
-                                                            );
-                                                          },
-                                                        );
-                                                      })),
-                                              Positioned(
-                                                  right: -5,
-                                                  top: -9,
-                                                  child: IconButton(
-                                                      icon: Icon(
-                                                        Icons.cancel,
-                                                        color: Colors.red,
-                                                        size: 24.r,
-                                                      ),
-                                                      onPressed: () =>
-                                                          setState(() {
-                                                            recordFile = null;
-                                                          })))
-                                            ],
-                                          ),
-                                        )
-                                      : SizedBox.shrink(),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Container(
-                            child: Align(
-                              alignment: Alignment.bottomLeft,
-                              child: Row(
-                                children: [
-                                  Visibility(
-                                      visible: _session.imageUrls!.isNotEmpty,
-                                      child: CachedNetworkImage(
-                                          height: 73,
-                                          width: 73,
-                                          imageUrl:
-                                              _session.imageUrls!.isNotEmpty
-                                                  ? _session.imageUrls!.first
-                                                  : '',
-                                          imageBuilder:
-                                              (context, imageProvider) =>
-                                                  Container(
-                                                    decoration: BoxDecoration(
-                                                      image: DecorationImage(
-                                                        image: imageProvider,
-                                                        fit: BoxFit.fill,
-                                                      ),
-                                                    ),
-                                                  ),
-                                          placeholder: (context, url) => Center(
-                                              child:
-                                                  CircularProgressIndicator()),
-                                          errorWidget: (context, url, error) =>
-                                              Image.asset(
-                                                "assets/images/brown_boy_mask.png",
-                                                width: 48,
-                                                height: 48,
-                                              ) //Icon(Icons.error),
-                                          )),
-                                ],
-                              ),
-                            ),
-                          ),
                         ],
+                      ),
+                      Container(
+                        alignment: Alignment.centerLeft,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Row(
+                            children: [
+                              _session.audioUrl!.isNotEmpty
+                                  ? CustomPlaySoundWidget(filePath: _session.audioUrl)
+                            : SizedBox.shrink(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        child: Align(
+                          alignment: Alignment.topLeft,
+                          child: Row(
+                            children: [
+                              Visibility(
+                                  visible: _session.imageUrls!.isNotEmpty,
+                                  child: CachedNetworkImage(
+                                      height: 73,
+                                      width: 73,
+                                      imageUrl: _session.imageUrls!.isNotEmpty
+                                          ? _session.imageUrls!.first
+                                          : '',
+                                      imageBuilder: (context, imageProvider) =>
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: imageProvider,
+                                                fit: BoxFit.fill,
+                                              ),
+                                            ),
+                                          ),
+                                      placeholder: (context, url) => Center(
+                                          child: CircularProgressIndicator()),
+                                      errorWidget: (context, url, error) =>
+                                          Image.asset(
+                                            "assets/images/brown_boy_mask.png",
+                                            width: 48,
+                                            height: 48,
+                                          ) //Icon(Icons.error),
+                                      )),
+                              SizedBox(width: 5,),
+                              Visibility(
+                                  visible: _session.imageUrls!.isNotEmpty,
+                                  child: CachedNetworkImage(
+                                      height: 73,
+                                      width: 73,
+                                      imageUrl: _session.imageUrls!.isNotEmpty
+                                          ? _session.imageUrls!.last
+                                          : '',
+                                      imageBuilder: (context, imageProvider) =>
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              image: DecorationImage(
+                                                image: imageProvider,
+                                                fit: BoxFit.fill,
+                                              ),
+                                            ),
+                                          ),
+                                      placeholder: (context, url) => Center(
+                                          child: CircularProgressIndicator()),
+                                      errorWidget: (context, url, error) =>
+                                          Image.asset(
+                                            "assets/images/brown_boy_mask.png",
+                                            width: 48,
+                                            height: 48,
+                                          ) //Icon(Icons.error),
+                                  )),
+                            ],
+                          ),
+                        ),
                       ),
                       SizedBox(
                         height: 10,
