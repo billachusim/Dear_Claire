@@ -103,7 +103,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     String text = box.get("text");
     print("text is:$text");
     if(text.isNotEmpty){
-      sessionTextEditingController.text=text;
+      sessionTextEditingController.text = text;
     }
   }
 
@@ -956,7 +956,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     bool isSuccessfull =
         await _firebaseServices.createSession(session: sessionObject);
 
-    box.remove("draft");
+    Hive.box("draft").clear();
     categorize(sessionObject);
 
 
