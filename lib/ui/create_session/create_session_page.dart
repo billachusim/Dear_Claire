@@ -194,7 +194,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
               borderRadius: BorderRadius.circular(30.0)
             ),
             title: Container(
-              child: Text('Enter Title', textAlign: TextAlign.center),
+              child: Text(AppString.save_or_share_title,
+                  textAlign: TextAlign.center),
             ),
             content: SingleChildScrollView(
               child: Container(
@@ -208,7 +209,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         controller: sessionTitleController,
                         decoration: InputDecoration(
                           //border: InputBorder,
-                          hintText: 'What\'s this session about?     ️   💌',
+                          hintText: AppString.whats_this_session_about,
                         ),
                       ),
                       Obx(
@@ -234,7 +235,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                           SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                                "Do you want other users to reply and follow this diary session?",
+                                AppString.do_you_want_other_users,
                                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                           ),
                           Obx(() => Switch(

@@ -9,6 +9,12 @@ class AppString{
   static const String create_ego_complete_toast = "You are Claired up!";
   static const String open_up_toast = "You are in!";
 
+  // Create Session flow strings
+
+  static const String save_or_share_title = 'Save Or Share Session 🌺';
+  static const String whats_this_session_about = 'What\'s this session about?';
+  static const String do_you_want_other_users = "Do you want other users to reply and follow this diary session?";
+
   static const String appFeaturedSessions = "sessions";
 
   static const String COLLECTION_USER_SESSION_COUNTERS = "user_session_counters";

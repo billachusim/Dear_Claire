@@ -99,6 +99,30 @@ class AdState {
     }
   }
 
+  // Create Custom Post Detail top banner ad unit.
+  String get customPostDetailTopBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/4802053317";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/9671236615";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
+
+  // Create Custom Post Detail bottom banner ad unit.
+  String get customPostDetailBottomBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/9662378196";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/8474253752";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
 
 
   // Create Alter Ego Mode top of comments banner ad unit.

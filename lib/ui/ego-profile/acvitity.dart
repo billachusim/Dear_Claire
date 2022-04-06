@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../featured/widget/custom_post_details_screen.dart';
+
 class ActivityWidget extends StatelessWidget {
 ActivityWidget({ Key? key }) : super(key: key);
 
@@ -90,7 +92,7 @@ class UserActivityCard extends StatelessWidget {
         elevation: 20,
         child: GestureDetector(
           onTap: () => PageRouter.gotoWidget(
-            PostDetailsWidget(sessionId: element.sessionId),
+            CustomPostDetailsWidget(sessionId: element.sessionId),
               context),
           child: Container(
             decoration: BoxDecoration(
