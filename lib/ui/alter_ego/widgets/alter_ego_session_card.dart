@@ -226,9 +226,9 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                 ),
 
                 Container(
-                  alignment: Alignment.centerLeft,
+                  alignment: Alignment.topLeft,
                   child: Align(
-                    alignment: Alignment.centerLeft,
+                    alignment: Alignment.topLeft,
                     child: Row(
                       children: [
                         element.audioUrl!.isNotEmpty

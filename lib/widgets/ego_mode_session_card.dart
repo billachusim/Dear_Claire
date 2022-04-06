@@ -15,6 +15,7 @@ import 'package:dear_claire/widgets/metoo_button.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
@@ -189,9 +190,9 @@ class EgoModeSessionCard extends StatelessWidget {
                 ),
 
                 Container(
-                  alignment: Alignment.centerLeft,
+                  alignment: Alignment.topLeft,
                   child: Align(
-                    alignment: Alignment.centerLeft,
+                    alignment: Alignment.topLeft,
                     child: Row(
                       children: [
                         element.audioUrl!.isNotEmpty
@@ -209,56 +210,60 @@ class EgoModeSessionCard extends StatelessWidget {
                       children: [
                         Visibility(
                             visible: element.imageUrls!.isNotEmpty,
-                            child: CachedNetworkImage(
-                                height: 75,
-                                width: 75,
-                                imageUrl: element.imageUrls!.isNotEmpty
-                                    ? element.imageUrls!.first
-                                    : '',
-                                imageBuilder: (context, imageProvider) => Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(25),
-                                        image: DecorationImage(
-                                          image: imageProvider,
-                                          fit: BoxFit.fill,
+                            child: FullScreenWidget(
+                              child: CachedNetworkImage(
+                                  height: 75,
+                                  width: 75,
+                                  imageUrl: element.imageUrls!.isNotEmpty
+                                      ? element.imageUrls!.first
+                                      : '',
+                                  imageBuilder: (context, imageProvider) => Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(25),
+                                          image: DecorationImage(
+                                            image: imageProvider,
+                                            fit: BoxFit.fill,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                placeholder: (context, url) =>
-                                    Center(child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) => Image.asset(
-                                      "assets/images/brown_boy_mask.png",
-                                      width: 48,
-                                      height: 48,
-                                    ) //Icon(Icons.error),
-                                )),
+                                  placeholder: (context, url) =>
+                                      Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => Image.asset(
+                                        "assets/images/brown_boy_mask.png",
+                                        width: 48,
+                                        height: 48,
+                                      ) //Icon(Icons.error),
+                                  ),
+                            )),
 
                         SizedBox(width: 5,),
 
                         Visibility(
                             visible: element.imageUrls!.isNotEmpty,
-                            child: CachedNetworkImage(
-                                height: 75,
-                                width: 75,
-                                imageUrl: element.imageUrls!.isNotEmpty
-                                    ? element.imageUrls!.last
-                                    : '',
-                                imageBuilder: (context, imageProvider) => Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                      fit: BoxFit.fill,
+                            child: FullScreenWidget(
+                              child: CachedNetworkImage(
+                                  height: 75,
+                                  width: 75,
+                                  imageUrl: element.imageUrls!.isNotEmpty
+                                      ? element.imageUrls!.last
+                                      : '',
+                                  imageBuilder: (context, imageProvider) => Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(25),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.fill,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                placeholder: (context, url) =>
-                                    Center(child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/brown_boy_mask.png",
-                                  width: 48,
-                                  height: 48,
-                                ) //Icon(Icons.error),
+                                  placeholder: (context, url) =>
+                                      Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => Image.asset(
+                                    "assets/images/brown_boy_mask.png",
+                                    width: 48,
+                                    height: 48,
+                                  ) //Icon(Icons.error),
+                              ),
                             )),
                       ],
                     ),
