@@ -172,9 +172,9 @@ class FirebaseServices extends ChangeNotifier {
 
   /// cache user id
   void setUsersId(String id) async {
+    await getUserWithId(id: id);
     prefs = await SharedPreferences.getInstance();
     prefs!.setString(usersKey, id);
-    await getUserWithId(id: id);
     notifyListeners();
   }
 
