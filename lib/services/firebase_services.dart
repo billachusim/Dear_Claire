@@ -359,8 +359,8 @@ class FirebaseServices extends ChangeNotifier {
           .where("userId", isEqualTo: _usersID)
           .where("flagged", isEqualTo: false)
           .where("archived", isEqualTo: false)
+          .orderBy('timeCreated', descending: true)
           .limit(AppString.appSessionLength)
-          .orderBy('timeLastActivity', descending: true)
           .get();
 
       _value.docs
