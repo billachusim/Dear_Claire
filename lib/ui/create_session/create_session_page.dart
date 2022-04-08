@@ -13,6 +13,7 @@ import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:emoji_chooser/emoji_chooser.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geocoding/geocoding.dart';
@@ -49,7 +50,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   UserModel userModel = UserModel();
 
-//used for generating randon id for each session
+//used for generating random id for each session
   var uuid = Uuid();
 
   //input controller to access session message from user
@@ -73,7 +74,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   bool acceptReplies = false;
   bool followClaire = true;
   String sessionMood = 'Current Mood';
-  bool showLocation = false;
   String? _location = '';
 
 
@@ -111,7 +111,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
       place = placemarks[0];
-      _location = ("${place.locality}, ${place.administrativeArea}, ${place.country}");
+      _location = ("in  ${place.administrativeArea}, ${place.country}");
       return place;
     } catch (e) {
       logger.e(e);
@@ -127,8 +127,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     c.selectedBackgroundColor = randomNumber.obs;
   }
 
-  //controller.text = someString;
-  // controller.selection = TextSelection.fromPosition(TextPosition(offset: controller.text.length));
 
   @override
   void initState() {
@@ -961,6 +959,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     sessionObject.moodId =
         Constant.USER_SESSION_MOODS.indexOf(c.sessionMood.value);
     sessionObject.location = _location;
+    sessionObject.timeLastActivity = Timestamp.now();
 
     bool isSuccessfull =
         await _firebaseServices.createSession(session: sessionObject);
