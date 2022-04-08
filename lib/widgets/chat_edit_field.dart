@@ -16,10 +16,9 @@ import '../ui/create_session/sound/play_sound_widget.dart';
 import '../ui/create_session/sound/sound_widget.dart';
 
 class ChatEditField extends StatefulWidget {
-  final Function(String value) onTap;
-  final record;
+  final Function(String value, String voiceNote) onTap;
 
-  ChatEditField({Key? key, required this.onTap, this.record}) : super(key: key);
+  ChatEditField({Key? key, required this.onTap}) : super(key: key);
 
   @override
   _ChatEditFieldState createState() => _ChatEditFieldState();
@@ -39,9 +38,8 @@ class _ChatEditFieldState extends State<ChatEditField> {
     String timeStamp = dateFormat.format(DateTime.now());
     String filename = currentUser!.uid.toString();
     // Create a Reference to the file
-    firebase_storage.Reference ref = firebase_storage.FirebaseStorage.instance
-        .ref()
-        .child("audio/" + filename + timeStamp);
+    firebase_storage.Reference ref =
+    firebase_storage.FirebaseStorage.instance.ref().child("audio/" + filename + timeStamp);
 
     // final metadata = firebase_storage.SettableMetadata(
     //    contentType: 'audio/wav',
@@ -158,7 +156,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                       ? FloatingActionButton(
                           onPressed: () {
                             if (_controller.text.isNotEmpty)
-                              widget.onTap(_controller.text);
+                              widget.onTap(_controller.text, _recordFile.toString());
                             _controller.text = '';
                           },
                           mini: true,

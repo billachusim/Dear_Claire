@@ -85,22 +85,22 @@ class _NewDiaryDetailsScreenState
             ],
           ),
           ChatEditField(
-            onTap: (String comment) =>
-                _sendComment(comment, featuredSessionModel!),
+            onTap: (String comment, voiceNote) =>
+                _sendComment(comment, voiceNote, featuredSessionModel!),
           )
         ],
       ),
     );
   }
 
-  void _sendComment(String comment, Session session) async {
+  void _sendComment(String comment, String voiceNote, Session session) async {
     if (!await firebaseServices.isUserSignIn(context)) return;
 
     final _userModel = await firebaseServices.getUserInfo();
 
     final _commentModel = CommentSessionModel(
         alterEgoId: _userModel.alterEgoId,
-        audioUrl: '',
+        audioUrl: voiceNote ?? '',
         commentId: '',
         flagged: session.flagged!,
         imageUrls: [],

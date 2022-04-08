@@ -75,7 +75,7 @@ class _SessionPostDetailsScreenState extends State<SessionPostDetailsScreen> {
           ),
 
           ChatEditField(
-            onTap: (String message){
+            onTap: (String message, String voiceNote){
             },
           )
         ],

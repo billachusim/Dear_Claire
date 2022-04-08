@@ -141,7 +141,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ],
             ),
             ChatEditField(
-              onTap: (v) => _sendMessage(v),
+              onTap: (v, voiceNote) => _sendMessage(v, voiceNote),
             )
           ],
         ),
@@ -149,7 +149,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _sendMessage(String v) async {
+  void _sendMessage(String v, voiceNote) async {
     final _user = await firebaseServices.getUserInfo();
     firebaseServices.addMessage(
         chatRoomPodo!,

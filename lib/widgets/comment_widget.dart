@@ -5,13 +5,16 @@ import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
+import 'package:dear_claire/widgets/play_advise_voice_note.dart';
 import 'package:dear_claire/widgets/share_button.dart';
 import 'package:dear_claire/widgets/thanks_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../ui/routes/page_router_animation.dart';
 import '../ui/visited_user_ego_page/visited_user_ego_page.dart';
 
@@ -156,6 +159,95 @@ class CommentWidget extends StatelessWidget {
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
+
+          SizedBox(
+            height: 6,
+          ),
+
+          Container(
+            alignment: Alignment.topLeft,
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Row(
+                children: [
+                  commentSessionModel!.audioUrl!.isNotEmpty
+                      ? PlayAdviseVoiceNote(filePath: commentSessionModel!.audioUrl)
+                      : SizedBox.shrink(),
+                ],
+              ),
+            ),
+          ),
+
+          Container(
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Row(
+                children: [
+                  Visibility(
+                      visible: commentSessionModel!.imageUrls!.isNotEmpty,
+                      child: FullScreenWidget(
+                        child: CachedNetworkImage(
+                            height: 75,
+                            width: 75,
+                            imageUrl: commentSessionModel!.imageUrls!.isNotEmpty
+                                ? commentSessionModel!.imageUrls!.first
+                                : '',
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/brown_boy_mask.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
+                        ),
+                      )),
+
+                  SizedBox(width: 5,),
+
+                  Visibility(
+                      visible: commentSessionModel!.imageUrls!.isNotEmpty,
+                      child: FullScreenWidget(
+                        child: CachedNetworkImage(
+                            height: 75,
+                            width: 75,
+                            imageUrl: commentSessionModel!.imageUrls!.isNotEmpty
+                                ? commentSessionModel!.imageUrls!.last
+                                : '',
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/brown_boy_mask.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
+                        ),
+                      )),
+                ],
+              ),
+            ),
+          ),
+
+
+
+
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Visibility(
               visible: currentUser?.email == "thesocialfaculty@gmail.com",

@@ -386,20 +386,6 @@ class FirebaseServices extends ChangeNotifier {
 
   }
 
-  /// Increase advise counter when user creates new comment.
-
-  Future<void> incrementAdviseCount() async {
-    FirebaseFirestore.instance
-        .collection("user_comment_counters")
-        .doc(userModel.userId)
-        .update({
-      'numberOfComments': FieldValue.increment(1),
-    },
-    );
-    logger.d('Successfully increased advise count');
-    print('Session Count is: $FieldValue');
-
-  }
 
   /// [featured Session Comments] -> get users featured sessions comments
   Stream<QuerySnapshot<Map<String, dynamic>>> getDiarySessionsComments(

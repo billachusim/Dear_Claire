@@ -100,14 +100,14 @@ class _SubChatScreenState extends State<SubChatScreen> {
                 )
               ],
             ),
-            ChatEditField(onTap: (v) => _sendMessage(v))
+            ChatEditField(onTap: (v, voiceNote) => _sendMessage(v, voiceNote))
           ],
         ),
       ),
     );
   }
 
-  void _sendMessage(String v) async {
+  void _sendMessage(String v, String voiceNote) async {
     final _user = await firebaseServices.getUserInfo();
     firebaseServices.addSubMessage(
         documentID!,

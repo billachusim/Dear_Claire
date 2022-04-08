@@ -169,18 +169,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     print('Session Count is: $FieldValue');
   }
 
-  /// Increase advise counter when user creates new comment.
-
-  Future<void> incrementAdviseCount() async {
-    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
-      {
-        'adviseCount': FieldValue.increment(1),
-      },
-      SetOptions(merge: true),
-    );
-    logger.d('Successfully increased advise count');
-    print('Session Count is: $FieldValue');
-  }
 
   /// Increase total love count when user creates new session or comment.
 

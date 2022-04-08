@@ -71,7 +71,7 @@ class _DiaryDetailsScreenState extends State<DiaryDetailsScreen> {
             ],
           ),
 
-          ChatEditField(onTap: (v){},)
+          ChatEditField(onTap: (v, voiceNote){},)
         ],
       ),
     );

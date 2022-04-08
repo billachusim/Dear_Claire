@@ -71,7 +71,7 @@ class _FollowedDetailsScreenState extends State<FollowedDetailsScreen> {
             ],
           ),
 
-          ChatEditField(onTap: (message){},)
+          ChatEditField(onTap: (message, voiceNote){},)
         ],
       ),
     );
