@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:635604110866:android:6a8952ebcc8d748ba192cb",
         "android_client_info": {
-          "package_name": "com.mobymagic.clairediary"
+          "package_name": "com.example.dear_claire"
         }
       },
       "oauth_client": [
@@ -35,7 +35,7 @@
               "client_id": "635604110866-avcdmvvsdhqsbeikbb3u76ck722bdfvc.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.mobymagic.clairediary"
+                "bundle_id": "com.example.dearClaire"
               }
             }
           ]
@@ -46,7 +46,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:635604110866:android:b08a16b376e63929a192cb",
         "android_client_info": {
-          "package_name": "com.mobymagic.clairediary"
+          "package_name": "com.example.fstore"
         }
       },
       "oauth_client": [
@@ -71,7 +71,7 @@
               "client_id": "635604110866-avcdmvvsdhqsbeikbb3u76ck722bdfvc.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.mobymagic.clairediary"
+                "bundle_id": "com.example.dearClaire"
               }
             }
           ]
@@ -111,6 +111,14 @@
           }
         },
         {
+          "client_id": "635604110866-ppfkb8h3lhpaft8bciqh6qbala4lla6a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mobymagic.clairediary",
+            "certificate_hash": "5382de1df527f6aff6184615edcc9a861f57bccb"
+          }
+        },
+        {
           "client_id": "635604110866-t1k4ie5pstq8471kg3ulu7cqcptg532e.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -139,12 +147,13 @@
               "client_id": "635604110866-avcdmvvsdhqsbeikbb3u76ck722bdfvc.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.mobymagic.clairediary"
+                "bundle_id": "com.example.dearClaire"
               }
             }
           ]
         }
-      }
+      },
+      "admob_app_id": "ca-app-pub-2404156870680632~1437179020"
     }
   ],
   "configuration_version": "1"
