@@ -164,16 +164,19 @@ class CommentWidget extends StatelessWidget {
             height: 6,
           ),
 
-          Container(
-            alignment: Alignment.topLeft,
-            child: Align(
+          Visibility(
+            visible: commentSessionModel!.audioUrl! != 'null',
+            child: Container(
               alignment: Alignment.topLeft,
-              child: Row(
-                children: [
-                  commentSessionModel!.audioUrl!.isNotEmpty
-                      ? PlayAdviseVoiceNote(filePath: commentSessionModel!.audioUrl)
-                      : SizedBox.shrink(),
-                ],
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Row(
+                  children: [
+                    commentSessionModel!.audioUrl!.isNotEmpty
+                        ? PlayAdviseVoiceNote(filePath: commentSessionModel!.audioUrl)
+                        : SizedBox.shrink(),
+                  ],
+                ),
               ),
             ),
           ),
