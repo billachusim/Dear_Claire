@@ -2,8 +2,6 @@ import 'dart:io';
 import 'dart:math';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/Admob/ad_state.dart';
-import 'package:dear_claire/data/models/session_model.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/user_model.dart';
 import 'package:dear_claire/ui/create_session/session_model.dart';
@@ -139,10 +137,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     initializeDatabaseObject();
     sessionTextFocusNode = FocusNode();
     _createInterstitialAd();
-  }
-
-  void attachLocation() async { await
-    _firebaseServices.determinePosition();
   }
 
   void initializeDatabaseObject() async {

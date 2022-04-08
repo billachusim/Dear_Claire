@@ -49,98 +49,15 @@ class FirebaseServices extends ChangeNotifier {
   final String usersKey = 'user';
   final String alterEgoKey = 'alterEgo';
   final String alterEgoAccessCodeKey = 'alterEgoAccessCodeKey';
-  final String userLocationKey = '';
   String? _usersID;
   String? _usersEgo;
 
   //var sharedPreference = SharedPreference.instance;
   String? _alterEgoID;
   String? _alterEgoAccessCode;
-  var address;
   UserModel? user;
   UserModel userModel = UserModel();
 
-  Future<Placemark?> determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.deniedForever) {
-        // Permissions are denied forever, handle appropriately.
-        return Future.error(
-            'Location permissions are permanently denied, we cannot request permissions.');
-      }
-
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    final _response = await Geolocator.getCurrentPosition();
-    return _getAddress(_response.latitude, _response.longitude);
-  }
-
-  Future<Placemark?> _getAddress(double lat, double long) async {
-    Placemark? place;
-    try {
-      List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
-      place = placemarks[0];
-      setSessionLocation("${place.locality}, ${place.administrativeArea}, ${place.country}");
-      return place;
-    } catch (e) {
-      logger.e(e);
-    }
-    return place;
-  }
-
-  /// cache user location
-  void setSessionLocation(String locationString) async {
-    prefs = await SharedPreferences.getInstance();
-    prefs!.setString(userLocationKey, locationString);
-    notifyListeners();
-  }
-
-  /// clear user location
-  void clearUsersLocation(String id) async {
-    prefs = await SharedPreferences.getInstance();
-    //prefs!.clear(userLocationKey, id);
-    notifyListeners();
-  }
-
-  /// get users location
-  Future<String> getUsersLocation() async {
-    prefs = await SharedPreferences.getInstance();
-    return prefs!.getString(userLocationKey) ?? '';
-  }
-
-  Future<Widget> showUserLocation() async {
-    address = await getUsersLocation();
-
-    if (address!.isNotEmpty) {
-      return Text('in $address',
-          textAlign: TextAlign.end,
-          maxLines: 1,
-          style: GoogleFonts.lato(
-              fontSize: 11.0,
-              color: Colors.white70,
-              fontWeight: FontWeight.w600));
-    } else
-      return Text('',
-          textAlign: TextAlign.end,
-          maxLines: 1,
-          style: GoogleFonts.lato(
-              fontSize: 12.0,
-              color: Colors.white70,
-              fontWeight: FontWeight.w700));
-  }
 
   /// subscribe user to a topic
   Future<void> _subscribeToSession(String sender, Session session) async {

@@ -172,26 +172,16 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                       SizedBox(
                         height: 3,
                       ),
-                      FutureBuilder<Widget>(
-                          future: firebaseServices.showUserLocation(),
-                          builder: (BuildContext context,
-                              AsyncSnapshot<Widget> snapshot) {
-                            if (snapshot.hasData) {
-                              print('Location: ${snapshot.hasData}');
-                              return snapshot.data!;
-                            } else {
-                              return Text('',
-                                  textAlign: TextAlign.end,
-                                  maxLines: 1,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 12.0,
-                                      color: Colors.white70,
-                                      fontWeight: FontWeight.w700));
-                            }
-                          }),
+                      Text(element.location ?? "",
+                          textAlign: TextAlign.end,
+                          maxLines: 1,
+                          style: GoogleFonts.lato(
+                              fontSize: 12.0,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w700)),
                     ],
                   ),
-                )
+                ),
               ],
             ),
             SizedBox(

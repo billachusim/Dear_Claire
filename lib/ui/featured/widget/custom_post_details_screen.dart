@@ -215,23 +215,13 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
                                   SizedBox(
                                     height: 5,
                                   ),
-                                  FutureBuilder<Widget>(
-                                      future: firebaseServices.showUserLocation(),
-                                      builder: (BuildContext context,
-                                          AsyncSnapshot<Widget> snapshot) {
-                                        if (snapshot.hasData) {
-                                          print('Location: ${snapshot.hasData}');
-                                          return snapshot.data!;
-                                        } else {
-                                          return Text('',
-                                              textAlign: TextAlign.end,
-                                              maxLines: 1,
-                                              style: GoogleFonts.lato(
-                                                  fontSize: 12.0,
-                                                  color: Colors.white70,
-                                                  fontWeight: FontWeight.w700));
-                                        }
-                                      }),
+                                  Text(_session.location ?? "",
+                                      textAlign: TextAlign.end,
+                                      maxLines: 1,
+                                      style: GoogleFonts.lato(
+                                          fontSize: 12.0,
+                                          color: Colors.white70,
+                                          fontWeight: FontWeight.w700)),
                                 ],
                               ),
                             )

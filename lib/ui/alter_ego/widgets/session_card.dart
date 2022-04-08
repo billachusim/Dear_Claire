@@ -120,23 +120,13 @@ class SessionCard extends StatelessWidget {
                         SizedBox(
                           height: 4,
                         ),
-                        FutureBuilder<Widget>(
-                            future: firebaseServices.showUserLocation(),
-                            builder: (BuildContext context, AsyncSnapshot<Widget> snapshot){
-                              if (snapshot.hasData) {
-                                print('Location: ${snapshot.hasData}');
-                                return snapshot.data!;
-                              } else {
-                                return Text('Location',
-                                    textAlign: TextAlign.start,
-                                    maxLines: 1,
-                                    style: GoogleFonts.lato(
-                                        fontSize: 13.0,
-                                        color: Pallet.colorWhite,
-                                        fontWeight: FontWeight.normal));
-                              }
-                            }
-                        ),
+                       Text(element.location ?? "",
+                           textAlign: TextAlign.start,
+                           maxLines: 1,
+                           style: GoogleFonts.lato(
+                               fontSize: 13.0,
+                               color: Pallet.colorWhite,
+                               fontWeight: FontWeight.normal)),
                       ],
                     ),
                   ),
