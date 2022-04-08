@@ -38,7 +38,7 @@ class _SessionPostDetailsScreenState extends State<SessionPostDetailsScreen> {
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: HexColor.fromHex(sessionModel!.colorHex!),
-        title: Text(sessionModel!.title!),
+        title: Text(sessionModel!.title ?? ""),
         elevation: 0,
       ),
       body: Stack(

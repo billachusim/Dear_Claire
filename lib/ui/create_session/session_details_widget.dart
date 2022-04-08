@@ -137,16 +137,19 @@ class SessionDetailsWidget extends StatelessWidget {
           ),
 
 
-          Container(
-            alignment: Alignment.centerLeft,
-            child: Align(
+          Visibility(
+            visible: singleSessionModel!.audioUrl != null,
+            child: Container(
               alignment: Alignment.centerLeft,
-              child: Row(
-                children: [
-                  singleSessionModel!.audioUrl!.isNotEmpty
-                      ? CustomPlaySoundWidget(filePath: singleSessionModel?.audioUrl)
-                      : SizedBox.shrink(),
-                ],
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  children: [
+                    singleSessionModel!.audioUrl != null
+                        ? CustomPlaySoundWidget(filePath: singleSessionModel?.audioUrl)
+                        : SizedBox.shrink(),
+                  ],
+                ),
               ),
             ),
           ),

@@ -93,6 +93,6 @@ class Session {
 
   @override
   String toString() {
-    return 'Session{audioUrl: $audioUrl, colorHex: $colorHex, archived: $archived, flagged: $flagged, featured: $featured, imageUrls: $imageUrls, message: $message, respondentUserId: $respondentUserId, sessionId: $sessionId, timeCreated: $timeCreated, timeLastActivity: $timeLastActivity, title: $title, userAvatarUrl: $userAvatarUrl, userId: $userId, userNickname: $userNickname, private: $private, repliesEnabled: $repliesEnabled, font: $font, meTooFollowCount: $meTooFollowCount, moodId: $moodId, followers: $followers, meToos: $meToos, meLove: $meLove, meHiFive: $meHiFive, meFlower: $meFlower}';
+    return 'Session{audioUrl: $audioUrl, location: $location, colorHex: $colorHex, archived: $archived, flagged: $flagged, featured: $featured, imageUrls: $imageUrls, message: $message, respondentUserId: $respondentUserId, sessionId: $sessionId, timeCreated: $timeCreated, timeLastActivity: $timeLastActivity, title: $title, userAvatarUrl: $userAvatarUrl, userId: $userId, userNickname: $userNickname, private: $private, repliesEnabled: $repliesEnabled, font: $font, meTooFollowCount: $meTooFollowCount, moodId: $moodId, followers: $followers, meToos: $meToos, meLove: $meLove, meHiFive: $meHiFive, meFlower: $meFlower}';
   }
 }
