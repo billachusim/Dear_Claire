@@ -17,6 +17,8 @@ import 'package:emoji_chooser/emoji_chooser.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:hive/hive.dart';
@@ -36,17 +38,13 @@ class CreateSessionPage extends StatefulWidget {
 
 const int maxFailedLoadAttempts = 3;
 
-
 class _CreateSessionPageState extends State<CreateSessionPage> {
   TextEditingController sessionTitleController = TextEditingController();
   final FirebaseServices _firebaseServices = FirebaseServices();
   final c = Get.find<CreateSessionController>();
 
-
   //object for hive database
   late final box;
-
-
 
 //obtain user id, nickname and avatarUrl linked to this user
   var currentUser = FirebaseAuth.instance.currentUser;
@@ -77,10 +75,55 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   bool acceptReplies = false;
   bool followClaire = true;
   String sessionMood = 'Current Mood';
+  bool showLocation = false;
   String? _location = '';
 
 
-  randomizeBackgroundColor(){
+
+  Future<Placemark?> determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.deniedForever) {
+        // Permissions are denied forever, handle appropriately.
+        return Future.error(
+            'Location permissions are permanently denied, we cannot request permissions.');
+      }
+
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    final _response = await Geolocator.getCurrentPosition();
+    return _getAddress(_response.latitude, _response.longitude);
+  }
+
+  Future<Placemark?> _getAddress(double lat, double long) async {
+    Placemark? place;
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
+      place = placemarks[0];
+      _location = ("${place.locality}, ${place.administrativeArea}, ${place.country}");
+      return place;
+    } catch (e) {
+      logger.e(e);
+    }
+    return place;
+  }
+
+
+
+  randomizeBackgroundColor() {
     Random random = new Random();
     int randomNumber = random.nextInt(Constant.DIARY_COLORS.length);
     c.selectedBackgroundColor = randomNumber.obs;
@@ -98,11 +141,15 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     _createInterstitialAd();
   }
 
-  void initializeDatabaseObject()async{
-   box = await Hive.openBox('draft');
+  void attachLocation() async { await
+    _firebaseServices.determinePosition();
+  }
+
+  void initializeDatabaseObject() async {
+    box = await Hive.openBox('draft');
     String text = box.get("text");
     print("text is:$text");
-    if(text.isNotEmpty){
+    if (text.isNotEmpty) {
       sessionTextEditingController.text = text;
     }
   }
@@ -120,67 +167,54 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   /// Increase session count when user creates new session.
 
   Future<void> incrementSessionCount() async {
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser!.uid)
-        .update({
-      'sessionCount': FieldValue.increment(1),
-    },
-    //SetOptions(merge: true),
+    FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).update(
+      {
+        'sessionCount': FieldValue.increment(1),
+      },
+      //SetOptions(merge: true),
     );
     logger.d('Successfully increased session count');
     print('Session Count is: $FieldValue');
-
   }
 
   /// Increase advise counter when user creates new comment.
 
   Future<void> incrementAdviseCount() async {
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser?.uid)
-        .set({
-      'adviseCount': FieldValue.increment(1),
-    },
+    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+      {
+        'adviseCount': FieldValue.increment(1),
+      },
       SetOptions(merge: true),
     );
     logger.d('Successfully increased advise count');
     print('Session Count is: $FieldValue');
-
   }
 
   /// Increase total love count when user creates new session or comment.
 
   Future<void> incrementTotalLoveCount() async {
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser?.uid)
-        .set({
-      'totalLoveCount': FieldValue.increment(1),
-    },
+    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+      {
+        'totalLoveCount': FieldValue.increment(1),
+      },
       SetOptions(merge: true),
     );
     logger.d('Successfully increased total love count');
     print('Session Count is: $FieldValue');
-
   }
 
   /// Increase current love count when user creates new session or comment.
 
   Future<void> incrementCurrentLoveCount() async {
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser?.uid)
-        .set({
-      'currentLoveCount': FieldValue.increment(1),
-    },
+    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+      {
+        'currentLoveCount': FieldValue.increment(1),
+      },
       SetOptions(merge: true),
     );
     logger.d('Successfully saved new nickname');
     print('Session Count is: $FieldValue');
-
   }
-
 
 //show up when user clicks on the FAB to create a session
   Future<void> _showCardDialog() async {
@@ -191,8 +225,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         return Center(
           child: AlertDialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30.0)
-            ),
+                borderRadius: BorderRadius.circular(30.0)),
             title: Container(
               child: Text(AppString.save_or_share_title,
                   textAlign: TextAlign.center),
@@ -217,8 +250,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                           borderRadius: BorderRadius.circular(30.0),
                           isExpanded: true,
                           value: c.sessionMood.value,
-                          icon: Icon(Icons.arrow_circle_down_rounded, color: Colors.pink,),
-                          items: Constant.USER_SESSION_MOODS.map((String items) {
+                          icon: Icon(
+                            Icons.arrow_circle_down_rounded,
+                            color: Colors.pink,
+                          ),
+                          items:
+                              Constant.USER_SESSION_MOODS.map((String items) {
                             return DropdownMenuItem(
                                 value: items, child: Text(items));
                           }).toList(),
@@ -230,13 +267,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                       ),
                       Container(
                           child: Row(
-                            children: [
+                        children: [
                           Icon(Icons.lock),
                           SizedBox(width: 8),
                           Flexible(
-                            child: Text(
-                                AppString.do_you_want_other_users,
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                            child: Text(AppString.do_you_want_other_users,
+                                style: TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.w600)),
                           ),
                           Obx(() => Switch(
                                 value: c.acceptReplies.value,
@@ -247,8 +284,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                 // activeColor: Colors.green,
                               ))
                         ],
-                      )
-                      ),
+                      )),
                       SizedBox(
                         height: 10,
                       ),
@@ -260,15 +296,16 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                           Flexible(
                             child: Text(
                                 "Do you want Claire to reply and follow this diary session?",
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                                style: TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.w600)),
                           ),
-                          Obx(()=>Switch(
-                            value: c.followClaire.value,
-                            onChanged: (value) {
-                              c.followClaire.value = value;
-},
-                                 activeTrackColor: Colors.purpleAccent,
-                                 activeColor: Pallet.colorSecondary,
+                          Obx(() => Switch(
+                                value: c.followClaire.value,
+                                onChanged: (value) {
+                                  c.followClaire.value = value;
+                                },
+                                activeTrackColor: Colors.purpleAccent,
+                                activeColor: Pallet.colorSecondary,
                               ))
                         ],
                       )),
@@ -277,23 +314,22 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                       ),
                       Container(
                           child: Row(
-                        children: [
-                          Icon(Icons.location_on_sharp),
-                          SizedBox(width: 9),
-                          Flexible(
-                            child: Text("Do you want to tag your location?",
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                          ),
+                            children: [
+                              Icon(Icons.location_on_sharp),
+                              SizedBox(width: 9),
+                              Flexible(
+                                child: Text("Do you want to tag your location?",
+                                    style: TextStyle(
+                                        fontSize: 13, fontWeight: FontWeight.w600)
+                                ),
+                              ),
                           Obx(() => Switch(
                                 value: c.location.value,
-                                onChanged: (value) async {
-                                  c.location.value = value;
+                                onChanged: (showLocation) async {
+                                  c.location.value = showLocation;
 
-                                  if (value) {
-                                    await firebaseServices
-                                        .determinePosition();
-                                    _location =
-                                        await firebaseServices.getUsersLocation();
+                                  if (showLocation) {
+                                    await determinePosition();
                                     setState(() {});
                                   }
                                 },
@@ -302,14 +338,15 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                               ))
                         ],
                       )),
-                      SizedBox(height: 10,),
+                      SizedBox(
+                        height: 10,
+                      ),
                       Text(
                         "Dear Claire collects location data to enable you add or filter diary sessions based on location.",
                         style: TextStyle(
                             fontSize: 12,
                             color: Pallet.colorSecondary,
-                            fontStyle: FontStyle.italic
-                        ),
+                            fontStyle: FontStyle.italic),
                       )
                     ],
                   ),
@@ -327,11 +364,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                 },
               ),
               TextButton(
-                child: Obx(()=>
-        c.acceptReplies.value ? Text("Share and Save",
-          style: TextStyle(color: Pallet.colorSecondary))
-            :Text('Save', style: TextStyle(color: Pallet.colorSecondary)),
-        ),
+                child: Obx(
+                  () => c.acceptReplies.value
+                      ? Text("Share and Save",
+                          style: TextStyle(color: Pallet.colorSecondary))
+                      : Text('Save',
+                          style: TextStyle(color: Pallet.colorSecondary)),
+                ),
                 onPressed: () {
                   if (sessionTextEditingController.text.isNotEmpty &&
                       sessionTitleController.text.isNotEmpty) {
@@ -363,13 +402,14 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
           appBar: AppBar(
             centerTitle: true,
             backgroundColor:
-            Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
-            title: Text("Start A Diary Session",
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 22,
-              color: Pallet.colorWhite,
-            ),
+                Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
+            title: Text(
+              "Start A Diary Session",
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 22,
+                color: Pallet.colorWhite,
+              ),
             ),
             elevation: 0,
           ),
@@ -407,17 +447,15 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                 .DIARY_FONT_STYLES[c.selectedFontIndex.value],
                             maxLines: null,
                             minLines: 1,
-                            onChanged: (value){
-                              if(value!=null){
+                            onChanged: (value) {
+                              if (value != null) {
                                 box.put("text", value);
                               }
-
                             },
                             scrollPadding: EdgeInsets.all(20.0),
                             controller: sessionTextEditingController,
                             focusNode: sessionTextFocusNode,
                             decoration: InputDecoration(
-
                               contentPadding: EdgeInsets.all(10),
                               focusedBorder: InputBorder.none,
                               disabledBorder: InputBorder.none,
@@ -459,8 +497,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                       child: IconButton(
                         alignment: Alignment.topCenter,
                         icon: Icon(Icons.camera_enhance_rounded,
-                            size: 35,
-                            color: Pallet.colorWhite),
+                            size: 35, color: Pallet.colorWhite),
                         onPressed: loadAssets,
                       )),
                   SizedBox(
@@ -531,7 +568,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                       height: 20.h,
                       width: 25.w,
                       child: IconButton(
-                        icon: Icon(Icons.mic_rounded, size: 35, color: Pallet.colorWhite,),
+                        icon: Icon(
+                          Icons.mic_rounded,
+                          size: 35,
+                          color: Pallet.colorWhite,
+                        ),
                         onPressed: () async {
                           var data = await Navigator.push(
                               context,
@@ -710,8 +751,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category2 = 'sex and dating';
       sessionObject.category3 = 'boyfriend and girlfriend';
       sessionObject.category4 = 'birthdays and anniversary';
-
-
     }
 
     if (sessionTextEditingController.text.contains('marriage') &
@@ -719,7 +758,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'marriage and family';
       sessionObject.category2 = 'husband and wife';
       sessionObject.category3 = 'birthdays and anniversary';
-
     }
 
     if (sessionTextEditingController.text.contains('sex') &
@@ -727,8 +765,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'sex and dating';
       sessionObject.category2 = 'love and relationship';
       sessionObject.category3 = 'boyfriend and girlfriend';
-
-
     }
 
     if (sessionTextEditingController.text.contains('school') &
@@ -748,14 +784,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'hate and abuse';
       sessionObject.category2 = 'depression and anxiety';
       sessionObject.category3 = 'sad and depressed';
-
     }
 
     if (sessionTextEditingController.text.contains('friends') &
         sessionTextEditingController.text.contains('fun')) {
       sessionObject.category1 = 'friends and fun';
       sessionObject.category2 = 'life and living';
-
     }
 
     if (sessionTextEditingController.text.contains('depression') &
@@ -763,7 +797,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'depression and anxiety';
       sessionObject.category2 = 'sad and depressed';
       sessionObject.category3 = 'single and lonely';
-
     }
 
     if (sessionTextEditingController.text.contains('help') &
@@ -774,12 +807,10 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     if (sessionTextEditingController.text.contains('sick') &
         sessionTextEditingController.text.contains('health') &
-        sessionTextEditingController.text.contains('fitness')
-    ) {
+        sessionTextEditingController.text.contains('fitness')) {
       sessionObject.category1 = 'health and fitness';
       sessionObject.category2 = 'life and living';
       sessionObject.category3 = 'food and drink';
-
     }
 
     if (sessionTextEditingController.text.contains('husband') &
@@ -788,8 +819,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category2 = 'marriage and family';
       sessionObject.category3 = 'life and living';
       sessionObject.category4 = 'birthdays and anniversary';
-
-
     }
 
     if (sessionTextEditingController.text.contains('boyfriend') &
@@ -798,8 +827,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category2 = 'sex and dating';
       sessionObject.category3 = 'birthdays and anniversary';
       sessionObject.category4 = 'boyfriend and girlfriend';
-
-
     }
 
     if (sessionTextEditingController.text.contains('food') &
@@ -807,7 +834,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'food and drink';
       sessionObject.category2 = 'health and fitness';
       sessionObject.category3 = 'friends and fun';
-
     }
 
     if (sessionTextEditingController.text.contains('birthday') &
@@ -816,8 +842,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category2 = 'love and relationship';
       sessionObject.category3 = 'marriage and family';
       sessionObject.category4 = 'friends and fun';
-
-
     }
 
     if (sessionTextEditingController.text.contains('pray') &
@@ -832,8 +856,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category2 = 'life and living';
       sessionObject.category3 = 'marriage and family';
       sessionObject.category4 = 'parents and children';
-
-
     }
 
     if (sessionTextEditingController.text.contains('parents') &
@@ -842,7 +864,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category2 = 'marriage and family';
       sessionObject.category3 = 'husband and wife';
       sessionObject.category4 = 'childhood and memory';
-
     }
 
     if (sessionTextEditingController.text.contains('business') &
@@ -850,7 +871,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'business and entrepreneur';
       sessionObject.category2 = 'work and career';
       sessionObject.category3 = 'school and education';
-
     }
 
     if (sessionTextEditingController.text.contains('art') &
@@ -858,7 +878,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'arts and photography';
       sessionObject.category2 = 'work and career';
       sessionObject.category3 = 'business and entrepreneur';
-
     }
 
     if (sessionTextEditingController.text.contains('music') &
@@ -867,8 +886,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category2 = 'arts and photography';
       sessionObject.category3 = 'work and career';
       sessionObject.category4 = 'comedy and entertainment';
-
-
     }
 
     if (sessionTextEditingController.text.contains('riddles') &
@@ -876,7 +893,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'riddles and jokes';
       sessionObject.category2 = 'friends Aad fun';
       sessionObject.category3 = 'comedy and entertainment';
-
     }
 
     if (sessionTextEditingController.text.contains('television') &
@@ -885,9 +901,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category2 = 'music Aad videos';
       sessionObject.category3 = 'arts and photography';
       sessionObject.category4 = 'comedy and entertainment';
-
-
-
     }
 
     if (sessionTextEditingController.text.contains('puzzle') &
@@ -895,7 +908,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'puzzles and games';
       sessionObject.category2 = 'riddles Aad jokes';
       sessionObject.category3 = 'comedy and entertainment';
-
     }
 
     if (sessionTextEditingController.text.contains('life') &
@@ -904,8 +916,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category2 = 'happy and blessed';
       sessionObject.category3 = 'childhood and memory';
       sessionObject.category4 = 'work and career';
-
-
     }
 
     if (sessionTextEditingController.text.contains('single') &
@@ -913,7 +923,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'single and lonely';
       sessionObject.category2 = 'sad Aad depressed';
       sessionObject.category3 = 'love and relationship';
-
     }
 
     if (sessionTextEditingController.text.contains('sad') &
@@ -921,7 +930,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'sad and depressed';
       sessionObject.category2 = 'single and lonely';
       sessionObject.category3 = 'life and living';
-
     }
 
     if (sessionTextEditingController.text.contains('brother') &
@@ -929,7 +937,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'brothers and sisters';
       sessionObject.category2 = 'marriage and family';
       sessionObject.category3 = 'husband and wife';
-
     }
 
     if (sessionTextEditingController.text.contains('comedy') &
@@ -937,7 +944,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category1 = 'comedy and entertainment';
       sessionObject.category2 = 'music Aad videos';
       sessionObject.category3 = 'riddles and jokes';
-
     }
 
     if (sessionTextEditingController.text.contains('happy') &
@@ -946,8 +952,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category2 = 'life Aad living';
       sessionObject.category3 = 'love and relationship';
       sessionObject.category4 = 'marriage and family';
-
-
     }
 
     sessionObject.userAvatarUrl = userModel.avatarUrl;
@@ -956,10 +960,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     sessionObject.private = c.acceptReplies.value;
     sessionObject.repliesEnabled = c.acceptReplies.value;
     sessionObject.message = sessionTextEditingController.text;
-    sessionObject.colorHex = Constant.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
+    sessionObject.colorHex =
+        Constant.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
     sessionObject.sessionId = uuid.v1();
     sessionObject.userId = userModel.userId;
-    sessionObject.moodId = Constant.USER_SESSION_MOODS.indexOf(c.sessionMood.value);
+    sessionObject.moodId =
+        Constant.USER_SESSION_MOODS.indexOf(c.sessionMood.value);
     sessionObject.location = _location;
 
     bool isSuccessfull =
@@ -968,11 +974,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     Hive.box("draft").clear();
     categorize(sessionObject);
 
-
     navigateToNewSession(await _firebaseServices.getSingleSession(
         sessionId: sessionObject.sessionId));
-
-
   }
 
   InterstitialAd? _interstitialAd;
@@ -983,9 +986,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   void _createInterstitialAd() {
     InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/3729355238" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/7377790353" :
-      '',      request: AdRequest(),
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/3729355238"
+          : Platform.isIOS
+              ? "ca-app-pub-2404156870680632/7377790353"
+              : '',
+      request: AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
           _interstitialAd = ad;
@@ -1026,9 +1032,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         MaterialPageRoute(
             builder: (_) => SessionPostDetailsScreen(
                   sessionModel: session,
-                )
-        )
-    );
+                )));
   }
 
   void categorize(CreateSessionModel createSessionModel) {

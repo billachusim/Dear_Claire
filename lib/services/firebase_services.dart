@@ -49,7 +49,7 @@ class FirebaseServices extends ChangeNotifier {
   final String usersKey = 'user';
   final String alterEgoKey = 'alterEgo';
   final String alterEgoAccessCodeKey = 'alterEgoAccessCodeKey';
-  final String userLocationKey = 'location';
+  final String userLocationKey = '';
   String? _usersID;
   String? _usersEgo;
 
@@ -93,7 +93,7 @@ class FirebaseServices extends ChangeNotifier {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
       place = placemarks[0];
-      setUsersLocation("${place.locality}, ${place.administrativeArea}, ${place.country}");
+      setSessionLocation("${place.locality}, ${place.administrativeArea}, ${place.country}");
       return place;
     } catch (e) {
       logger.e(e);
@@ -102,9 +102,9 @@ class FirebaseServices extends ChangeNotifier {
   }
 
   /// cache user location
-  void setUsersLocation(String id) async {
+  void setSessionLocation(String locationString) async {
     prefs = await SharedPreferences.getInstance();
-    prefs!.setString(userLocationKey, id);
+    prefs!.setString(userLocationKey, locationString);
     notifyListeners();
   }
 

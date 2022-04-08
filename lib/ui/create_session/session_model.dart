@@ -80,8 +80,8 @@ class CreateSessionModel {
     if (json['repliesEnabled'] != null) {
       repliesEnabled = json['repliesEnabled'];
     }
-    if (json['locationId'] != null) {
-      location = json['locationId'];
+    if (json['location'] != null) {
+      location = json['location'];
     }
 
     title = json['title'];
@@ -113,7 +113,7 @@ class CreateSessionModel {
       data['moodId'] = moodId;
     }
     if (location != null) {
-      data['locationId'] = location;
+      data['location'] = location;
     }
 
     data['repliesEnabled'] = repliesEnabled;

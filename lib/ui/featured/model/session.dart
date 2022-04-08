@@ -84,7 +84,7 @@ class Session {
       meLove: json['meLove'] ?? [],
       meHiFive: json['meHiFive'] ?? [],
       meFlower: json['meFlower'] ?? [],
-      location: json['molocationodId'] ?? '',
+      location: json['location'] ?? '',
     );
   }
 

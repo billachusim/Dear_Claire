@@ -16,6 +16,7 @@ class FeaturedSessionModel {
   List<dynamic>? meToos;
   bool flagged;
   bool featured;
+  String? location;
 
   FeaturedSessionModel({
     this.title,
@@ -33,6 +34,7 @@ class FeaturedSessionModel {
     this.meToos,
     this.flagged = false,
     this.featured = false,
+    this.location
   });
 
   factory FeaturedSessionModel.fromJson(dynamic json) {
@@ -52,6 +54,7 @@ class FeaturedSessionModel {
       moodId: json['moodId'] ?? 0,
       followers: json['followers'] ?? [],
       meToos: json['meToos'] ?? [],
+      location: json['location'] ?? '',
     );
   }
 }
