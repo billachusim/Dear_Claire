@@ -168,7 +168,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
 
     final _commentModel = CommentSessionModel(
         alterEgoId: _userModel.alterEgoId,
-        audioUrl: voiceNote ?? '',
+        audioUrl: voiceNote,
         commentId: '',
         flagged: session.flagged!,
         imageUrls: [],

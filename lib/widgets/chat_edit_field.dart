@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
@@ -9,11 +11,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:full_screen_image/full_screen_image.dart';
 import 'package:intl/intl.dart';
+import 'package:multi_image_picker/multi_image_picker.dart';
 
+import '../services/firebase_services.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../ui/create_session/sound/play_sound_widget.dart';
 import '../ui/create_session/sound/sound_widget.dart';
+import '../ui/featured/model/comment_session_model.dart';
+import '../ui/featured/model/session.dart';
+import '../utils/constant.dart';
 
 class ChatEditField extends StatefulWidget {
   final Function(String value, String voiceNote) onTap;
@@ -26,11 +34,16 @@ class ChatEditField extends StatefulWidget {
 
 class _ChatEditFieldState extends State<ChatEditField> {
   final TextEditingController _controller = TextEditingController();
+  final FirebaseServices _firebaseServices = FirebaseServices();
+
   bool isTyping = false;
   User? currentUser = FirebaseAuth.instance.currentUser;
 
   //initialize the audio record file that stores user audio record. null by default
   File? _recordFile;
+
+  //initialize the image list stores user selected images.
+  List<Asset> imageList = <Asset>[];
 
   Future<String> uploadCommentAudio(File file) async {
     firebase_storage.UploadTask uploadTask;
@@ -48,6 +61,97 @@ class _ChatEditFieldState extends State<ChatEditField> {
     var audioUrl = await (await uploadTask).ref.getDownloadURL();
     print("The audio url is $audioUrl");
     return audioUrl;
+  }
+
+  Future<void> loadAssets() async {
+    String error = 'No Error Detected';
+    try {
+      imageList = await MultiImagePicker.pickImages(
+        maxImages: 2,
+        enableCamera: true,
+        selectedAssets: imageList,
+        cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
+        materialOptions: MaterialOptions(
+          actionBarColor: "#abcdef",
+          actionBarTitle: "To Dear Claire",
+          allViewTitle: "All Photos",
+          useDetailsView: false,
+          selectCircleStrokeColor: "#000000",
+        ),
+      );
+    } on Exception catch (e) {
+      error = e.toString();
+    }
+
+    if (!mounted) return;
+    setState(() {
+      imageList;
+    });
+  }
+
+  void _sendComment(Session session) async {
+    if (!await firebaseServices.isUserSignIn(context)) return;
+
+    final _userModel = await firebaseServices.getUserInfo();
+
+    List<String> imageDownloadUrls = <String>[];
+    for (var image in imageList) {
+      imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
+    }
+    final _commentModel = CommentSessionModel(
+        alterEgoId: _userModel.alterEgoId,
+        audioUrl: _recordFile.toString(),
+        commentId: '',
+        flagged: false,
+        imageUrls: imageDownloadUrls,
+        isUserAdmin: false,
+        message: _controller.text,
+        timeCreated: Timestamp.now(),
+        userAvatarUrl: _userModel.avatarUrl,
+        userId: _userModel.userId,
+        userNickname:  _userModel.nickname);
+
+    firebaseServices.addComment(
+        title: session.title ?? '',
+        docId: session.sessionId!,
+        sender: _userModel.userType == 'ADMIN' ? 'Claire' :
+        _userModel.userType == 'SUPER_ADMIN' ? 'Claire' :
+        _userModel.nickname!,
+        map: _commentModel.toJson());
+    updateSessionTimeLastActivity(session);
+    incrementAdviseCount();
+  }
+
+
+  /// Increase advise counter when user creates new comment.
+
+  Future<void> incrementAdviseCount() async {
+    FirebaseFirestore.instance
+        .collection("user_comment_counters")
+        .doc(currentUser?.uid)
+        .update({
+      "numberOfComments": FieldValue.increment(1),
+    },
+    );
+    logger.d('Successfully increased advise count');
+    print('Session Count is: $FieldValue');
+
+  }
+
+
+  /// Update a session's timeLastActivity when new comment is made.
+
+  Future<void> updateSessionTimeLastActivity(Session session) async {
+    FirebaseFirestore.instance
+        .collection("sessions")
+        .doc(session.sessionId)
+        .update({
+      'timeLastActivity': FieldValue.serverTimestamp(),
+    },
+    );
+    logger.d('Successfully increased advise count');
+    print('Session Count is: $FieldValue');
+
   }
 
   @override
@@ -86,6 +190,74 @@ class _ChatEditFieldState extends State<ChatEditField> {
                   ),
                 ),
               ),
+
+              Container(
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Row(
+                    children: [
+                      Visibility(
+                          visible: imageList.isNotEmpty,
+                          child: FullScreenWidget(
+                            child: CachedNetworkImage(
+                                height: 75,
+                                width: 75,
+                                imageUrl: imageList.isNotEmpty
+                                    ? imageList.first.toString()
+                                    : '',
+                                imageBuilder: (context, imageProvider) => Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(25),
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.fill,
+                                    ),
+                                  ),
+                                ),
+                                placeholder: (context, url) =>
+                                    Center(child: CircularProgressIndicator()),
+                                errorWidget: (context, url, error) => Image.asset(
+                                  "assets/images/brown_boy_mask.png",
+                                  width: 48,
+                                  height: 48,
+                                ) //Icon(Icons.error),
+                            ),
+                          )),
+
+                      SizedBox(width: 5,),
+
+                      Visibility(
+                          visible: imageList.isNotEmpty,
+                          child: FullScreenWidget(
+                            child: CachedNetworkImage(
+                                height: 75,
+                                width: 75,
+                                imageUrl: imageList.isNotEmpty
+                                    ? imageList.last.toString()
+                                    : '',
+                                imageBuilder: (context, imageProvider) => Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(25),
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.fill,
+                                    ),
+                                  ),
+                                ),
+                                placeholder: (context, url) =>
+                                    Center(child: CircularProgressIndicator()),
+                                errorWidget: (context, url, error) => Image.asset(
+                                  "assets/images/brown_boy_mask.png",
+                                  width: 48,
+                                  height: 48,
+                                ) //Icon(Icons.error),
+                            ),
+                          )),
+                    ],
+                  ),
+                ),
+              ),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -99,7 +271,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                       )),
                   CupertinoButton(
                     padding: EdgeInsets.zero,
-                    onPressed: () {},
+                    onPressed: loadAssets,
                     child: Icon(
                       Icons.linked_camera_rounded,
                       size: 30,
@@ -127,11 +299,12 @@ class _ChatEditFieldState extends State<ChatEditField> {
                             maxLines: null,
                             controller: _controller,
                             onChanged: (text) {
-                              if (text.length >= 1) {
+                              if (text.length >= 2) {
                                 setState(() {
                                   isTyping = true;
                                 });
                               } else {
+                                isTyping = false;
                                 setState(() {
                                   isTyping = false;
                                 });
@@ -158,6 +331,10 @@ class _ChatEditFieldState extends State<ChatEditField> {
                             if (_controller.text.isNotEmpty)
                               widget.onTap(_controller.text, _recordFile.toString());
                             _controller.text = '';
+                            setState(() {
+                              _recordFile = null;
+                              imageList = [];
+                            });
                           },
                           mini: true,
                           backgroundColor: Pallet.colorSplashScreen,
@@ -190,47 +367,6 @@ class _ChatEditFieldState extends State<ChatEditField> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _recordFileWidget() {
-    return Container(
-      height: 60.h,
-      width: 60.w,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          Center(
-              child: IconButton(
-                  icon: Icon(Icons.play_circle_fill_outlined,
-                      color: Colors.white, size: 40.r),
-                  onPressed: () {
-                    showDialog<void>(
-                      context: context,
-                      barrierDismissible: false, // user must tap button!
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          content: PlaySoundWidget(
-                            filePath: _recordFile?.path,
-                          ),
-                        );
-                      },
-                    );
-                  })),
-          Positioned(
-              right: -5,
-              top: -9,
-              child: IconButton(
-                  icon: Icon(
-                    Icons.cancel,
-                    color: Colors.red,
-                    size: 24.r,
-                  ),
-                  onPressed: () => setState(() {
-                        _recordFile = null;
-                      })))
-        ],
       ),
     );
   }
