@@ -191,69 +191,81 @@ class _ChatEditFieldState extends State<ChatEditField> {
                 ),
               ),
 
-              Container(
-                child: Align(
-                  alignment: Alignment.bottomLeft,
-                  child: Row(
-                    children: [
-                      Visibility(
-                          visible: imageList.isNotEmpty,
-                          child: FullScreenWidget(
-                            child: CachedNetworkImage(
-                                height: 75,
-                                width: 75,
-                                imageUrl: imageList.isNotEmpty
-                                    ? imageList.first.toString()
-                                    : '',
-                                imageBuilder: (context, imageProvider) => Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                      fit: BoxFit.fill,
+              Visibility(
+                visible: imageList.isNotEmpty,
+                child: Container(
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Row(
+                      children: [
+                        Visibility(
+                            visible: imageList.isNotEmpty,
+                            child: FullScreenWidget(
+                              child: CachedNetworkImage(
+                                  height: 75,
+                                  width: 75,
+                                  imageUrl: imageList.isNotEmpty
+                                      ? imageList.first.toString()
+                                      : '',
+                                  imageBuilder: (context, imageProvider) => Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(25),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.fill,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                placeholder: (context, url) =>
-                                    Center(child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/brown_boy_mask.png",
-                                  width: 48,
-                                  height: 48,
-                                ) //Icon(Icons.error),
-                            ),
-                          )),
+                                  placeholder: (context, url) =>
+                                      Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => Image.asset(
+                                    "assets/images/brown_boy_mask.png",
+                                    width: 48,
+                                    height: 48,
+                                  ) //Icon(Icons.error),
+                              ),
+                            )),
 
-                      SizedBox(width: 5,),
+                        SizedBox(width: 5,),
 
-                      Visibility(
-                          visible: imageList.isNotEmpty,
-                          child: FullScreenWidget(
-                            child: CachedNetworkImage(
-                                height: 75,
-                                width: 75,
-                                imageUrl: imageList.isNotEmpty
-                                    ? imageList.last.toString()
-                                    : '',
-                                imageBuilder: (context, imageProvider) => Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                      fit: BoxFit.fill,
+                        Visibility(
+                            visible: imageList.isNotEmpty,
+                            child: FullScreenWidget(
+                              child: CachedNetworkImage(
+                                  height: 75,
+                                  width: 75,
+                                  imageUrl: imageList.isNotEmpty
+                                      ? imageList.last.toString()
+                                      : '',
+                                  imageBuilder: (context, imageProvider) => Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(25),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.fill,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                placeholder: (context, url) =>
-                                    Center(child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/brown_boy_mask.png",
-                                  width: 48,
-                                  height: 48,
-                                ) //Icon(Icons.error),
+                                  placeholder: (context, url) =>
+                                      Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => Image.asset(
+                                    "assets/images/brown_boy_mask.png",
+                                    width: 48,
+                                    height: 48,
+                                  ) //Icon(Icons.error),
+                              ),
+                            )),
+                        IconButton(
+                            icon: Icon(
+                              Icons.cancel,
+                              color: Colors.red,
+                              size: 24.r,
                             ),
-                          )),
-                    ],
+                            onPressed: () => setState(() {
+                              imageList = [];
+                            }))
+                      ],
+                    ),
                   ),
                 ),
               ),
