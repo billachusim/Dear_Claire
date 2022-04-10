@@ -2,6 +2,8 @@ import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:flutter/material.dart';
 
+import '../../services/firebase_services.dart';
+import '../../utils/constant.dart';
 import '../../utils/strings.dart';
 
 class ClaireLoves extends StatefulWidget {
@@ -10,6 +12,24 @@ class ClaireLoves extends StatefulWidget {
 }
 
 class _ClaireLovesState extends State<ClaireLoves> {
+
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    getUser();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  getUser() async {
+    userModel = await firebaseServices.getUserInfo();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +104,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                   borderRadius: BorderRadius.circular(5)
                               ),
                               child: Text(
-                                "1234",
+                                userModel.sessionCount.toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
@@ -134,7 +154,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                   borderRadius: BorderRadius.circular(5)
                               ),
                               child: Text(
-                                "1234",
+                                userModel.adviseCount.toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
@@ -234,7 +254,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                   borderRadius: BorderRadius.circular(5)
                               ),
                               child: Text(
-                                "1234",
+                                userModel.totalLoveCount.toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
