@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
+import 'package:dear_claire/ui/ego-profile/claire_loves.dart';
+import 'package:dear_claire/ui/featured/ego_stream.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/toast.dart';
@@ -1079,7 +1081,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                       children: [
                         ActivityWidget(),
                         ArchiveWidget(),
-                        SearchPage(title: 'Search Claire',),
+                        ClaireLoves(),
                       ],
                     ),
                   )

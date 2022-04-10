@@ -70,14 +70,11 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
     List<Session> selectedSessions = [];
     sessions.forEach((element) {
 
-      if(DateTime(element.dateTime!.year, element.dateTime!.month, element.dateTime!.day).isBefore(DateTime(selectedDay.year, selectedDay.month, selectedDay.day))){
+      if(DateTime(element.dateTime!.year, element.dateTime!.month, element.dateTime!.day)
+          .isAtSameMomentAs(DateTime(selectedDay.year, selectedDay.month, selectedDay.day)))
+      {
         selectedSessions.add(element);
       }
-      // if (element.dateTime!.day == selectedDay.day
-      // && element.dateTime!.year == selectedDay.year &&
-      //     element.dateTime!.month == selectedDay.month ) {
-      //   selectedSessions.add(element);
-      // }
     });
 
     debugPrint("length is ${selectedSessions.length}");
@@ -130,7 +127,7 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
         calendarStyle: CalendarStyle(
             defaultTextStyle: TextStyle(color: Colors.white),
             selectedDecoration: BoxDecoration(
-              color: Colors.yellow, shape: BoxShape.circle,),
+              color: Colors.green, shape: BoxShape.circle,),
             weekendTextStyle: TextStyle(color: Colors.white)),
         firstDay: kFirstDay,
         lastDay: kLastDay,
