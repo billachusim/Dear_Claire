@@ -13,21 +13,19 @@ const runtimeOpts = {
 exports.addCategoriesToSessionsWithMood5 = functions.runWith(runtimeOpts)
     .https.onRequest(
         (req, res) => {
-          const Sessions = admin.firestore().collection("sessions");
+          const Activities =
+          admin.firestore().collection("user_activity");
 
-          Sessions.where("moodId", "==", 11)
+          Activities.where("clientId", "==", "fSMVS2DY8ngblW3LlUYowgPkdR83")
               .get()
               .then((snapshots) => {
                 if (snapshots.size > 0) {
-                  snapshots.forEach((session) => {
-                    Sessions.doc(session.id).update({
-                      category1: "life and living",
-                      category2: "happy and blessed",
-                      category3: "childhood and memory",
-                      category4: "work and career",
+                  snapshots.forEach((activity) => {
+                    Activities.doc(activity.id).update({
+                      clientId: "PbRuh3FmtESK57j3PM1Tc9RvPKh2",
                     });
                   });
                 }
               });
-          return Sessions;
+          return Activities;
         });

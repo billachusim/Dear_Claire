@@ -230,7 +230,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                       borderRadius: BorderRadius.circular(5)
                                   ),
                                   child: Text(
-                                    "20",
+                                    "N10",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 16,
@@ -365,7 +365,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                               ),
                               child: Text(
                                 "Claire pays you back the cost of vibes and times you spent on the app. Isn't that cool! "
-                                    "Note: Only Alter and Super Egos can request cash for now",
+                                    "Note: Only Alter and Super Egos can request cash for now.",
                                 textAlign: TextAlign.justify,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
@@ -518,7 +518,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                               ),
                               SizedBox(height: 2,),
                               Text(
-                                "Amount",
+                                "Enter Amount",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,

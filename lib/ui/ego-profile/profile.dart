@@ -52,12 +52,19 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
   GlobalKey<FlipCardState> cardKey2 = GlobalKey<FlipCardState>();
 
+  String _advisesCount = "";
+  String _sessionsCount = "";
+  String _totalLoveCount = "";
+
 
 
   @override
   void initState() {
     super.initState();
     getUser();
+   // updateAdvisesCount();
+    //updateSessionsCount();
+    //updateTotalLoveCount();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       print(_tabController.index);
@@ -225,6 +232,57 @@ class _EgoProfilePageState extends State<EgoProfilePage>
       );
       _interstitialAd2!.show();
     }
+  }
+
+
+
+  /// Update the advises count to user model
+
+  Future<void> updateAdvisesCount() async {
+    final adviseCount = _advisesCount;
+    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+      {
+        "adviseCount": adviseCount,
+      },
+    );
+    SetOptions(merge: true);
+    logger.d('Successfully saved total advises count');
+    print('Advice Count is: $adviseCount');
+
+  }
+
+
+
+  /// Update the sessions count to user model
+
+  Future<void> updateSessionsCount() async {
+    final sessionCount = _sessionsCount;
+    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+      {
+        "sessionCount": sessionCount,
+      },
+    );
+    SetOptions(merge: true);
+    logger.d('Successfully saved total advises count');
+    print('Advice Count is: $sessionCount');
+
+  }
+
+
+
+  /// Update the total love count to user model
+
+  Future<void> updateTotalLoveCount() async {
+    final totalLoveCount = _totalLoveCount;
+    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+      {
+        "sessionCount": totalLoveCount,
+      },
+    );
+    SetOptions(merge: true);
+    logger.d('Successfully saved total advises count');
+    print('Advice Count is: $totalLoveCount');
+
   }
 
 
@@ -885,6 +943,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                         }
 
                         if (profileInfo.hasData) {
+                          _sessionsCount = profileInfo.data!.sessionCount.toString();
                           return _pageHeader(
                               userName: profileInfo.data!.userModel!.nickname,
                               sessionCount: profileInfo.data!.sessionCount,
