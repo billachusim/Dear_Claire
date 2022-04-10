@@ -13,9 +13,11 @@ import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
+import '../Categories/category_sessions.dart';
 import '../featured/model/session.dart';
 import '../model/session.dart';
 import '../../../widgets/ego_mode_session_card.dart';
+import '../routes/page_router_animation.dart';
 
 class SearchPage extends StatefulWidget {
   SearchPage({Key? key, required this.title, this.record}) : super(key: key);
@@ -274,20 +276,20 @@ class _SearchPageState extends State<SearchPage> {
         ),
         body: Stack(
            children: [
-             RotateImage(getDeviceHeight(context), getDeviceWidth(context)),
+             CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
              ListView(
               children: [
                 SizedBox(height: 7,),
                 Container(
                   margin: EdgeInsets.only(bottom: 10),
                   child: Align(
-                    alignment: Alignment.topLeft,
+                    alignment: Alignment.topCenter,
                     child: Text(
                         AppString.featured_searches,
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
-                        fontSize: 20,
-                        color: Pallet.colorPrimary,
+                        fontSize: 22,
+                        color: Pallet.colorWhite,
                       ),
                     ),
                   ),
@@ -304,20 +306,30 @@ class _SearchPageState extends State<SearchPage> {
                           color: Pallet.colorPrimary,
                           borderRadius: BorderRadius.circular(25)
                         ),
-                        child: Container(
-                          height: 18,
-                          width: 200,
-                          decoration: BoxDecoration(
-                            color: Pallet.colorWhite,
-                            borderRadius: BorderRadius.circular(20)
-                          ),
-                          child: Text(
-                            AppString.im_so_happy,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black,
+                        child: GestureDetector(onTap: (){
+                          setState(() {
+                            String featuredCategory1 = "happy and blessed";
+                            String thisCategory = featuredCategory1;
+                            PageRouter.gotoWidget(
+                                CategorySessions(visitedCategory: thisCategory,),
+                                context);
+                          });
+                        },
+                          child: Container(
+                            height: 18,
+                            width: 200,
+                            decoration: BoxDecoration(
+                              color: Pallet.colorWhite,
+                              borderRadius: BorderRadius.circular(20)
+                            ),
+                            child: Text(
+                              AppString.im_so_happy,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
                         ),
@@ -328,7 +340,7 @@ class _SearchPageState extends State<SearchPage> {
                         stream: showHappySearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
+                            return Text('');
                           }
                           if (!session.hasData) {
                             return Center(
@@ -375,28 +387,38 @@ class _SearchPageState extends State<SearchPage> {
                   children: [
                     Align(
                     alignment: Alignment.topLeft,
-                    child: Container(
-                      width: 200,
-                      alignment: Alignment.topLeft,
-                      padding: EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                          color: Pallet.colorPrimary,
-                          borderRadius: BorderRadius.circular(25)
-                      ),
+                    child: GestureDetector(onTap: (){
+                      setState(() {
+                        String featuredCategory1 = "love and relationship";
+                        String thisCategory = featuredCategory1;
+                        PageRouter.gotoWidget(
+                            CategorySessions(visitedCategory: thisCategory,),
+                            context);
+                      });
+                    },
                       child: Container(
-                        height: 18,
                         width: 200,
+                        alignment: Alignment.topLeft,
+                        padding: EdgeInsets.all(3),
                         decoration: BoxDecoration(
-                            color: Pallet.colorWhite,
-                            borderRadius: BorderRadius.circular(20)
+                            color: Pallet.colorPrimary,
+                            borderRadius: BorderRadius.circular(25)
                         ),
-                        child: Text(
-                          AppString.relationship_issues,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.black,
+                        child: Container(
+                          height: 18,
+                          width: 200,
+                          decoration: BoxDecoration(
+                              color: Pallet.colorWhite,
+                              borderRadius: BorderRadius.circular(20)
+                          ),
+                          child: Text(
+                            AppString.relationship_issues,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
                       ),
@@ -407,7 +429,7 @@ class _SearchPageState extends State<SearchPage> {
                         stream: showRelationshipIssuesSearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
+                            return Text('');
                           }
                           if (!session.hasData) {
                             return Center(
@@ -455,28 +477,38 @@ class _SearchPageState extends State<SearchPage> {
                   children: [
                     Align(
                       alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                            color: Pallet.colorPrimary,
-                            borderRadius: BorderRadius.circular(25)
-                        ),
+                      child: GestureDetector(onTap: (){
+                        setState(() {
+                          String featuredCategory1 = "sad and depressed";
+                          String thisCategory = featuredCategory1;
+                          PageRouter.gotoWidget(
+                              CategorySessions(visitedCategory: thisCategory,),
+                              context);
+                        });
+                      },
                         child: Container(
-                          height: 18,
                           width: 200,
+                          alignment: Alignment.topLeft,
+                          padding: EdgeInsets.all(3),
                           decoration: BoxDecoration(
-                              color: Pallet.colorWhite,
-                              borderRadius: BorderRadius.circular(20)
+                              color: Pallet.colorPrimary,
+                              borderRadius: BorderRadius.circular(25)
                           ),
-                          child: Text(
-                            AppString.sad_and_depressed,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black,
+                          child: Container(
+                            height: 18,
+                            width: 200,
+                            decoration: BoxDecoration(
+                                color: Pallet.colorWhite,
+                                borderRadius: BorderRadius.circular(20)
+                            ),
+                            child: Text(
+                              AppString.sad_and_depressed,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
                         ),
@@ -487,7 +519,7 @@ class _SearchPageState extends State<SearchPage> {
                         stream: showSadAndDepressedSearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
+                            return Text('');
                           }
                           if (!session.hasData) {
                             return Center(
@@ -544,28 +576,38 @@ class _SearchPageState extends State<SearchPage> {
                   children: [
                     Align(
                       alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                            color: Pallet.colorPrimary,
-                            borderRadius: BorderRadius.circular(25)
-                        ),
+                      child: GestureDetector(onTap: (){
+                        setState(() {
+                          String featuredCategory1 = "school and education";
+                          String thisCategory = featuredCategory1;
+                          PageRouter.gotoWidget(
+                              CategorySessions(visitedCategory: thisCategory,),
+                              context);
+                        });
+                      },
                         child: Container(
-                          height: 18,
                           width: 200,
+                          alignment: Alignment.topLeft,
+                          padding: EdgeInsets.all(3),
                           decoration: BoxDecoration(
-                              color: Pallet.colorWhite,
-                              borderRadius: BorderRadius.circular(20)
+                              color: Pallet.colorPrimary,
+                              borderRadius: BorderRadius.circular(25)
                           ),
-                          child: Text(
-                            AppString.school_and_work,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black,
+                          child: Container(
+                            height: 18,
+                            width: 200,
+                            decoration: BoxDecoration(
+                                color: Pallet.colorWhite,
+                                borderRadius: BorderRadius.circular(20)
+                            ),
+                            child: Text(
+                              AppString.school_and_work,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
                         ),
@@ -576,7 +618,7 @@ class _SearchPageState extends State<SearchPage> {
                         stream: showSchoolAndWorkSearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
+                            return Text('');
                           }
                           if (!session.hasData) {
                             return Center(
@@ -623,28 +665,38 @@ class _SearchPageState extends State<SearchPage> {
                   children: [
                     Align(
                       alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                            color: Pallet.colorPrimary,
-                            borderRadius: BorderRadius.circular(25)
-                        ),
+                      child: GestureDetector(onTap: (){
+                        setState(() {
+                          String featuredCategory1 = "friends and fun";
+                          String thisCategory = featuredCategory1;
+                          PageRouter.gotoWidget(
+                              CategorySessions(visitedCategory: thisCategory,),
+                              context);
+                        });
+                      },
                         child: Container(
-                          height: 18,
                           width: 200,
+                          alignment: Alignment.topLeft,
+                          padding: EdgeInsets.all(3),
                           decoration: BoxDecoration(
-                              color: Pallet.colorWhite,
-                              borderRadius: BorderRadius.circular(20)
+                              color: Pallet.colorPrimary,
+                              borderRadius: BorderRadius.circular(25)
                           ),
-                          child: Text(
-                            AppString.make_new_friends,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black,
+                          child: Container(
+                            height: 18,
+                            width: 200,
+                            decoration: BoxDecoration(
+                                color: Pallet.colorWhite,
+                                borderRadius: BorderRadius.circular(20)
+                            ),
+                            child: Text(
+                              AppString.make_new_friends,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
                         ),
@@ -655,7 +707,7 @@ class _SearchPageState extends State<SearchPage> {
                         stream: showMakeNewFriendsSearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
+                            return Text('');
                           }
                           if (!session.hasData) {
                             return Center(
@@ -703,28 +755,38 @@ class _SearchPageState extends State<SearchPage> {
                   children: [
                     Align(
                       alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                            color: Pallet.colorPrimary,
-                            borderRadius: BorderRadius.circular(25)
-                        ),
+                      child: GestureDetector(onTap: (){
+                        setState(() {
+                          String featuredCategory1 = "health and fitness";
+                          String thisCategory = featuredCategory1;
+                          PageRouter.gotoWidget(
+                              CategorySessions(visitedCategory: thisCategory,),
+                              context);
+                        });
+                      },
                         child: Container(
-                          height: 18,
                           width: 200,
+                          alignment: Alignment.topLeft,
+                          padding: EdgeInsets.all(3),
                           decoration: BoxDecoration(
-                              color: Pallet.colorWhite,
-                              borderRadius: BorderRadius.circular(20)
+                              color: Pallet.colorPrimary,
+                              borderRadius: BorderRadius.circular(25)
                           ),
-                          child: Text(
-                            AppString.sick_and_tired,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black,
+                          child: Container(
+                            height: 18,
+                            width: 200,
+                            decoration: BoxDecoration(
+                                color: Pallet.colorWhite,
+                                borderRadius: BorderRadius.circular(20)
+                            ),
+                            child: Text(
+                              AppString.sick_and_tired,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
                         ),
@@ -735,7 +797,7 @@ class _SearchPageState extends State<SearchPage> {
                         stream: showSickAndTiredSearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
+                            return Text('');
                           }
                           if (!session.hasData) {
                             return Center(

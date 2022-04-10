@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
+import '../../utils/color.dart';
 import '../splash_screen/custom_rotate_bacground.dart';
 import '../splash_screen/rotate_logo.dart';
 import 'widget/chat_widget.dart';
@@ -80,6 +81,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Pallet.colorSecondaryDark,
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: HexColor.fromHex(chatRoomPodo!.hex!),
@@ -89,7 +91,7 @@ class _ChatScreenState extends State<ChatScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
+            //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
             ListView(
               children: [
                 StreamBuilder(

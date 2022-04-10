@@ -35,9 +35,10 @@ class _FollowedPageState extends State<FollowedPage> {
           return Future.value(false);
         },
         child: Scaffold(
+          backgroundColor: Pallet.colorSecondaryDark,
           body: Stack(
             children: [
-              CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
+              //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
               StreamBuilder(
               stream: firebaseServices.getFollowingSessions(),

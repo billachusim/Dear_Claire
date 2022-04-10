@@ -22,9 +22,10 @@ class ChatRoomsPage extends StatelessWidget {
           return Future.value(false);
         },
         child: Scaffold(
+          backgroundColor: Pallet.colorSecondaryDark,
           body: Stack(
             children: [
-              CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
+              //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
               ListView(
               children: RoomData.room().map((room) => ChatRoomWidget(element: room)).toList(),

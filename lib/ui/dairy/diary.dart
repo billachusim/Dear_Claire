@@ -34,9 +34,10 @@ class _DiaryPageState extends State<DiaryPage> {
           return Future.value(false);
         },
         child: Scaffold(
+          backgroundColor: Pallet.colorSecondaryDark,
           body: Stack(
             children: [
-              CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
+              //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
               FutureBuilder(
                 future: firebaseServices.getDiarySessions(),

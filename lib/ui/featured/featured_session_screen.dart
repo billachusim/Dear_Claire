@@ -32,9 +32,10 @@ class _FeaturedPageState extends State<FeaturedPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: Pallet.colorSecondaryDark,
         body: Stack(
           children: [
-            CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
+            //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
             Column(
             children: [

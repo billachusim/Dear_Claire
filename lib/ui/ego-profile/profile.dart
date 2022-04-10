@@ -861,6 +861,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
           return Future.value(false);
         },
         child: Scaffold(
+          backgroundColor: Pallet.colorSecondaryDark,
           body: Column(
             children: [
               Material(
@@ -932,7 +933,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                 borderRadius: BorderRadius.circular(25),
                                 color: currentTabIndex != 0
                                     ? Pallet.colorWhite
-                                    : null),
+                                    : Pallet.colorWhite),
                             child: Padding(
                               padding: const EdgeInsets.all(3.0),
                               child: Row(
@@ -986,7 +987,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                     borderRadius: BorderRadius.circular(25),
                                     color: currentTabIndex != 1
                                         ? Pallet.colorWhite
-                                        : null),
+                                        : Pallet.colorWhite),
                                 child: Padding(
                                   padding: const EdgeInsets.all(3.0),
                                   child: Row(
@@ -1039,7 +1040,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                     borderRadius: BorderRadius.circular(25),
                                     color: currentTabIndex != 2
                                         ? Pallet.colorWhite
-                                        : null),
+                                        : Pallet.colorWhite),
                                 child: Padding(
                                   padding: const EdgeInsets.all(3.0),
                                   child: Row(
