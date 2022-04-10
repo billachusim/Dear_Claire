@@ -778,6 +778,28 @@ class FirebaseServices extends ChangeNotifier {
     return _userActivityList;
   }
 
+  /// [User Activity] -> get user activity that a user made
+  Future<List<UserActivityModel>> getActivityForUser() async {
+    List<UserActivityModel> _userActivityList = [];
+    user = await getUserInfo();
+    try {
+      final _value = await _firebaseFirestore
+          .collection(AppString.userActivity)
+          .where("clientId", isEqualTo: user!.userId)
+          .orderBy('dateCreated', descending: true)
+          .limit(AppString.allSessionLength)
+          .get();
+
+      _value.docs
+          .map((e) =>
+          _userActivityList.addAll([UserActivityModel.fromJson(e.data())]))
+          .toList();
+    } catch (e) {
+      logger.e(e);
+    }
+    return _userActivityList;
+  }
+
   /// get chats
   Stream<QuerySnapshot<Map<String, dynamic>>> getChats(
       ChatRoomPodo? chatRoomPodo) {

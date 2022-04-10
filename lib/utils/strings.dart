@@ -61,7 +61,7 @@ class AppString{
   static const String shareLink = "https://claire.page.link/featured";
 
   static const int appSessionLength = 50;
-  static const int allSessionLength = 100;
+  static const int allSessionLength = 300;
   static const String photos = 'image';
   static const String audio = '/audio/';
   static const String session = 'sessions';
