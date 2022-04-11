@@ -58,9 +58,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   void initState() {
     super.initState();
     getUser();
-    updateSessionsCount();
-    updateAdvisesCount();
-    updateTotalLoveCount();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       print(_tabController.index);
@@ -294,7 +291,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   Widget _pageHeader(
       {String? avatarUrl, String? userName, String? userType,
-        var sessionCount, var totalLoveCount, var advisesCount})
+        var sessionCount, var totalLoveCount, var adviseCount})
   {
     return Material(
       child: Container(
@@ -429,7 +426,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                advisesCount ?? "---",
+                                adviseCount ?? "---",
                                 style: TextStyle(
                                     fontSize: 23,
                                     fontWeight: FontWeight.w700,
@@ -925,7 +922,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                           return _pageHeader(
                               userName: profileInfo.data!.userModel!.nickname,
                               sessionCount: userModel.sessionCount.toString(),
-                              advisesCount: userModel.adviseCount.toString(),
+                              adviseCount: userModel.adviseCount.toString(),
                               totalLoveCount: userModel.totalLoveCount.toString(),
                               userType: profileInfo.data!.userModel!.userType,
                               avatarUrl: profileInfo.data!.userModel!.avatarUrl,

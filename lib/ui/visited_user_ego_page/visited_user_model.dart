@@ -14,10 +14,10 @@ class VisitedUserModel {
   Timestamp? timeRegistered;
   String? userId;
   String? userType;
-  String? sessionCount;
-  String? adviseCount;
-  String? totalLoveCount;
-  String? currentLoveCount;
+  int? sessionCount;
+  int? adviseCount;
+  int? totalLoveCount;
+  int? currentLoveCount;
 
   VisitedUserModel({
     this.alterEgoAccessCode,
@@ -52,10 +52,10 @@ class VisitedUserModel {
       timeRegistered: json['timeRegistered'] ?? '',
       userId: json['userId'] ?? '',
       userType: json['userType'] ?? '',
-      sessionCount: json['sessionCount'] ?? '',
-      adviseCount: json['adviseCount'] ?? '',
-      totalLoveCount: json['totalLoveCount'] ?? '',
-      currentLoveCount: json['currentLoveCount'] ?? '',
+      sessionCount: json['sessionCount'] ?? 0,
+      adviseCount: json['adviseCount'] ?? 0,
+      totalLoveCount: json['totalLoveCount'] ?? 0,
+      currentLoveCount: json['currentLoveCount'] ?? 0,
     );
   }
 
@@ -73,10 +73,10 @@ class VisitedUserModel {
       timeRegistered: json['timeRegistered'] ?? '',
       userId: json['userId'] ?? '',
       userType: json['userType'] ?? '',
-      sessionCount: json['sessionCount'] ?? '',
-      adviseCount: json['adviseCount'] ?? '',
-      totalLoveCount: json['totalLoveCount'] ?? '',
-      currentLoveCount: json['currentLoveCount'] ?? '',
+      sessionCount: json['sessionCount'] ?? 0,
+      adviseCount: json['adviseCount'] ?? 0,
+      totalLoveCount: json['totalLoveCount'] ?? 0,
+      currentLoveCount: json['currentLoveCount'] ?? 0,
     );
   }
 

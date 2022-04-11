@@ -271,9 +271,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
     visitedProfileInfo = VisitedEgoProfileInfo(
       visitedUserModel: visitedUser,
-      sessionCount: _sessionList.length.toString(),
-      advisesCount: _advisesList.length.toString(),
-      followCount: _followsList.length.toString(),
+      sessionCount: _sessionList.length,
+      advisesCount: _advisesList.length,
+      followCount: _followsList.length,
     );
     return visitedProfileInfo;
 
@@ -286,7 +286,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
   Widget _visitedPageHeader(
       {String? avatarUrl, String? userName, String? userType,
-        var sessionCount, var followCount, var advisesCount})
+        var sessionCount, var totalLoveCount, var adviseCount})
   {
     return Material(
       child: Container(
@@ -401,31 +401,12 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-
-
-                            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                              future: FirebaseFirestore.instance
-                                  .collection("user_comment_counters")
-                                  .doc(widget.visitedUsersID)
-                                  .get(),
-                              builder: (_, snapshot) {
-                                if (snapshot.hasData) {
-                                  var data = snapshot.data!.data();
-                                  var advisesCount = data?["numberOfComments"] ?? "0";
-                                  // _advisesCount = advisesCount;
-                                  debugPrint(
-                                      " This is the COUNT of advises given by this visited user ${advisesCount.toString()}");
-                                  return  Text(
-                                    advisesCount.toString(),
-                                    style: TextStyle(
-                                        fontSize: 23,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.black),
-                                  );
-                                }
-
-                                return Center(child: CircularProgressIndicator());
-                              },
+                            Text(
+                              adviseCount ?? "---",
+                              style: TextStyle(
+                                  fontSize: 23,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black),
                             ),
 
                             Text(
@@ -445,7 +426,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              followCount ?? "---",
+                              totalLoveCount ?? "---",
                               style: TextStyle(
                                   fontSize: 23,
                                   fontWeight: FontWeight.w700,
@@ -833,9 +814,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                     if (visitedProfileInfo.hasData) {
                       return _visitedPageHeader(
                         userName: visitedProfileInfo.data?.visitedUserModel?.nickname,
-                        sessionCount: visitedProfileInfo.data!.sessionCount,
-                        advisesCount: visitedProfileInfo.data!.advisesCount,
-                        followCount: visitedProfileInfo.data!.followCount,
+                        sessionCount: visitedUserModel.sessionCount.toString(),
+                        adviseCount: visitedUserModel.adviseCount.toString(),
+                        totalLoveCount: visitedUserModel.totalLoveCount.toString(),
                         userType: visitedProfileInfo.data?.visitedUserModel?.userType,
                         avatarUrl: visitedProfileInfo.data?.visitedUserModel?.avatarUrl,
                       );
