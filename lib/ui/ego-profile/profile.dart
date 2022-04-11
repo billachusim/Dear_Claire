@@ -671,7 +671,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
 
               Container(
-                width: 385,
+                width: getDeviceWidth(context),
+                margin: EdgeInsets.only(left: 4, right: 4),
                 height: 100,
                 child: FlipCard(
                   key: cardKey,

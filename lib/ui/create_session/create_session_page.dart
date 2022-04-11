@@ -322,13 +322,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                       SizedBox(
                         height: 10,
                       ),
-                      Text(
-                        "Dear Claire collects location data to enable you add or filter diary sessions based on location.",
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: Pallet.colorSecondary,
-                            fontStyle: FontStyle.italic),
-                      )
                     ],
                   ),
                 ),

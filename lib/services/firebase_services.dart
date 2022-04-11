@@ -452,12 +452,13 @@ class FirebaseServices extends ChangeNotifier {
                 setUsersId(value.user!.uid),
                 //showToast("Showing user UID ${value.user!.uid}")
               });
+      showToast(AppString.open_up_toast);
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
       return true;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password') {
         showToast(
-            'The password is invalid or the user does not have a password.');
+            'The ego code is invalid or the ego does not have an ego code.');
       } else if (e.code == 'wrong-email') {
         showToast('The email is invalid or the user does not have an email.');
       }
@@ -606,6 +607,7 @@ class FirebaseServices extends ChangeNotifier {
 
       setUsersId(_user.user!.uid);
 
+      showToast(AppString.create_ego_complete_toast);
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
       return true;
     } on FirebaseAuthException catch (e) {

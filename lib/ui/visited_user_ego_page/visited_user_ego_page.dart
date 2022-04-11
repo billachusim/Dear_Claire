@@ -564,8 +564,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
 
             Container(
-              width: 385,
+              width: getDeviceWidth(context),
               height: 100,
+              margin: EdgeInsets.only(left: 4, right: 4),
               child: FlipCard(
                 key: cardKey,
                 direction: FlipDirection.HORIZONTAL, // default
