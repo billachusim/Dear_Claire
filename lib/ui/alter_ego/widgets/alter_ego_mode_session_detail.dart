@@ -189,6 +189,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
 
     updateSessionTimeLastActivity(session);
     incrementAdviseCount();
+    incrementTotalLoveCount();
   }
 
 
@@ -199,13 +200,28 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     FirebaseFirestore.instance
         .collection("user_comment_counters")
         .doc(currentUser?.uid)
-        .update({
+        .set({
       "numberOfComments": FieldValue.increment(1),
     },
+      SetOptions(merge: true),
+
     );
     logger.d('Successfully increased advise count');
     print('Session Count is: $FieldValue');
 
+  }
+
+  /// Increase total love count when user creates new session or comment.
+
+  Future<void> incrementTotalLoveCount() async {
+    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+      {
+        'totalLoveCount': FieldValue.increment(20),
+      },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully increased total love count');
+    print('Session Count is: $FieldValue');
   }
 
   /// Update a session's timeLastActivity when new comment is made.

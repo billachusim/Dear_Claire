@@ -452,6 +452,7 @@ class FirebaseServices extends ChangeNotifier {
                 setUsersId(value.user!.uid),
                 //showToast("Showing user UID ${value.user!.uid}")
               });
+      updateUsersModel(context, email, secretCode);
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
       return true;
     } on FirebaseAuthException catch (e) {
@@ -467,6 +468,63 @@ class FirebaseServices extends ChangeNotifier {
       return false;
     }
   }
+
+
+  /// SignUp user
+  Future<bool> updateUsersModel(
+      BuildContext context, String email, String secretCode,) async {
+    final _user = await FirebaseAuth.instance
+        .signInWithEmailAndPassword(email: email, password: secretCode);
+    final _email = email;
+    final _secretCode = secretCode;
+    try {
+      final email = _email;
+      final secretCode = _secretCode;
+      final timeLastUnlocked = FieldValue.serverTimestamp();
+      final sessionCount = userModel.sessionCount;
+      final adviseCount = userModel.adviseCount;
+      final totalLoveCount = userModel.totalLoveCount;
+      final currentLoveCount = userModel.currentLoveCount;
+      FirebaseFirestore.instance
+          .collection("users")
+          .doc(_user.user!.uid)
+          .set({
+        "email": email,
+        "secretCode": secretCode,
+        "timeLastUnlocked": timeLastUnlocked,
+        "sessionCount": sessionCount,
+        "adviseCount": adviseCount,
+        "totalLoveCount": totalLoveCount,
+        "currentLoveCount": currentLoveCount,
+
+      },
+        SetOptions(merge: true)
+      );
+      logger.d('Completely created new ego');
+      print('Email: $email');
+      print('Secret Code: $secretCode');
+
+      setUsersId(_user.user!.uid);
+
+      return true;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        showToast('The password provided is too weak.');
+      } else if (e.code.length < 4) {
+        showToast('secret code should be up to 4 digits');
+      } else if (e.code == 'email-already-in-use') {
+        showToast('The account already exists for that email.');
+      } else if (!isValidEmail(email)) {
+        showToast('email is not invalid');
+      }
+      logger.e(e);
+      return false;
+    } catch (e) {
+      logger.e(e);
+      return false;
+    }
+  }
+
 
   /// Authenticate the AlterEgo in
 
@@ -569,10 +627,10 @@ class FirebaseServices extends ChangeNotifier {
       final avatarUrl = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fpink_girl_mask.png?alt=media&token=ec5ed423-a990-4e2c-84cf-e2019621455f";
       final userId = _user.user?.uid;
       final gender = _gender;
-      final sessionCount = "";
-      final adviseCount = "";
-      final totalLoveCount = "";
-      final currentLoveCount = "";
+      final sessionCount = 0;
+      final adviseCount = 0;
+      final totalLoveCount = 0;
+      final currentLoveCount = 0;
       FirebaseFirestore.instance
           .collection("users")
           .doc(_user.user!.uid)
@@ -593,9 +651,7 @@ class FirebaseServices extends ChangeNotifier {
         "adviseCount": adviseCount,
         "totalLoveCount": totalLoveCount,
         "currentLoveCount": currentLoveCount,
-
       },
-        //SetOptions(merge: true)
       );
       logger.d('Completely created new ego');
       print('Email: $email');
@@ -1077,9 +1133,9 @@ class FirebaseServices extends ChangeNotifier {
 
     profileInfo = EgoProfileInfo(
         userModel: user,
-        sessionCount: _sessionList.length.toString(),
-        advisesCount: _advisesList.length.toString(),
-        followCount: _followsList.length.toString(),
+        sessionCount: _sessionList.length,
+        advisesCount: _advisesList.length,
+        followCount: _followsList.length,
     );
     return profileInfo;
 

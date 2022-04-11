@@ -5,12 +5,12 @@ class EgoProfileInfo{
   final UserModel? userModel;
    var avatarUrl;
    var nickname;
-   var sessionCount;
+   int? sessionCount;
    var followCount;
-   var advisesCount;
+   int? advisesCount;
    var userType;
-   var totalLoveCount;
-   var currentLoveCount;
+   int? totalLoveCount;
+   int? currentLoveCount;
 
   EgoProfileInfo(
       { this.userModel,

@@ -195,6 +195,7 @@ class _EgoModeSessionDetailState
         map: _commentModel.toJson());
     updateSessionTimeLastActivity(session);
     incrementAdviseCount();
+    incrementTotalLoveCount();
   }
 
 
@@ -205,13 +206,27 @@ class _EgoModeSessionDetailState
     FirebaseFirestore.instance
         .collection("users")
         .doc(currentUser?.uid)
-        .update({
+        .set({
       "adviseCount": FieldValue.increment(1),
     },
+      SetOptions(merge: true),
     );
-    logger.d('Successfully increased advise count');
+    logger.d('Increased advise count');
     print('Advise Count is: $FieldValue');
 
+  }
+
+  /// Increase total love count when user creates new session or comment.
+
+  Future<void> incrementTotalLoveCount() async {
+    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+      {
+        'totalLoveCount': FieldValue.increment(10),
+      },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully increased total love count');
+    print('Session Count is: $FieldValue');
   }
 
 

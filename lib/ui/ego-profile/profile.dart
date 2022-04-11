@@ -235,7 +235,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   /// Update the advises count to user model
 
   Future<void> updateAdvisesCount() async {
-    final adviseCount = userModel.adviseCount.toString();
+    final adviseCount = userModel.adviseCount;
     FirebaseFirestore.instance.collection('users').doc(userModel.userId)
         .set(
       {
@@ -254,7 +254,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   /// Update the sessions count to user model
 
   Future<void> updateSessionsCount() async {
-    final sessionCount = userModel.sessionCount.toString();
+    final sessionCount = userModel.sessionCount;
     FirebaseFirestore.instance.collection('users').doc(userModel.userId)
         .set(
       {
@@ -272,7 +272,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   /// Update the total love count to user model
 
   Future<void> updateTotalLoveCount() async {
-    final totalLoveCount = userModel.totalLoveCount.toString();
+    final totalLoveCount = userModel.totalLoveCount;
     FirebaseFirestore.instance.collection('users').doc(userModel.userId)
         .set(
       {
@@ -405,7 +405,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                sessionCount ?? "",
+                                sessionCount ?? "---",
                                 style: TextStyle(
                                     fontSize: 23,
                                     fontWeight: FontWeight.w700,
@@ -924,9 +924,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                         if (profileInfo.hasData) {
                           return _pageHeader(
                               userName: profileInfo.data!.userModel!.nickname,
-                              sessionCount: profileInfo.data!.userModel!.sessionCount,
-                              advisesCount: profileInfo.data!.userModel!.adviseCount,
-                              totalLoveCount: profileInfo.data!.userModel!.totalLoveCount,
+                              sessionCount: userModel.sessionCount.toString(),
+                              advisesCount: userModel.adviseCount.toString(),
+                              totalLoveCount: userModel.totalLoveCount.toString(),
                               userType: profileInfo.data!.userModel!.userType,
                               avatarUrl: profileInfo.data!.userModel!.avatarUrl,
                           );

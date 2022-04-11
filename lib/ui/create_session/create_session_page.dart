@@ -159,10 +159,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   /// Increase session count when user creates new session.
 
   Future<void> incrementSessionCount() async {
-    FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).update(
+    FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).set(
       {
         'sessionCount': FieldValue.increment(1),
       },
+      SetOptions(merge: true),
+
     );
     logger.d('Successfully increased session count');
     print('Session Count is: $FieldValue');
@@ -174,7 +176,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   Future<void> incrementTotalLoveCount() async {
     FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
       {
-        'totalLoveCount': FieldValue.increment(1),
+        'totalLoveCount': FieldValue.increment(10),
       },
       SetOptions(merge: true),
     );
@@ -356,6 +358,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                     Navigator.of(context).pop();
                     createSession();
                     showToast(AppString.started_new_session);
+                    incrementSessionCount();
+                    incrementTotalLoveCount();
                     Future.delayed(Duration(seconds: 2), () {
                       _showInterstitialAd();
                     });
