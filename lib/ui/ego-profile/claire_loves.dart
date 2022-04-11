@@ -132,7 +132,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                       borderRadius: BorderRadius.circular(5)
                                   ),
                                   child: Text(
-                                    userModel.sessionCount.toString(),
+                                    "---",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 16,
@@ -279,7 +279,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                       borderRadius: BorderRadius.circular(5)
                                   ),
                                   child: Text(
-                                    userModel.totalLoveCount.toString(),
+                                    "---",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 16,
@@ -402,7 +402,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                       borderRadius: BorderRadius.circular(5)
                                   ),
                                   child: Text(
-                                    userModel.sessionCount.toString(),
+                                    userModel.currentLoveCount.toString(),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 16,
@@ -440,7 +440,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                       borderRadius: BorderRadius.circular(5)
                                   ),
                                   child: Text(
-                                    userModel.totalLoveCount.toString(),
+                                    userModel.currentLoveCount.toString(),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 16,
@@ -607,7 +607,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                       borderRadius: BorderRadius.circular(5)
                                   ),
                                   child: Text(
-                                    userModel.totalLoveCount.toString(),
+                                    "---",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,

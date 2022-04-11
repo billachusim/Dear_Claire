@@ -52,19 +52,15 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
   GlobalKey<FlipCardState> cardKey2 = GlobalKey<FlipCardState>();
 
-  String _advisesCount = "";
-  String _sessionsCount = "";
-  String _totalLoveCount = "";
-
 
 
   @override
   void initState() {
     super.initState();
     getUser();
-   // updateAdvisesCount();
-    //updateSessionsCount();
-    //updateTotalLoveCount();
+    updateSessionsCount();
+    updateAdvisesCount();
+    updateTotalLoveCount();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       print(_tabController.index);
@@ -239,13 +235,15 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   /// Update the advises count to user model
 
   Future<void> updateAdvisesCount() async {
-    final adviseCount = _advisesCount;
-    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+    final adviseCount = userModel.adviseCount.toString();
+    FirebaseFirestore.instance.collection('users').doc(userModel.userId)
+        .set(
       {
         "adviseCount": adviseCount,
       },
+        SetOptions(merge: true)
+
     );
-    SetOptions(merge: true);
     logger.d('Successfully saved total advises count');
     print('Advice Count is: $adviseCount');
 
@@ -256,15 +254,16 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   /// Update the sessions count to user model
 
   Future<void> updateSessionsCount() async {
-    final sessionCount = _sessionsCount;
-    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+    final sessionCount = userModel.sessionCount.toString();
+    FirebaseFirestore.instance.collection('users').doc(userModel.userId)
+        .set(
       {
         "sessionCount": sessionCount,
       },
+      SetOptions(merge: true)
     );
-    SetOptions(merge: true);
-    logger.d('Successfully saved total advises count');
-    print('Advice Count is: $sessionCount');
+    logger.d('Successfully saved total sessions count');
+    print('Session Count is: $sessionCount');
 
   }
 
@@ -273,15 +272,17 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   /// Update the total love count to user model
 
   Future<void> updateTotalLoveCount() async {
-    final totalLoveCount = _totalLoveCount;
-    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+    final totalLoveCount = userModel.totalLoveCount.toString();
+    FirebaseFirestore.instance.collection('users').doc(userModel.userId)
+        .set(
       {
-        "sessionCount": totalLoveCount,
+        "totalLoveCount": totalLoveCount,
       },
+        SetOptions(merge: true)
+
     );
-    SetOptions(merge: true);
-    logger.d('Successfully saved total advises count');
-    print('Advice Count is: $totalLoveCount');
+    logger.d('Successfully saved total love count');
+    print('Total love Count is: $totalLoveCount');
 
   }
 
@@ -293,7 +294,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   Widget _pageHeader(
       {String? avatarUrl, String? userName, String? userType,
-        var sessionCount, var followCount, var advisesCount})
+        var sessionCount, var totalLoveCount, var advisesCount})
   {
     return Material(
       child: Container(
@@ -404,7 +405,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                sessionCount ?? "---",
+                                sessionCount ?? "",
                                 style: TextStyle(
                                     fontSize: 23,
                                     fontWeight: FontWeight.w700,
@@ -427,35 +428,13 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-
-
-
-                            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                              future: FirebaseFirestore.instance
-                              .collection("user_comment_counters")
-                              .doc(userModel.userId)
-                              .get(),
-                            builder: (_, snapshot) {
-                              if (snapshot.hasData) {
-                                var data = snapshot.data!.data();
-                                var advisesCount = data!["numberOfComments"];
-                                _advisesCount = advisesCount.toString();
-                                debugPrint(
-                                    " This is the COUNT of advises given by this user ${advisesCount.toString()}");
-                                return  Text(
-                                  advisesCount.toString(),
-                                  style: TextStyle(
-                                      fontSize: 23,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.black),
-                                );
-                              }
-
-                              return Center(child: CircularProgressIndicator());
-                            },
-                          ),
-
-
+                              Text(
+                                advisesCount ?? "---",
+                                style: TextStyle(
+                                    fontSize: 23,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black),
+                              ),
 
                               Text(
                                 "Advises",
@@ -474,7 +453,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                followCount ?? "---",
+                                totalLoveCount ?? "---",
                                 style: TextStyle(
                                     fontSize: 23,
                                     fontWeight: FontWeight.w700,
@@ -943,12 +922,11 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                         }
 
                         if (profileInfo.hasData) {
-                          _sessionsCount = profileInfo.data!.sessionCount.toString();
                           return _pageHeader(
                               userName: profileInfo.data!.userModel!.nickname,
-                              sessionCount: profileInfo.data!.sessionCount,
-                              advisesCount: profileInfo.data!.advisesCount,
-                              followCount: profileInfo.data!.followCount,
+                              sessionCount: profileInfo.data!.userModel!.sessionCount,
+                              advisesCount: profileInfo.data!.userModel!.adviseCount,
+                              totalLoveCount: profileInfo.data!.userModel!.totalLoveCount,
                               userType: profileInfo.data!.userModel!.userType,
                               avatarUrl: profileInfo.data!.userModel!.avatarUrl,
                           );

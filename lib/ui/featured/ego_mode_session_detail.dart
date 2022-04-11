@@ -203,14 +203,14 @@ class _EgoModeSessionDetailState
 
   Future<void> incrementAdviseCount() async {
     FirebaseFirestore.instance
-        .collection("user_comment_counters")
+        .collection("users")
         .doc(currentUser?.uid)
         .update({
-      "numberOfComments": FieldValue.increment(1),
+      "adviseCount": FieldValue.increment(1),
     },
     );
     logger.d('Successfully increased advise count');
-    print('Session Count is: $FieldValue');
+    print('Advise Count is: $FieldValue');
 
   }
 

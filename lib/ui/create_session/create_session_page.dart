@@ -163,7 +163,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       {
         'sessionCount': FieldValue.increment(1),
       },
-      //SetOptions(merge: true),
     );
     logger.d('Successfully increased session count');
     print('Session Count is: $FieldValue');
