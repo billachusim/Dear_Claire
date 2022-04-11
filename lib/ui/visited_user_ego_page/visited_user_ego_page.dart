@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
+import 'package:dear_claire/ui/ego-profile/claire_loves.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_profile_page_model.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_user_model.dart';
 import 'package:dear_claire/utils/helper.dart';
@@ -1107,7 +1108,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
 
 
-                        SearchPage(title: 'Search Claire',),
+                        ClaireLoves(),
                       ],
                     ),
                   )

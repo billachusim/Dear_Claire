@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
+import 'package:dear_claire/ui/featured/widget/post_details_widget.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
@@ -17,9 +18,14 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Admob/ad_state.dart';
+import '../../../services/firebase_services.dart';
+import '../../../widgets/chat_edit_field.dart';
+import '../../../widgets/comment_widget.dart';
+import '../../../widgets/toast.dart';
 import '../../create_session/sound/play_sound_widget.dart';
 import '../../routes/page_router_animation.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
+import '../model/comment_session_model.dart';
 
 class CustomPostDetailsWidget extends StatefulWidget {
   CustomPostDetailsWidget({Key? key, required this.sessionId}) : super(key: key);
@@ -35,6 +41,12 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
 
   //initialize the audio record file that stores user audio record. null by default
   String? recordFile;
+  Session? featuredSessionModel;
+  List<CommentSessionModel> _commentSessionList = [];
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
+
+
 
 
   // Admob Ad Units.
@@ -83,373 +95,187 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    return Material(
-      child: SafeArea(
-        child: StreamBuilder(
-            stream: firebaseServices.getSingleDocument(id: widget.sessionId),
-            builder: (context,
-                AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snaps) {
-              if (snaps.hasData) {
-                final _session = Session.fromJson(snaps.data!.data()!);
-                return Scaffold(
-                  backgroundColor: HexColor.fromHex(_session.colorHex!),
-                  appBar: AppBar(
-                    centerTitle: true,
-                    backgroundColor: HexColor.fromHex(_session.colorHex!),
-                    title: Text(_session.title!,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 22,
-                        color: Pallet.colorWhite,
-                      ),
-                    ),
-                    elevation: 0,
-                  ),
-                  body: Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 6.0, vertical: 5),
-                    decoration: BoxDecoration(
-                        color: HexColor.fromHex(_session.colorHex!)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                visitedUsersID = _session.userId!;
-                                visitedEgoName = _session.userNickname!;
-                                String thisEgoName =
-                                _session.userNickname.toString();
-                                String thisUser = _session.userId.toString();
-                                PageRouter.gotoWidget(
-                                    VisitedUserEgoProfilePage(
-                                        visitedUsersID: thisUser,
-                                        visitedEgoName: thisEgoName),
-                                    context);
-                                print("Visited User ID::: $thisEgoName");
-                              },
-                              child: CachedNetworkImage(
-                                  width: 48,
-                                  height: 48,
-                                  imageUrl: _session.userAvatarUrl!,
-                                  imageBuilder: (context, imageProvider) =>
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                            image: imageProvider,
-                                            fit: BoxFit.fill,
-                                          ),
-                                        ),
-                                      ),
-                                  placeholder: (context, url) =>
-                                      Center(child: CircularProgressIndicator()),
-                                  errorWidget: (context, url, error) =>
-                                      Image.asset(
-                                        "assets/images/brown_boy_mask.png",
-                                        width: 48,
-                                        height: 48,
-                                      ) //Icon(Icons.error),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 8,
-                            ),
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      visitedUsersID = _session.userId!;
-                                      visitedEgoName = _session.userNickname!;
-                                      String thisEgoName =
-                                      _session.userNickname.toString();
-                                      String thisUser =
-                                      _session.userId.toString();
-                                      PageRouter.gotoWidget(
-                                          VisitedUserEgoProfilePage(
-                                              visitedUsersID: thisUser,
-                                              visitedEgoName: thisEgoName),
-                                          context);
-                                      print("Visited User ID::: $thisEgoName");
-                                    },
-                                    child: Text(_session.userNickname!,
-                                        textAlign: TextAlign.start,
-                                        maxLines: 1,
-                                        style: GoogleFonts.lato(
-                                            fontSize: 18.0,
-                                            color: Pallet.colorWhite,
-                                            fontWeight: FontWeight.w700)),
-                                  ),
-                                  SizedBox(
-                                    height: 5,
-                                  ),
-                                  Text(timeConverter(_session.timeCreated!),
-                                      textAlign: TextAlign.start,
-                                      maxLines: 1,
-                                      style: GoogleFonts.lato(
-                                          fontSize: 13.0,
-                                          color: Pallet.colorWhite,
-                                          fontWeight: FontWeight.normal)),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(Mood.getMood(_session.moodId).toString(),
-                                      textAlign: TextAlign.end,
-                                      maxLines: 1,
-                                      style: GoogleFonts.lato(
-                                          fontSize: 13.0,
-                                          color: Pallet.colorWhite,
-                                          fontWeight: FontWeight.w700)),
-                                  SizedBox(
-                                    height: 5,
-                                  ),
-                                  Text(_session.location ?? "",
-                                      textAlign: TextAlign.end,
-                                      maxLines: 1,
-                                      style: GoogleFonts.lato(
-                                          fontSize: 12.0,
-                                          color: Colors.white70,
-                                          fontWeight: FontWeight.w700)),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
-                        SizedBox(
-                          height: 14,
-                        ),
-                        Center(
-                          child: Text(_session.title!,
-                              textAlign: TextAlign.center,
-                              maxLines: 3,
-                              style: GoogleFonts.lato(
-                                  fontSize: 20.0,
-                                  color: Pallet.colorWhite,
-                                  fontWeight: FontWeight.w700)),
-                        ),
-                        SizedBox(
-                          height: 12,
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _session.message!,
-                                textAlign: TextAlign.left,
-                                style: GoogleFonts.lato(
-                                    fontSize: 17.0,
-                                    color: Pallet.colorWhite,
-                                    fontWeight: FontWeight.normal),
-                              ),
-                            ),
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Row(
-                                  children: [
-                                    _session.audioUrl!.isNotEmpty
-                                        ? Container(
-                                      height: 60.h,
-                                      width: 60.w,
-                                      child: Stack(
-                                        fit: StackFit.expand,
-                                        children: <Widget>[
-                                          Center(
-                                              child: IconButton(
-                                                  icon: Icon(
-                                                      Icons
-                                                          .play_circle_fill_outlined,
-                                                      color: Colors.white,
-                                                      size: 40.r),
-                                                  onPressed: () {
-                                                    recordFile = _session.audioUrl!.toString();
-                                                    showDialog<void>(
-                                                      context: context,
-                                                      barrierDismissible:
-                                                      false, // user must tap button!
-                                                      builder: (BuildContext
-                                                      context) {
-                                                        return AlertDialog(
-                                                          content:
-                                                          PlaySoundWidget(
-                                                            filePath:
-                                                            recordFile,
-                                                          ),
-                                                        );
-                                                      },
-                                                    );
-                                                  })),
-                                          Positioned(
-                                              right: -5,
-                                              top: -9,
-                                              child: IconButton(
-                                                  icon: Icon(
-                                                    Icons.cancel,
-                                                    color: Colors.red,
-                                                    size: 24.r,
-                                                  ),
-                                                  onPressed: () =>
-                                                      setState(() {
-                                                        recordFile = null;
-                                                      })))
-                                        ],
-                                      ),
-                                    )
-                                        : SizedBox.shrink(),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Container(
-                              child: Align(
-                                alignment: Alignment.bottomLeft,
-                                child: Row(
-                                  children: [
-                                    Visibility(
-                                        visible: _session.imageUrls!.isNotEmpty,
-                                        child: CachedNetworkImage(
-                                            height: 73,
-                                            width: 73,
-                                            imageUrl:
-                                            _session.imageUrls!.isNotEmpty
-                                                ? _session.imageUrls!.first
-                                                : '',
-                                            imageBuilder:
-                                                (context, imageProvider) =>
-                                                Container(
-                                                  decoration: BoxDecoration(
-                                                    image: DecorationImage(
-                                                      image: imageProvider,
-                                                      fit: BoxFit.fill,
-                                                    ),
-                                                  ),
-                                                ),
-                                            placeholder: (context, url) => Center(
-                                                child:
-                                                CircularProgressIndicator()),
-                                            errorWidget: (context, url, error) =>
-                                                Image.asset(
-                                                  "assets/images/brown_boy_mask.png",
-                                                  width: 48,
-                                                  height: 48,
-                                                ) //Icon(Icons.error),
-                                        )),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          children: [
-                            MetooButton(
-                              cheers: _session.meToos!.length,
-                              thanks: _session.meLove!.length,
-                              sorry: _session.meHiFive!.length,
-                              me2: _session.meFlower!.length,
-                              onReactionChanged: (reaction, index) async {
-                                if (await firebaseServices
-                                    .isUserSignIn(context)) {
-                                  final _userModel =
-                                  await firebaseServices.getUserInfo();
+    return Scaffold(
+      backgroundColor: Pallet.colorSecondaryDark,
+      body: Stack(
+        children: [
+          //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
+          ListView(
+            children: [
+              PostDetailsWidget(
+                sessionId: widget.sessionId,
+              ),
+              StreamBuilder(
+                  stream: firebaseServices.getFeaturedSessionsComments(
+                      widget.sessionId!),
+                  builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                    if (snapShot.hasError) {
+                      return Container();
+                    }
 
-                                  firebaseServices.addUsersReactionToASession(
-                                      context, index,
-                                      session: _session,
-                                      sender: _userModel.nickname ?? '');
-                                }
-                              },
-                              color: Pallet.colorWhite,
-                            ),
-                            new Spacer(),
-                            FollowButton(
-                              text: _session.followers!.contains(currentUser?.uid)
-                                  ? 'Unfollow'
-                                  : 'Follow',
-                              onPressed: () async {
-                                if (await firebaseServices.isUserSignIn(context))
-                                  firebaseServices.followThisSession(context,
-                                      session: _session);
-                              },
-                              count: _session.followers!.length,
-                            ),
-                            new Spacer(),
-                            ShareButton(
-                              onPressed: () => _shareSession(_session.message!),
-                              color: Colors.white,
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                );
-              }
-              return Container();
-            }),
-      ),
-    );
-  }
+                    if (snapShot.hasData) {
+                      _commentSessionList.clear();
 
-  Widget _recordFileWidget() {
-    return Container(
-      height: 60.h,
-      width: 60.w,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          Center(
-              child: IconButton(
-                  icon: Icon(Icons.play_circle_fill_outlined,
-                      color: Colors.white, size: 40.r),
-                  onPressed: () {
-                    showDialog<void>(
-                      context: context,
-                      barrierDismissible: false, // user must tap button!
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          content: PlaySoundWidget(
-                            filePath: recordFile,
-                          ),
-                        );
-                      },
-                    );
-                  })),
-          Positioned(
-              right: -5,
-              top: -9,
-              child: IconButton(
-                  icon: Icon(
-                    Icons.cancel,
-                    color: Colors.red,
-                    size: 24.r,
-                  ),
-                  onPressed: () => setState(() {
-                    recordFile = null;
-                  })))
+                      /// clear list
+                      snapShot.data!.docs
+                          .map((e) => _commentSessionList
+                          .add(CommentSessionModel.fromJson(e.data())))
+                          .toList();
+                      return Column(
+
+                        children: [
+
+                          // Top ad unit is here
+                          if(customPostDetailTopBanner == null)
+                            SizedBox(height: 70)
+                          else
+                            Container(
+                              height: 60,
+                              child: AdWidget(ad: customPostDetailTopBanner),
+                            ),
+
+                          ..._commentSessionList
+                              .map((element) => CommentWidget(
+                            commentSessionModel: element,
+                            onPressed: () => _updateReaction(
+                                element, featuredSessionModel!),
+                            onShare: () => _share(element.message),
+                          ))
+                              .toList(),
+
+                          // Bottom ad unit is here
+                          if(customPostDetailBottomBanner == null)
+                            SizedBox(height: 70)
+                          else
+                            Container(
+                              height: 60,
+                              child: AdWidget(ad: customPostDetailBottomBanner),
+                            ),
+                        ],
+                      );
+                    }
+                    return Container();
+                  }
+              ),
+              SizedBox(
+                height: 70,
+              )
+            ],
+          ),
+          ChatEditField(
+            onTap: (String comment, voiceNote) =>
+                _sendComment(comment, voiceNote, featuredSessionModel!),
+          )
         ],
       ),
     );
   }
 
-  _shareSession(String? message) {
+
+
+
+
+  void _sendComment(String comment, String voiceNote, Session session) async {
+    if (!await firebaseServices.isUserSignIn(context)) return;
+
+    final _userModel = await firebaseServices.getUserInfo();
+    final _commentModel = CommentSessionModel(
+        alterEgoId: _userModel.alterEgoId,
+        audioUrl: voiceNote,
+        commentId: '',
+        flagged: session.flagged!,
+        imageUrls: [],
+        isUserAdmin: false,
+        message: comment,
+        timeCreated: Timestamp.now(),
+        userAvatarUrl: _userModel.avatarUrl,
+        userId: _userModel.userId,
+        userNickname:  _userModel.nickname);
+
+    firebaseServices.addComment(
+        title: session.title ?? '',
+        docId: session.sessionId!,
+        sender: _userModel.userType == 'ADMIN' ? 'Claire' :
+        _userModel.userType == 'SUPER_ADMIN' ? 'Claire' :
+        _userModel.nickname!,
+        map: _commentModel.toJson());
+    updateSessionTimeLastActivity(session);
+    incrementAdviseCount();
+    incrementTotalLoveCount();
+  }
+
+
+
+  /// Increase advise counter when user creates new comment.
+
+  Future<void> incrementAdviseCount() async {
+    FirebaseFirestore.instance
+        .collection("users")
+        .doc(currentUser?.uid)
+        .set({
+      "adviseCount": FieldValue.increment(1),
+    },
+      SetOptions(merge: true),
+    );
+    logger.d('Increased advise count');
+    print('Advise Count is: $FieldValue');
+
+  }
+
+  /// Increase total love count when user creates new session or comment.
+
+  Future<void> incrementTotalLoveCount() async {
+    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+      {
+        'totalLoveCount': FieldValue.increment(10),
+      },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully increased total love count');
+    print('Session Count is: $FieldValue');
+  }
+
+
+  /// Update a session's timeLastActivity when new comment is made.
+
+  Future<void> updateSessionTimeLastActivity(Session session) async {
+    FirebaseFirestore.instance
+        .collection("sessions")
+        .doc(session.sessionId)
+        .update({
+      'timeLastActivity': FieldValue.serverTimestamp(),
+    },
+    );
+    logger.d('Successfully increased advise count');
+    print('Session Count is: $FieldValue');
+
+  }
+
+
+  void _updateReaction(
+      CommentSessionModel? commentSessionModel, Session session) async {
+    if (commentSessionModel!.commentId!.isEmpty) {
+      showToast('You can\'t react to this post at this time.');
+      return;
+    }
+    if (!await firebaseServices.isUserSignIn(context)) return;
+
+    final _userModel = await firebaseServices.getUserInfo();
+    firebaseServices.addThanksReaction(
+        commentID: commentSessionModel.commentId!,
+        docId: session.sessionId!,
+        map: commentSessionModel.thanks!.contains(_userModel.userId)
+            ? {
+          'thanks': FieldValue.arrayRemove([_userModel.userId])
+        }
+            : {
+          'thanks': FieldValue.arrayUnion([_userModel.userId])
+        });
+  }
+
+  _share(String? message) {
     String _message = '''
+    And here is the advise from Claire:
     
      $message  
     ''';

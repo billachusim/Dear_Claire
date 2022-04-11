@@ -781,7 +781,7 @@ class FirebaseServices extends ChangeNotifier {
     return _userActivityList;
   }
 
-  /// [User Activity] -> get user activity that a user made
+  /// [User Activity] -> get user activity made on a user
   Future<List<UserActivityModel>> getActivityForUser() async {
     List<UserActivityModel> _userActivityList = [];
     user = await getUserInfo();
