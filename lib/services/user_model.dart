@@ -18,6 +18,7 @@ class UserModel {
   int? adviseCount;
   int? totalLoveCount;
   int? currentLoveCount;
+  int? withdrawnLoveCount;
 
   UserModel({
     this.alterEgoAccessCode,
@@ -36,6 +37,7 @@ class UserModel {
     this.adviseCount,
     this.totalLoveCount,
     this.currentLoveCount,
+    this.withdrawnLoveCount,
   });
 
   factory UserModel.fromJson(json) {
@@ -56,6 +58,7 @@ class UserModel {
       adviseCount: json['adviseCount'] ?? 0,
       totalLoveCount: json['totalLoveCount'] ?? 0,
       currentLoveCount: json['currentLoveCount'] ?? 0,
+      withdrawnLoveCount: json['withdrawnLoveCount'] ?? 0,
     );
   }
 
@@ -77,6 +80,7 @@ class UserModel {
       adviseCount: json['adviseCount'] ?? 0,
       totalLoveCount: json['totalLoveCount'] ?? 0,
       currentLoveCount: json['currentLoveCount'] ?? 0,
+      withdrawnLoveCount: json['withdrawnLoveCount'] ?? 0,
     );
   }
 
@@ -97,5 +101,6 @@ class UserModel {
         'adviseCount': adviseCount,
         'totalLoveCount': totalLoveCount,
         'currentLoveCount': currentLoveCount,
+        'withdrawnLoveCount': withdrawnLoveCount,
   };
 }

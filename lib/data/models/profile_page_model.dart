@@ -11,6 +11,7 @@ class EgoProfileInfo{
    var userType;
    int? totalLoveCount;
    int? currentLoveCount;
+   int? withdrawnLoveCount;
 
   EgoProfileInfo(
       { this.userModel,
@@ -22,6 +23,7 @@ class EgoProfileInfo{
        this.userType,
        this.totalLoveCount,
        this.currentLoveCount,
+       this.withdrawnLoveCount,
       });
 
 }

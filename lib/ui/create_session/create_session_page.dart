@@ -184,18 +184,29 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     print('Session Count is: $FieldValue');
   }
 
-  /// Increase current love count when user creates new session or comment.
 
-  Future<void> incrementCurrentLoveCount() async {
-    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
-      {
-        'currentLoveCount': FieldValue.increment(1),
-      },
+  /// Ascertain current available love for the user.
+
+  void ascertainCurrentLoveCount() {
+    final totalLove = userModel.totalLoveCount;
+    final withdrawnLove = userModel.withdrawnLoveCount;
+    final currentLoveCount = totalLove! - withdrawnLove!;
+    FirebaseFirestore.instance
+        .collection("users")
+        .doc(currentUser?.uid)
+        .set({
+      "currentLoveCount": currentLoveCount,
+    },
       SetOptions(merge: true),
     );
-    logger.d('Successfully saved new nickname');
-    print('Session Count is: $FieldValue');
+    logger.d('Increased advise count');
+    print('Current love Count is: $currentLoveCount');
+
   }
+
+
+
+
 
 //show up when user clicks on the FAB to create a session
   Future<void> _showCardDialog() async {
@@ -351,11 +362,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                     Navigator.of(context).pop();
                     createSession();
                     showToast(AppString.started_new_session);
-                    incrementSessionCount();
-                    incrementTotalLoveCount();
-                    Future.delayed(Duration(seconds: 2), () {
-                      _showInterstitialAd();
-                    });
                   } else {
                     _interstitialAd?.dispose();
                     showToast(AppString.new_session_error);
@@ -950,6 +956,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     Hive.box("draft").clear();
     categorize(sessionObject);
+
+    incrementSessionCount();
+    incrementTotalLoveCount();
+    ascertainCurrentLoveCount();
+
+      _showInterstitialAd();
 
     navigateToNewSession(await _firebaseServices.getSingleSession(
         sessionId: sessionObject.sessionId));
