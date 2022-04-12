@@ -177,223 +177,221 @@ class _ChatEditFieldState extends State<ChatEditField> {
       child: Container(
         color: Colors.black,
         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Flexible(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Visibility(
-                visible: _recordFile != null,
-                child: Container(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Visibility(
+              visible: _recordFile != null,
+              child: Container(
+                alignment: Alignment.topLeft,
+                child: Align(
                   alignment: Alignment.topLeft,
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Row(
-                      children: [
-                        CustomPlaySoundWidget(
-                          filePath: _recordFile?.path,
-                        ),
-                        IconButton(
-                            icon: Icon(
-                              Icons.cancel,
-                              color: Colors.red,
-                              size: 24.r,
-                            ),
-                            onPressed: () => setState(() {
-                                  _recordFile = null;
-                                }))
-                      ],
-                    ),
+                  child: Row(
+                    children: [
+                      CustomPlaySoundWidget(
+                        filePath: _recordFile?.path,
+                      ),
+                      IconButton(
+                          icon: Icon(
+                            Icons.cancel,
+                            color: Colors.red,
+                            size: 24.r,
+                          ),
+                          onPressed: () => setState(() {
+                                _recordFile = null;
+                              }))
+                    ],
                   ),
                 ),
               ),
+            ),
 
-              Visibility(
-                visible: imageList.isNotEmpty,
-                child: Container(
-                  child: Align(
-                    alignment: Alignment.bottomLeft,
-                    child: Row(
-                      children: [
-                        Visibility(
-                            visible: imageList.isNotEmpty,
-                            child: FullScreenWidget(
-                              child: CachedNetworkImage(
-                                  height: 75,
-                                  width: 75,
-                                  imageUrl: imageList.isNotEmpty
-                                      ? imageList.first.toString()
-                                      : '',
-                                  imageBuilder: (context, imageProvider) => Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(25),
-                                      image: DecorationImage(
-                                        image: imageProvider,
-                                        fit: BoxFit.fill,
-                                      ),
+            Visibility(
+              visible: imageList.isNotEmpty,
+              child: Container(
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Row(
+                    children: [
+                      Visibility(
+                          visible: imageList.isNotEmpty,
+                          child: FullScreenWidget(
+                            child: CachedNetworkImage(
+                                height: 75,
+                                width: 75,
+                                imageUrl: imageList.isNotEmpty
+                                    ? imageList.first.toString()
+                                    : '',
+                                imageBuilder: (context, imageProvider) => Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(25),
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.fill,
                                     ),
                                   ),
-                                  placeholder: (context, url) =>
-                                      Center(child: CircularProgressIndicator()),
-                                  errorWidget: (context, url, error) => Image.asset(
-                                    "assets/images/brown_boy_mask.png",
-                                    width: 48,
-                                    height: 48,
-                                  ) //Icon(Icons.error),
-                              ),
-                            )),
-
-                        SizedBox(width: 5,),
-
-                        Visibility(
-                            visible: imageList.isNotEmpty,
-                            child: FullScreenWidget(
-                              child: CachedNetworkImage(
-                                  height: 75,
-                                  width: 75,
-                                  imageUrl: imageList.isNotEmpty
-                                      ? imageList.last.toString()
-                                      : '',
-                                  imageBuilder: (context, imageProvider) => Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(25),
-                                      image: DecorationImage(
-                                        image: imageProvider,
-                                        fit: BoxFit.fill,
-                                      ),
-                                    ),
-                                  ),
-                                  placeholder: (context, url) =>
-                                      Center(child: CircularProgressIndicator()),
-                                  errorWidget: (context, url, error) => Image.asset(
-                                    "assets/images/brown_boy_mask.png",
-                                    width: 48,
-                                    height: 48,
-                                  ) //Icon(Icons.error),
-                              ),
-                            )),
-                        IconButton(
-                            icon: Icon(
-                              Icons.cancel,
-                              color: Colors.red,
-                              size: 24.r,
+                                ),
+                                placeholder: (context, url) =>
+                                    Center(child: CircularProgressIndicator()),
+                                errorWidget: (context, url, error) => Image.asset(
+                                  "assets/images/brown_boy_mask.png",
+                                  width: 48,
+                                  height: 48,
+                                ) //Icon(Icons.error),
                             ),
-                            onPressed: () => setState(() {
-                              imageList = [];
-                            }))
-                      ],
-                    ),
+                          )),
+
+                      SizedBox(width: 5,),
+
+                      Visibility(
+                          visible: imageList.isNotEmpty,
+                          child: FullScreenWidget(
+                            child: CachedNetworkImage(
+                                height: 75,
+                                width: 75,
+                                imageUrl: imageList.isNotEmpty
+                                    ? imageList.last.toString()
+                                    : '',
+                                imageBuilder: (context, imageProvider) => Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(25),
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.fill,
+                                    ),
+                                  ),
+                                ),
+                                placeholder: (context, url) =>
+                                    Center(child: CircularProgressIndicator()),
+                                errorWidget: (context, url, error) => Image.asset(
+                                  "assets/images/brown_boy_mask.png",
+                                  width: 48,
+                                  height: 48,
+                                ) //Icon(Icons.error),
+                            ),
+                          )),
+                      IconButton(
+                          icon: Icon(
+                            Icons.cancel,
+                            color: Colors.red,
+                            size: 24.r,
+                          ),
+                          onPressed: () => setState(() {
+                            imageList = [];
+                          }))
+                    ],
                   ),
                 ),
               ),
+            ),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  CupertinoButton(
-                      padding: EdgeInsets.zero,
-                      onPressed: () {},
-                      child: SvgPicture.asset(
-                        AppImages.appEmoji,
-                        color: Colors.pink,
-                        height: 24,
-                      )),
-                  CupertinoButton(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                CupertinoButton(
                     padding: EdgeInsets.zero,
-                    onPressed: loadAssets,
-                    child: Icon(
-                      Icons.linked_camera_rounded,
-                      size: 30,
+                    onPressed: () {},
+                    child: SvgPicture.asset(
+                      AppImages.appEmoji,
                       color: Colors.pink,
-                    ),
+                      height: 24,
+                    )),
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: loadAssets,
+                  child: Icon(
+                    Icons.linked_camera_rounded,
+                    size: 30,
+                    color: Colors.pink,
                   ),
-                  Flexible(
-                    child: new ConstrainedBox(
-                      constraints: new BoxConstraints(
-                        minWidth: getDeviceWidth(context),
-                        maxWidth: getDeviceWidth(context),
-                        minHeight: 20.0,
-                        maxHeight: 135.0,
-                      ),
-                      child: new Scrollbar(
-                        child: Container(
-                          padding: EdgeInsets.zero,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(25),
-                            color: Pallet.colorWhite,
-                          ),
-                          child: new TextField(
-                            cursorColor: Pallet.colorSplashScreen,
-                            keyboardType: TextInputType.multiline,
-                            maxLines: null,
-                            controller: _controller,
-                            onChanged: (text) {
-                              if (text.length >= 2) {
-                                setState(() {
-                                  isTyping = true;
-                                });
-                              } else {
-                                isTyping = false;
-                                setState(() {
-                                  isTyping = false;
-                                });
-                              }
-                            },
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding:
-                                  EdgeInsets.only(left: 13.0, right: 13.0),
-                              hintText: "Positive vibes only...",
-                              hintStyle: TextStyle(
-                                fontStyle: FontStyle.italic,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
+                ),
+                Flexible(
+                  child: new ConstrainedBox(
+                    constraints: new BoxConstraints(
+                      minWidth: getDeviceWidth(context),
+                      maxWidth: getDeviceWidth(context),
+                      minHeight: 20.0,
+                      maxHeight: 135.0,
+                    ),
+                    child: new Scrollbar(
+                      child: Container(
+                        padding: EdgeInsets.zero,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          color: Pallet.colorWhite,
                         ),
-                      ),
-                    ),
-                  ),
-                  isTyping == true
-                      ? FloatingActionButton(
-                          onPressed: () {
-                            if (_controller.text.isNotEmpty)
-                              widget.onTap(_controller.text, _recordFile.toString());
-                            _controller.text = '';
-                            setState(() {
-                              _recordFile = null;
-                              imageList = [];
-                            });
-                          },
-                          mini: true,
-                          backgroundColor: Pallet.colorSplashScreen,
-                          child: SvgPicture.asset(
-                            AppImages.appSend,
-                            height: 25,
-                          ))
-                      : FloatingActionButton(
-                          onPressed: () async {
-                            var data = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => SoundRecorderWidget(
-                                          onRecordComplete: (recordFile) {},
-                                        )));
-                            if (data != null) {
-                              _recordFile = data;
-                              setState(() {});
+                        child: new TextField(
+                          cursorColor: Pallet.colorSplashScreen,
+                          keyboardType: TextInputType.multiline,
+                          maxLines: null,
+                          controller: _controller,
+                          onChanged: (text) {
+                            if (text.length >= 2) {
+                              setState(() {
+                                isTyping = true;
+                              });
+                            } else {
+                              isTyping = false;
+                              setState(() {
+                                isTyping = false;
+                              });
                             }
                           },
-                          mini: true,
-                          backgroundColor: Pallet.colorPrimary,
-                          child: Icon(
-                            Icons.mic_rounded,
-                            size: 35,
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            contentPadding:
+                                EdgeInsets.only(left: 13.0, right: 13.0),
+                            hintText: "Positive vibes only...",
+                            hintStyle: TextStyle(
+                              fontStyle: FontStyle.italic,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
-                ],
-              ),
-            ],
-          ),
+                      ),
+                    ),
+                  ),
+                ),
+                isTyping == true
+                    ? FloatingActionButton(
+                        onPressed: () {
+                          if (_controller.text.isNotEmpty)
+                            widget.onTap(_controller.text, _recordFile.toString());
+                          _controller.text = '';
+                          setState(() {
+                            _recordFile = null;
+                            imageList = [];
+                          });
+                        },
+                        mini: true,
+                        backgroundColor: Pallet.colorSplashScreen,
+                        child: SvgPicture.asset(
+                          AppImages.appSend,
+                          height: 25,
+                        ))
+                    : FloatingActionButton(
+                        onPressed: () async {
+                          var data = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => SoundRecorderWidget(
+                                        onRecordComplete: (recordFile) {},
+                                      )));
+                          if (data != null) {
+                            _recordFile = data;
+                            setState(() {});
+                          }
+                        },
+                        mini: true,
+                        backgroundColor: Pallet.colorPrimary,
+                        child: Icon(
+                          Icons.mic_rounded,
+                          size: 35,
+                        ),
+                      ),
+              ],
+            ),
+          ],
         ),
       ),
     );
