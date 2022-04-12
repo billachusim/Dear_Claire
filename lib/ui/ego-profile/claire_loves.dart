@@ -1,3 +1,5 @@
+import 'dart:core';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
@@ -16,6 +18,12 @@ class ClaireLoves extends StatefulWidget {
 }
 
 class _ClaireLovesState extends State<ClaireLoves> {
+  late int _totalLoveCount;
+  late int _currentLoveCount;
+  late int _withdrawnLoveCount = 0;
+
+
+
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _amountRequestController = TextEditingController();
 
@@ -26,19 +34,13 @@ class _ClaireLovesState extends State<ClaireLoves> {
   @override
   void initState() {
     super.initState();
-    getUser();
   }
+
 
   @override
   void dispose() {
     super.dispose();
   }
-
-  getUser() async {
-    userModel = await firebaseServices.getUserInfo();
-  }
-
-
 
 
 
@@ -46,7 +48,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
   void ascertainWithdrawnLoveCount() {
     final currentWithdrawal = double.parse(_amountController.text);
-    final totalWithdrawal = userModel.withdrawnLoveCount;
+    final totalWithdrawal = _withdrawnLoveCount;
     final withdrawnLoveCount = currentWithdrawal + totalWithdrawal!;
     FirebaseFirestore.instance
         .collection("users")
@@ -159,13 +161,31 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
                                 ),
-                                child: Text(
-                                  userModel.sessionCount.toString(),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                  ),
+                                child: FutureBuilder<
+                                    DocumentSnapshot<Map<String, dynamic>>>(
+                                  future: FirebaseFirestore.instance
+                                      .collection("users")
+                                      .doc(currentUser!.uid)
+                                      .get(),
+                                  builder: (_, snapshot) {
+                                    if (snapshot.hasData) {
+                                      var data = snapshot.data!.data();
+                                      var sessionCount = data?["sessionCount"] ?? "0";
+                                      debugPrint(
+                                          " This is the Total number of SESSIONS by this user ${sessionCount.toString()}");
+                                      return Text(
+                                        sessionCount.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                      );
+                                    }
+
+                                    return Center(
+                                        child: CircularProgressIndicator());
+                                  },
                                 ),
                               ),
                             ),
@@ -208,13 +228,31 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
                                 ),
-                                child: Text(
-                                  userModel.adviseCount.toString(),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                  ),
+                                child: FutureBuilder<
+                                    DocumentSnapshot<Map<String, dynamic>>>(
+                                  future: FirebaseFirestore.instance
+                                      .collection("users")
+                                      .doc(currentUser!.uid)
+                                      .get(),
+                                  builder: (_, snapshot) {
+                                    if (snapshot.hasData) {
+                                      var data = snapshot.data!.data();
+                                      var adviseCount = data?["adviseCount"] ?? "0";
+                                      debugPrint(
+                                          " This is the Total number of ADVISES by this user ${adviseCount.toString()}");
+                                      return Text(
+                                        adviseCount.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                      );
+                                    }
+
+                                    return Center(
+                                        child: CircularProgressIndicator());
+                                  },
                                 ),
                               ),
                             ),
@@ -306,13 +344,32 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
                                 ),
-                                child: Text(
-                                  userModel.totalLoveCount.toString(),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                  ),
+                                child: FutureBuilder<
+                                    DocumentSnapshot<Map<String, dynamic>>>(
+                                  future: FirebaseFirestore.instance
+                                      .collection("users")
+                                      .doc(currentUser!.uid)
+                                      .get(),
+                                  builder: (_, snapshot) {
+                                    if (snapshot.hasData) {
+                                      var data = snapshot.data!.data();
+                                      var totalLoveCount = data?["totalLoveCount"] ?? "0";
+                                      _totalLoveCount = totalLoveCount;
+                                      debugPrint(
+                                          " This is the Total number of LOVES earned by this user ${totalLoveCount.toString()}");
+                                      return Text(
+                                        totalLoveCount.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                      );
+                                    }
+
+                                    return Center(
+                                        child: CircularProgressIndicator());
+                                  },
                                 ),
                               ),
                             ),
@@ -429,13 +486,32 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
                                 ),
-                                child: Text(
-                                  userModel.currentLoveCount.toString(),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                  ),
+                                child: FutureBuilder<
+                                    DocumentSnapshot<Map<String, dynamic>>>(
+                                  future: FirebaseFirestore.instance
+                                      .collection("users")
+                                      .doc(currentUser!.uid)
+                                      .get(),
+                                  builder: (_, snapshot) {
+                                    if (snapshot.hasData) {
+                                      var data = snapshot.data!.data();
+                                      var currentLoveCount = data?["currentLoveCount"] ?? "0";
+                                      _currentLoveCount = currentLoveCount;
+                                      debugPrint(
+                                          " This is the CURRENT loves for this user ${currentLoveCount.toString()}");
+                                      return Text(
+                                        currentLoveCount.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                      );
+                                    }
+
+                                    return Center(
+                                        child: CircularProgressIndicator());
+                                  },
                                 ),
                               ),
                             ),
@@ -478,8 +554,9 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
                                       var withdrawnLoveCount = data?["withdrawnLoveCount"] ?? "0";
+                                     // _withdrawnLoveCount = withdrawnLoveCount;
                                       debugPrint(
-                                          " This is the Total number of withdrawal by this user ${withdrawnLoveCount.toString()}");
+                                          " This is the Total number of love withdrawals by this user ${withdrawnLoveCount.toString()}");
                                       return Text(
                                         withdrawnLoveCount.toString(),
                                         textAlign: TextAlign.center,
