@@ -467,13 +467,32 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
                                 ),
-                                child: Text(
-                                  userModel.withdrawnLoveCount.toString(),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                  ),
+
+                                child: FutureBuilder<
+                                    DocumentSnapshot<Map<String, dynamic>>>(
+                                  future: FirebaseFirestore.instance
+                                      .collection("users")
+                                      .doc(currentUser!.uid)
+                                      .get(),
+                                  builder: (_, snapshot) {
+                                    if (snapshot.hasData) {
+                                      var data = snapshot.data!.data();
+                                      var withdrawnLoveCount = data?["withdrawnLoveCount"] ?? "0";
+                                      debugPrint(
+                                          " This is the Total number of withdrawal by this user ${withdrawnLoveCount.toString()}");
+                                      return Text(
+                                        withdrawnLoveCount.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                      );
+                                    }
+
+                                    return Center(
+                                        child: CircularProgressIndicator());
+                                  },
                                 ),
                               ),
                             ),
@@ -700,7 +719,6 @@ class _ClaireLovesState extends State<ClaireLoves> {
                             if (_amountController.text.isNotEmpty) {
                               setState(() {
                                 ascertainWithdrawnLoveCount();
-                                getUser();
                               });
                             }
                           },

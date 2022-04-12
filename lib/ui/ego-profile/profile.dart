@@ -70,6 +70,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   UserModel userModel = UserModel();
   SessionModel sessionModel = SessionModel();
   User? currentUser = FirebaseAuth.instance.currentUser;
+  late String? userType = userModel.userType;
 
   getUser() async {
     userModel = await firebaseServices.getUserInfo();
@@ -210,8 +211,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   /// Profile Cover header
 
-  Widget _pageHeader({String? userType})
-  {
+  Widget _pageHeader() {
     return Material(
       child: Container(
         margin: EdgeInsets.only(bottom: 6),
@@ -658,20 +658,41 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                       ),
                       child: Row(
                         children: [
-                          Text(
-                            userType == 'REGULAR'
-                                ? 'Ego'
-                                : userType == 'ADMIN'
-                                    ? 'Alter Ego'
-                                    : userType == 'SUPER_ADMIN'
-                                        ? 'Super Ego'
-                                        : '',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
+
+                          FutureBuilder<
+                              DocumentSnapshot<Map<String, dynamic>>>(
+                            future: FirebaseFirestore.instance
+                                .collection("users")
+                                .doc(currentUser!.uid)
+                                .get(),
+                            builder: (_, snapshot) {
+                              if (snapshot.hasData) {
+                                var data = snapshot.data!.data();
+                                var _userType = data?["userType"] ?? "Ego";
+                                userType = _userType;
+                                debugPrint(
+                                    " The userType of this user is ${userType.toString()}");
+                                return Text(
+                                  userType == 'REGULAR'
+                                      ? 'Ego'
+                                      : userType == 'ADMIN'
+                                      ? 'Alter Ego'
+                                      : userType == 'SUPER_ADMIN'
+                                      ? 'Super Ego'
+                                      : '',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              }
+
+                              return Center(
+                                  child: CircularProgressIndicator());
+                            },
                           ),
+
                           topBarWidget(),
                         ],
                       ),
@@ -926,8 +947,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   @override
   Widget build(BuildContext context) {
-    print("User nickname::: ${userModel.nickname}");
-    print("User type::: ${userModel.userType}");
 
     return SafeArea(
       child: WillPopScope(
@@ -958,9 +977,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                       }
 
                       if (profileInfo.hasData) {
-                        return _pageHeader(
-                          userType: profileInfo.data!.userModel!.userType,
-                        );
+                        return _pageHeader();
                       }
                       return Container();
                     }),
