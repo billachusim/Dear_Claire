@@ -49,7 +49,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
   void ascertainWithdrawnLoveCount() {
     final currentWithdrawal = double.parse(_amountController.text);
     final totalWithdrawal = _withdrawnLoveCount;
-    final withdrawnLoveCount = currentWithdrawal + totalWithdrawal!;
+    final withdrawnLoveCount = currentWithdrawal + totalWithdrawal;
     FirebaseFirestore.instance
         .collection("users")
         .doc(currentUser?.uid)
