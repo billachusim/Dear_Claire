@@ -61,14 +61,14 @@ class FirebaseServices extends ChangeNotifier {
 
   /// subscribe user to a topic
   Future<void> _subscribeToSession(String sender, Session session) async {
-  //  _usersID = await getUsersId();
+    _usersID = await getUsersId();
 
     await _firebaseMessaging.subscribeToTopic(session.sessionId!);
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
       to: '/topics/${session.sessionId}',
       collapseKey: 'type_a',
-      data: pushNotification.Data(id: currentUser!.uid),
+      data: pushNotification.Data(id: _usersID),
       notification: pushNotification.Notification(
           title: session.title ?? '', body: '$sender followed your session'),
     );
@@ -248,7 +248,7 @@ class FirebaseServices extends ChangeNotifier {
         .where("featured", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .where("archived", isEqualTo: false)
-        .where('followers', arrayContains: currentUser!.uid)
+        .where('followers', arrayContains: _usersID)
         .limit(AppString.appSessionLength)
         .orderBy('timeLastActivity', descending: true)
         .snapshots();
@@ -273,7 +273,7 @@ class FirebaseServices extends ChangeNotifier {
     try {
       final _value = await _firebaseFirestore
           .collection(AppString.appFeaturedSessions)
-          .where("userId", isEqualTo: currentUser!.uid)
+          .where("userId", isEqualTo: _usersID)
           .where("flagged", isEqualTo: false)
           .where("archived", isEqualTo: false)
           .orderBy('timeCreated', descending: true)
@@ -371,7 +371,7 @@ class FirebaseServices extends ChangeNotifier {
         pushNotification.NotificationModel(
       to: '/topics/$docId',
       collapseKey: 'type_a',
-      data: pushNotification.Data(id: currentUser!.uid),
+      data: pushNotification.Data(id: _usersID),
       notification: pushNotification.Notification(
           title: title, body: '$sender advised your session'),
     );
@@ -434,10 +434,10 @@ class FirebaseServices extends ChangeNotifier {
   }
 
   void updateUserInfo(UserModel userModel) async {
-   // _usersID = await getUsersId();
+    _usersID = await getUsersId();
     _firebaseFirestore
         .collection(AppString.users)
-        .doc(currentUser!.uid)
+        .doc(_usersID)
         .update(userModel.toJson());
   }
 
@@ -633,7 +633,7 @@ class FirebaseServices extends ChangeNotifier {
   /// request to follow a featured session
   void followThisSession(BuildContext context, {Session? session}) {
     showCustomDialog(context,
-        message: session!.followers!.contains(currentUser!.uid)
+        message: session!.followers!.contains(_usersID)
             ? AppString.unFollowDiarySessions
             : AppString.followDiarySessions, onPressed: () {
       PageRouter.goBack(context);
@@ -646,12 +646,12 @@ class FirebaseServices extends ChangeNotifier {
       {Session? session}) async {
     final _user = await getUserInfo();
     String _name = _user.userType == 'ADMIN' ? 'Claire' : _user.nickname!;
-    !session!.followers!.contains(currentUser!.uid)
+    !session!.followers!.contains(_usersID)
         ? _firebaseFirestore
             .collection(AppString.appFeaturedSessions)
             .doc(session.sessionId)
             .update({
-            'followers': FieldValue.arrayUnion([currentUser!.uid]),
+            'followers': FieldValue.arrayUnion([_usersID]),
             "featured": false,
             "archived": false,
             "flagged": false
@@ -671,7 +671,7 @@ class FirebaseServices extends ChangeNotifier {
             .collection(AppString.appFeaturedSessions)
             .doc(session.sessionId)
             .update({
-            'followers': FieldValue.arrayRemove([currentUser!.uid]),
+            'followers': FieldValue.arrayRemove([_usersID]),
             "featured": true,
             'flagged': false,
             "archived": false,
@@ -739,10 +739,10 @@ class FirebaseServices extends ChangeNotifier {
   /// Get user info
 
   Future<UserModel> getUserInfo() async {
-    //_usersID = await getUsersId();
+    _usersID = await getUsersId();
     DocumentSnapshot response = await _firebaseFirestore
         .collection(AppString.users)
-        .doc(currentUser?.uid)
+        .doc(_usersID)
         .get();
 
     var user = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
@@ -908,27 +908,27 @@ class FirebaseServices extends ChangeNotifier {
   /// add users reaction to a posts
   Future<void>? addUsersReactionToASession(BuildContext context, int index,
       {required Session? session, required String sender}) async {
-   // _usersID = await getUsersId();
+    _usersID = await getUsersId();
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
       to: '/topics/${session!.sessionId}',
       collapseKey: 'type_a',
-      data: pushNotification.Data(id: currentUser!.uid),
+      data: pushNotification.Data(id: _usersID),
       notification: pushNotification.Notification(
           title: session.title ?? '', body: '$sender reacted to your session'),
     );
 
-    ReactionHandler.reactionType(session, index).contains(currentUser!.uid)
+    ReactionHandler.reactionType(session, index).contains(_usersID)
         ? _firebaseFirestore
             .collection(AppString.appFeaturedSessions)
             .doc(session.sessionId)
-            .update(ReactionHandler.returnReaction(index, currentUser!.uid,
+            .update(ReactionHandler.returnReaction(index, _usersID!,
                 addReaction: false))
             .then((value) => logger.d('Successfully remove reaction'))
         : _firebaseFirestore
             .collection(AppString.appFeaturedSessions)
             .doc(session.sessionId)
-            .update(ReactionHandler.returnReaction(index, currentUser!.uid,
+            .update(ReactionHandler.returnReaction(index, _usersID!,
                 addReaction: true))
             .then((value) => notificationService
                 .sendNotification(_notificationModel.toJson()));
@@ -953,11 +953,11 @@ class FirebaseServices extends ChangeNotifier {
   Future<List<Session>> getUserSessionByDate({DateTime? startDate}) async {
     List<Session> _sessionList = [];
 
-    //_usersID = await getUsersId();
+    _usersID = await getUsersId();
     try {
       final _value = await _firebaseFirestore
           .collection(AppString.appFeaturedSessions)
-          .where("userId", isEqualTo: currentUser!.uid)
+          .where("userId", isEqualTo: _usersID)
           .where("timeCreated", isGreaterThanOrEqualTo: startDate!)
           // .orderBy('timeCreated', descending: true)
          // .limit(AppString.appSessionLength)
@@ -976,10 +976,10 @@ class FirebaseServices extends ChangeNotifier {
 
   /// get number of followers a user has
   Future<void> getNumberOfFollowersForUser() async {
-   // _usersID = await getUsersId();
+    _usersID = await getUsersId();
     final query = await _firebaseFirestore
         .collection(AppString.COLLECTION_USER_FOLLOW_COUNTERS)
-        .doc(currentUser!.uid)
+        .doc(_usersID)
         .collection(AppString.COLLECTION_USER_FOLLOW_SHARDS)
         //.limit(100)
         .get();
@@ -994,7 +994,7 @@ class FirebaseServices extends ChangeNotifier {
 
   Future<EgoProfileInfo> getEgoProfileInfo()async{
     EgoProfileInfo profileInfo= EgoProfileInfo();
-   // _usersID = await getUsersId();
+    _usersID = await getUsersId();
 
 
     //get user profile Info
@@ -1009,7 +1009,7 @@ class FirebaseServices extends ChangeNotifier {
     try {
       final _value = await _firebaseFirestore
           .collection(AppString.appFeaturedSessions)
-          .where("userId", isEqualTo: currentUser!.uid)
+          .where("userId", isEqualTo: _usersID)
          // .limit(AppString.appSessionLength)
           .get();
 
@@ -1035,7 +1035,7 @@ class FirebaseServices extends ChangeNotifier {
     try {
     final _value = await _firebaseFirestore
         .collection("user_comment_counters")
-        .where("userId", isEqualTo: currentUser!.uid)
+        .where("userId", isEqualTo: _usersID)
       //  .limit(AppString.appSessionLength)
         .get();
 
@@ -1061,7 +1061,7 @@ class FirebaseServices extends ChangeNotifier {
     try {
       final _value = await _firebaseFirestore
           .collection("user_follow_counters")
-          .where("userId", isEqualTo: currentUser!.uid)
+          .where("userId", isEqualTo: _usersID)
           //.limit(AppString.appCommentLength)
           .get();
 

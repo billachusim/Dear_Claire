@@ -49,7 +49,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   @override
   void initState() {
     super.initState();
-    //getUser();
+    getUser();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       print(_tabController.index);
@@ -67,7 +67,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   }
 
   int currentTabIndex = 0;
-  //String? userName;
   UserModel userModel = UserModel();
   SessionModel sessionModel = SessionModel();
   User? currentUser = FirebaseAuth.instance.currentUser;
