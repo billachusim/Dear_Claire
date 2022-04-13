@@ -61,7 +61,7 @@ class FirebaseServices extends ChangeNotifier {
 
   /// subscribe user to a topic
   Future<void> _subscribeToSession(String sender, Session session) async {
-    _usersID = await getUsersId();
+    //_usersID = await getUsersId();
 
     await _firebaseMessaging.subscribeToTopic(session.sessionId!);
     final pushNotification.NotificationModel _notificationModel =
@@ -70,10 +70,10 @@ class FirebaseServices extends ChangeNotifier {
       collapseKey: 'type_a',
       data: pushNotification.Data(id: _usersID),
       notification: pushNotification.Notification(
-          title: session.title ?? '', body: '$sender followed your session'),
+          title: session.title ?? '', body: '$sender followed the session'),
     );
     notificationService.sendNotification(_notificationModel.toJson());
-    logger.d('Following this session: ${session.sessionId!}');
+    logger.d('Following this session: ${session.title!}');
   }
 
   /// subscribe user to chat room
@@ -371,9 +371,9 @@ class FirebaseServices extends ChangeNotifier {
         pushNotification.NotificationModel(
       to: '/topics/$docId',
       collapseKey: 'type_a',
-      data: pushNotification.Data(id: _usersID),
+      data: pushNotification.Data(id: sender),
       notification: pushNotification.Notification(
-          title: title, body: '$sender advised your session'),
+          title: title, body: '$sender added comment to the session'),
     );
 
     _firebaseFirestore
@@ -627,9 +627,7 @@ class FirebaseServices extends ChangeNotifier {
             .doc(session.sessionId)
             .update({
             'followers': FieldValue.arrayUnion([_usersID]),
-            "featured": false,
-            "archived": false,
-            "flagged": false
+            //"featured": false,
           }).whenComplete(() {
             _subscribeToSession(_name, session);
 
@@ -647,9 +645,7 @@ class FirebaseServices extends ChangeNotifier {
             .doc(session.sessionId)
             .update({
             'followers': FieldValue.arrayRemove([_usersID]),
-            "featured": true,
-            'flagged': false,
-            "archived": false,
+           // "featured": true,
           }).whenComplete(() {
             _unSubscribeToSession(session.sessionId!);
 
@@ -882,11 +878,11 @@ class FirebaseServices extends ChangeNotifier {
 
   /// add users reaction to a posts
   Future<void>? addUsersReactionToASession(BuildContext context, int index,
-      {required Session? session, required String sender}) async {
+      {required Session session, required String sender}) async {
     _usersID = await getUsersId();
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
-      to: '/topics/${session!.sessionId}',
+      to: '/topics/${session.sessionId}',
       collapseKey: 'type_a',
       data: pushNotification.Data(id: _usersID),
       notification: pushNotification.Notification(

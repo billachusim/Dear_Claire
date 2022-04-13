@@ -1,5 +1,6 @@
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/utils/constant.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 final ClairNotification clairNotification = ClairNotification();
 
 class ClairNotification {
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
   SharedPreferences? _prefs;
 
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -46,7 +49,7 @@ class ClairNotification {
   }
 
   void triggerNotifications() async {
-    String _usersID = await firebaseServices.getUsersId();
+    String _usersID = currentUser!.uid;
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       RemoteNotification? notification = message.notification!;
@@ -69,8 +72,8 @@ class ClairNotification {
 
   void triggerReminder() async {
     if (_itsTime()) {
-      flutterLocalNotificationsPlugin.show(0, 'ClaireReminder',
-          'It\'s high time we talk.', _notificationDetails());
+      flutterLocalNotificationsPlugin.show(0, 'Claireminder',
+          'Erm, what\'s happening there/?', _notificationDetails());
       return;
     }
     await _prefs!.setString('reminder', DateTime.now().toString());
@@ -84,7 +87,7 @@ class ClairNotification {
 
       final _difference = DateTime.now().difference(_dateTime);
 
-      if (_difference.inDays == 7) {
+      if (_difference.inDays == 3) {
         return true;
       }
     }
