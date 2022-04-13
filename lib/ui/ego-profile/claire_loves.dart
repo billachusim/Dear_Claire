@@ -165,7 +165,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(currentUser!.uid)
+                                      .doc(currentUser?.uid)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
@@ -232,7 +232,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(currentUser!.uid)
+                                      .doc(currentUser?.uid)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
@@ -348,13 +348,13 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(currentUser!.uid)
+                                      .doc(currentUser?.uid)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
                                       var totalLoveCount = data?["totalLoveCount"] ?? "0";
-                                      _totalLoveCount = totalLoveCount;
+                                      var _totalLoveCount = totalLoveCount;
                                       debugPrint(
                                           " This is the Total number of LOVES earned by this user ${totalLoveCount.toString()}");
                                       return Text(
@@ -490,13 +490,13 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(currentUser!.uid)
+                                      .doc(currentUser?.uid)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
                                       var currentLoveCount = data?["currentLoveCount"] ?? "0";
-                                      _currentLoveCount = currentLoveCount;
+                                      var _currentLoveCount = currentLoveCount;
                                       debugPrint(
                                           " This is the CURRENT loves for this user ${currentLoveCount.toString()}");
                                       return Text(
@@ -548,13 +548,13 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(currentUser!.uid)
+                                      .doc(currentUser?.uid)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
                                       var withdrawnLoveCount = data?["withdrawnLoveCount"] ?? "0";
-                                     // _withdrawnLoveCount = withdrawnLoveCount;
+                                     var _withdrawnLoveCount = withdrawnLoveCount;
                                       debugPrint(
                                           " This is the Total number of love withdrawals by this user ${withdrawnLoveCount.toString()}");
                                       return Text(
