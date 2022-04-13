@@ -46,7 +46,7 @@ class AuthSelectionPage extends StatelessWidget {
                         child: Text("Dear Claire",
                             textAlign: TextAlign.center,
                             style: GoogleFonts.lato(
-                                fontSize: 20.0,
+                                fontSize: 24.0,
                                 color: Pallet.colorWhite,
                                 //fontStyle: FontStyle.normal,
                                 fontWeight: FontWeight.w800)),
@@ -58,7 +58,7 @@ class AuthSelectionPage extends StatelessWidget {
                         child: Text("Secret Diary Chat",
                             textAlign: TextAlign.center,
                             style: GoogleFonts.lato(
-                                fontSize: 12.0,
+                                fontSize: 13.0,
                                 color: Pallet.colorWhite,
                                 //fontStyle: FontStyle.normal,
                                 fontWeight: FontWeight.w400)),
@@ -78,7 +78,7 @@ class AuthSelectionPage extends StatelessWidget {
                         children: [
                           GestureDetector(
                             onTap: (){
-                              Navigator.of(context).pushNamed(AppRoutes.signUp);
+                              Navigator.of(context).pushReplacementNamed(AppRoutes.signUp);
                             },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -94,7 +94,7 @@ class AuthSelectionPage extends StatelessWidget {
                                   child: Text("Sign Up",
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.lato(
-                                          fontSize: 12.0,
+                                          fontSize: 16.0,
                                           color: Pallet.colorSplashScreen,
                                           //fontStyle: FontStyle.normal,
                                           fontWeight: FontWeight.w700)),
@@ -102,33 +102,32 @@ class AuthSelectionPage extends StatelessWidget {
                               ),
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 30,vertical: 13),
-                            child: Container(
-                              alignment: Alignment.bottomCenter,
-                              width: MediaQuery.of(context).size.width,
-                              height: 38,
-                              child: Center(
-                                child: ButtonTheme(
-                                  minWidth: MediaQuery.of(context).size.width,
-                                  child: RaisedButton(
-                                    onPressed: () {
-                                      Navigator.of(context).pushNamed(AppRoutes.login);
-                                    },
-                                    color: Colors.transparent,
-                                    shape: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(6.0),
-                                        borderSide: new BorderSide(color: Pallet.colorWhite)),
-                                    child: Text("Login",
-                                        textAlign: TextAlign.center,
-                                        style: GoogleFonts.lato(
-                                            fontSize: 12.0,
-                                            color: Pallet.colorWhite,
-                                            //fontStyle: FontStyle.normal,
-                                            fontWeight: FontWeight.w700)),
-                                  ),
-                                ),
 
+                          SizedBox(height: 22,),
+
+                          GestureDetector(
+                            onTap: (){
+                              Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 30),
+                              child: Container(
+                                alignment: Alignment.bottomCenter,
+                                width: MediaQuery.of(context).size.width,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                    color: Pallet.colorSecondary,
+                                    borderRadius:
+                                    BorderRadius.all(Radius.circular(6))),
+                                child: Center(
+                                  child: Text("Log In",
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.lato(
+                                          fontSize: 16.0,
+                                          color: Pallet.colorWhite,
+                                          //fontStyle: FontStyle.normal,
+                                          fontWeight: FontWeight.w700)),
+                                ),
                               ),
                             ),
                           ),

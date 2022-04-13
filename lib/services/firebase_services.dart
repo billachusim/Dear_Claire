@@ -198,7 +198,7 @@ class FirebaseServices extends ChangeNotifier {
   void logUserOut(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     await prefs!.clear();
-    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+    Navigator.of(context).pushReplacementNamed(AppRoutes.authSelection);
   }
 
   /// checks if a user is signed in or not
@@ -207,7 +207,7 @@ class FirebaseServices extends ChangeNotifier {
   Future<bool> isUserSignIn(BuildContext context) async {
     _usersID = await getUsersId();
     if (_usersID!.isEmpty) {
-      Navigator.of(context).pushNamed(AppRoutes.login);
+      Navigator.of(context).pushNamed(AppRoutes.authSelection);
       return false;
     }
     return true;
