@@ -310,24 +310,46 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                     }),
                 new Spacer(),
 
-                if (currentUser?.email == "thesocialfaculty@gmail.com")
-                GestureDetector(
-                  onTap: () {
-                    if (element.featured == false)
-                      featureAlertDialog(context);
-                    else unfeatureAlertDialog(context);
+                FutureBuilder<
+                    DocumentSnapshot<Map<String, dynamic>>>(
+                  future: FirebaseFirestore.instance
+                      .collection("users")
+                      .doc(currentUser!.uid)
+                      .get(),
+                  builder: (_, snapshot) {
+                    if (snapshot.hasData) {
+                      var data = snapshot.data!.data();
+                      var userType = data?["userType"] ?? "0";
+                      debugPrint(
+                          " This is the actual userType of this user ${userType.toString()}");
+                      return
+                        Visibility(
+                          visible: userType == "SUPER_ADMIN",
+                          child: GestureDetector(
+                            onTap: () {
+                              if (element.featured == false)
+                                featureAlertDialog(context);
+                              else unfeatureAlertDialog(context);
+                            },
+                            child: Container(
+                              child: Visibility(
+                                visible: element.repliesEnabled == true,
+                                child: Icon(
+                                  element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
+                                  color: Pallet.colorWhite,
+                                  size: 26,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                    }
+
+                    return Center(
+                        child: CircularProgressIndicator());
                   },
-                  child: Container(
-                    child: Visibility(
-                      visible: element.repliesEnabled == true,
-                      child: Icon(
-                        element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
-                        color: Pallet.colorWhite,
-                        size: 26,
-                      ),
-                    ),
-                  ),
                 ),
+
                 new Spacer(),
 
                 StreamBuilder(

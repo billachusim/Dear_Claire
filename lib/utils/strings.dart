@@ -186,7 +186,7 @@ class AppString{
 
   static const String started_new_session = "You have started a new diary session";
   static const String new_session_error = "Please enter a title and message for Claire";
-  static const String get_alter_ego_error = "Can't seem to identify Ego,\nKindly login as an Ego first.";
+  static const String get_alter_ego_error = "Can't seem to identify alter or super ego";
   static const String change_ego_name = "Name your ego anytime. Remain Anonymous";
   static const String nice_clairevatar = "Nice clairevatar! Change anytime. Remain Anonymous";
   static const String change_ego_mantra = "Always live by your mantra";

@@ -476,17 +476,17 @@ class FirebaseServices extends ChangeNotifier {
 
   getUserAlterEgo(BuildContext context, String alterEgoId,
       String alterEgoAccessCode) async {
-    UserModel user = await getUser();
-    var userId = await getUsersId();
-    var getAlterEgoId = await getAlterEgoUserId();
-    var getAlterEgoAccessCode = await getAlterEgoUserAccessCode();
+    UserModel user = await getUserInfo();
+    var userId = currentUser?.uid;
+    var getAlterEgoId = user.alterEgoId;
+    var getAlterEgoAccessCode = user.alterEgoAccessCode;
     var isLoggedIn = currentUser;
     print(
-        "AlterEgo login details...: user: $user ..userId: ${userId.toString()}, isLoggedIn: $isLoggedIn, isLoggedIn.uid: ${isLoggedIn!.uid} ,getAlterEgoId: ${user.alterEgoId}, getAlterEgoAccessCode: ${user.alterEgoAccessCode}");
+        "AlterEgo login details...: user: $user ..userId: ${userId.toString()}, isLoggedIn: $isLoggedIn, isLoggedIn.uid: ${isLoggedIn?.uid} ,getAlterEgoId: ${user.alterEgoId}, getAlterEgoAccessCode: ${user.alterEgoAccessCode}");
     print(
         "Get getAlterEgoId...: $alterEgoId , getAlterEgoId await from:::$getAlterEgoId, getAlterEgoAccessCode await from:: $getAlterEgoAccessCode, Get getAlterEgoAccessCode...: $alterEgoAccessCode");
-    if (isLoggedIn.uid == userId.toString()
-        //&& getAlterEgoId.toString() == alterEgoId && getAlterEgoAccessCode.toString() == alterEgoAccessCode
+    if (isLoggedIn?.uid == userId.toString()
+        && getAlterEgoId.toString() == alterEgoId && getAlterEgoAccessCode.toString() == alterEgoAccessCode
         ) {
       setAlterEgoId(alterEgoId);
       setAlterEgoAccessCode(alterEgoAccessCode);
@@ -498,32 +498,7 @@ class FirebaseServices extends ChangeNotifier {
     }
   }
 
-  /// Authenticate the user in
-  Future<bool> signInToDonate(
-      BuildContext context, String email, String secretCode) async {
-    final _user;
-    try {
-      _user = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: email, password: secretCode)
-          .then((value) => {
-                setUsersId(value.user!.uid),
-                //showToast("Showing user UID ${value.user!.uid}")
-              });
-      Navigator.of(context).pushReplacementNamed(AppRoutes.donate);
-      return true;
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'wrong-password') {
-        showToast(
-            'The password is invalid or the user does not have a password.');
-      } else if (e.code == 'wrong-email') {
-        showToast('The email is invalid or the user does not have an email.');
-      }
-      return false;
-    } catch (e) {
-      print(e);
-      return false;
-    }
-  }
+
 
   ///get AlterEgo details to enable donation
   Future<UserModel> getUserAlterEgoToDonate(BuildContext context,

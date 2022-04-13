@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/utils/color.dart';
@@ -252,19 +253,38 @@ class CommentWidget extends StatelessWidget {
 
 
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Visibility(
-              visible: currentUser?.email == "thesocialfaculty@gmail.com",
-              child: Align(
-                alignment: Alignment.bottomRight,
-                child: Text(commentSessionModel!.alterEgoId!,
-                    textAlign: TextAlign.end,
-                    maxLines: 1,
-                    style: GoogleFonts.lato(
-                        fontSize: 12.0,
-                        color: Pallet.colorBlack,
-                        fontWeight: FontWeight.w800)),
-              ),
+
+            FutureBuilder<
+                DocumentSnapshot<Map<String, dynamic>>>(
+              future: FirebaseFirestore.instance
+                  .collection("users")
+                  .doc(currentUser!.uid)
+                  .get(),
+              builder: (_, snapshot) {
+                if (snapshot.hasData) {
+                  var data = snapshot.data!.data();
+                  var userType = data?["userType"] ?? "0";
+                  debugPrint(
+                      " This is the actual userType of this user ${userType.toString()}");
+                  return
+                    Visibility(
+                      visible: userType == "SUPER_ADMIN",
+                      child: Text(commentSessionModel!.alterEgoId!,
+                          textAlign: TextAlign.start,
+                          maxLines: 1,
+                          style: GoogleFonts.lato(
+                              fontSize: 12.0,
+                              color: Pallet.colorBlack,
+                              fontWeight: FontWeight.w800)),
+                    );
+                }
+
+                return Center(
+                    child: CircularProgressIndicator());
+              },
             ),
+
+
             if (commentSessionModel!.isUserAdmin)
               CupertinoButton(
                   padding: EdgeInsets.zero,
