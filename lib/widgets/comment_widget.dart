@@ -258,7 +258,7 @@ class CommentWidget extends StatelessWidget {
                 DocumentSnapshot<Map<String, dynamic>>>(
               future: FirebaseFirestore.instance
                   .collection("users")
-                  .doc(currentUser!.uid)
+                  .doc(currentUser?.uid)
                   .get(),
               builder: (_, snapshot) {
                 if (snapshot.hasData) {
