@@ -7,6 +7,7 @@ import 'package:dear_claire/ui/featured/model/featured_session_model.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,6 +23,9 @@ import '../../widgets/ego_mode_session_card.dart';
 class TheFeaturedSessions extends StatelessWidget {
 
   TheFeaturedSessions({Key? key}) : super(key: key);
+
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
 
   final List<Session>? _sessionList = [];
 
@@ -72,6 +76,20 @@ class TheFeaturedSessions extends StatelessWidget {
           },
         ),
       );
+  }
+
+
+  Object _returnSessions(
+      List<FeaturedSessionModel> _sessionList) {
+    try {
+      final _toRemove = _sessionList
+          .where((element) =>
+          element.followers!.contains(currentUser!.uid))
+          .toList();
+      return _sessionList.remove(_toRemove);
+    } catch (e) {
+      return _sessionList;
+    }
   }
 
 }

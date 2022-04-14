@@ -219,7 +219,7 @@ class FirebaseServices extends ChangeNotifier {
   Stream<QuerySnapshot<Map<String, dynamic>>> getFeaturedSession() {
     return _firebaseFirestore
         .collection(AppString.appFeaturedSessions)
-        .where("featured", isEqualTo: true)
+        .where("repliesEnabled", isEqualTo: true)
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(50)
@@ -245,12 +245,12 @@ class FirebaseServices extends ChangeNotifier {
   Stream<QuerySnapshot<Map<String, dynamic>>> getFollowingSessions() {
     return _firebaseFirestore
         .collection(AppString.appFeaturedSessions)
-        .where("featured", isEqualTo: false)
+        .where("repliesEnabled", isEqualTo: true)
         .where("flagged", isEqualTo: false)
         .where("archived", isEqualTo: false)
         .where('followers', arrayContains: _usersID)
         .limit(AppString.appSessionLength)
-        .orderBy('timeLastActivity', descending: true)
+        //.orderBy('timeLastActivity', descending: true)
         .snapshots();
   }
 
@@ -627,6 +627,7 @@ class FirebaseServices extends ChangeNotifier {
             .doc(session.sessionId)
             .update({
             'followers': FieldValue.arrayUnion([_usersID]),
+            'timeLastActivity': FieldValue.serverTimestamp(),
             //"featured": false,
           }).whenComplete(() {
             _subscribeToSession(_name, session);
