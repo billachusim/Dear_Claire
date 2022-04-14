@@ -12,10 +12,12 @@ import 'package:dear_claire/widgets/comments_button.dart';
 import 'package:dear_claire/widgets/metoo_button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../utils/strings.dart';
 import '../../widgets/toast.dart';
+import '../create_session/sound/custom_play_sound_widget.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 
 class CustomSearchCard extends StatelessWidget {
@@ -179,34 +181,80 @@ class CustomSearchCard extends StatelessWidget {
                   height: 3,
                 ),
                 Container(
+                  alignment: Alignment.topLeft,
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: Row(
+                      children: [
+                        element.audioUrl!.isNotEmpty
+                            ? CustomPlaySoundWidget(filePath: element.audioUrl)
+                            : SizedBox.shrink(),
+                      ],
+                    ),
+                  ),
+                ),
+
+                Container(
                   child: Align(
                     alignment: Alignment.bottomLeft,
                     child: Row(
                       children: [
                         Visibility(
                             visible: element.imageUrls!.isNotEmpty,
-                            child: CachedNetworkImage(
-                                height: 38,
-                                width: 38,
-                                imageUrl: element.imageUrls!.isNotEmpty
-                                    ? element.imageUrls!.first
-                                    : '',
-                                imageBuilder: (context, imageProvider) => Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                      fit: BoxFit.fill,
+                            child: FullScreenWidget(
+                              child: CachedNetworkImage(
+                                  height: 45,
+                                  width: 45,
+                                  imageUrl: element.imageUrls!.isNotEmpty
+                                      ? element.imageUrls!.first
+                                      : '',
+                                  imageBuilder: (context, imageProvider) => Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(25),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.fill,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                placeholder: (context, url) =>
-                                    Center(child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/brown_boy_mask.png",
-                                  width: 30,
-                                  height: 30,
-                                ) //Icon(Icons.error),
+                                  placeholder: (context, url) =>
+                                      Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => Image.asset(
+                                    "assets/images/brown_boy_mask.png",
+                                    width: 48,
+                                    height: 48,
+                                  ) //Icon(Icons.error),
+                              ),
+                            )),
+
+                        SizedBox(width: 5,),
+
+                        Visibility(
+                            visible: element.imageUrls!.isNotEmpty,
+                            child: FullScreenWidget(
+                              child: CachedNetworkImage(
+                                  height: 45,
+                                  width: 45,
+                                  imageUrl: element.imageUrls!.isNotEmpty
+                                      ? element.imageUrls!.last
+                                      : '',
+                                  imageBuilder: (context, imageProvider) => Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(25),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.fill,
+                                      ),
+                                    ),
+                                  ),
+                                  placeholder: (context, url) =>
+                                      Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => Image.asset(
+                                    "assets/images/brown_boy_mask.png",
+                                    width: 48,
+                                    height: 48,
+                                  ) //Icon(Icons.error),
+                              ),
                             )),
                       ],
                     ),

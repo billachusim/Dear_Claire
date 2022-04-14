@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/Categories/category_streams.dart';
 import 'package:dear_claire/ui/Categories/category_streams2.dart';
+import 'package:dear_claire/ui/featured/audio_stream_card.dart';
 import 'package:dear_claire/ui/featured/ego_stream.dart';
 import 'package:dear_claire/ui/featured/model/featured_session_model.dart';
 import 'package:dear_claire/utils/color.dart';
@@ -79,19 +80,6 @@ class TheFeaturedSessions extends StatelessWidget {
   }
 
 
-  Object _returnSessions(
-      List<FeaturedSessionModel> _sessionList) {
-    try {
-      final _toRemove = _sessionList
-          .where((element) =>
-          element.followers!.contains(currentUser!.uid))
-          .toList();
-      return _sessionList.remove(_toRemove);
-    } catch (e) {
-      return _sessionList;
-    }
-  }
-
 }
 
 
@@ -99,24 +87,24 @@ class TheFeaturedSessions extends StatelessWidget {
 /// This is a stream class showing love and relationship public sessions
 
 
-class LoveAndRelationshipSessions extends StatelessWidget {
+class FeaturedAudioSessions extends StatelessWidget {
 
-  LoveAndRelationshipSessions({Key? key}) : super(key: key);
+  FeaturedAudioSessions({Key? key}) : super(key: key);
 
   final List<Session>? _sessionList = [];
 
 
   /// Get Featured sessions for "love and relationship" search
   /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showLoveAndRelationshipSessions() {
+  Stream<QuerySnapshot<Map<String, dynamic>>> showBottomFeaturedSessions() {
     return FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "friends and fun")
-        .where("repliesEnabled", isEqualTo: true)
+        .where("featured", isEqualTo: true)
+        .where("audioUrl", isGreaterThanOrEqualTo: "https")
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-    // .orderBy('timeCreated', descending: true)
+        .limit(100)
+        .orderBy('audioUrl', descending: true)
         .snapshots();
   }
 
@@ -130,10 +118,10 @@ class LoveAndRelationshipSessions extends StatelessWidget {
         children: [
           Container(
             child: StreamBuilder(
-              stream: showLoveAndRelationshipSessions(),
+              stream: showBottomFeaturedSessions(),
               builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                 if (session.connectionState == ConnectionState.waiting) {
-                  return RotateImage(70, 70);
+                  return RotateImage(35, 35);
                 }
                 if (!session.hasData) {
                   return Center(
@@ -142,7 +130,7 @@ class LoveAndRelationshipSessions extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.lato(
-                            fontSize: 15.0,
+                            fontSize: 3.0,
                             color: Pallet.colorBlack,
                             //fontStyle: FontStyle.normal,
                             fontWeight: FontWeight.w600)),
@@ -157,13 +145,13 @@ class LoveAndRelationshipSessions extends StatelessWidget {
                   }).toList();
 
                   return Scrollbar(
-                    child: SizedBox(height: 200,
+                    child: SizedBox(height: 140,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
                           ..._sessionList!
                               .map((element) =>
-                              CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
+                              AudioStreamCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                               .toList(),
                         ],
                       ),
