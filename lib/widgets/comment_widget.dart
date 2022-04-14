@@ -52,11 +52,17 @@ class CommentWidget extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: () {
-                  visitedUsersID = commentSessionModel!.userId!;
-                  visitedEgoName = commentSessionModel!.userNickname!;
+                  visitedUsersID = commentSessionModel?.isUserAdmin == true
+                      ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                      : commentSessionModel!.userId ?? '';
+                  visitedEgoName = commentSessionModel?.isUserAdmin == true
+                      ? "Claire"
+                      : commentSessionModel!.userNickname ?? '';
                   String thisEgoName =
-                      commentSessionModel!.userNickname.toString();
-                  String thisUser = commentSessionModel!.userId.toString();
+                      visitedEgoName;
+                  String thisUser = commentSessionModel?.isUserAdmin == true
+                      ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                      : commentSessionModel!.userId ?? '';
                   PageRouter.gotoWidget(
                       VisitedUserEgoProfilePage(
                           visitedUsersID: thisUser,
@@ -97,13 +103,17 @@ class CommentWidget extends StatelessWidget {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        if (commentSessionModel?.isUserAdmin == true)
-                          visitedUsersID = commentSessionModel!.userId!;
-                        visitedEgoName = commentSessionModel!.userNickname!;
+                        visitedUsersID = commentSessionModel?.isUserAdmin == true
+                            ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                            : commentSessionModel!.userId ?? '';
+                        visitedEgoName = commentSessionModel?.isUserAdmin == true
+                            ? "Lol, yes, it's me, Claire!"
+                            : commentSessionModel!.userNickname ?? '';
                         String thisEgoName =
-                            commentSessionModel!.userNickname.toString();
-                        String thisUser =
-                            commentSessionModel!.userId.toString();
+                            visitedEgoName;
+                        String thisUser = commentSessionModel?.isUserAdmin == true
+                            ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                            : commentSessionModel!.userId ?? '';
                         PageRouter.gotoWidget(
                             VisitedUserEgoProfilePage(
                                 visitedUsersID: thisUser,

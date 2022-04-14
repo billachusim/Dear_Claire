@@ -11,6 +11,7 @@ import 'package:dear_claire/ui/create_session/create_session_page.dart';
 import 'package:dear_claire/ui/donate/donate.dart';
 import 'package:dear_claire/ui/ego-profile/clairevatar.dart';
 import 'package:dear_claire/ui/ego-profile/profile.dart';
+import 'package:dear_claire/ui/featured/request_feature_form.dart';
 import 'package:dear_claire/ui/login/login_screen.dart';
 import 'package:dear_claire/ui/menu_items/how_claire_works.dart';
 import 'package:dear_claire/ui/menu_items/how_alter_ego_works.dart';
@@ -38,6 +39,7 @@ class AppRoutes {
   static const howClaireWorks = '/how_claire_works';
   static const howAlterEgoWorks = '/how_alter_ego_works';
   static const alterEgoRegistration = '/alterEgoRegistration';
+  static const requestFeatureForm = '/requestFeatureForm';
   static const editClairevatar = '/editClairevatar';
   static const searchPage = '/searchPage';
   static const egoPage = '/egoPage';
@@ -133,6 +135,13 @@ class AppRouter {
       case AppRoutes.alterEgoRegistration:
         return MaterialPageRoute<dynamic>(
           builder: (_) => AlterEgoRegistration(),
+          settings: settings,
+          fullscreenDialog: true,
+        );
+
+      case AppRoutes.requestFeatureForm:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => RequestFeatureForm(),
           settings: settings,
           fullscreenDialog: true,
         );

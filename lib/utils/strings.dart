@@ -24,7 +24,11 @@ class AppString{
 
   static const String featuredPageNote = "Featured Sessions! \n Your session won't appear here unless you allow. \n Please contribute positive vibes only and no ads.";
   static const String feature_alert_note = "💡 This session is not featured\nWould you like to feature it?";
-  static const String unfeature_alert_note = "💡 This session is featured!\nWould you like to unfeature it?";
+  static const String unfeature_alert_note = "💡 This session is featured!\n"
+      "Would you like to unfeature it?";
+  static const String ego_mode_feature_alert_note = "💡 Your session is currently not featured\n"
+      "Would you like to feature it?";
+
 
 
   static const String sessionCategories = "categories";
@@ -169,7 +173,7 @@ class AppString{
   static const String request_access = "Request Access  🌺";
   static const String donate = "Donate  💕";
 
-  static const String alter_ego_orientation_first_header = "Hello Darling🌺\n\nWelcome to the first stage of your Clairentation.\n\nNone of the details discussed here will be made public. The personal details you are about to provide are needed to confirm your gender and qualification for access to Alter-Ego or Super-Ego Mode.\n\nAlso as an Alter-Ego, you automatically become an elite member of our little secret group of Claires Of The World 🌸 therefore, for the many benefits that will come to you in the future for being a Claire, we hope to reach you via the details you will provide.";
+  static const String alter_ego_orientation_first_header = "Hello Darling🌺\n\nWelcome to the first stage of your Clairentation.\n\nNone of the details discussed here will be made public. The personal details you are about to provide are needed to confirm your gender and qualification for access to Alter-Ego or Super-Ego Mode.\n\nAlso as an Alter-Ego, you automatically become an elite member of our little secret group of Claires Of The World 🌺 therefore, for the many benefits that will come to you in the future for being a Claire, we hope to reach you via the details you will provide.";
   static const String switchText1 = "Are you truly interested in becoming an Alter-Ego not just to read random people\'s Diary Sessions but to reply them with happy vibes and good advises?";
   static const String switchText2 = "Do you believe that the world will be a better place if people treat other people like themselves wish to be treated?";
   static const String switchText3 = "Are you following @socialfaculty on Instagram?";
@@ -180,6 +184,15 @@ class AppString{
   static const String switchHeaderTwo = "Please Answer The Following Questions By Switching Yes Or No";
   static const String switchBottomHeader = "Thank you so much for coming this far ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Claire and cue in for your final Verification and Clairentation on Whatsapp where you will receive your Alter-Ego login details.";
   static const String WHATSAPP_URL = "https://api.whatsapp.com/send?phone=2348188578955&text=";
+
+
+  static const String request_feature_form_header = "Hello Darling🌺\n\n"
+      "Sessions are automatically featured by Claire if they are marked to receive replies from other users at the time of creating the session.\n\n"
+      "There are also few other situations that must be met by the algorithm before Claire automatically features a session.\n\n"
+      "Whyever, if your session is not featured and you'll love for it to be; please complete the short process below.";
+
+  static const String request_feature_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Admin and cue in for final verification.";
+  static const String request_feature_switchText7 = "Agree that Claire reserves the right to feature and unfeature any session, anytime?";
 
 
   // App Toasts

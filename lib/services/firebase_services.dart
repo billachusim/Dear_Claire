@@ -887,7 +887,7 @@ class FirebaseServices extends ChangeNotifier {
       collapseKey: 'type_a',
       data: pushNotification.Data(id: _usersID),
       notification: pushNotification.Notification(
-          title: session.title ?? '', body: '$sender reacted to your session'),
+          title: session.title ?? '', body: '$sender reacted to the session'),
     );
 
     ReactionHandler.reactionType(session, index).contains(_usersID)

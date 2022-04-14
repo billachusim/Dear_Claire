@@ -13,20 +13,59 @@ import 'package:dear_claire/utils/mood.dart';
 import 'package:dear_claire/widgets/comments_button.dart';
 import 'package:dear_claire/widgets/metoo_button.dart';
 import 'package:dear_claire/widgets/toast.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/firebase_services.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../utils/strings.dart';
 
 class EgoModeSessionCard extends StatelessWidget {
   Session element;
+  bool? isFeatured;
 
   EgoModeSessionCard({Key? key, required this.element, required this.visitedUsersID, required this.visitedEgoName}) : super(key: key);
   late String visitedUsersID;
   late String visitedEgoName;
+
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
+
+  /// Edit feature
+
+  Future<bool?> setToFeatured() async {
+    final value = true;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(element.sessionId)
+        .update({
+      "featured": value,
+    },
+    );
+    logger.d('Successfully changed feature');
+    print('Is Featured?: $value');
+    isFeatured = value;
+    return value;
+  }
+
+
+  Future<bool?> removeFromFeatured() async {
+    final value = false;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(element.sessionId)
+        .update({
+      "featured": value,
+    },
+    );
+    logger.d('Successfully changed feature');
+    print('Is Featured?: $value');
+    isFeatured = value;
+    return value;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -277,7 +316,32 @@ class EgoModeSessionCard extends StatelessWidget {
                           context, index,
                           session: element, sender: _userModel.nickname ?? '');
                     }),
+
                 new Spacer(),
+
+                        Visibility(
+                          visible: element.userId == currentUser!.uid,
+                          child: GestureDetector(
+                            onTap: () {
+                              if (element.featured == false)
+                                featureAlertDialog(context);
+                              else unfeatureAlertDialog(context);
+                            },
+                            child: Container(
+                              child: Visibility(
+                                visible: element.repliesEnabled == true,
+                                child: Icon(
+                                  element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
+                                  color: Pallet.colorWhite,
+                                  size: 26,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                new Spacer(),
+
                 StreamBuilder(
                     stream: firebaseServices
                         .getFeaturedSessionsComments(element.sessionId!),
@@ -363,4 +427,85 @@ class EgoModeSessionCard extends StatelessWidget {
       return CommentSessionModel();
     }
   }
+
+
+
+
+
+  featureAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Request Feature\n"
+          "Cost: 1,000+ CL"),
+      onPressed:  () {
+       // setToFeatured();
+        Navigator.pushReplacementNamed(context, AppRoutes.requestFeatureForm);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Feature This Session?"),
+      content: Text(AppString.ego_mode_feature_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
+  unfeatureAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.pushReplacementNamed(context, AppRoutes.alterEgoHomepage);
+      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Unfeature"),
+      onPressed:  () {
+        removeFromFeatured();
+        Navigator.pushReplacementNamed(context, AppRoutes.alterEgoHomepage);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Unfeature This Session?"),
+      content: Text(AppString.unfeature_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
 }

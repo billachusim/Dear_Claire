@@ -82,8 +82,8 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             textInputAction: TextInputAction.next,
                             controller: _fullNameController,
                             decoration: new InputDecoration(
-                              hintText: "John Doe",
-                              labelText: "First Name",
+                              hintText: "Nne Chike",
+                              labelText: "Full Name",
                               labelStyle:
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
@@ -116,7 +116,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             textInputAction: TextInputAction.next,
                             controller: _fullAddressController,
                             decoration: new InputDecoration(
-                              hintText: "#3 johndoe street",
+                              hintText: "No 16 Solo Ogun street, Aguda, Lagos, Nigeria",
                               labelText: "Full Address",
                               labelStyle:
                               TextStyle(color: Pallet.colorTextGray),
@@ -150,7 +150,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             textInputAction: TextInputAction.next,
                             controller: _phoneController,
                             decoration: new InputDecoration(
-                              hintText: "08011122212",
+                              hintText: "+2348188578955",
                               labelText: "Phone Number",
                               labelStyle:
                               TextStyle(color: Pallet.colorTextGray),
@@ -184,7 +184,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             textInputAction: TextInputAction.next,
                             controller: _ageController,
                             decoration: new InputDecoration(
-                              hintText: "25",
+                              hintText: "16",
                               labelText: "Age",
                               labelStyle:
                               TextStyle(color: Pallet.colorTextGray),
@@ -218,7 +218,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             textInputAction: TextInputAction.next,
                             controller: _nameOfSchoolController,
                             decoration: new InputDecoration(
-                              hintText: "Nottingham University",
+                              hintText: "University Of Mumbai",
                               labelText: "Name of School Or Occupation",
                               labelStyle:
                               TextStyle(color: Pallet.colorTextGray),
@@ -252,7 +252,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             textInputAction: TextInputAction.next,
                             controller: _nameOfBestFriendController,
                             decoration: new InputDecoration(
-                              hintText: "John Doe",
+                              hintText: "Tochi",
                               labelText: "Name of Best Friend Or Relative",
                               labelStyle:
                               TextStyle(color: Pallet.colorTextGray),
@@ -354,7 +354,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             textInputAction: TextInputAction.next,
                             controller: _emailController,
                             decoration: new InputDecoration(
-                              hintText: "johndoe@gmail.com",
+                              hintText: "dearclaireapp@gmail.com",
                               labelText: "Email",
                               labelStyle:
                               TextStyle(color: Pallet.colorTextGray),
@@ -388,7 +388,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             textInputAction: TextInputAction.next,
                             controller: _facebookNameController,
                             decoration: new InputDecoration(
-                              hintText: "etim.utibe",
+                              hintText: "Sandra Ezra Chidimma",
                               labelText: "Facebook Name",
                               labelStyle:
                               TextStyle(color: Pallet.colorTextGray),
@@ -422,7 +422,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             textInputAction: TextInputAction.next,
                             controller: _instagramUserNameController,
                             decoration: new InputDecoration(
-                              hintText: "utibe__etim",
+                              hintText: "@socialfaculty",
                               labelText: "Instagram Username",
                               labelStyle:
                               TextStyle(color: Pallet.colorTextGray),
