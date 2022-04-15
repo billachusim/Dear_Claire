@@ -21,9 +21,10 @@ class _ClaireLovesState extends State<ClaireLoves> {
   var _withdrawnLoveCount;
   var _currentLoveCount;
   var _totalLoveCount;
-  var _requestedAmount;
+  var _currentWithdrawal;
   var _toRequest;
   var _rate;
+  var _userType;
 
 
   final TextEditingController _amountController = TextEditingController();
@@ -53,6 +54,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
     final totalWithdrawal = _withdrawnLoveCount! + currentWithdrawal;
     final withdrawnLoveCount = currentWithdrawal + totalWithdrawal;
     _currentLoveCount = _totalLoveCount - totalWithdrawal;
+    _toRequest = currentWithdrawal * int.parse(_rate.toString());
+    _currentWithdrawal = _toRequest;
     FirebaseFirestore.instance
         .collection("users")
         .doc(currentUser!.uid)
@@ -67,17 +70,6 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
   }
 
-  String setRequestedAmount() {
-    var egoRate = userModel.userType == 'REGULAR'? '1.5' :
-    userModel.userType == 'ADMIN'? '2.0' :
-    userModel.userType == 'SUPER_ADMIN'? '2.5' :
-    '';
-    final amountEntered = int.parse(_amountController.text);
-    final toRequest = amountEntered * int.parse(egoRate);
-    _toRequest = toRequest;
-    _rate = egoRate;
-    return egoRate;
-  }
 
 
 
@@ -691,25 +683,50 @@ class _ClaireLovesState extends State<ClaireLoves> {
                               child: Container(
                                 padding: EdgeInsets.only(top: 7),
                                 height: 30,
-                                width: 40,
+                                width: 60,
                                 decoration: BoxDecoration(
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
                                 ),
-                                child: Text(
-                                  "1.5",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 13,
-                                    color: Colors.black,
-                                  ),
+                                child: FutureBuilder<
+                                    DocumentSnapshot<Map<String, dynamic>>>(
+                                  future: FirebaseFirestore.instance
+                                      .collection("users")
+                                      .doc(currentUser?.uid)
+                                      .get(),
+                                  builder: (_, snapshot) {
+                                    if (snapshot.hasData) {
+                                      var data = snapshot.data!.data();
+                                      var userType = data?["userType"] ?? "REGULAR";
+                                      _rate = userType == 'REGULAR'? '2' :
+                                      userType == 'ADMIN'? '3' :
+                                      userType == 'SUPER_ADMIN'? '5' :
+                                      '1.5';
+                                      _userType = userType;
+                                      debugPrint(
+                                          " This is the ego rate used for conversion for this user ${_rate.toString()}");
+                                      return Text(
+                                        _rate.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                      );
+                                    }
+
+                                    return Center(
+                                        child: CircularProgressIndicator());
+                                  },
                                 ),
                               ),
                             ),
                             SizedBox(height: 2,),
                             Text(
-                              "Ego",
+                              _userType == 'REGULAR'? 'Ego Rate' :
+                              _userType == 'ADMIN'? 'AlterEgo Rate' :
+                              _userType == 'SUPER_ADMIN'? 'SuperEgo Rate' :
+                              'Ego Rate',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
