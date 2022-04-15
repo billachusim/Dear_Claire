@@ -24,9 +24,9 @@ class AppString{
 
   static const String featuredPageNote = "Featured Sessions! \n Your session won't appear here unless you allow. \n Please contribute positive vibes only and no ads.";
   static const String feature_alert_note = "💡 This session is not featured\nWould you like to feature it?";
-  static const String unfeature_alert_note = "💡 This session is featured!\n"
+  static const String unfeature_alert_note = "💡 Your session is featured!\n"
       "Would you like to unfeature it?";
-  static const String ego_mode_feature_alert_note = "💡 Your session is currently not featured\n"
+  static const String ego_mode_feature_alert_note = "💡 Your session is not featured\n"
       "Would you like to feature it?";
 
 

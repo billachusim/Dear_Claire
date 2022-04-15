@@ -483,8 +483,8 @@ class AlterEgoModeSessionCard extends StatelessWidget {
     Widget cancelButton = TextButton(
       child: Text("Cancel"),
       onPressed:  () {
-        Navigator.pushReplacementNamed(context, AppRoutes.alterEgoHomepage);
-      },
+        Navigator.of(context).pop();
+        },
     );
     Widget continueButton = TextButton(
       child: Text("Unfeature"),
