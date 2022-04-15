@@ -320,7 +320,7 @@ class EgoModeSessionCard extends StatelessWidget {
                 new Spacer(),
 
                         Visibility(
-                          visible: element.userId == currentUser!.uid,
+                          visible: element.userId == currentUser?.uid,
                           child: GestureDetector(
                             onTap: () {
                               if (element.featured == false)
