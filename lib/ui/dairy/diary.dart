@@ -43,7 +43,7 @@ class _DiaryPageState extends State<DiaryPage> {
                 future: firebaseServices.getDiarySessions(),
                 builder: (context, AsyncSnapshot<List<Session>> session) {
                   if (session.connectionState == ConnectionState.waiting) {
-                    return RotateImage(70, 70);
+                    return RotateImage(50, 50);
                   }
                   if (!session.hasData) {
                     return Center(

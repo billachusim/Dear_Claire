@@ -18,7 +18,7 @@ class _SplashPageState extends State<SplashPage>
   void initState() {
     super.initState();
     _controller =
-        AnimationController(vsync: this, duration: Duration(seconds: 2))
+        AnimationController(vsync: this, duration: Duration(seconds: 1))
           ..forward()
           ..addStatusListener((status) {
             if (status == AnimationStatus.completed)
@@ -40,7 +40,7 @@ class _SplashPageState extends State<SplashPage>
                   animation: _controller,
                   builder: (_, child) {
                     return Transform.rotate(
-                      angle: _controller.value * 2 * math.pi,
+                      angle: _controller.value * 1 * math.pi,
                       child: child,
                     );
                   },

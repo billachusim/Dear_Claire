@@ -44,7 +44,7 @@ class _FollowedPageState extends State<FollowedPage> {
               stream: firebaseServices.getFollowingSessions(),
               builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                 if (session.connectionState == ConnectionState.waiting) {
-                  return RotateImage(70, 70);
+                  return RotateImage(50, 50);
                 }
                 if (!session.hasData) {
                   return Center(

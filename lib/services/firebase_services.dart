@@ -219,7 +219,7 @@ class FirebaseServices extends ChangeNotifier {
   Stream<QuerySnapshot<Map<String, dynamic>>> getFeaturedSession() {
     return _firebaseFirestore
         .collection(AppString.appFeaturedSessions)
-        .where("repliesEnabled", isEqualTo: true)
+        .where("featured", isEqualTo: true)
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(150)
@@ -300,8 +300,8 @@ class FirebaseServices extends ChangeNotifier {
           .where("archived", isEqualTo: false)
           .where("flagged", isEqualTo: false)
           .where("repliesEnabled", isEqualTo: true)
-          .where("respondentUserId", isEqualTo: "")
-          .orderBy('timeLastActivity', descending: true)
+          .where("respondentUserId", isEqualTo: '')
+         // .orderBy('timeLastActivity', descending: true)
           .limit(AppString.appSessionLength)
           .get();
 
