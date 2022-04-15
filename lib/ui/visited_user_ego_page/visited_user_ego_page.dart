@@ -292,7 +292,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   {
     return Material(
       child: Container(
-        margin: EdgeInsets.only(bottom: 6),
+        margin: EdgeInsets.only(bottom: 3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -367,7 +367,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                     ],
                   ),
                   SizedBox(
-                    width: 25,
+                    width: 12,
                   ),
 
                   // The count columns are here
@@ -397,7 +397,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                           ],
                         ),
                         SizedBox(
-                          width: 30,
+                          width: 10,
                         ),
                         Column(
                           mainAxisSize: MainAxisSize.min,
@@ -421,7 +421,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                           ],
                         ),
                         SizedBox(
-                          width: 30,
+                          width: 10,
                         ),
                         Column(
                           mainAxisSize: MainAxisSize.min,
@@ -449,9 +449,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                   ),
                 ],
               ),
-            ),
-            SizedBox(
-              height: 2,
             ),
 
 

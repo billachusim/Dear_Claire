@@ -36,7 +36,7 @@ class CustomSearchCard extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: Container(
         width: 270,
-        height: 185,
+        height: 192,
         margin: EdgeInsets.symmetric(vertical: 2, horizontal: 3),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
         decoration: BoxDecoration(

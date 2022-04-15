@@ -174,12 +174,12 @@ class _SearchPageState extends State<SearchPage> {
     return Material(
       child: Scaffold(
         appBar: PreferredSize(
-          preferredSize: Size.fromHeight(72.5), // Set this height
+          preferredSize: Size.fromHeight(80.5), // Set this height
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: EdgeInsets.only(top: 30),
+                padding: EdgeInsets.only(top: 20),
                 height: 100,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(0),

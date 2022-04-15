@@ -239,7 +239,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   {
     return Material(
       child: Container(
-        margin: EdgeInsets.only(bottom: 6),
+        width: getDeviceWidth(context),
+        margin: EdgeInsets.only(bottom: 3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -332,9 +333,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                       ),
                     ],
                   ),
-                  SizedBox(
-                    width: 25,
-                  ),
+
+                  SizedBox(width: 12,),
 
                   // The count columns are here
                   Container(
@@ -363,7 +363,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                           ],
                         ),
                         SizedBox(
-                          width: 30,
+                          width: 10,
                         ),
                         Column(
                           mainAxisSize: MainAxisSize.min,
@@ -392,7 +392,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                           ],
                         ),
                         SizedBox(
-                          width: 30,
+                          width: 10,
                         ),
                         Column(
                           mainAxisSize: MainAxisSize.min,
@@ -420,9 +420,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                   ),
                 ],
               ),
-            ),
-            SizedBox(
-              height: 2,
             ),
 
 

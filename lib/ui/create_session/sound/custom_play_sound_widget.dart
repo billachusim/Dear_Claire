@@ -43,7 +43,7 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        height: 70,
+        height: 60,
         child: Column(children: [
           Row(
             mainAxisSize: MainAxisSize.min,

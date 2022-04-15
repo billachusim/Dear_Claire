@@ -36,7 +36,7 @@ class AudioStreamCard extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: Container(
         width: 250,
-        height: 130,
+        height: 132,
         margin: EdgeInsets.symmetric(vertical: 1, horizontal: 3),
         padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 1),
         decoration: BoxDecoration(
