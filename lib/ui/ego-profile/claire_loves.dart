@@ -18,10 +18,12 @@ class ClaireLoves extends StatefulWidget {
 }
 
 class _ClaireLovesState extends State<ClaireLoves> {
-  late int _totalLoveCount;
-  late int _currentLoveCount;
-  late int _withdrawnLoveCount = 0;
-
+  var _withdrawnLoveCount;
+  var _currentLoveCount;
+  var _totalLoveCount;
+  var _requestedAmount;
+  var _toRequest;
+  var _rate;
 
 
   final TextEditingController _amountController = TextEditingController();
@@ -47,20 +49,34 @@ class _ClaireLovesState extends State<ClaireLoves> {
   /// Ascertain withdrawn available love for the user.
 
   void ascertainWithdrawnLoveCount() {
-    final currentWithdrawal = double.parse(_amountController.text);
-    final totalWithdrawal = _withdrawnLoveCount;
+    final currentWithdrawal = int.parse(_amountController.text);
+    final totalWithdrawal = _withdrawnLoveCount! + currentWithdrawal;
     final withdrawnLoveCount = currentWithdrawal + totalWithdrawal;
+    _currentLoveCount = _totalLoveCount - totalWithdrawal;
     FirebaseFirestore.instance
         .collection("users")
-        .doc(currentUser?.uid)
+        .doc(currentUser!.uid)
         .set({
       "withdrawnLoveCount": withdrawnLoveCount,
+      "currentLoveCount": _currentLoveCount,
     },
       SetOptions(merge: true),
     );
     logger.d('Got the withdrawn love count');
     print('Withdrawn love Count is: $withdrawnLoveCount');
 
+  }
+
+  String setRequestedAmount() {
+    var egoRate = userModel.userType == 'REGULAR'? '1.5' :
+    userModel.userType == 'ADMIN'? '2.0' :
+    userModel.userType == 'SUPER_ADMIN'? '2.5' :
+    '';
+    final amountEntered = int.parse(_amountController.text);
+    final toRequest = amountEntered * int.parse(egoRate);
+    _toRequest = toRequest;
+    _rate = egoRate;
+    return egoRate;
   }
 
 
@@ -354,7 +370,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
                                       var totalLoveCount = data?["totalLoveCount"] ?? "0";
-                                      var _totalLoveCount = totalLoveCount;
+                                      _totalLoveCount = totalLoveCount;
                                       debugPrint(
                                           " This is the Total number of LOVES earned by this user ${totalLoveCount.toString()}");
                                       return Text(
@@ -554,7 +570,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
                                       var withdrawnLoveCount = data?["withdrawnLoveCount"] ?? "0";
-                                     var _withdrawnLoveCount = withdrawnLoveCount;
+                                      _withdrawnLoveCount = withdrawnLoveCount;
                                       debugPrint(
                                           " This is the Total number of love withdrawals by this user ${withdrawnLoveCount.toString()}");
                                       return Text(
@@ -730,24 +746,14 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
                                 ),
-                                child: TextField(
-                                  cursorColor: Pallet.colorSecondary,
-                                  keyboardType: TextInputType.number,
-                                  maxLines: 1,
-                                  controller: _amountRequestController,
-                                  decoration: InputDecoration(
-                                    border: InputBorder.none,
-                                    contentPadding:
-                                    EdgeInsets.only(left: 22.0, bottom: 13, right: 2.0),
-                                    hintText: "30000",
-                                    hintStyle: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      color: Pallet.grey,
-                                      fontSize: 14,
-                                    ),
-                                    counterText: '',
+                                child: Text(
+                                  _toRequest.toString(),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                    color: Colors.white,
                                   ),
-                                  maxLength: 5,
                                 ),
                               ),
                             ),
@@ -778,7 +784,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                         alignment: Alignment.center,
                           child: OutlinedButton(
                             onPressed: (){
-                              Navigator.pushNamed(context, AppRoutes.howAlterEgoWorks);
+                              Navigator.pushNamed(context, AppRoutes.requestClaireLoveForm);
                             },
                             style: OutlinedButton.styleFrom(
                               backgroundColor: Pallet.colorSecondary,
@@ -796,6 +802,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                             if (_amountController.text.isNotEmpty) {
                               setState(() {
                                 ascertainWithdrawnLoveCount();
+                                _amountController.text = "";
                               });
                             }
                           },

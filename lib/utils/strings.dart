@@ -194,6 +194,15 @@ class AppString{
   static const String request_feature_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Admin and cue in for final verification.";
   static const String request_feature_switchText7 = "Agree that Claire reserves the right to feature and unfeature any session, anytime?";
 
+  static const String request_clairelove_form_header = "Hello Darling🌺\n\n"
+      "This is Claire sharing every single profit from the Dear Claire app back with you."
+      "The profit is basically the balance from the little adverts you interact with after we subtract expenses required to keep Claire going.\n\n"
+      "Please use the short form below to request cash once a month in order to keep you going too!\n"
+      "Note: Claire reserves the right to increase or decrease your current love count during the course of this verification process which could last from two to seven days.";
+
+  static const String requestLoveSwitchText7 = "Agree that Claire reserves the right to increase, decrease, delay, withhold and deny a cash request at anytime?";
+  static const String request_clairelove_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Admin and cue in for final verification.";
+
 
   // App Toasts
 
