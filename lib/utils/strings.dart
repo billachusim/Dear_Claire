@@ -29,6 +29,10 @@ class AppString{
   static const String ego_mode_feature_alert_note = "💡 Your session is not featured\n"
       "Would you like to feature it?";
 
+  static const String archive_alert_note = "💡 This session is still open to visitors.\nWould you like to archive it?";
+  static const String unarchive_alert_note = "💡 Your session is archived!\n"
+      "Would you like to unarchive it?";
+
 
 
   static const String sessionCategories = "categories";

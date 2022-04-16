@@ -9,8 +9,16 @@ import 'package:url_launcher/url_launcher.dart';
 class RequestClaireLoveForm extends StatefulWidget {
   final String currentWithdrawal;
   final String totalLoveCount;
+  final String userId;
+  final String currentWithdrawable;
+  final String totalWithdrawn;
 
-  const RequestClaireLoveForm({Key? key, required this.currentWithdrawal, required this.totalLoveCount}) : super(key: key);
+  const RequestClaireLoveForm({Key? key,
+    required this.currentWithdrawal,
+    required this.totalLoveCount,
+    required this.userId,
+    required this.currentWithdrawable,
+    required this.totalWithdrawn}) : super(key: key);
 
   @override
   _RequestClaireLoveFormState createState() => _RequestClaireLoveFormState();
@@ -376,9 +384,13 @@ class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
   }
 
   String? getPayload(){
-    var userUid = firebaseServices.currentUser!.uid.isEmpty ? "null" : firebaseServices.currentUser!.uid;
+    var userId = widget.userId.isEmpty ? "null" : widget.userId;
     var totalLove = widget.totalLoveCount.isEmpty ? "null" : widget.totalLoveCount;
     var currentRequest = widget.currentWithdrawal.isEmpty ? "null" : widget.currentWithdrawal;
+    var withdrawableLoves = widget.currentWithdrawable.isEmpty ? "null" : widget.currentWithdrawable;
+    var totalWithdrawn = widget.totalWithdrawn.isEmpty ? "null" : widget.totalWithdrawn;
+
+
 
     var accountNumber = _accountNumberController.text.isEmpty ? "null" : _accountNumberController.text;
     var bankName = _bankNameController.text.isEmpty ? "null" : _bankNameController.text;
@@ -393,11 +405,15 @@ class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
       Hi, Admin,
       I'm requesting some cash for the month. These are the details:
 
-      *UserId*: $userUid
+      *UserId*: $userId
 
       *Email*: $email
       
       *Total Love*: $totalLove
+      
+      *Current Withdrawable*: $withdrawableLoves
+      
+      *Total Withdrawn*: $totalWithdrawn
       
       *Current Request in Naira*: $currentRequest
 

@@ -26,6 +26,7 @@ import '../utils/strings.dart';
 class EgoModeSessionCard extends StatelessWidget {
   Session element;
   bool? isFeatured;
+  bool? isArchived;
 
   EgoModeSessionCard({Key? key, required this.element, required this.visitedUsersID, required this.visitedEgoName}) : super(key: key);
   late String visitedUsersID;
@@ -66,6 +67,42 @@ class EgoModeSessionCard extends StatelessWidget {
     isFeatured = value;
     return value;
   }
+
+
+
+  /// Archive a session
+
+  Future<bool?> sendToArchive() async {
+    final value = true;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(element.sessionId)
+        .update({
+      "archived": value,
+    },
+    );
+    logger.d('Successfully changed archive');
+    print('Is Archived?: $value');
+    isArchived = value;
+    return value;
+  }
+
+
+  Future<bool?> removeFromArchive() async {
+    final value = false;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(element.sessionId)
+        .update({
+      "archived": value,
+    },
+    );
+    logger.d('Successfully changed archive');
+    print('Is Archived?: $value');
+    isArchived = value;
+    return value;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -340,7 +377,32 @@ class EgoModeSessionCard extends StatelessWidget {
                           ),
                         ),
 
+                SizedBox(width: 10,),
+
+
+                Visibility(
+                  visible: element.userId == currentUser?.uid,
+                  child: GestureDetector(
+                    onTap: () {
+                      if (element.archived == false)
+                        archiveAlertDialog(context);
+                      else unarchiveAlertDialog(context);
+                    },
+                    child: Container(
+                      child: Visibility(
+                        visible: element.archived == false,
+                        child: Icon(
+                          element.archived == true ? Icons.archive_rounded : Icons.archive_outlined,
+                          color: Pallet.colorWhite,
+                          size: 26,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
                 new Spacer(),
+
 
                 StreamBuilder(
                     stream: firebaseServices
@@ -491,6 +553,82 @@ class EgoModeSessionCard extends StatelessWidget {
     AlertDialog alert = AlertDialog(
       title: Text("Unfeature This Session?"),
       content: Text(AppString.unfeature_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
+
+
+  archiveAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Archive"),
+      onPressed:  () {
+        sendToArchive();
+        Navigator.pushReplacementNamed(context, AppRoutes.diarySessions);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Archive This Session?"),
+      content: Text(AppString.archive_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
+  unarchiveAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context).pop();      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Unarchive"),
+      onPressed:  () {
+        removeFromArchive();
+        Navigator.pushReplacementNamed(context, AppRoutes.diarySessions);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Unarchive This Session?"),
+      content: Text(AppString.unarchive_alert_note),
       actions: [
         cancelButton,
         continueButton,

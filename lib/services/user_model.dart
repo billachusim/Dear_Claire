@@ -17,8 +17,8 @@ class UserModel {
   int? sessionCount;
   int? adviseCount;
   int? totalLoveCount;
-  int? currentLoveCount;
-  int? withdrawnLoveCount;
+  var currentLoveCount;
+  var withdrawnLoveCount;
 
   UserModel({
     this.alterEgoAccessCode,
@@ -79,8 +79,8 @@ class UserModel {
       sessionCount: json['sessionCount'] ?? 0,
       adviseCount: json['adviseCount'] ?? 0,
       totalLoveCount: json['totalLoveCount'] ?? 0,
-      currentLoveCount: json['currentLoveCount'] ?? 0,
-      withdrawnLoveCount: json['withdrawnLoveCount'] ?? 0,
+      currentLoveCount: json['currentLoveCount'] ?? 0.0,
+      withdrawnLoveCount: json['withdrawnLoveCount'] ?? 0.0,
     );
   }
 

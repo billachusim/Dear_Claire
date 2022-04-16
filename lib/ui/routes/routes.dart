@@ -8,6 +8,7 @@ import 'package:dear_claire/ui/alter_ego/new_diaries_page.dart';
 import 'package:dear_claire/ui/auth/auth_selection.dart';
 import 'package:dear_claire/ui/bottom_nav/stack_index_home.dart';
 import 'package:dear_claire/ui/create_session/create_session_page.dart';
+import 'package:dear_claire/ui/dairy/diary.dart';
 import 'package:dear_claire/ui/donate/donate.dart';
 import 'package:dear_claire/ui/ego-profile/clairevatar.dart';
 import 'package:dear_claire/ui/ego-profile/profile.dart';
@@ -29,6 +30,7 @@ import '../visited_user_ego_page/visited_user_ego_page.dart';
 class AppRoutes {
   static const home = '/featured';
   static const archivedSessions = '/archived_sessions';
+  static const diarySessions = '/diary_sessions';
   static const newDiaries = '/newDiaries';
   static const login = '/login';
   static const signUp = '/signUp';
@@ -66,6 +68,13 @@ class AppRouter {
       case AppRoutes.newDiaries:
         return MaterialPageRoute<dynamic>(
           builder: (_) => NewDiariesPage(),
+          settings: settings,
+          fullscreenDialog: true,
+        );
+
+      case AppRoutes.diarySessions:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => DiaryPage(title: "Dear Claire"),
           settings: settings,
           fullscreenDialog: true,
         );
@@ -150,7 +159,7 @@ class AppRouter {
 
       case AppRoutes.requestClaireLoveForm:
         return MaterialPageRoute<dynamic>(
-          builder: (_) => RequestClaireLoveForm(currentWithdrawal: '', totalLoveCount: '',),
+          builder: (_) => RequestClaireLoveForm(currentWithdrawal: '', totalLoveCount: '', userId: '', totalWithdrawn: '', currentWithdrawable: '',),
           settings: settings,
           fullscreenDialog: true,
         );

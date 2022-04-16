@@ -27,6 +27,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
   var _toRequest;
   var _rate;
   var _userType;
+  late String _userId;
 
   bool _showRequestButton = false;
 
@@ -49,6 +50,24 @@ class _ClaireLovesState extends State<ClaireLoves> {
     super.dispose();
   }
 
+
+
+  /// Set and show current withdrawal available to the user.
+
+  void setWithdrawalAmount() {
+    final currentWithdrawal = int.parse(_amountController.text);
+    final totalWithdrawal = _withdrawnLoveCount! + currentWithdrawal;
+    final withdrawnLoveCount = currentWithdrawal + totalWithdrawal;
+    _currentLoveCount = _totalLoveCount - totalWithdrawal;
+    _toRequest = currentWithdrawal * int.parse(_rate.toString());
+    _currentWithdrawal = _toRequest;
+
+    logger.d('Got the request love count');
+    print('Requested love Count is: $withdrawnLoveCount');
+    print('Current love Count is: $_currentLoveCount');
+
+
+  }
 
 
   /// Ascertain withdrawn available love for the user.
@@ -366,7 +385,9 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
                                       var totalLoveCount = data?["totalLoveCount"] ?? "0";
+                                      String userId = data?["userId"] ?? "";
                                       _totalLoveCount = totalLoveCount;
+                                      _userId = userId;
                                       debugPrint(
                                           " This is the Total number of LOVES earned by this user ${totalLoveCount.toString()}");
                                       return Text(
@@ -705,7 +726,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                       _rate = userType == 'REGULAR'? '2' :
                                       userType == 'ADMIN'? '3' :
                                       userType == 'SUPER_ADMIN'? '5' :
-                                      '1.5';
+                                      '2';
                                       _userType = userType;
                                       debugPrint(
                                           " This is the ego rate used for conversion for this user ${_rate.toString()}");
@@ -817,11 +838,13 @@ class _ClaireLovesState extends State<ClaireLoves> {
                         alignment: Alignment.center,
                         child: OutlinedButton(
                           onPressed: () {
+                            setState(() {
+
+                            });
                             if (_amountController.text.isNotEmpty) {
                               setState(() {
-                                ascertainWithdrawnLoveCount();
+                                setWithdrawalAmount();
                                 _showRequestButton = true;
-                                _amountController.text = "";
                               });
                             }
                           },
@@ -843,15 +866,21 @@ class _ClaireLovesState extends State<ClaireLoves> {
                         visible: _showRequestButton,
                         child: OutlinedButton(
                           onPressed: (){
-
+                            ascertainWithdrawnLoveCount();
                             PageRouter.gotoWidget(
                                 RequestClaireLoveForm(
-                                    currentWithdrawal: _currentWithdrawal.toString(),
-                                    totalLoveCount: _totalLoveCount.toString()),
-                                context);
-                            print("Requested Amount Is::: $_currentWithdrawal");
+                                  currentWithdrawal: _currentWithdrawal.toString(),
+                                  totalLoveCount: _totalLoveCount.toString(),
+                                  userId: _userId.toString(),
+                                  currentWithdrawable: _currentLoveCount.toString(),
+                                  totalWithdrawn: _withdrawnLoveCount.toString(),
+                                ), context);
 
-                            },
+                            print("Requested Amount Is::: $_currentWithdrawal");
+                            print("Available Amount Is::: $_currentLoveCount");
+
+
+                          },
                           style: OutlinedButton.styleFrom(
                             backgroundColor: Pallet.colorSecondary,
                             padding: EdgeInsets.all(17),
