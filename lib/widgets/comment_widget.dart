@@ -9,6 +9,7 @@ import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/widgets/play_advise_voice_note.dart';
 import 'package:dear_claire/widgets/share_button.dart';
 import 'package:dear_claire/widgets/thanks_button.dart';
+import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -18,22 +19,96 @@ import 'package:google_fonts/google_fonts.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../ui/routes/page_router_animation.dart';
 import '../ui/visited_user_ego_page/visited_user_ego_page.dart';
+import '../utils/strings.dart';
 
-class CommentWidget extends StatelessWidget {
-  CommentSessionModel? commentSessionModel;
-  final Function()? onPressed;
-  final Function()? onShare;
-  late String visitedUsersID;
-  late String visitedEgoName;
-
-  User? currentUser = FirebaseAuth.instance.currentUser;
-
+class CommentWidget extends StatefulWidget {
   CommentWidget(
       {Key? key,
       this.onPressed,
       this.onShare,
       required this.commentSessionModel})
       : super(key: key);
+
+  CommentSessionModel? commentSessionModel;
+  final Function()? onPressed;
+  final Function()? onShare;
+  late String visitedUsersID;
+  late String visitedEgoName;
+
+  @override
+  _CommentWidgetState createState() => _CommentWidgetState();
+}
+
+class _CommentWidgetState extends State<CommentWidget> {
+  TextEditingController adviseTitleController = TextEditingController();
+  final FirebaseServices _firebaseServices = FirebaseServices();
+
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
+  //show up when user clicks on the FAB to create a session
+  Future<void> _showCardDialog() async {
+    adviseTitleController.text = widget.commentSessionModel!.message.toString();
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return Center(
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0)),
+            title: Container(
+              child: Text(AppString.edit_advise_dialog_header,
+                  textAlign: TextAlign.center),
+            ),
+            content: SingleChildScrollView(
+              child: Container(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: adviseTitleController,
+                        minLines: 4,
+                        maxLines: 200,
+                        decoration: InputDecoration(
+                          //border: InputBorder,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text(
+                  'Save',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,17 +127,19 @@ class CommentWidget extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: () {
-                  visitedUsersID = commentSessionModel?.isUserAdmin == true
-                      ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
-                      : commentSessionModel!.userId ?? '';
-                  visitedEgoName = commentSessionModel?.isUserAdmin == true
-                      ? "Claire"
-                      : commentSessionModel!.userNickname ?? '';
-                  String thisEgoName =
-                      visitedEgoName;
-                  String thisUser = commentSessionModel?.isUserAdmin == true
-                      ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
-                      : commentSessionModel!.userId ?? '';
+                  widget.visitedUsersID =
+                      widget.commentSessionModel?.isUserAdmin == true
+                          ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                          : widget.commentSessionModel!.userId ?? '';
+                  widget.visitedEgoName =
+                      widget.commentSessionModel?.isUserAdmin == true
+                          ? "Claire"
+                          : widget.commentSessionModel!.userNickname ?? '';
+                  String thisEgoName = widget.visitedEgoName;
+                  String thisUser =
+                      widget.commentSessionModel?.isUserAdmin == true
+                          ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                          : widget.commentSessionModel!.userId ?? '';
                   PageRouter.gotoWidget(
                       VisitedUserEgoProfilePage(
                           visitedUsersID: thisUser,
@@ -73,9 +150,9 @@ class CommentWidget extends StatelessWidget {
                 child: CachedNetworkImage(
                     width: 40,
                     height: 40,
-                    imageUrl: commentSessionModel?.isUserAdmin == true
+                    imageUrl: widget.commentSessionModel?.isUserAdmin == true
                         ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
-                        : commentSessionModel!.userAvatarUrl ?? '',
+                        : widget.commentSessionModel!.userAvatarUrl ?? '',
                     imageBuilder: (context, imageProvider) => Container(
                           decoration: BoxDecoration(
                             image: DecorationImage(
@@ -103,17 +180,20 @@ class CommentWidget extends StatelessWidget {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        visitedUsersID = commentSessionModel?.isUserAdmin == true
-                            ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
-                            : commentSessionModel!.userId ?? '';
-                        visitedEgoName = commentSessionModel?.isUserAdmin == true
-                            ? "Lol, yes, it's me, Claire!"
-                            : commentSessionModel!.userNickname ?? '';
-                        String thisEgoName =
-                            visitedEgoName;
-                        String thisUser = commentSessionModel?.isUserAdmin == true
-                            ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
-                            : commentSessionModel!.userId ?? '';
+                        widget.visitedUsersID =
+                            widget.commentSessionModel?.isUserAdmin == true
+                                ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                                : widget.commentSessionModel!.userId ?? '';
+                        widget.visitedEgoName =
+                            widget.commentSessionModel?.isUserAdmin == true
+                                ? "Lol, yes, it's me, Claire!"
+                                : widget.commentSessionModel!.userNickname ??
+                                    '';
+                        String thisEgoName = widget.visitedEgoName;
+                        String thisUser =
+                            widget.commentSessionModel?.isUserAdmin == true
+                                ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                                : widget.commentSessionModel!.userId ?? '';
                         PageRouter.gotoWidget(
                             VisitedUserEgoProfilePage(
                                 visitedUsersID: thisUser,
@@ -122,9 +202,9 @@ class CommentWidget extends StatelessWidget {
                         print("Visited User ID::: $thisEgoName");
                       },
                       child: Text(
-                          commentSessionModel?.isUserAdmin == true
+                          widget.commentSessionModel?.isUserAdmin == true
                               ? "Claire"
-                              : commentSessionModel!.userNickname ?? '',
+                              : widget.commentSessionModel!.userNickname ?? '',
                           textAlign: TextAlign.start,
                           maxLines: 1,
                           style: GoogleFonts.lato(
@@ -136,7 +216,7 @@ class CommentWidget extends StatelessWidget {
                       height: 2,
                     ),
                     Text(
-                        timeConverter(commentSessionModel!.timeCreated!,
+                        timeConverter(widget.commentSessionModel!.timeCreated!,
                             time: TimeConverterEnum.Comment),
                         textAlign: TextAlign.start,
                         maxLines: 1,
@@ -151,8 +231,8 @@ class CommentWidget extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   ThanksButton(
-                    count: commentSessionModel!.thanks!.length,
-                    onPressed: onPressed,
+                    count: widget.commentSessionModel!.thanks!.length,
+                    onPressed: widget.onPressed,
                     color: 1 == 2 ? Pallet.colorPink : Pallet.colorTextGray,
                   ),
                 ],
@@ -163,109 +243,105 @@ class CommentWidget extends StatelessWidget {
             height: 1,
           ),
           Text(
-            commentSessionModel!.message!,
+            widget.commentSessionModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
                 fontSize: 15.0,
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
-
           SizedBox(
             height: 6,
           ),
-
           Visibility(
-            visible: commentSessionModel!.audioUrl! != 'null',
+            visible: widget.commentSessionModel!.audioUrl! != 'null',
             child: Container(
               alignment: Alignment.topLeft,
               child: Align(
                 alignment: Alignment.topLeft,
                 child: Row(
                   children: [
-                    commentSessionModel!.audioUrl!.isNotEmpty
-                        ? PlayAdviseVoiceNote(filePath: commentSessionModel!.audioUrl)
+                    widget.commentSessionModel!.audioUrl!.isNotEmpty
+                        ? PlayAdviseVoiceNote(
+                            filePath: widget.commentSessionModel!.audioUrl)
                         : SizedBox.shrink(),
                   ],
                 ),
               ),
             ),
           ),
-
           Container(
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Row(
                 children: [
                   Visibility(
-                      visible: commentSessionModel!.imageUrls!.isNotEmpty,
+                      visible:
+                          widget.commentSessionModel!.imageUrls!.isNotEmpty,
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
-                            imageUrl: commentSessionModel!.imageUrls!.isNotEmpty
-                                ? commentSessionModel!.imageUrls!.first
+                            imageUrl: widget
+                                    .commentSessionModel!.imageUrls!.isNotEmpty
+                                ? widget.commentSessionModel!.imageUrls!.first
                                 : '',
                             imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                  fit: BoxFit.fill,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(25),
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.fill,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
                             placeholder: (context, url) =>
                                 Center(child: CircularProgressIndicator()),
                             errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/brown_boy_mask.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
-                        ),
+                                  "assets/images/brown_boy_mask.png",
+                                  width: 48,
+                                  height: 48,
+                                ) //Icon(Icons.error),
+                            ),
                       )),
-
-                  SizedBox(width: 5,),
-
+                  SizedBox(
+                    width: 5,
+                  ),
                   Visibility(
-                      visible: commentSessionModel!.imageUrls!.isNotEmpty,
+                      visible:
+                          widget.commentSessionModel!.imageUrls!.isNotEmpty,
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
-                            imageUrl: commentSessionModel!.imageUrls!.isNotEmpty
-                                ? commentSessionModel!.imageUrls!.last
+                            imageUrl: widget
+                                    .commentSessionModel!.imageUrls!.isNotEmpty
+                                ? widget.commentSessionModel!.imageUrls!.last
                                 : '',
                             imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                  fit: BoxFit.fill,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(25),
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.fill,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
                             placeholder: (context, url) =>
                                 Center(child: CircularProgressIndicator()),
                             errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/brown_boy_mask.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
-                        ),
+                                  "assets/images/brown_boy_mask.png",
+                                  width: 48,
+                                  height: 48,
+                                ) //Icon(Icons.error),
+                            ),
                       )),
                 ],
               ),
             ),
           ),
-
-
-
-
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-
-            FutureBuilder<
-                DocumentSnapshot<Map<String, dynamic>>>(
+            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
               future: FirebaseFirestore.instance
                   .collection("users")
                   .doc(currentUser?.uid)
@@ -276,26 +352,23 @@ class CommentWidget extends StatelessWidget {
                   var userType = data?["userType"] ?? "0";
                   debugPrint(
                       " This is the actual userType of this user ${userType.toString()}");
-                  return
-                    Visibility(
-                      visible: userType == "SUPER_ADMIN",
-                      child: Text(commentSessionModel!.alterEgoId!,
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 12.0,
-                              color: Pallet.colorBlack,
-                              fontWeight: FontWeight.w800)),
-                    );
+                  return Visibility(
+                    visible: userType == "SUPER_ADMIN",
+                    child: Text(widget.commentSessionModel!.alterEgoId!,
+                        textAlign: TextAlign.start,
+                        maxLines: 1,
+                        style: GoogleFonts.lato(
+                            fontSize: 12.0,
+                            color: Pallet.colorBlack,
+                            fontWeight: FontWeight.w800)),
+                  );
                 }
 
-                return Center(
-                    child: CircularProgressIndicator());
+                return Center(child: CircularProgressIndicator());
               },
             ),
 
-
-            if (commentSessionModel!.isUserAdmin)
+            if (widget.commentSessionModel!.isUserAdmin)
               CupertinoButton(
                   padding: EdgeInsets.zero,
                   child: Container(
@@ -322,8 +395,91 @@ class CommentWidget extends StatelessWidget {
                       ],
                     ),
                   ),
-                  onPressed: onShare)
-          ]),
+                  onPressed: widget.onShare),
+
+            if (widget.commentSessionModel!.userId == currentUser?.uid)
+            CupertinoButton(
+                padding: EdgeInsets.zero,
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Pallet.colorSecondary,
+                      )),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.edit,
+                        size: 15,
+                        color: Pallet.colorSecondary,
+                      ),
+                      Text(
+                        'Edit',
+                        style: GoogleFonts.lato(
+                            fontSize: 13.0,
+                            color: Pallet.colorSecondary,
+                            fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
+                ),
+                onPressed: widget.onShare
+            ),
+
+
+            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+              future: FirebaseFirestore.instance
+                  .collection("users")
+                  .doc(currentUser?.uid)
+                  .get(),
+              builder: (_, snapshot) {
+                if (snapshot.hasData) {
+                  var data = snapshot.data!.data();
+                  var userType = data?["userType"] ?? "0";
+                  debugPrint(
+                      " This is the actual userType of this user ${userType.toString()}");
+                  return
+                    Visibility(
+                      visible: userType != "REGULAR",
+                      child: CupertinoButton(
+                          padding: EdgeInsets.zero,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Pallet.colorSecondary,
+                                )),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.edit,
+                                  size: 15,
+                                  color: Pallet.colorSecondary,
+                                ),
+                                Text(
+                                  'Edit',
+                                  style: GoogleFonts.lato(
+                                      fontSize: 13.0,
+                                      color: Pallet.colorSecondary,
+                                      fontWeight: FontWeight.w800),
+                                ),
+                              ],
+                            ),
+                          ),
+                          onPressed: _showCardDialog
+                      ),
+                    );
+                }
+
+                return Center(child: CircularProgressIndicator());
+              },
+            ),
+
+
+          ]
+          ),
         ],
       ),
     );

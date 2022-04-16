@@ -15,6 +15,9 @@ class AppString{
   static const String whats_this_session_about = 'What\'s this session about?';
   static const String do_you_want_other_users = "Do you want other users to reply and follow this diary session?";
 
+  static const String edit_advise_dialog_header = 'Edit Your Advise 🌺';
+
+
   static const String appFeaturedSessions = "sessions";
 
   static const String COLLECTION_USER_SESSION_COUNTERS = "user_session_counters";
