@@ -386,7 +386,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                   );
                 }
 
-                return Center(child: CircularProgressIndicator());
+                return Text("getting edit buttons");
               },
             ),
 
@@ -439,14 +439,14 @@ class _CommentWidgetState extends State<CommentWidget> {
                       Text(
                         'Edit',
                         style: GoogleFonts.lato(
-                            fontSize: 13.0,
+                            fontSize: 12.0,
                             color: Pallet.colorSecondary,
                             fontWeight: FontWeight.w800),
                       ),
                     ],
                   ),
                 ),
-                onPressed: widget.onShare
+                onPressed: _showCardDialog
             ),
 
 
@@ -481,7 +481,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                                   color: Pallet.colorSecondary,
                                 ),
                                 Text(
-                                  'Edit',
+                                  'Super Edit',
                                   style: GoogleFonts.lato(
                                       fontSize: 13.0,
                                       color: Pallet.colorSecondary,
