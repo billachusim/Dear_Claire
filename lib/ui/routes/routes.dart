@@ -41,7 +41,7 @@ class AppRoutes {
   static const howAlterEgoWorks = '/how_alter_ego_works';
   static const alterEgoRegistration = '/alterEgoRegistration';
   static const requestFeatureForm = '/requestFeatureForm';
-  static const requestClaireLoveForm = '/requestFeatureForm';
+  static const requestClaireLoveForm = '/requestClaireLoveForm';
   static const editClairevatar = '/editClairevatar';
   static const searchPage = '/searchPage';
   static const egoPage = '/egoPage';
@@ -150,7 +150,7 @@ class AppRouter {
 
       case AppRoutes.requestClaireLoveForm:
         return MaterialPageRoute<dynamic>(
-          builder: (_) => RequestClaireLoveForm(),
+          builder: (_) => RequestClaireLoveForm(currentWithdrawal: '', totalLoveCount: '',),
           settings: settings,
           fullscreenDialog: true,
         );

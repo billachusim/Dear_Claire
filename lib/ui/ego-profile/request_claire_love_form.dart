@@ -7,7 +7,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class RequestClaireLoveForm extends StatefulWidget {
-  const RequestClaireLoveForm({Key? key}) : super(key: key);
+  final String currentWithdrawal;
+  final String totalLoveCount;
+
+  const RequestClaireLoveForm({Key? key, required this.currentWithdrawal, required this.totalLoveCount}) : super(key: key);
 
   @override
   _RequestClaireLoveFormState createState() => _RequestClaireLoveFormState();
@@ -374,8 +377,8 @@ class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
 
   String? getPayload(){
     var userUid = firebaseServices.currentUser!.uid.isEmpty ? "null" : firebaseServices.currentUser!.uid;
-    var totalLove = userModel.totalLoveCount.toString().isEmpty ? "null" : userModel.totalLoveCount;
-    var currentLove = firebaseServices.currentUser!.uid.isEmpty ? "null" : firebaseServices.currentUser!.uid;
+    var totalLove = widget.totalLoveCount.isEmpty ? "null" : widget.totalLoveCount;
+    var currentRequest = widget.currentWithdrawal.isEmpty ? "null" : widget.currentWithdrawal;
 
     var accountNumber = _accountNumberController.text.isEmpty ? "null" : _accountNumberController.text;
     var bankName = _bankNameController.text.isEmpty ? "null" : _bankNameController.text;
@@ -394,7 +397,9 @@ class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
 
       *Email*: $email
       
-      *Total Love* 
+      *Total Love*: $totalLove
+      
+      *Current Request in Naira*: $currentRequest
 
       *Account Number*: $accountNumber
 

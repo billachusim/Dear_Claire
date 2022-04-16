@@ -1,6 +1,7 @@
 import 'dart:core';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dear_claire/ui/ego-profile/request_claire_love_form.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../services/firebase_services.dart';
 import '../../utils/constant.dart';
 import '../../utils/strings.dart';
+import '../routes/page_router_animation.dart';
 import '../routes/routes.dart';
 
 class ClaireLoves extends StatefulWidget {
@@ -25,6 +27,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
   var _toRequest;
   var _rate;
   var _userType;
+
+  bool _showRequestButton = false;
 
 
   final TextEditingController _amountController = TextEditingController();
@@ -347,7 +351,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                               child: Container(
                                 padding: EdgeInsets.only(top: 7),
                                 height: 30,
-                                width: 60,
+                                width: 75,
                                 decoration: BoxDecoration(
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
@@ -636,7 +640,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     border: InputBorder.none,
                                     contentPadding:
                                     EdgeInsets.only(left: 22.0, bottom: 13, right: 2.0),
-                                    hintText: "30000",
+                                    hintText: "000",
                                     hintStyle: TextStyle(
                                       fontStyle: FontStyle.italic,
                                       color: Pallet.grey,
@@ -763,20 +767,29 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
                                 ),
-                                child: Text(
-                                  _toRequest.toString(),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14,
-                                    color: Colors.white,
+                                child: TextField(
+                                  cursorColor: Pallet.colorSecondary,
+                                  keyboardType: TextInputType.number,
+                                  maxLines: 1,
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    contentPadding:
+                                    EdgeInsets.only(left: 22.0, bottom: 13, right: 2.0),
+                                    hintText: _currentWithdrawal.toString(),
+                                    hintStyle: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      color: Pallet.colorBlack,
+                                      fontSize: 20,
+                                    ),
+                                    counterText: '',
                                   ),
+                                  maxLength: 5,
                                 ),
                               ),
                             ),
                             SizedBox(height: 2,),
                             Text(
-                              "To Request",
+                              "Cash Out",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
@@ -795,36 +808,61 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
                   SizedBox(height: 8,),
 
-                  Column(
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+
                       Align(
                         alignment: Alignment.center,
-                          child: OutlinedButton(
-                            onPressed: (){
-                              Navigator.pushNamed(context, AppRoutes.requestClaireLoveForm);
-                            },
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: Pallet.colorSecondary,
-                              padding: EdgeInsets.all(17),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(25)),
-                            ),
-                            child: Text("Request Cash  🌺",
-                                style: GoogleFonts.lato(
-                                    fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
-                          ),
-                      ),
-                      IconButton(
+                        child: OutlinedButton(
                           onPressed: () {
                             if (_amountController.text.isNotEmpty) {
                               setState(() {
                                 ascertainWithdrawnLoveCount();
+                                _showRequestButton = true;
                                 _amountController.text = "";
                               });
                             }
                           },
-                          icon: Icon(Icons.attach_money_outlined)
-                      )
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Pallet.colorSecondary,
+                            padding: EdgeInsets.all(8),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25)),
+                          ),
+                          child: Text("Show Cash Out",
+                              style: GoogleFonts.lato(
+                                  fontSize: 12.0, fontWeight: FontWeight.w700, color: Colors.white)),
+                        ),
+                      ),
+
+                      SizedBox(width: 10,),
+
+                      Visibility(
+                        visible: _showRequestButton,
+                        child: OutlinedButton(
+                          onPressed: (){
+
+                            PageRouter.gotoWidget(
+                                RequestClaireLoveForm(
+                                    currentWithdrawal: _currentWithdrawal.toString(),
+                                    totalLoveCount: _totalLoveCount.toString()),
+                                context);
+                            print("Requested Amount Is::: $_currentWithdrawal");
+
+                            },
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Pallet.colorSecondary,
+                            padding: EdgeInsets.all(17),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25)),
+                          ),
+                          child: Text("Request Cash  🌺",
+                              style: GoogleFonts.lato(
+                                  fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
+                        ),
+                      ),
 
                     ],
                   ),
