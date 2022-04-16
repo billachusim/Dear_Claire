@@ -152,6 +152,7 @@ class _HomeDashboardPageState extends State<HomePage>
           }).toList(),
         ),
         floatingActionButton: FloatingActionButton(
+          heroTag: null,
           backgroundColor: Pallet.colorSplashScreen,
           onPressed: () {
             if (currentUser == null) {

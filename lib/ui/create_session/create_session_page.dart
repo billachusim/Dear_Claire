@@ -574,6 +574,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                 ],
               )),
           floatingActionButton: FloatingActionButton(
+            heroTag: "sendSession",
             backgroundColor: Pallet.colorSplashScreen,
             onPressed: () {
               _showCardDialog();

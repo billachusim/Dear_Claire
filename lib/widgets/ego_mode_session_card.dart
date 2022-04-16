@@ -390,7 +390,7 @@ class EgoModeSessionCard extends StatelessWidget {
                     },
                     child: Container(
                       child: Visibility(
-                        visible: element.archived == false,
+                        visible: element.userId == currentUser?.uid,
                         child: Icon(
                           element.archived == true ? Icons.archive_rounded : Icons.archive_outlined,
                           color: Pallet.colorWhite,

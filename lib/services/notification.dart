@@ -9,6 +9,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final ClairNotification clairNotification = ClairNotification();
 
+Future<void> _firebaseMessagingBackgroundHandler(
+    RemoteMessage message) async {
+  await Firebase.initializeApp();
+  logger.d('A bg message just showed up :  ${message.messageId}');
+}
+
+
 class ClairNotification {
   User? currentUser = FirebaseAuth.instance.currentUser;
 
@@ -23,12 +30,6 @@ class ClairNotification {
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
-
-  Future<void> _firebaseMessagingBackgroundHandler(
-      RemoteMessage message) async {
-    await Firebase.initializeApp();
-    logger.d('A bg message just showed up :  ${message.messageId}');
-  }
 
   Future<void> initializeNotification() async {
     _prefs = await SharedPreferences.getInstance();
@@ -49,7 +50,7 @@ class ClairNotification {
   }
 
   void triggerNotifications() async {
-    String _usersID = currentUser!.uid;
+    String? _usersID = currentUser?.uid.toString();
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       RemoteNotification? notification = message.notification!;

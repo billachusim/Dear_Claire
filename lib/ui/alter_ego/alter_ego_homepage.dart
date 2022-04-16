@@ -137,6 +137,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
               ),
             ),
             floatingActionButton: FloatingActionButton(
+              heroTag: "newSessionFromAEM",
               backgroundColor: Pallet.colorSecondary,
               onPressed: () {
                 Navigator.of(context).pushNamed(AppRoutes.createSessionPage);

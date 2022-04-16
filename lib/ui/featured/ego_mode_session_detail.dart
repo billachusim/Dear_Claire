@@ -189,9 +189,7 @@ class _EgoModeSessionDetailState
     firebaseServices.addComment(
         title: session.title ?? '',
         docId: session.sessionId!,
-        sender: _userModel.userType == 'ADMIN' ? 'Claire' :
-        _userModel.userType == 'SUPER_ADMIN' ? 'Claire' :
-        _userModel.nickname!,
+        sender: _userModel.nickname.toString(),
         map: _commentModel.toJson());
     updateSessionTimeLastActivity(session);
     incrementAdviseCount();

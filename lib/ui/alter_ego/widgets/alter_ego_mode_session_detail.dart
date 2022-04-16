@@ -184,7 +184,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         docId: session.sessionId!,
         sender: _userModel.userType == 'ADMIN'? 'Claire' :
         _userModel.userType == 'SUPER_ADMIN'? 'Claire' :
-        _userModel.nickname!,
+        _userModel.nickname.toString(),
         map: _commentModel.toJson());
 
     updateSessionTimeLastActivity(session);
