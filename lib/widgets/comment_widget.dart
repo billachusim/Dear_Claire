@@ -15,7 +15,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../ui/routes/page_router_animation.dart';
 import '../ui/visited_user_ego_page/visited_user_ego_page.dart';
