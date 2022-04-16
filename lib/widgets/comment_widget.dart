@@ -26,7 +26,7 @@ class CommentWidget extends StatefulWidget {
       {Key? key,
       this.onPressed,
       this.onShare,
-      required this.commentSessionModel})
+      required this.commentSessionModel, required this.sessionId})
       : super(key: key);
 
   CommentSessionModel? commentSessionModel;
@@ -34,6 +34,7 @@ class CommentWidget extends StatefulWidget {
   final Function()? onShare;
   late String visitedUsersID;
   late String visitedEgoName;
+  final String sessionId;
 
   @override
   _CommentWidgetState createState() => _CommentWidgetState();
@@ -44,6 +45,23 @@ class _CommentWidgetState extends State<CommentWidget> {
   final FirebaseServices _firebaseServices = FirebaseServices();
 
   User? currentUser = FirebaseAuth.instance.currentUser;
+
+  Future<void> editAdvise() async {
+    final sessionId = widget.sessionId;
+    final commentId = widget.commentSessionModel!.commentId;
+    final advise = adviseTitleController.text;
+    FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .doc(sessionId)
+        .collection(AppString.appFeaturedSessionsComments)
+        .doc(commentId)
+        .update({
+      "message": advise,
+    },
+    );
+    logger.d('Successfully saved new nickname');
+    print('EditedAdvise: $advise');
+  }
 
   //show up when user clicks on the FAB to create a session
   Future<void> _showCardDialog() async {
@@ -100,7 +118,11 @@ class _CommentWidgetState extends State<CommentWidget> {
                   style: TextStyle(color: Colors.red),
                 ),
                 onPressed: () {
+                  editAdvise();
                   Navigator.of(context).pop();
+                  setState(() {
+                    adviseTitleController.text = "";
+                  });
                 },
               ),
             ],

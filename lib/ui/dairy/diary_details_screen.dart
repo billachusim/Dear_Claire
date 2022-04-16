@@ -59,7 +59,7 @@ class _DiaryDetailsScreenState extends State<DiaryDetailsScreen> {
                       return Column(
                         children: [
                           ..._commentSessionList
-                              .map((element) => CommentWidget(commentSessionModel: element,))
+                              .map((element) => CommentWidget(commentSessionModel: element, sessionId: '',))
                               .toList(),
                         ],
                       );

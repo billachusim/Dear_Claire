@@ -138,6 +138,7 @@ class _EgoModeSessionDetailState
                                     onPressed: () => _updateReaction(
                                         element, featuredSessionModel!),
                                     onShare: () => _share(element.message),
+                                    sessionId: featuredSessionModel!.sessionId.toString(),
                                   ))
                               .toList(),
 
