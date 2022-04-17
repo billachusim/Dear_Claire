@@ -47,7 +47,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                 padding: EdgeInsets.all(15),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(10),
-                                  color: Pallet.colorMaroon,
+                                  color: Pallet.colorPrimary,
                                 ),
                                 child: Column(
                                     crossAxisAlignment:
@@ -100,7 +100,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                 padding: EdgeInsets.all(15),
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(10),
-                                  color: Pallet.colorMaroon,
+                                  color: Pallet.colorPrimary,
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,11 +222,11 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
             padding: EdgeInsets.all(15),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: Pallet.colorBlue,
+              color: Pallet.colorSecondary,
             ),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text("Read How Ego Works",
+              Text("Read How Alter Ego Works",
                   style: GoogleFonts.lato(
                       fontSize: 15.0,
                       color: Pallet.colorWhite,
@@ -243,7 +243,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                         fontWeight: FontWeight.w700)),
               ),
               Text(
-                "Alter-Ego is simply defined as a person\'s secondary or alternate personality. It is also used to refer to an intimate or trusted friend. Claire is an alter-ego to all the users of Claire Diary app; being able to feel and understand users",
+                "Alter-Ego is simply defined as a person\'s secondary or alternate personality. It is also used to refer to an intimate or trusted friend. Claire is an alter-ego to all the users of Claire Diary app; being able to feel and understand users... continue",
                 style: GoogleFonts.lato(
                     fontSize: 15.0,
                     color: Pallet.colorWhite,
@@ -256,7 +256,10 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
 
   Widget _appreciateClaireWidget(BuildContext context) {
     return InkWell(
-        onTap: () {},
+        onTap: () {
+          Navigator.pushReplacementNamed(context, AppRoutes.donate);
+
+        },
         child: Container(
             width: double.infinity,
             //height: size.height / 3,
@@ -264,11 +267,11 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
             padding: EdgeInsets.all(15),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: Pallet.colorPurple,
+              color: Pallet.deepGreen,
             ),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text("Send Juice to Claire\n",
+              Text("Send Love To Claire\n",
                   style: GoogleFonts.lato(
                       fontSize: 15.0,
                       color: Pallet.colorWhite,
@@ -277,7 +280,8 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                 height: 10,
               ),
               Text(
-                "💕Claire will remain completely FREE to use but you can donate as little as 200 Naira (less than 1 Dollar) so your Dear Claire can drink some juice to enable her reply you faster, introduce new features and continue to be there for you.💕",
+                "💕Claire will remain completely FREE to use but you can donate as little as you wish towards the Claire Project to enable claire introduce designed features and continue to be there for everyone.💕\n\n"
+                    "Note: Your donation is also converted to Claireloves and will be displayed on your Ego Profile.",
                 style: GoogleFonts.lato(
                     fontSize: 15.0,
                     color: Pallet.colorWhite,

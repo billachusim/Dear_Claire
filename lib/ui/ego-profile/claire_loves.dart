@@ -157,7 +157,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                 borderRadius: BorderRadius.circular(10)
                             ),
                             child: Text(
-                            "Claire converts your data to cash as reward for sharing time with her and positive vibes around the app.",
+                            "Claire converts your data to Loves for sharing time with her and positive vibes around the app.",
                               textAlign: TextAlign.justify,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
@@ -482,9 +482,9 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                 borderRadius: BorderRadius.circular(10)
                             ),
                             child: Text(
-                              "Claire pays you back the cost of vibes and times you spent on the app. Isn't that cool! "
+                              "Claire pays you back the cost of vibes and times you spent on the app. "
                                   "Note: Only Alter and Super Egos can request cash for now.",
-                              textAlign: TextAlign.justify,
+                              textAlign: TextAlign.left,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 11,

@@ -226,10 +226,10 @@ class _DonatePageState extends State<DonatePage> {
 
   Widget _getCurrency() {
     final amounts = [
-      Amount.TWO,
       Amount.FIVE,
-      Amount.ONE_K,
-      Amount.TWO_K,
+      Amount.TEN,
+      Amount.TWENTY,
+      Amount.FORTY,
     ];
     return Container(
       height: 250,
@@ -264,10 +264,10 @@ class _DonatePageState extends State<DonatePage> {
   _handleCurrencyTap(String amount, int index) {
     this.setState(() {
       this.selectedAmount = amount;
-      index == 0 ? this.amountController.text = "200" :
-      index == 1 ? this.amountController.text = "500" :
-      index == 2 ? this.amountController.text = "1000" :
-      index == 3 ? this.amountController.text = "2000" :
+      index == 0 ? this.amountController.text = "2000" :
+      index == 1 ? this.amountController.text = "5000" :
+      index == 2 ? this.amountController.text = "10000" :
+      index == 3 ? this.amountController.text = "20000" :
       this.amountController.text = amount;
     });
     Navigator.pop(this.context);
@@ -298,22 +298,22 @@ class _DonatePageState extends State<DonatePage> {
 }
 
 class Amount{
-  static const one = 1;
-  static const two = 2;
-  static const four = 4;
-  static const seven = 7;
+  static const five = 5;
+  static const ten = 10;
+  static const twenty = 20;
+  static const forty = 40;
 
-  static const String TWO = "₦200 (Less than \$$one)";
-  static const String FIVE = "₦500 (Less than \$$two)";
-  static const String ONE_K = "₦1000 (Less than \$$four)";
-  static const String TWO_K = "₦2000 (Less than \$$seven)";
+  static const String FIVE = "₦2000 (Less than \$$five)";
+  static const String TEN = "₦5000 (Less than \$$ten)";
+  static const String TWENTY = "₦10000 (Less than \$$twenty)";
+  static const String FORTY = "₦20000 (Less than \$$forty)";
 }
 
 final List<String> amounts = [
-  '200',
-  '500',
-  '1000',
   '2000',
+  '5000',
+  '10000',
+  '20000',
 ];
 
 class SingleNotifier extends ChangeNotifier {

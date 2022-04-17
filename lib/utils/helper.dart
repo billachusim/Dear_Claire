@@ -146,3 +146,9 @@ void shareMessage(String message) {
   Share.share(
       '${AppString.shareHeader}\n\n$message\n${AppString.shareLink}');
 }
+
+/// share Claire to someone
+void sendClaireToSomeone() {
+  Share.share(
+      '${AppString.sendClaireToSomeoneHeader}\n\n${AppString.sendClaireLink}');
+}

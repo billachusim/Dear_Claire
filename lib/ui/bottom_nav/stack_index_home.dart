@@ -53,15 +53,15 @@ class _HomeDashboardPageState extends State<HomePage>
           ? await launch(shareClaireUrl)
           : throw 'Could not launch PlayStore';
 
-  void _launchEmail() async =>
-      await canLaunch("mailto:$claireEmailAddress?subject=Inquiry&body=New%20plugin")
-          ? await launch("mailto:$claireEmailAddress?subject=Inquiry&body=Hello%Claire")
-          : throw 'Could not launch email application';
 
-  void _launchWhatsapp() async =>
-      await canLaunch("https://wa.me/$phoneNumber")
-          ? await launch("https://wa.me/$phoneNumber")
-          : throw 'Could not launch Whatsapp';
+  String? getWhatsAppUrl(){
+    return AppString.WHATSAPP_URL;
+  }
+
+  onContinueToWhatsAppClicked() {
+    var whatsAppUrl = getWhatsAppUrl();
+    launch(whatsAppUrl!);
+  }
 
   static const String phoneNumber = "+2348188578955";
   static const String claireEmailAddress = "thesocialfaculty@gmail.com";
@@ -217,28 +217,16 @@ class _HomeDashboardPageState extends State<HomePage>
                 ListTile(
                   title: Text("Send Claire to Someone",
                       style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: ()=>_launchShareClaire(),
+                  onTap: ()=>sendClaireToSomeone(),
                   leading: Icon(Icons.share, color: Pallet.colorWhite),
                 ),
                 SizedBox(height: 18,),
                 ListTile(
-                  title: Text("Contact us via Instagram",
+                  title: Text("Contact Us",
                       style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: () =>_launchInstagram(),
+                  onTap: () =>onContinueToWhatsAppClicked(),
                   leading: Icon(Icons.email, color: Pallet.colorWhite),
                 ),
-                ListTile(
-                  title: Text("Contact us via Whatsapp",
-                      style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: ()=>_launchWhatsapp(),
-                  leading: Icon(Icons.email, color: Pallet.colorWhite),
-                ),
-                ListTile(
-                  title: Text("Contact us via Email",
-                      style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: () =>_launchEmail(),
-                  leading: Icon(Icons.email, color: Pallet.colorWhite),
-                )
               ],
             ),
           ),
