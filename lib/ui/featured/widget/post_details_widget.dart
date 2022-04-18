@@ -367,6 +367,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       onPressed: _showCardDialog
                                   ),
 
+                                new SizedBox(width: 10,),
+
                                 CupertinoButton(
                                     padding: EdgeInsets.zero,
                                     child: Container(
