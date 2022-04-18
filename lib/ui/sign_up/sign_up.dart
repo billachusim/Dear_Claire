@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -19,6 +20,14 @@ class _SignUpPage extends State<SignUpPage> {
   TextEditingController _genderController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final FirebaseServices _firebaseServices = FirebaseServices();
+
+
+  void _launchClairePolicySite() async =>
+      await canLaunch("https://sites.google.com/view/claire-diary/claire-privacy-policy")
+          ? await launch("https://sites.google.com/view/claire-diary/claire-privacy-policy")
+          : throw 'Could not launch Instagram';
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -170,6 +179,32 @@ class _SignUpPage extends State<SignUpPage> {
                                     color: Pallet.colorBlack,
                                     fontWeight: FontWeight.w400)),
                           ),
+
+                          SizedBox(height: 5,),
+
+                          Container(
+                            alignment: Alignment.center,
+                            child: Text("By tapping Create Ego, you are accepting Dear Claire's Terms Of Use and Privacy Policy",
+                                textAlign: TextAlign.left,
+                                style: GoogleFonts.lato(
+                                    fontSize: 12.0,
+                                    color: Pallet.colorPrimary,
+                                    fontWeight: FontWeight.w600)),
+                          ),
+                          GestureDetector(
+                            onTap: _launchClairePolicySite,
+                            child: Container(
+
+                              alignment: Alignment.center,
+                              child: Text("Tap here to open Terms Of Use and Privacy Policy",
+                                  textAlign: TextAlign.right,
+                                  style: GoogleFonts.lato(
+                                      fontSize: 10.0,
+                                      color: Pallet.colorBlue,
+                                      fontWeight: FontWeight.w600)),
+                            ),
+                          ),
+
 
                           SizedBox(
                             height: 40,

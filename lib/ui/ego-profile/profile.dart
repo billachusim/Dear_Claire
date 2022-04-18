@@ -114,7 +114,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
     return FirebaseFirestore.instance
         .collection('ego_stream')
-        .where("userId", isEqualTo: currentUser!.uid)
+        .where("userId", isEqualTo: currentUser?.uid)
         .limit(300)
         .orderBy('egoTime', descending: true)
         .snapshots();
@@ -801,7 +801,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                           ),
                                         ),
                                       ),
-                                      title: Text(data['egoName'],
+                                      title: Text(data['egoName'].toString(),
                                         style: TextStyle(
                                           color: Colors.white70,
                                           fontSize: 12,

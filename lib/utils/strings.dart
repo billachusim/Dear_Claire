@@ -21,6 +21,13 @@ class AppString{
   static const String send_ego_message_header = 'Drop A Positive Note 🌺';
 
 
+  static const String terms_of_use_header = 'Terms Of Use & Privacy Policy 🌺';
+
+  static const String terms_of_use = '';
+
+
+
+
 
 
   static const String appFeaturedSessions = "sessions";
