@@ -55,7 +55,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                     children: [
                                       Text(AppString.read_how_claire_works,
                                           style: GoogleFonts.lato(
-                                              fontSize: 15.0,
+                                              fontSize: 17.0,
                                               color: Pallet.colorWhite,
                                               fontWeight: FontWeight.w700)),
                                       SizedBox(
@@ -71,7 +71,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                       Text(
                                           AppString.how_claire_works_header,
                                           style: GoogleFonts.lato(
-                                              fontSize: 15.0,
+                                              fontSize: 17.0,
                                               color: Pallet.colorWhite,
                                               fontWeight: FontWeight.w700)),
                                       Text(AppString.what_is_claire,
@@ -228,7 +228,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text("Read How Alter Ego Works",
                   style: GoogleFonts.lato(
-                      fontSize: 15.0,
+                      fontSize: 17.0,
                       color: Pallet.colorWhite,
                       fontWeight: FontWeight.w700)),
               SizedBox(
@@ -238,7 +238,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
               Center(
                 child: Text(" \n 🌸 What Is Alter-Ego?\n",
                     style: GoogleFonts.lato(
-                        fontSize: 15.0,
+                        fontSize: 16.0,
                         color: Pallet.colorWhite,
                         fontWeight: FontWeight.w700)),
               ),
@@ -273,7 +273,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text("Send Love To Claire\n",
                   style: GoogleFonts.lato(
-                      fontSize: 15.0,
+                      fontSize: 17.0,
                       color: Pallet.colorWhite,
                       fontWeight: FontWeight.w700)),
               SizedBox(
@@ -303,11 +303,26 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
               borderRadius: BorderRadius.circular(5),
               color: Color.fromRGBO(114, 31, 182, 1),
             ),
-            child: Center(child:Text("Send Feedback",
-                style: GoogleFonts.lato(
-                    fontSize: 15.0,
-                    color: Pallet.colorWhite,
-                    fontWeight: FontWeight.w700)))));
+            child: Column(
+              children: [
+                Center(
+                    child: Text("Send Feedback",
+                    style: GoogleFonts.lato(
+                        fontSize: 17.0,
+                        color: Pallet.colorWhite,
+                        fontWeight: FontWeight.w700)
+                    )
+                ),
+                Text("\nIf you see or hear or experience anything you did not understand while using the app.",
+                    style: GoogleFonts.lato(
+                        fontSize: 15.0,
+                        color: Pallet.colorWhite,
+                        fontWeight: FontWeight.w600)
+                )
+              ],
+            )
+        )
+    );
   }
 
   launchEmailApp() {

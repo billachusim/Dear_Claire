@@ -18,6 +18,9 @@ class AppString{
   static const String edit_advise_dialog_header = 'Edit Your Advise 🌺';
   static const String edit_session_dialog_header = 'Edit Your Session Text 🌺';
 
+  static const String send_ego_message_header = 'Drop A Positive Note 🌺';
+
+
 
 
   static const String appFeaturedSessions = "sessions";
@@ -227,6 +230,8 @@ class AppString{
   static const String change_ego_name = "Name your ego anytime. Remain Anonymous";
   static const String nice_clairevatar = "Nice clairevatar! Change anytime. Remain Anonymous";
   static const String change_ego_mantra = "Always live by your mantra";
+  static const String sent_ego_message = "You sent a mantra. Positive vibes only";
+
   static const String lets_go_anonymous = "Let's go anonymous";
   static const String claire_promise = "You will never be not truly loved";
   static const String nickname_page_header = "Just One More Thing,";

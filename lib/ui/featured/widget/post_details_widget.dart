@@ -333,7 +333,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
                             new Spacer(),
 
-                            Column(
+                            Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (_session.userId == currentUser?.uid)
@@ -366,6 +366,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       ),
                                       onPressed: _showCardDialog
                                   ),
+
                                 CupertinoButton(
                                     padding: EdgeInsets.zero,
                                     child: Container(

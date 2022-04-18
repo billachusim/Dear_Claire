@@ -110,11 +110,15 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   /// Query Ego stream from Firestore
 
-  final Stream<QuerySnapshot> _egoStream = FirebaseFirestore.instance
-      .collection('ego_stream')
-      .orderBy('egoTime', descending: true)
-      .limitToLast(50)
-      .snapshots();
+  Stream<QuerySnapshot<Map<String, dynamic>>> getUserEgoStream() {
+
+    return FirebaseFirestore.instance
+        .collection('ego_stream')
+        .where("userId", isEqualTo: currentUser!.uid)
+        .limit(300)
+        .orderBy('egoTime', descending: true)
+        .snapshots();
+  }
 
 
   /// Save Ego mantra
@@ -127,7 +131,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     final userId = userModel.userId;
     FirebaseFirestore.instance
         .collection('ego_stream')
-    //.doc(currentUser?.uid)
         .add({
       "egoMessage": egoMessage,
       "egoTime": egoTime,
@@ -137,7 +140,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     },
       //SetOptions(merge: true)
     );
-    logger.d('Successfully saved an Ego message');
+    logger.d('Successfully saved your Ego message');
     print('Ego Message: $egoMessage');
 
   }
@@ -641,9 +644,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             Align(
                               alignment: Alignment.topLeft,
                               child: Text(
-                                userType == 'REGULAR'? 'Ego Mantra:' :
-                                userType == 'ADMIN'? 'Alter Ego Mantra:' :
-                                userType == 'SUPER_ADMIN'? 'Super Ego Mantra:' :
+                                userType == 'REGULAR'? 'Ego Stream:' :
+                                userType == 'ADMIN'? 'Alter Ego Stream:' :
+                                userType == 'SUPER_ADMIN'? 'Super Ego Stream:' :
                                 '',
                                 style: TextStyle(
                                   fontSize: 14,
@@ -758,10 +761,14 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                         children: [
                           Expanded(
                             child: StreamBuilder<QuerySnapshot>(
-                              stream: _egoStream,
+                              stream: getUserEgoStream(),
                               builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
                                 if (snapshot.hasError) {
                                   return Text('Something went wrong');
+                                }
+                                if (!snapshot.hasData) {
+                                  return Text('Write a mantra that you wish to live by currently by tapping on this space',
+                                  style: TextStyle(color: Colors.white),);
                                 }
 
                                 if (snapshot.connectionState == ConnectionState.waiting) {

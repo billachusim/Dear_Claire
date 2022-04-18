@@ -27,6 +27,7 @@ import 'package:focused_menu/modals.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../services/user_activity_model.dart';
+import '../../services/user_model.dart';
 import '../../utils/constant.dart';
 import '../../widgets/ego_mode_session_card.dart';
 import '../Search/search_page.dart';
@@ -52,7 +53,7 @@ class VisitedUserEgoProfilePage extends StatefulWidget {
 class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final TextEditingController _mantraController = TextEditingController();
+  final TextEditingController _visitorMantraController = TextEditingController();
   GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
   GlobalKey<FlipCardState> cardKey2 = GlobalKey<FlipCardState>();
 
@@ -63,6 +64,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   void initState() {
     super.initState();
     getVisitedUser();
+    getVisitingUser();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       print(_tabController.index);
@@ -83,6 +85,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   String? visitedUsersID;
   String? _visitedUsersId;
   List<Session>? _sessionList = [];
+  UserModel? _visitingUser = UserModel();
 
 
 
@@ -90,27 +93,48 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     visitedUserModel = await getVisitedUserInfo();
   }
 
+  getVisitingUser() async {
+    userModel = await getVisitingUserInfo();
+  }
+
+  /// Get Visiting Ego User info
+  Future<UserModel> getVisitingUserInfo() async {
+    DocumentSnapshot response = await FirebaseFirestore.instance
+        .collection(AppString.users)
+        .doc(currentUser?.uid)
+        .get();
+
+    var visitingUser = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
+    _visitingUser = visitingUser;
+    logger.d('Successfully got the visited user model');
+    print('Visited user is: $visitedUser');
+    return visitingUser;
+  }
+
 
   /// Query Ego stream from Firestore
 
-  final Stream<QuerySnapshot> _egoStream = FirebaseFirestore.instance
-      .collection('ego_stream')
-      .orderBy('egoTime', descending: true)
-      .limitToLast(50)
-      .snapshots();
+  Stream<QuerySnapshot<Map<String, dynamic>>> getVisitedUserEgoStream() {
+
+    return FirebaseFirestore.instance
+        .collection('ego_stream')
+        .where("userId", isEqualTo: widget.visitedUsersID)
+        .limit(300)
+        .orderBy('egoTime', descending: true)
+        .snapshots();
+  }
 
 
   /// Save Ego mantra
 
   Future<void> saveEgoMessage() async {
-    final egoMessage = _mantraController.text;
+    final egoMessage = _visitorMantraController.text;
     final egoTime = FieldValue.serverTimestamp();
-    final egoName = userModel.nickname;
-    final egoImage = userModel.avatarUrl;
-    final userId = userModel.userId;
+    final egoName = _visitingUser?.nickname;
+    final egoImage = _visitingUser?.avatarUrl;
+    final userId = widget.visitedUsersID;
     FirebaseFirestore.instance
         .collection('ego_stream')
-    //.doc(currentUser?.uid)
         .add({
       "egoMessage": egoMessage,
       "egoTime": egoTime,
@@ -120,7 +144,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     },
       //SetOptions(merge: true)
     );
-    logger.d('Successfully saved an Ego message');
+    logger.d('Successfully sent an Ego message to $egoName');
     print('Ego Message: $egoMessage');
 
   }
@@ -138,13 +162,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     return visitedUser;
   }
 
-  /// Get sessions from the category and have been featured
-  Future<DocumentSnapshot<Map<String, dynamic>>> getVisitedUserProfile() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .doc(widget.visitedUsersID)
-        .get();
-  }
 
   /// Get visited user's sessions that have been featured or marked for replies.
   Stream<QuerySnapshot<Map<String, dynamic>>> visitedUsersSessions() {
@@ -179,6 +196,74 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       logger.e(e);
     }
     return _userActivityList;
+  }
+
+  //show up when user clicks on the FAB to edit an advise
+  Future<void> _showCardDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return Center(
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0)),
+            title: Container(
+              child: Text(AppString.send_ego_message_header,
+                  textAlign: TextAlign.center),
+            ),
+            content: SingleChildScrollView(
+              child: Container(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: _visitorMantraController,
+                        minLines: 3,
+                        maxLines: 10,
+                        decoration: InputDecoration(
+                          //border: InputBorder,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text(
+                  'Send',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onPressed: () {
+                  saveEgoMessage();
+                  Navigator.of(context).pop();
+                  setState(() {
+                    _visitorMantraController.text = "";
+                  });
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
 
@@ -586,9 +671,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                             Align(
                               alignment: Alignment.topLeft,
                               child: Text(
-                                userType == 'REGULAR'? 'Ego Mantra:' :
-                                userType == 'ADMIN'? 'Alter Ego Mantra:' :
-                                userType == 'SUPER_ADMIN'? 'Super Ego Mantra:' :
+                                userType == 'REGULAR'? 'Ego Stream:' :
+                                userType == 'ADMIN'? 'Alter Ego Stream:' :
+                                userType == 'SUPER_ADMIN'? 'Super Ego Stream:' :
                                 '',
                                 style: TextStyle(
                                   fontSize: 14,
@@ -617,31 +702,32 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                       minHeight: 50.0,
                                       maxHeight: 90.0,
                                     ),
-                                    child: new Scrollbar(
+                                    child: GestureDetector(
+                                      onTap: _showCardDialog,
                                       child: Container(
-                                        padding: EdgeInsets.zero,
+                                        padding: EdgeInsets.all(5),
+                                        width: double.infinity,
+                                        height: 40,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(30),
-                                          color: Pallet.colorWhite,
-                                        ),
-                                        child: TextField(
-                                          cursorColor: Pallet.colorSplashScreen,
-                                          keyboardType: TextInputType.multiline,
-                                          maxLines: 2,
-                                          controller: _mantraController,
-                                          decoration: InputDecoration(
-                                            border: InputBorder.none,
-                                            contentPadding:
-                                            EdgeInsets.only(left: 13.0, right: 13.0, top: 20),
-                                            hintText: "...write a new ego mantra...",
-                                            hintStyle: TextStyle(
-                                              fontStyle: FontStyle.italic,
-                                              color: Pallet.colorSecondary,
-                                              fontSize: 14,
-                                            ),
-                                            counterText: '',
+                                          borderRadius: BorderRadius.circular(20.0),
+                                          gradient: LinearGradient(
+                                            begin: Alignment(-0.37857140550652835, -1.9473685559777252),
+                                            end: Alignment(1.2428571464417884, 2.526316110739735),
+                                            stops: [0.0, 0.856177031993866, 1.0],
+                                            colors: [
+                                              Pallet.colorWhite,
+                                              Pallet.colorSecondary,
+                                              Pallet.colorSecondaryDark,
+                                            ],
                                           ),
-                                          maxLength: 160,
+                                        ),
+                                        child: Center(
+                                          child: Text('Drop an anonymous message into this Ego\'s Stream.',
+                                            style: GoogleFonts.lato(
+                                                fontSize: 12.0,
+                                                color: Pallet.colorBlack,
+                                                fontWeight: FontWeight.w700),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -650,13 +736,13 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                 FloatingActionButton(
                                     onPressed: () {
                                       if (userModel.nickname != null)
-                                        if (_mantraController.text.isNotEmpty)
+                                        if (_visitorMantraController.text.isNotEmpty)
                                           saveEgoMessage();
-                                      _mantraController.clear();
+                                      _visitorMantraController.clear();
                                       if(cardKey.currentState != null) { //null safety
                                         cardKey.currentState!.toggleCard();
                                       }
-                                      showToast(AppString.change_ego_mantra);
+                                      showToast(AppString.sent_ego_message);
                                     },
                                     mini: true,
                                     backgroundColor: Pallet.colorWhite,
@@ -700,10 +786,14 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                         children: [
                           Expanded(
                             child: StreamBuilder<QuerySnapshot>(
-                              stream: _egoStream,
+                              stream: getVisitedUserEgoStream(),
                               builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
                                 if (snapshot.hasError) {
                                   return Text('Something went wrong');
+                                }
+                                if (!snapshot.hasData) {
+                                  return Text('Write a mantra that you wish to live by currently by tapping on this space',
+                                    style: TextStyle(color: Colors.white),);
                                 }
 
                                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -718,7 +808,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                         child: CachedNetworkImage(
                                           width: 35,
                                           height: 40,
-                                          imageUrl: data['egoImage'],
+                                          imageUrl: data['egoImage'].toString(),
                                           imageBuilder: (context, imageProvider) => Container(
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
@@ -736,7 +826,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                           ),
                                         ),
                                       ),
-                                      title: Text(data['egoName'],
+                                      title: Text(data['egoName'].toString(),
                                         style: TextStyle(
                                           color: Colors.white70,
                                           fontSize: 12,
