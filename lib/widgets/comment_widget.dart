@@ -40,7 +40,7 @@ class CommentWidget extends StatefulWidget {
 }
 
 class _CommentWidgetState extends State<CommentWidget> {
-  TextEditingController adviseTitleController = TextEditingController();
+  TextEditingController editAdviseController = TextEditingController();
   final FirebaseServices _firebaseServices = FirebaseServices();
 
   User? currentUser = FirebaseAuth.instance.currentUser;
@@ -48,7 +48,7 @@ class _CommentWidgetState extends State<CommentWidget> {
   Future<void> editAdvise() async {
     final sessionId = widget.sessionId;
     final commentId = widget.commentSessionModel!.commentId;
-    final advise = adviseTitleController.text;
+    final advise = editAdviseController.text;
     FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
         .doc(sessionId)
@@ -58,13 +58,13 @@ class _CommentWidgetState extends State<CommentWidget> {
       "message": advise,
     },
     );
-    logger.d('Successfully saved new nickname');
+    logger.d('Successfully saved edited advise');
     print('EditedAdvise: $advise');
   }
 
-  //show up when user clicks on the FAB to create a session
+  //show up when user clicks on the FAB to edit an advise
   Future<void> _showCardDialog() async {
-    adviseTitleController.text = widget.commentSessionModel!.message.toString();
+    editAdviseController.text = widget.commentSessionModel!.message.toString();
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
@@ -86,7 +86,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TextField(
-                        controller: adviseTitleController,
+                        controller: editAdviseController,
                         minLines: 4,
                         maxLines: 200,
                         decoration: InputDecoration(
@@ -120,7 +120,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                   editAdvise();
                   Navigator.of(context).pop();
                   setState(() {
-                    adviseTitleController.text = "";
+                    editAdviseController.text = "";
                   });
                 },
               ),

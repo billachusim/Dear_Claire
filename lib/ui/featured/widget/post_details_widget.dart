@@ -22,6 +22,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../services/firebase_services.dart';
 import '../../../utils/strings.dart';
 import '../../create_session/sound/custom_play_sound_widget.dart';
 import '../../create_session/sound/play_sound_widget.dart';
@@ -38,12 +39,14 @@ class PostDetailsWidget extends StatefulWidget {
 
 class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   final screenshotController = ScreenshotController();
+  TextEditingController editSessionController = TextEditingController();
 
   late String visitedUsersID;
   late String visitedEgoName;
 
   //initialize the audio record file that stores user audio record. null by default
   String? recordFile;
+  Session? theSession;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +61,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                   AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snaps) {
                 if (snaps.hasData) {
                   final _session = Session.fromJson(snaps.data!.data()!);
+                  theSession = _session;
                   return Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6.0, vertical: 5),
@@ -329,40 +333,76 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
                             new Spacer(),
 
-                            CupertinoButton(
-                                padding: EdgeInsets.zero,
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                        color: Pallet.colorWhite,
-                                      )),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.share_rounded,
-                                        size: 15,
-                                        color: Pallet.colorWhite,
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_session.userId == currentUser?.uid)
+                                  CupertinoButton(
+                                      padding: EdgeInsets.zero,
+                                      child: Container(
+                                        padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 7),
+                                        decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: Pallet.colorWhite,
+                                            )),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.edit,
+                                              size: 15,
+                                              color: Pallet.colorWhite,
+                                            ),
+                                            SizedBox(width: 2,),
+                                            Text(
+                                              'Edit',
+                                              style: GoogleFonts.lato(
+                                                  fontSize: 12.0,
+                                                  color: Pallet.colorWhite,
+                                                  fontWeight: FontWeight.w800),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      Text(
-                                        'Share',
-                                        style: GoogleFonts.lato(
-                                            fontSize: 13.0,
-                                            color: Pallet.colorWhite,
-                                            fontWeight: FontWeight.w800),
-                                      ),
-                                    ],
+                                      onPressed: _showCardDialog
                                   ),
+                                CupertinoButton(
+                                    padding: EdgeInsets.zero,
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
+                                      decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: Pallet.colorWhite,
+                                          )),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.share_rounded,
+                                            size: 15,
+                                            color: Pallet.colorWhite,
+                                          ),
+                                          Text(
+                                            'Share',
+                                            style: GoogleFonts.lato(
+                                                fontSize: 13.0,
+                                                color: Pallet.colorWhite,
+                                                fontWeight: FontWeight.w800),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    onPressed: () async {
+                                      final image =
+                                          await screenshotController.capture();
+                                      if (image == null) return;
+                                      await saveImage(image);
+                                      saveAndShare(image);
+                                    }
                                 ),
-                                onPressed: () async {
-                                  final image =
-                                      await screenshotController.capture();
-                                  if (image == null) return;
-                                  await saveImage(image);
-                                  saveAndShare(image);
-                                }
+                              ],
                             ),
+
                           ],
                         )
                       ],
@@ -375,14 +415,90 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
       ),
     );
   }
-  
 
-  _shareSession(String? message) {
-    String _message = '''
-    
-     $message  
-    ''';
-    shareMessage(_message);
+// Edit session function
+  Future<void> editAdvise() async {
+    final sessionId = widget.sessionId;
+    final message = editSessionController.text;
+    FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .doc(sessionId)
+        .update({
+      "message": message,
+    },
+    );
+    logger.d('Successfully saved edited session');
+    print('Edited Session: $message');
+  }
+
+
+  //show up when user clicks on the FAB to edit an advise
+  Future<void> _showCardDialog() async {
+    editSessionController.text = theSession!.message.toString();
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return Center(
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0)),
+            title: Container(
+              child: Text(AppString.edit_session_dialog_header,
+                  textAlign: TextAlign.center),
+            ),
+            content: SingleChildScrollView(
+              child: Container(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: editSessionController,
+                        minLines: 8,
+                        maxLines: 2000,
+                        decoration: InputDecoration(
+                          //border: InputBorder,
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text(
+                  'Save',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onPressed: () {
+                  editAdvise();
+                  Navigator.of(context).pop();
+                  setState(() {
+                    editSessionController.text = "";
+                  });
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<String> saveImage(Uint8List bytes) async {
