@@ -545,7 +545,7 @@ class FirebaseServices extends ChangeNotifier {
       final timeRegistered = FieldValue.serverTimestamp();
       final userType = "REGULAR";
       final nickname = "Claire's Darling";
-      final avatarUrl = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fpink_girl_mask.png?alt=media&token=ec5ed423-a990-4e2c-84cf-e2019621455f";
+      final avatarUrl = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2FSpeak_No_Evil_Monkey_Emoji.png?alt=media&token=88242e3b-ee93-4b76-9d91-a24c112ef4f2";
       final userId = _user.user?.uid;
       final gender = _gender;
       final sessionCount = 0;
