@@ -48,6 +48,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   String? recordFile;
   Session? theSession;
 
+  bool? isFlagged;
+
   @override
   Widget build(BuildContext context) {
     User? currentUser = FirebaseAuth.instance.currentUser;
@@ -318,7 +320,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                               },
                               color: Pallet.colorWhite,
                             ),
-                            new Spacer(),
+                            new SizedBox(width: 10,),
                             FollowButton(
                               text: _session.followers!.contains(currentUser?.uid)
                                   ? 'Unfollow'
@@ -333,41 +335,78 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
                             new Spacer(),
 
+                            if (_session.userId == currentUser?.uid)
+                              CupertinoButton(
+                                  padding: EdgeInsets.zero,
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 7),
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: Pallet.colorWhite,
+                                        )),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.edit,
+                                          size: 15,
+                                          color: Pallet.colorWhite,
+                                        ),
+                                        SizedBox(width: 2,),
+                                        Text(
+                                          'Edit',
+                                          style: GoogleFonts.lato(
+                                              fontSize: 12.0,
+                                              color: Pallet.colorWhite,
+                                              fontWeight: FontWeight.w800),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  onPressed: _showCardDialog
+                              ),
+
+                            new Spacer(),
+
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                if (_session.userId == currentUser?.uid)
-                                  CupertinoButton(
-                                      padding: EdgeInsets.zero,
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 7),
-                                        decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
-                                            border: Border.all(
-                                              color: Pallet.colorWhite,
-                                            )),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.edit,
-                                              size: 15,
-                                              color: Pallet.colorWhite,
-                                            ),
-                                            SizedBox(width: 2,),
-                                            Text(
-                                              'Edit',
-                                              style: GoogleFonts.lato(
-                                                  fontSize: 12.0,
-                                                  color: Pallet.colorWhite,
-                                                  fontWeight: FontWeight.w800),
-                                            ),
-                                          ],
+                                if (_session.repliesEnabled == true)
+                                  GestureDetector(
+                                  onTap: () {
+                                    if (_session.flagged == false)
+                                      flagAlertDialog(context);
+                                    else unflagAlertDialog(context);
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(vertical: 0, horizontal: 5),
+                                    decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: Pallet.colorWhite,
+                                        )),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          _session.flagged == true ? Icons.flag : Icons.flag_outlined,
+                                          color: Pallet.colorWhite,
+                                          size: 20,
                                         ),
-                                      ),
-                                      onPressed: _showCardDialog
+                                        SizedBox(width: 2,),
+                                        Text(
+                                          'Flag',
+                                          style: GoogleFonts.lato(
+                                              fontSize: 13.0,
+                                              color: Pallet.colorWhite,
+                                              fontWeight: FontWeight.w800),
+                                        ),
+                                      ],
+                                    ),
                                   ),
+                                ),
 
                                 new SizedBox(width: 10,),
+
 
                                 CupertinoButton(
                                     padding: EdgeInsets.zero,
@@ -522,5 +561,113 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     final text = '${AppString.shareHeader}\n\n${AppString.shareLink}';
     await Share.shareFiles([image.path], text: text);
   }
+
+
+  flagAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Flag"),
+      onPressed:  () {
+        sendToFlagged();
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Flag This Session?"),
+      content: Text(AppString.flag_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  /// Archive a session
+
+  Future<bool?> sendToFlagged() async {
+    final value = true;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(theSession?.sessionId)
+        .update({
+      "flagged": value,
+    },
+    );
+    logger.d('Successfully flagged a session');
+    print('Is Flagged?: $value');
+    isFlagged = value;
+    return value;
+  }
+
+
+  unflagAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context).pop();      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Unflag"),
+      onPressed:  () {
+        removeFromFlagged();
+        Navigator.pushReplacementNamed(context, AppRoutes.alterEgoHomepage);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Unflag This Session?"),
+      content: Text(AppString.unflag_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
+  Future<bool?> removeFromFlagged() async {
+    final value = false;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(theSession?.sessionId)
+        .update({
+      "flagged": value,
+    },
+    );
+    logger.d('Successfully changed archive');
+    print('Is Flagged?: $value');
+    isFlagged = value;
+    return value;
+  }
+
 
 }

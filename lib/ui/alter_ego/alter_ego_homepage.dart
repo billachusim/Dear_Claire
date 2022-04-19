@@ -1,6 +1,7 @@
 import 'package:dear_claire/data/repository/post_repository_impl.dart';
 import 'package:dear_claire/ui/alter_ego/advised_page.dart';
 import 'package:dear_claire/ui/alter_ego/all_page.dart';
+import 'package:dear_claire/ui/alter_ego/flagged_sessions_page.dart';
 import 'package:dear_claire/ui/alter_ego/new_diaries_page.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
@@ -8,7 +9,9 @@ import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../utils/helper.dart';
+import '../../utils/strings.dart';
 import '../splash_screen/custom_rotate_bacground.dart';
 import 'chatrooms.dart';
 
@@ -33,6 +36,15 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   dispose() {
     _pageController!.dispose();
     super.dispose();
+  }
+
+  String? getWhatsAppUrl(){
+    return AppString.WHATSAPP_URL;
+  }
+
+  onContinueToWhatsAppClicked() {
+    var whatsAppUrl = getWhatsAppUrl();
+    launch(whatsAppUrl!);
   }
 
   @override
@@ -80,6 +92,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                   AdvisedPage(),
                   NewDiariesPage(),
                   AllDiariesPage(),
+                  FlaggedDiariesPage(),
                   ChatRooms()
                 ],
               ),
@@ -106,29 +119,36 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                 // A6A6B1
                 items: [
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.favorite_border,
+                    icon: Icon(Icons.favorite,
                         color: currentIndex == 0
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
                     label: 'Advising',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.calendar_today_outlined,
+                    icon: Icon(Icons.calendar_today,
                         color: currentIndex == 1
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
-                    label: 'New Sessions',
+                    label: 'New',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.access_time_rounded,
                         color: currentIndex == 2
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
-                    label: 'All Sessions',
+                    label: 'All',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.flag,
+                        color: currentIndex == 3
+                            ? Pallet.colorWhite
+                            : Pallet.colorSecondary),
+                    label: 'Flagged',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.messenger,
-                        color: currentIndex == 3
+                        color: currentIndex == 4
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
                     label: 'Rooms',
@@ -191,15 +211,16 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                     ListTile(
                       title: Text("Send Claire to Someone",
                           style: TextStyle(color: Pallet.colorWhite)),
-                      onTap: () {},
+                      onTap: ()=>sendClaireToSomeone(),
                       leading: Icon(Icons.share, color: Pallet.colorWhite),
                     ),
+                    SizedBox(height: 18,),
                     ListTile(
                       title: Text("Contact Us",
                           style: TextStyle(color: Pallet.colorWhite)),
-                      onTap: () {},
+                      onTap: () =>onContinueToWhatsAppClicked(),
                       leading: Icon(Icons.email, color: Pallet.colorWhite),
-                    )
+                    ),
                   ],
                 ),
               ),

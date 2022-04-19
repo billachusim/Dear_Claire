@@ -221,8 +221,8 @@ class FirebaseServices extends ChangeNotifier {
         .collection(AppString.appFeaturedSessions)
         .where("featured", isEqualTo: true)
         .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(150)
+       // .where("flagged", isEqualTo: false)
+        .limit(50)
         .orderBy('timeLastActivity', descending: true)
         .snapshots();
   }
@@ -246,7 +246,7 @@ class FirebaseServices extends ChangeNotifier {
     return _firebaseFirestore
         .collection(AppString.appFeaturedSessions)
         .where("repliesEnabled", isEqualTo: true)
-        .where("flagged", isEqualTo: false)
+       // .where("flagged", isEqualTo: false)
         .where("archived", isEqualTo: false)
         .where('followers', arrayContains: _usersID)
         .limit(AppString.appSessionLength)
@@ -298,7 +298,7 @@ class FirebaseServices extends ChangeNotifier {
       final _value = await _firebaseFirestore
           .collection(AppString.appFeaturedSessions)
           .where("archived", isEqualTo: false)
-          .where("flagged", isEqualTo: false)
+        //  .where("flagged", isEqualTo: false)
           .where("repliesEnabled", isEqualTo: true)
           .where("respondentUserId", isEqualTo: '')
          // .orderBy('timeLastActivity', descending: true)
@@ -325,8 +325,8 @@ class FirebaseServices extends ChangeNotifier {
       final _value = await _firebaseFirestore
           .collection(AppString.appFeaturedSessions)
           .where("archived", isEqualTo: false)
-          .where("flagged", isEqualTo: false)
-          .where("respondentUserId", isEqualTo: userModel.userId)
+         // .where("flagged", isEqualTo: false)
+          .where("respondentUserId", isEqualTo: currentUser?.uid)
           .orderBy('timeLastActivity', descending: true)
           .limit(AppString.appSessionLength)
           .get();
@@ -360,6 +360,30 @@ class FirebaseServices extends ChangeNotifier {
     }
     return _sessionList;
   }
+
+
+  /// Get all sessions that have been flagged
+  /// @return LiveData
+  Future<List<Session>> getFlaggedSessions() async {
+    List<Session> _sessionList = [];
+    try {
+      final _value = await _firebaseFirestore
+          .collection(AppString.appFeaturedSessions)
+          .where("flagged", isEqualTo: true)
+          .orderBy('timeLastActivity', descending: true)
+          .limit(AppString.allSessionLength)
+          .get();
+
+      _value.docs
+          .map((e) => _sessionList.addAll([Session.fromJson(e.data())]))
+          .toList();
+    } catch (e) {
+      logger.e(e);
+    }
+    return _sessionList;
+  }
+
+
 
   /// adds a comment to a post
   void addComment(
