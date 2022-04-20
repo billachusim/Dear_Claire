@@ -77,7 +77,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   int currentTabIndex = 0;
   UserModel userModel = UserModel();
   User? currentUser = FirebaseAuth.instance.currentUser;
-  UserModel? user;
 
   getUser() async {
     userModel = await firebaseServices.getUserInfo();
@@ -226,6 +225,43 @@ class _EgoProfilePageState extends State<EgoProfilePage>
       );
       _interstitialAd2!.show();
     }
+  }
+
+
+  flagEgoAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Back"),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Okay"),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Be Very Careful, You Are Flagged!"),
+      content: Text(AppString.flagged_ego_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 
 
@@ -571,38 +607,86 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
                 /// Here is the Ego badge showing user's usertype
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: EdgeInsets.only(
-                          left: 8, right: 4, top: 4, bottom: 4),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: userType == 'REGULAR'? Pallet.colorPrimary
-                            : userType == 'ADMIN'? Pallet.colorSecondary
-                            : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                            :Pallet.colorBlue,
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            userType == 'REGULAR'? 'Ego' :
-                            userType == 'ADMIN'? 'Alter Ego' :
-                            userType == 'SUPER_ADMIN'? 'Super Ego' :
-                            '',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.only(
+                              left: 8, right: 4, top: 4, bottom: 4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: userType == 'REGULAR'? Pallet.colorPrimary
+                                : userType == 'ADMIN'? Pallet.colorSecondary
+                                : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
+                                :Pallet.colorBlue,
                           ),
-                          topBarWidget(),
-                        ],
+                          child: Row(
+                            children: [
+                              Text(
+                                userType == 'REGULAR'? 'Ego' :
+                                userType == 'ADMIN'? 'Alter Ego' :
+                                userType == 'SUPER_ADMIN'? 'Super Ego' :
+                                '',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              topBarWidget(),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 6,)
+                      ],
+                    ),
+
+
+                    SizedBox(height: 3,),
+
+                    /// Flagged user label
+
+                    Visibility(
+                      visible: userModel.flagged == true,
+                      child: GestureDetector(
+                        onTap: () {
+                          if (userModel.flagged == true)
+                            flagEgoAlertDialog(context);
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(right: 6),
+                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 5),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Pallet.colorPrimaryDark,
+                              )),
+                          child: Row(
+                            children: [
+                              Icon(
+                                userModel.flagged == true ? Icons.flag : Icons.flag_outlined,
+                                color: Pallet.colorPrimaryDark,
+                                size: 15,
+                              ),
+                              SizedBox(width: 2,),
+                              Text(
+                                "You Are Flagged!",
+                                style: GoogleFonts.lato(
+                                    fontSize: 11.0,
+                                    color: Pallet.colorPrimaryDark,
+                                    fontWeight: FontWeight.w800),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                    SizedBox(width: 6,)
+
+
                   ],
                 ),
               ],
