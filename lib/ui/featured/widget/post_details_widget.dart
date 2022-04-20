@@ -632,7 +632,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
       child: Text("Unflag"),
       onPressed:  () {
         removeFromFlagged();
-        Navigator.pushReplacementNamed(context, AppRoutes.alterEgoHomepage);
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
       },
     );
 

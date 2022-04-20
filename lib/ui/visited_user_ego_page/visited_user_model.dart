@@ -19,6 +19,7 @@ class VisitedUserModel {
   int? totalLoveCount;
   var currentLoveCount;
   var withdrawnLoveCount;
+  bool flagged;
 
   VisitedUserModel({
     this.alterEgoAccessCode,
@@ -38,6 +39,7 @@ class VisitedUserModel {
     this.totalLoveCount,
     this.currentLoveCount,
     this.withdrawnLoveCount,
+    this.flagged = false,
   });
 
   factory VisitedUserModel.fromJson(json) {
@@ -59,6 +61,7 @@ class VisitedUserModel {
       totalLoveCount: json['totalLoveCount'] ?? 0,
       currentLoveCount: json['currentLoveCount'] ?? 0,
       withdrawnLoveCount: json['withdrawnLoveCount'] ?? 0,
+      flagged: json['flagged'],
 
     );
   }
@@ -82,6 +85,8 @@ class VisitedUserModel {
       totalLoveCount: json['totalLoveCount'] ?? 0,
       currentLoveCount: json['currentLoveCount'] ?? 0.0,
       withdrawnLoveCount: json['withdrawnLoveCount'] ?? 0.0,
+      flagged: json['flagged'] ?? false,
+
 
     );
   }
@@ -104,6 +109,7 @@ class VisitedUserModel {
     'totalLoveCount': totalLoveCount,
     'currentLoveCount': currentLoveCount,
     'withdrawnLoveCount': withdrawnLoveCount,
+    'flagged': flagged,
 
   };
 }

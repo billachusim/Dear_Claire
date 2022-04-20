@@ -75,9 +75,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   }
 
   int currentTabIndex = 0;
-  //String? userName;
   UserModel userModel = UserModel();
-  SessionModel sessionModel = SessionModel();
   User? currentUser = FirebaseAuth.instance.currentUser;
   UserModel? user;
 

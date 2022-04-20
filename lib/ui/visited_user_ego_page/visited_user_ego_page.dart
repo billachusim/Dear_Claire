@@ -78,14 +78,14 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   }
 
   int currentTabIndex = 0;
-  //VisitedUserModel visitedUser = VisitedUserModel();
-  SessionModel sessionModel = SessionModel();
   User? currentUser = FirebaseAuth.instance.currentUser;
   VisitedUserModel? visitedUser = VisitedUserModel();
   String? visitedUsersID;
   String? _visitedUsersId;
   List<Session>? _sessionList = [];
   UserModel? _visitingUser = UserModel();
+  bool? isFlagged;
+
 
 
 
@@ -267,6 +267,135 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   }
 
 
+
+  /// Block a user only by Super Ego
+
+  Future<void> blockUser() async {
+    final userId = visitedUser?.userId;
+    final userToBlock = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId);
+    await userToBlock.delete();
+    logger.d('Successfully blocked a user');
+    print("The Blocked User Is: $userId");
+  }
+
+
+  flagEgoAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Flag"),
+      onPressed:  () {
+        sendToFlagged();
+        showToast("Thank You!\n Claire will check this Ego for violations.");
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Flag And Report This User?"),
+      content: Text(AppString.flag_ego_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  /// Flag a user
+
+  Future<bool?> sendToFlagged() async {
+    final userId = visitedUser?.userId;
+    final value = true;
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .set({
+      "flagged": value,
+    },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully flagged a user');
+    print('Is Flagged?: $userId');
+    isFlagged = value;
+    return value;
+  }
+
+
+
+
+  unflagEgoAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Back"),
+      onPressed:  () {
+        Navigator.of(context).pop();      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Unflag"),
+      onPressed:  () {
+        removeFromFlagged();
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Unflag This User?"),
+      content: Text(AppString.unflag_ego_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  /// Unflag a user
+
+  Future<bool?> removeFromFlagged() async {
+    final userId = visitedUser?.userId;
+    final value = false;
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .set({
+      "flagged": value,
+    },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully unflagged a user');
+    print('Is Flagged?: $value');
+    isFlagged = value;
+    return value;
+  }
+
+
   /// Visited User Ego Profile Info Here
 
 
@@ -274,7 +403,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     VisitedEgoProfileInfo visitedProfileInfo = VisitedEgoProfileInfo();
     _visitedUsersId = widget.visitedUsersID;
     visitedUser = await getVisitedUserInfo();
-    //visitedUserInfo = await getVisitedUserInfo();
 
     visitedProfileInfo = VisitedEgoProfileInfo(visitedUserModel: visitedUser);
 
@@ -602,37 +730,83 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
                 /// Here is the Ego badge showing user's usertype
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      margin: EdgeInsets.only(right: 6),
-                      padding: EdgeInsets.only(
-                          left: 8, right: 4, top: 4, bottom: 4,),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: userType == 'REGULAR'? Pallet.colorPrimary
-                            : userType == 'ADMIN'? Pallet.colorSecondary
-                            : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                            :Pallet.colorBlue,
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            userType == 'REGULAR'? 'Ego' :
-                            userType == 'ADMIN'? 'Alter Ego' :
-                            userType == 'SUPER_ADMIN'? 'Super Ego' :
-                            '',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          margin: EdgeInsets.only(right: 6),
+                          padding: EdgeInsets.only(
+                              left: 8, right: 4, top: 4, bottom: 4,),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: userType == 'REGULAR'? Pallet.colorPrimary
+                                : userType == 'ADMIN'? Pallet.colorSecondary
+                                : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
+                                :Pallet.colorBlue,
                           ),
-                        ],
-                      ),
+                          child: Row(
+                            children: [
+                              Text(
+                                userType == 'REGULAR'? 'Ego' :
+                                userType == 'ADMIN'? 'Alter Ego' :
+                                userType == 'SUPER_ADMIN'? 'Super Ego' :
+                                '',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
+
+                      SizedBox(height: 3,),
+
+                      /// Flagged user label
+
+                      GestureDetector(
+                        onTap: () {
+                          if (visitedUser?.flagged == false)
+                            flagEgoAlertDialog(context);
+                          else unflagEgoAlertDialog(context);
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(right: 6),
+                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 5),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Pallet.colorPrimaryDark,
+                              )),
+                          child: Row(
+                            children: [
+                              Icon(
+                                visitedUser?.flagged == true ? Icons.flag : Icons.flag_outlined,
+                                color: Pallet.colorPrimaryDark,
+                                size: 15,
+                              ),
+                              SizedBox(width: 2,),
+                              Text(
+                                userType == 'REGULAR'? 'Flag Ego' :
+                                userType == 'ADMIN'? 'Flag Alter Ego' :
+                                userType == 'SUPER_ADMIN'? 'Flag Super Ego' :
+                                '',
+                                style: GoogleFonts.lato(
+                                    fontSize: 11.0,
+                                    color: Pallet.colorPrimaryDark,
+                                    fontWeight: FontWeight.w800),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ],

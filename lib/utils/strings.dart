@@ -53,12 +53,13 @@ class AppString{
   static const String unarchive_alert_note = "💡 Your session is archived!\n"
       "Would you like to unarchive it?";
 
-  static const String flag_alert_note = "💡 Does this session contain something bad?.\nWould you like to report it so Claire can check violations?";
+  static const String flag_alert_note = "💡 Does this session contain something bad?\nReport it so Claire can check for violations?";
   static const String unflag_alert_note = "💡 This session is flagged!\n"
+      "An Alter Ego will moderate or delete it asap\n"
       "Would you like to unflag it?";
 
   static const String flag_advise_alert_note = "💡 Does this advise contain something bad?."
-      "\nReport it so Claire can check violations?\n"
+      "\nReport it so Claire can check for violations?\n"
       "If you are session owner, use the delete button that will appear on the advise after flagging it";
   static const String unflag_advise_alert_note = "💡 This advise is flagged!\n"
       "An Alter Ego will remove or moderate it asap.\n"
@@ -66,6 +67,13 @@ class AppString{
 
   static const String delete_advise_alert_note = "💡 Do you want to delete this advise permanently?\n"
       "If you wait a little, an Alter Ego will moderate it.";
+
+  static const String flag_ego_alert_note = "💡 Did this user do something bad?.\n"
+      "\nFlag it so Claire can check for violations and block this user?";
+
+  static const String unflag_ego_alert_note = "💡 This user is flagged and reported!\n"
+      "Claire will moderate or block user asap\n"
+      "Would you like to unflag?";
 
 
 
