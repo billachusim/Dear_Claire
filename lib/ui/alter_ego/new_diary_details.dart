@@ -71,7 +71,7 @@ class _NewDiaryDetailsScreenState
                         children: [
                           ..._commentSessionList
                               .map((element) => CommentWidget(
-                            commentSessionModel: element, sessionId: '',
+                            commentSessionModel: element, sessionId: '', userId: '',
                           ))
                               .toList(),
                         ],

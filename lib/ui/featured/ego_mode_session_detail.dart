@@ -139,7 +139,9 @@ class _EgoModeSessionDetailState
                                         element, featuredSessionModel!),
                                     onShare: () => _share(element.message),
                                     sessionId: featuredSessionModel!.sessionId.toString(),
-                                  ))
+                                    userId: featuredSessionModel!.userId.toString(),
+
+                          ))
                               .toList(),
 
                           // Bottom ad unit is here

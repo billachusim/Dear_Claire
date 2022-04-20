@@ -82,7 +82,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             textInputAction: TextInputAction.next,
                             controller: _fullNameController,
                             decoration: new InputDecoration(
-                              hintText: "Nne Chike",
+                              hintText: "Mercy Ezulumalu Achusim",
                               labelText: "Full Name",
                               labelStyle:
                               TextStyle(color: Pallet.colorTextGray),

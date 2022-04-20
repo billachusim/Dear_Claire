@@ -25,7 +25,7 @@ class CommentWidget extends StatefulWidget {
       {Key? key,
       this.onPressed,
       this.onShare,
-      required this.commentSessionModel, required this.sessionId})
+      required this.commentSessionModel, required this.sessionId, required this.userId})
       : super(key: key);
 
   CommentSessionModel? commentSessionModel;
@@ -34,6 +34,7 @@ class CommentWidget extends StatefulWidget {
   late String visitedUsersID;
   late String visitedEgoName;
   final String sessionId;
+  final String userId;
 
   @override
   _CommentWidgetState createState() => _CommentWidgetState();
@@ -44,6 +45,8 @@ class _CommentWidgetState extends State<CommentWidget> {
   final FirebaseServices _firebaseServices = FirebaseServices();
 
   User? currentUser = FirebaseAuth.instance.currentUser;
+  bool? isFlagged;
+
 
   Future<void> editAdvise() async {
     final sessionId = widget.sessionId;
@@ -130,6 +133,179 @@ class _CommentWidgetState extends State<CommentWidget> {
       },
     );
   }
+
+
+
+
+  deletedAdviseAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Wait First"),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Delete Now"),
+      onPressed:  () {
+        deleteAdvise();
+        showToast("You have deleted that advise. Keep your aura clean!");
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Delete This Advise?"),
+      content: Text(AppString.delete_advise_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  /// Delete an Advise
+
+  Future<void> deleteAdvise() async {
+    final sessionId = widget.sessionId;
+    final commentId = widget.commentSessionModel!.commentId;
+    final collection = FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(sessionId)
+        .collection(AppString.appFeaturedSessionsComments);
+    await collection.doc(commentId).delete();
+    logger.d('Successfully deleted an advise');
+  }
+
+
+
+  flagAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Flag"),
+      onPressed:  () {
+        sendToFlagged();
+        showToast("Thank You!\n An Alter Ego will check this advise for violations.");
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Flag This Advise?"),
+      content: Text(AppString.flag_advise_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  /// Flag an Advise
+
+  Future<bool?> sendToFlagged() async {
+    final sessionId = widget.sessionId;
+    final commentId = widget.commentSessionModel!.commentId;
+    final value = true;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(sessionId)
+        .collection(AppString.appFeaturedSessionsComments)
+        .doc(commentId)
+        .update({
+      "flagged": value,
+    },
+    );
+    logger.d('Successfully flagged a session');
+    print('Is Flagged?: $value');
+    isFlagged = value;
+    return value;
+  }
+
+
+
+  unflagAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Back"),
+      onPressed:  () {
+        Navigator.of(context).pop();      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Unflag"),
+      onPressed:  () {
+        removeFromFlagged();
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Unflag This Advise?"),
+      content: Text(AppString.unflag_advise_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
+  Future<bool?> removeFromFlagged() async {
+    final sessionId = widget.sessionId;
+    final commentId = widget.commentSessionModel!.commentId;
+    final value = false;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(sessionId)
+        .collection(AppString.appFeaturedSessionsComments)
+        .doc(commentId)
+        .update({
+      "flagged": value,
+    },
+    );
+    logger.d('Successfully unflagged a session');
+    print('Is Flagged?: $value');
+    isFlagged = value;
+    return value;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -416,7 +592,83 @@ class _CommentWidgetState extends State<CommentWidget> {
                       ],
                     ),
                   ),
-                  onPressed: widget.onShare),
+                  onPressed: widget.onShare
+              ),
+
+
+              Visibility(
+                visible: widget.commentSessionModel?.flagged == true,
+                child: GestureDetector(
+                  onTap: () {
+                    if (widget.userId == currentUser?.uid)
+                      deletedAdviseAlertDialog(context);
+                  },
+                  child: Visibility(
+                    visible: widget.userId == currentUser?.uid,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 5),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Pallet.colorPrimaryDark,
+                          )),
+                      child: Row(
+                        children: [
+                          Icon(
+                            widget.commentSessionModel?.flagged == true ? Icons.delete_forever_rounded : Icons.delete_forever_outlined,
+                            color: Pallet.colorPrimaryDark,
+                            size: 15,
+                          ),
+                          SizedBox(width: 2,),
+                          Text(
+                            'Delete',
+                            style: GoogleFonts.lato(
+                                fontSize: 11.0,
+                                color: Pallet.colorPrimaryDark,
+                                fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+
+
+            if (widget.commentSessionModel!.isUserAdmin != true)
+              GestureDetector(
+                onTap: () {
+                  if (widget.commentSessionModel?.flagged == false)
+                    flagAlertDialog(context);
+                  else unflagAlertDialog(context);
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 0, horizontal: 5),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Pallet.colorPrimaryDark,
+                      )),
+                  child: Row(
+                    children: [
+                      Icon(
+                        widget.commentSessionModel?.flagged == true ? Icons.flag : Icons.flag_outlined,
+                        color: Pallet.colorPrimaryDark,
+                        size: 15,
+                      ),
+                      SizedBox(width: 2,),
+                      Text(
+                        'Flag',
+                        style: GoogleFonts.lato(
+                            fontSize: 11.0,
+                            color: Pallet.colorPrimaryDark,
+                            fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
             if (widget.commentSessionModel!.userId == currentUser?.uid)
             CupertinoButton(
@@ -480,7 +732,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                                   color: Pallet.colorSecondary,
                                 ),
                                 Text(
-                                  'Super Edit',
+                                  'Moderate',
                                   style: GoogleFonts.lato(
                                       fontSize: 13.0,
                                       color: Pallet.colorSecondary,

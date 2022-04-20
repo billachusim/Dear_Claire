@@ -236,7 +236,7 @@ class FirebaseServices extends ChangeNotifier {
         .collection(AppString.appFeaturedSessionsComments)
         .orderBy('timeCreated', descending: false)
         .limit(AppString.appCommentLength)
-        .where("flagged", isEqualTo: false)
+        //.where("flagged", isEqualTo: false)
         .snapshots();
   }
 

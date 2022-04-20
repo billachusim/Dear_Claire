@@ -62,7 +62,7 @@ class _SessionPostDetailsScreenState extends State<SessionPostDetailsScreen> {
                       return Column(
                         children: [
                           ..._commentSessionList
-                              .map((element) => CommentWidget(commentSessionModel: element, sessionId: '',))
+                              .map((element) => CommentWidget(commentSessionModel: element, sessionId: '', userId: '',))
                               .toList(),
                         ],
                       );

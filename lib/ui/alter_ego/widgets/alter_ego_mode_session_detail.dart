@@ -130,7 +130,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                                     commentSessionModel: element,
                             onPressed: () => _updateReaction(
                                 element, featuredSessionModel!),
-                            onShare: () => _share(element.message), sessionId: '',
+                            onShare: () => _share(element.message), sessionId: '', userId: '',
                                   ))
                               .toList(),
 

@@ -24,6 +24,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../services/firebase_services.dart';
 import '../../../utils/strings.dart';
+import '../../../widgets/toast.dart';
 import '../../create_session/sound/custom_play_sound_widget.dart';
 import '../../create_session/sound/play_sound_widget.dart';
 import '../../routes/page_router_animation.dart';
@@ -577,6 +578,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
       child: Text("Flag"),
       onPressed:  () {
         sendToFlagged();
+        showToast("Thank You!\n An Alter Ego will check this session for violations.");
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       },
     );
@@ -600,7 +602,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     );
   }
 
-  /// Archive a session
+  /// Flag a session
 
   Future<bool?> sendToFlagged() async {
     final value = true;
