@@ -110,7 +110,7 @@ class UserActivityCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  element.userId == userModel.userId && element.clientId == userModel.userId ?
+                  element.userId == currentUser?.uid && element.clientId == currentUser?.uid ?
                   Text("You ${element.activityType}ed a session",
                       style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
                   : element.userId == userModel.userId && element.clientId == userModel.userId ?

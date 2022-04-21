@@ -42,6 +42,9 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   final screenshotController = ScreenshotController();
   TextEditingController editSessionController = TextEditingController();
 
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
+
   late String visitedUsersID;
   late String visitedEgoName;
 
@@ -327,6 +330,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   ? 'Unfollow'
                                   : 'Follow',
                               onPressed: () async {
+                                saveUserFollowActivity();
                                 if (await firebaseServices.isUserSignIn(context))
                                   firebaseServices.followThisSession(context,
                                       session: _session);
@@ -669,6 +673,40 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     print('Is Flagged?: $value');
     isFlagged = value;
     return value;
+  }
+
+
+  /// Save user comment activity
+
+  Future<void> saveUserFollowActivity() async {
+    final dateCreated = FieldValue.serverTimestamp();
+    final clientNickname = userModel.userType != "REGULAR"
+        ? "Claire"
+        : userModel.nickname ?? 'Claire\'s Darling';
+    final sessionId = theSession?.sessionId;
+    final sessionOwner = theSession?.userId;
+    final sessionVisitor = currentUser?.uid;
+    final activityMessage = "$sessionVisitor followed $sessionOwner's session.";
+    final activityType = "follow";
+    final userActivityId = "";
+    FirebaseFirestore.instance
+        .collection('ego_stream')
+        .add({
+      "activityMessage": activityMessage,
+      "activityType": activityType,
+      "clientId": sessionVisitor,
+      "clientNickname": clientNickname,
+      "dateCreated": dateCreated,
+      "sessionId": sessionId,
+      "userActivityId": userActivityId,
+      "userId": sessionOwner,
+
+    },
+      //SetOptions(merge: true)
+    );
+    logger.d('Successfully saved your follow activity');
+    print('Activity Message: $activityMessage');
+
   }
 
 

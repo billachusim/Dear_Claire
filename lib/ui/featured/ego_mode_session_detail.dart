@@ -197,6 +197,7 @@ class _EgoModeSessionDetailState
     updateSessionTimeLastActivity(session);
     incrementAdviseCount();
     incrementTotalLoveCount();
+    saveUserCommentActivity();
   }
 
 
@@ -228,6 +229,40 @@ class _EgoModeSessionDetailState
     );
     logger.d('Successfully increased total love count');
     print('Session Count is: $FieldValue');
+  }
+
+
+  /// Save user comment activity
+
+  Future<void> saveUserCommentActivity() async {
+    final dateCreated = FieldValue.serverTimestamp();
+    final clientNickname = userModel.userType != "REGULAR"
+        ? "Claire"
+        : userModel.nickname ?? 'Claire\'s Darling';
+    final sessionId = featuredSessionModel?.sessionId;
+    final sessionOwner = featuredSessionModel?.userId;
+    final sessionVisitor = currentUser?.uid;
+    final activityMessage = "$sessionVisitor advised $sessionOwner's session.";
+    final activityType = "comment";
+    final userActivityId = "";
+    FirebaseFirestore.instance
+        .collection('ego_stream')
+        .add({
+      "activityMessage": activityMessage,
+      "activityType": activityType,
+      "clientId": sessionVisitor,
+      "clientNickname": clientNickname,
+      "dateCreated": dateCreated,
+      "sessionId": sessionId,
+      "userActivityId": userActivityId,
+      "userId": sessionOwner,
+
+    },
+      //SetOptions(merge: true)
+    );
+    logger.d('Successfully saved your comment activity');
+    print('Activity Message: $activityMessage');
+
   }
 
 

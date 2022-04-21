@@ -20,7 +20,6 @@ final SharedPreference sharedPreference = SharedPreference();
 class Constant {
   //static const Float LASH_DELAY = 1500L;
   static const String EVENT_OPEN_ALTER_EGO = "EVENT_OPEN_ALTER_EGO";
-  static const String BASE_API_URL = "http://demo9490895.mockable.io";
   static const String INSTAGRAM_PAGE_URL = "https://www.instagram.com/socialfaculty";
   static const String APP_DYNAMIC_LINK =
       "https://claire.page.link/featured";
