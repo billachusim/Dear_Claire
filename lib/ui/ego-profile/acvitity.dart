@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dear_claire/services/user_activity_model.dart';
 import 'package:dear_claire/services/user_model.dart';
 import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
@@ -99,28 +100,48 @@ class UserActivityCard extends StatelessWidget {
                 borderRadius: BorderRadius.all(Radius.circular(8)),
             ),
             padding: EdgeInsets.all(8),
-            child: Row(children: [
-              Icon(
-                Icons.notifications_active_rounded,
-                color: Pallet.colorPrimary,
-                size: 26,
+            child: Row(
+              children: [
+              ClipOval(
+                child: CachedNetworkImage(
+                  width: 30,
+                  height: 30,
+                  imageUrl: element.clientAvatarUrl ?? "",
+                  imageBuilder: (context, imageProvider) => Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: imageProvider,
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                  placeholder: (context, url) =>
+                      CircularProgressIndicator(),
+                  errorWidget: (context, url, error) => Image.asset(
+                    "assets/images/brown_boy_mask.png",
+                    width: 30,
+                    height: 30,
+                  ),
+                ),
               ),
-              SizedBox(width: 8.w,),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  element.userId == currentUser?.uid && element.clientId == currentUser?.uid ?
-                  Text("You ${element.activityType}ed a session",
-                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
-                  : element.userId == userModel.userId && element.clientId == userModel.userId ?
-                  Text("Someone ${element.activityType}ed your session",
-                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
-                  : Text("${element.clientNickname} ${element.activityType}ed on this session",
-                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,)),
-                  Text(timeConverter(element.dateCreated!),
-                      style: TextStyle(fontSize: 11.sp, color: Pallet.colorTextGray)),
-                ],)
+              SizedBox(width: 4.w,),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    element.userId == currentUser?.uid && element.clientId == currentUser?.uid ?
+                    Text("You ${element.activityType}ed a session",
+                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Pallet.colorSecondaryDark))
+                    : element.userId == userModel.userId && element.clientId == userModel.userId ?
+                    Text("Someone ${element.activityType}ed your session",
+                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Pallet.colorSecondaryDark))
+                    : Text("${element.clientNickname} ${element.activityType}ed on this session",
+                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Pallet.colorSecondaryDark)),
+                    Text(timeConverter(element.dateCreated!),
+                        style: TextStyle(fontSize: 11.sp, color: Pallet.colorTextGray)),
+                  ],),
+              )
             ],),
           ),
         ),

@@ -980,7 +980,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                     return ListTile(
                                       leading: ClipOval(
                                         child: CachedNetworkImage(
-                                          width: 35,
+                                          width: 40,
                                           height: 40,
                                           imageUrl: data['egoImage'].toString(),
                                           imageBuilder: (context, imageProvider) => Container(

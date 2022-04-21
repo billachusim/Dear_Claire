@@ -689,11 +689,15 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     final activityMessage = "$sessionVisitor followed $sessionOwner's session.";
     final activityType = "follow";
     final userActivityId = "";
+    final avatarUrl = userModel.userType != "REGULAR"
+        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
+        : userModel.avatarUrl.toString();
     FirebaseFirestore.instance
         .collection('ego_stream')
         .add({
       "activityMessage": activityMessage,
       "activityType": activityType,
+      "clientAvatarUrl": avatarUrl,
       "clientId": sessionVisitor,
       "clientNickname": clientNickname,
       "dateCreated": dateCreated,

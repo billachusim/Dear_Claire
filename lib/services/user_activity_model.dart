@@ -9,6 +9,7 @@ class UserActivityModel {
   Timestamp? dateCreated;
   String? activityType;
   String? sessionId;
+  String? clientAvatarUrl;
 
 UserActivityModel({
     this.userActivityId,
@@ -19,6 +20,7 @@ UserActivityModel({
     this.dateCreated,
     this.activityType,
     this.sessionId,
+    this.clientAvatarUrl,
   });
 
   factory UserActivityModel.fromJson(dynamic json) {
@@ -30,7 +32,8 @@ UserActivityModel({
       activityMessage: json['activityMessage'] ?? '',
       dateCreated: json['dateCreated'] ?? '',
       activityType: json['activityType'] ?? '',
-      sessionId: json['sessionId'],
+      sessionId: json['sessionId'] ?? '',
+      clientAvatarUrl: json['avatarUrl'] ?? '',
     );
   }
 }
