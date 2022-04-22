@@ -14,12 +14,19 @@ import '../../utils/strings.dart';
 import '../routes/page_router_animation.dart';
 import '../routes/routes.dart';
 
-class ClaireLoves extends StatefulWidget {
+class VisitedUserClaireLoves extends StatefulWidget {
+  final String visitedUsersID;
+  final String visitedEgoName;
+
+  VisitedUserClaireLoves(
+      {Key? key, required this.visitedUsersID, required this.visitedEgoName})
+      : super(key: key);
+
   @override
-  _ClaireLovesState createState() => _ClaireLovesState();
+  _VisitedUserClaireLovesState createState() => _VisitedUserClaireLovesState();
 }
 
-class _ClaireLovesState extends State<ClaireLoves> {
+class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
   var _withdrawnLoveCount;
   var _currentLoveCount;
   var _totalLoveCount;
@@ -66,7 +73,6 @@ class _ClaireLovesState extends State<ClaireLoves> {
     print('Requested love Count is: $withdrawnLoveCount');
     print('Current love Count is: $_currentLoveCount');
 
-
   }
 
 
@@ -81,7 +87,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
     _currentWithdrawal = _toRequest;
     FirebaseFirestore.instance
         .collection("users")
-        .doc(currentUser!.uid)
+        .doc(widget.visitedUsersID)
         .set({
       "withdrawnLoveCount": withdrawnLoveCount,
       "currentLoveCount": _currentLoveCount,
@@ -123,46 +129,28 @@ class _ClaireLovesState extends State<ClaireLoves> {
                   Container(
                     alignment: Alignment.topLeft,
                     child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          FutureBuilder<
-                              DocumentSnapshot<Map<String, dynamic>>>(
-                            future: FirebaseFirestore.instance
-                                .collection("users")
-                                .doc(currentUser?.uid)
-                                .get(),
-                            builder: (_, snapshot) {
-                              if (snapshot.hasData) {
-                                var data = snapshot.data!.data();
-                                var egoName = data?["nickname"] ?? "";
-                                debugPrint(
-                                    " This is the name of the withdrawer ${egoName.toString()}");
-                                return Text(
-                                  egoName.toString() + '\'s',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              }
-
-                              return Center(
-                                  child: CircularProgressIndicator());
-                            },
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          widget.visitedEgoName + '\'s',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Pallet.colorWhite,
                           ),
+                        ),
 
-                          SizedBox(width: 4,),
+                        SizedBox(width: 4,),
 
-                          Text(
-                            "Convert",
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              color: Pallet.colorWhite,
-                            ),
-                          ),
-                        ]
+                        Text(
+                        "Convert",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Pallet.colorWhite,
+                        ),
+                      ),
+                    ]
                     ),
                   ),
 
@@ -184,7 +172,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                 borderRadius: BorderRadius.circular(10)
                             ),
                             child: Text(
-                            "Claire converts your data to Loves for sharing time with her and positive vibes around the app.",
+                              "Claire converts your data to Loves for sharing time with her and positive vibes around the app.",
                               textAlign: TextAlign.justify,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
@@ -223,7 +211,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(currentUser?.uid)
+                                      .doc(widget.visitedUsersID)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
@@ -290,7 +278,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(currentUser?.uid)
+                                      .doc(widget.visitedUsersID)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
@@ -406,7 +394,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(currentUser?.uid)
+                                      .doc(widget.visitedUsersID)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
@@ -475,16 +463,31 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
                   Container(
                     alignment: Alignment.topLeft,
-                    child: Text(
-                      "Withdraw",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        color: Pallet.colorWhite,
-                      ),
+                    child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.visitedEgoName + '\'s',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: Pallet.colorWhite,
+                            ),
+                          ),
+
+                          SizedBox(width: 4,),
+
+                          Text(
+                            "Balance",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              color: Pallet.colorWhite,
+                            ),
+                          ),
+                        ]
                     ),
                   ),
-
 
 
                   Container(
@@ -543,7 +546,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(currentUser?.uid)
+                                      .doc(widget.visitedUsersID)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
@@ -601,7 +604,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(currentUser?.uid)
+                                      .doc(widget.visitedUsersID)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
@@ -737,7 +740,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(currentUser?.uid)
+                                      .doc(widget.visitedUsersID)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {

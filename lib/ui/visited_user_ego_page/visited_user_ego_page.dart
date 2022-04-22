@@ -3,6 +3,7 @@ import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/ego-profile/claire_loves.dart';
 import 'package:dear_claire/ui/featured/widget/custom_post_details_screen.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_profile_page_model.dart';
+import 'package:dear_claire/ui/visited_user_ego_page/visited_user_claireloves.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_user_model.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
@@ -1370,7 +1371,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
 
 
-                        ClaireLoves(),
+                        VisitedUserClaireLoves(visitedEgoName: visitedUser?.nickname.toString() ?? '', visitedUsersID: visitedUser?.userId.toString() ?? '',),
                       ],
                     ),
                   )
@@ -1417,28 +1418,48 @@ class VisitedUserActivityCard extends StatelessWidget {
               borderRadius: BorderRadius.all(Radius.circular(8)),
             ),
             padding: EdgeInsets.all(8),
-            child: Row(children: [
-              Icon(
-                Icons.notifications_active_rounded,
-                color: Pallet.colorPrimary,
-                size: 26,
+            child: Row(
+              children: [
+                ClipOval(
+                child: CachedNetworkImage(
+                  width: 30,
+                  height: 30,
+                  imageUrl: element.clientAvatarUrl ?? "",
+                  imageBuilder: (context, imageProvider) => Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: imageProvider,
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                  ),
+                  placeholder: (context, url) =>
+                      CircularProgressIndicator(),
+                  errorWidget: (context, url, error) => Image.asset(
+                    "assets/images/brown_boy_mask.png",
+                    width: 30,
+                    height: 30,
+                  ),
+                ),
               ),
-              SizedBox(width: 8.w,),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  element.userId == userModel.userId && element.clientId == userModel.userId ?
-                  Text("You ${element.activityType}ed on this session",
-                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
-                      : element.userId == userModel.userId && element.clientId == userModel.userId ?
-                  Text("Someone ${element.activityType}ed on your session",
-                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
-                      : Text("${element.clientNickname} ${element.activityType}ed on this session",
-                      style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,)),
-                  Text(timeConverter(element.dateCreated!),
-                      style: TextStyle(fontSize: 11.sp, color: Pallet.colorTextGray)),
-                ],)
+              SizedBox(width: 4.w,),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    element.userId == userModel.userId && element.clientId == userModel.userId ?
+                    Text("You ${element.activityType}ed on this session",
+                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
+                        : element.userId == userModel.userId && element.clientId == userModel.userId ?
+                    Text("Someone ${element.activityType}ed on your session",
+                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
+                        : Text("${element.clientNickname} ${element.activityType}ed on this session",
+                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,)),
+                    Text(timeConverter(element.dateCreated!),
+                        style: TextStyle(fontSize: 11.sp, color: Pallet.colorTextGray)),
+                  ],),
+              )
             ],),
           ),
         ),
