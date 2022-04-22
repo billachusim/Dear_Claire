@@ -92,6 +92,41 @@ class ChatRoomWidget extends StatelessWidget {
                   color: Pallet.colorWhite,
                   fontWeight: FontWeight.normal),
             ),
+
+            SizedBox(height: 8,),
+
+
+            Align(
+              alignment: Alignment.center,
+              child: GestureDetector(
+                child: Container(
+                  padding: EdgeInsets.all(5),
+                  width: double.infinity,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20.0),
+                    gradient: LinearGradient(
+                      begin: Alignment(-0.37857140550652835, -1.9473685559777252),
+                      end: Alignment(1.2428571464417884, 2.526316110739735),
+                      stops: [0.0, 0.856177031993866, 1.0],
+                      colors: [
+                        Pallet.colorWhite,
+                        Pallet.colorSecondary,
+                        Pallet.colorSecondaryDark,
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Text('ENTER',
+                      style: GoogleFonts.lato(
+                          fontSize: 15.0,
+                          color: Pallet.colorSecondaryDark,
+                          fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
