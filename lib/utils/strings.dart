@@ -256,6 +256,12 @@ class AppString{
       "Please use the short form below to request cash once a month in order to keep you going too!\n"
       "Note: Claire reserves the right to increase or decrease your current love count during the course of this verification process which could last from two to seven days.";
 
+  static const String send_clairelove_form_header = "Hello Darling🌺\n\n"
+      "This is so nice of you trying to send love to another user.\n"
+      "The amount of love sent will be deducted from your current loves\n\n"
+      "Note: You can only send love once a month and that also means you can't make a withdrawal that same month.";
+
+
   static const String requestLoveSwitchText7 = "Agree that Claire reserves the right to increase, decrease, delay, withhold and deny a cash request at anytime?";
   static const String request_clairelove_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Admin and cue in for final verification.";
 

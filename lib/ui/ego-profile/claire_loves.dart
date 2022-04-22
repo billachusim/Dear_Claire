@@ -26,7 +26,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
   var _currentWithdrawal;
   var _toRequest;
   var _rate;
-  var _userType;
+  var _rateBadge;
   late String _userId;
 
   bool _showRequestButton = false;
@@ -55,15 +55,19 @@ class _ClaireLovesState extends State<ClaireLoves> {
   /// Set and show current withdrawal available to the user.
 
   void setWithdrawalAmount() {
+    final rate = _rateBadge == 'Ego Rate'? 2 :
+    _rateBadge == 'Alter Ego Rate'? 3 :
+    _rateBadge == 'Super Ego Rate'? 5 :
+    3;
     final currentWithdrawal = int.parse(_amountController.text);
     final totalWithdrawal = _withdrawnLoveCount! + currentWithdrawal;
     final withdrawnLoveCount = currentWithdrawal + totalWithdrawal;
     _currentLoveCount = _totalLoveCount - totalWithdrawal;
-    _toRequest = currentWithdrawal * int.parse(_rate.toString());
+    _toRequest = currentWithdrawal * rate;
     _currentWithdrawal = _toRequest;
 
     logger.d('Got the request love count');
-    print('Requested love Count is: $withdrawnLoveCount');
+    print('Withdrawn love Count is: $withdrawnLoveCount');
     print('Current love Count is: $_currentLoveCount');
 
 
@@ -73,11 +77,15 @@ class _ClaireLovesState extends State<ClaireLoves> {
   /// Ascertain withdrawn available love for the user.
 
   void ascertainWithdrawnLoveCount() {
+    final rate = _rateBadge == 'Ego Rate'? 2 :
+    _rateBadge == 'Alter Ego Rate'? 3 :
+    _rateBadge == 'Super Ego Rate'? 5 :
+    3;
     final currentWithdrawal = int.parse(_amountController.text);
     final totalWithdrawal = _withdrawnLoveCount! + currentWithdrawal;
     final withdrawnLoveCount = currentWithdrawal + totalWithdrawal;
     _currentLoveCount = _totalLoveCount - totalWithdrawal;
-    _toRequest = currentWithdrawal * int.parse(_rate.toString());
+    _toRequest = currentWithdrawal * rate;
     _currentWithdrawal = _toRequest;
     FirebaseFirestore.instance
         .collection("users")
@@ -125,34 +133,6 @@ class _ClaireLovesState extends State<ClaireLoves> {
                     child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          FutureBuilder<
-                              DocumentSnapshot<Map<String, dynamic>>>(
-                            future: FirebaseFirestore.instance
-                                .collection("users")
-                                .doc(currentUser?.uid)
-                                .get(),
-                            builder: (_, snapshot) {
-                              if (snapshot.hasData) {
-                                var data = snapshot.data!.data();
-                                var egoName = data?["nickname"] ?? "";
-                                debugPrint(
-                                    " This is the name of the withdrawer ${egoName.toString()}");
-                                return Text(
-                                  egoName.toString() + '\'s',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              }
-
-                              return Center(
-                                  child: CircularProgressIndicator());
-                            },
-                          ),
-
-                          SizedBox(width: 4,),
 
                           Text(
                             "Convert",
@@ -435,7 +415,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                             ),
                             SizedBox(height: 2,),
                             Text(
-                              "Total Loves",
+                              "Loves",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
@@ -742,12 +722,11 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
-                                      var userType = data?["userType"] ?? "REGULAR";
-                                      _rate = userType == 'REGULAR'? '2' :
-                                      userType == 'ADMIN'? '3' :
-                                      userType == 'SUPER_ADMIN'? '5' :
-                                      '2';
-                                      _userType = userType;
+                                      var userType = data?["userType"];
+                                      _rate = userType == 'REGULAR'? 2 :
+                                      userType == 'ADMIN'? 3 :
+                                      userType == 'SUPER_ADMIN'? 5 :
+                                      3;
                                       debugPrint(
                                           " This is the ego rate used for conversion for this user ${_rate.toString()}");
                                       return Text(
@@ -767,17 +746,36 @@ class _ClaireLovesState extends State<ClaireLoves> {
                               ),
                             ),
                             SizedBox(height: 2,),
-                            Text(
-                              _userType == 'REGULAR'? 'Ego Rate' :
-                              _userType == 'ADMIN'? 'AlterEgo Rate' :
-                              _userType == 'SUPER_ADMIN'? 'SuperEgo Rate' :
-                              'Ego Rate',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
+                            FutureBuilder<
+                                DocumentSnapshot<Map<String, dynamic>>>(
+                              future: FirebaseFirestore.instance
+                                  .collection("users")
+                                  .doc(currentUser?.uid)
+                                  .get(),
+                              builder: (_, snapshot) {
+                                if (snapshot.hasData) {
+                                  var data = snapshot.data!.data();
+                                  var userType = data?["userType"];
+                                  _rateBadge = userType == 'REGULAR'? 'Ego Rate' :
+                                  userType == 'ADMIN'? 'Alter Ego Rate' :
+                                  userType == 'SUPER_ADMIN'? 'Super Ego Rate' :
+                                  'Ego Rate';
+                                  debugPrint(
+                                      " This is the rate badge for for this user ${_rateBadge.toString()}");
+                                  return Text(
+                                    _rateBadge.toString(),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                  );
+                                }
+
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              },
                             ),
                           ],
                         ),

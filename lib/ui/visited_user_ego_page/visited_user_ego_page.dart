@@ -1243,7 +1243,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        "Claire Love",
+                                        "Loves",
                                         style: TextStyle(
                                           color: currentTabIndex != 2
                                               ? Pallet.colorSecondary

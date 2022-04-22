@@ -2,6 +2,7 @@ import 'dart:core';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/ego-profile/request_claire_love_form.dart';
+import 'package:dear_claire/ui/visited_user_ego_page/send_clairelove_form.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -63,14 +64,11 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
 
   void setWithdrawalAmount() {
     final currentWithdrawal = int.parse(_amountController.text);
-    final totalWithdrawal = _withdrawnLoveCount! + currentWithdrawal;
-    final withdrawnLoveCount = currentWithdrawal + totalWithdrawal;
-    _currentLoveCount = _totalLoveCount - totalWithdrawal;
     _toRequest = currentWithdrawal * int.parse(_rate.toString());
     _currentWithdrawal = _toRequest;
 
     logger.d('Got the request love count');
-    print('Requested love Count is: $withdrawnLoveCount');
+    print('Requested love Count is: $currentWithdrawal');
     print('Current love Count is: $_currentLoveCount');
 
   }
@@ -82,7 +80,6 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
     final currentWithdrawal = int.parse(_amountController.text);
     final totalWithdrawal = _withdrawnLoveCount! + currentWithdrawal;
     final withdrawnLoveCount = currentWithdrawal + totalWithdrawal;
-    _currentLoveCount = _totalLoveCount - totalWithdrawal;
     _toRequest = currentWithdrawal * int.parse(_rate.toString());
     _currentWithdrawal = _toRequest;
     FirebaseFirestore.instance
@@ -143,7 +140,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                         SizedBox(width: 4,),
 
                         Text(
-                        "Convert",
+                        "Loves",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w600,
@@ -216,11 +213,14 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
-                                      var sessionCount = data?["sessionCount"] ?? "0";
+                                      var totalLoveCount = data?["totalLoveCount"] ?? "0";
+                                      String userId = data?["userId"] ?? "";
+                                      _totalLoveCount = totalLoveCount;
+                                      _userId = userId;
                                       debugPrint(
-                                          " This is the Total number of SESSIONS by this user ${sessionCount.toString()}");
+                                          " This is the Total number of LOVES earned by this user ${totalLoveCount.toString()}");
                                       return Text(
-                                        sessionCount.toString(),
+                                        totalLoveCount.toString(),
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: 16,
@@ -237,7 +237,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                             ),
                             SizedBox(height: 2,),
                             Text(
-                              "Sessions",
+                              "Total",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
@@ -251,7 +251,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                         SizedBox(width: 5,),
 
                         Text(
-                          "+",
+                          "-",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
@@ -283,11 +283,12 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
-                                      var adviseCount = data?["adviseCount"] ?? "0";
+                                      var withdrawnLoveCount = data?["withdrawnLoveCount"] ?? "0";
+                                      _withdrawnLoveCount = withdrawnLoveCount;
                                       debugPrint(
-                                          " This is the Total number of ADVISES by this user ${adviseCount.toString()}");
+                                          " This is the Total number of love withdrawals by this user ${withdrawnLoveCount.toString()}");
                                       return Text(
-                                        adviseCount.toString(),
+                                        withdrawnLoveCount.toString(),
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: 16,
@@ -304,7 +305,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                             ),
                             SizedBox(height: 2,),
                             Text(
-                              "Advises",
+                              "Withdrawn",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
@@ -316,55 +317,6 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                         ),
 
                         SizedBox(width: 5,),
-
-                        Text(
-                          "x",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 40,
-                            color: Colors.white,
-                          ),
-                        ),
-
-                        SizedBox(width: 4,),
-
-                        Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Container(
-                                padding: EdgeInsets.only(top: 7),
-                                height: 30,
-                                width: 60,
-                                decoration: BoxDecoration(
-                                    color: Pallet.colorWhite,
-                                    borderRadius: BorderRadius.circular(5)
-                                ),
-                                child: Text(
-                                  "N10",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 2,),
-                            Text(
-                              "Rate",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(width: 4,),
 
                         Text(
                           "=",
@@ -399,14 +351,12 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
-                                      var totalLoveCount = data?["totalLoveCount"] ?? "0";
-                                      String userId = data?["userId"] ?? "";
-                                      _totalLoveCount = totalLoveCount;
-                                      _userId = userId;
+                                      var currentLoveCount = data?["currentLoveCount"] ?? "0";
+                                      var _currentLoveCount = currentLoveCount;
                                       debugPrint(
-                                          " This is the Total number of LOVES earned by this user ${totalLoveCount.toString()}");
+                                          " This is the CURRENT loves for this user ${currentLoveCount.toString()}");
                                       return Text(
-                                        totalLoveCount.toString(),
+                                        currentLoveCount.toString(),
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: 16,
@@ -423,7 +373,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                             ),
                             SizedBox(height: 2,),
                             Text(
-                              "Total Loves",
+                              "Current",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
@@ -467,18 +417,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            widget.visitedEgoName + '\'s',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              color: Pallet.colorWhite,
-                            ),
-                          ),
-
-                          SizedBox(width: 4,),
-
-                          Text(
-                            "Balance",
+                            "Send Love",
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
@@ -505,8 +444,8 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                                 borderRadius: BorderRadius.circular(10)
                             ),
                             child: Text(
-                              "Claire pays you back the cost of vibes and times you spent on the app. "
-                                  "Note: Only Alter and Super Egos can request cash for now.",
+                              "Claire allows you to send some love anonymously to whomever your ego desires. "
+                                  "Note: Only Alter and Super Egos can send loves for now.",
                               textAlign: TextAlign.left,
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
@@ -546,7 +485,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(widget.visitedUsersID)
+                                      .doc(currentUser?.uid)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
@@ -604,7 +543,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
                                       .collection("users")
-                                      .doc(widget.visitedUsersID)
+                                      .doc(currentUser?.uid)
                                       .get(),
                                   builder: (_, snapshot) {
                                     if (snapshot.hasData) {
@@ -891,12 +830,11 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                           onPressed: (){
                             ascertainWithdrawnLoveCount();
                             PageRouter.gotoWidget(
-                                RequestClaireLoveForm(
-                                  currentWithdrawal: _currentWithdrawal.toString(),
-                                  totalLoveCount: _totalLoveCount.toString(),
+                                SendClaireLoveForm(
+                                  amountToSend: _currentWithdrawal.toString(),
                                   userId: _userId.toString(),
-                                  currentWithdrawable: _currentLoveCount.toString(),
-                                  totalWithdrawn: _withdrawnLoveCount.toString(),
+                                  visitedUsersId: widget.visitedUsersID,
+                                  visitedUser: widget.visitedEgoName,
                                 ), context);
 
                             print("Requested Amount Is::: $_currentWithdrawal");
