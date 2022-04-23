@@ -197,6 +197,29 @@ class AdState {
     }
   }
 
+  // Create Search Page middle banner ad unit.
+  String get searchPageMiddleBannerAdUnitId2 {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/1791012053";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/4503099019";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
+  // Create Search Page bottom banner ad unit.
+  String get searchPageBottomBannerAdUnitId2 {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/9286358697";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/7590133648";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
 
 
 }

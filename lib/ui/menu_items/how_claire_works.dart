@@ -377,7 +377,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
       scheme: 'mailto',
       path: 'dearclaireapp@gmail.com',
       query: encodeQueryParameters(
-          <String, String>{'subject': 'Feedback From Claire'}),
+          <String, String>{'subject': 'Questions About Dear Claire'}),
     );
 
     launch(emailLaunchUri.toString());

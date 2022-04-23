@@ -354,6 +354,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                 ),
                 isTyping == true
                     ? FloatingActionButton(
+                  heroTag: "Write",
                         onPressed: () {
                           if (_controller.text.isNotEmpty)
                             widget.onTap(_controller.text, _recordFile.toString());
@@ -370,6 +371,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                           height: 25,
                         ))
                     : FloatingActionButton(
+                  heroTag: "Record",
                         onPressed: () async {
                           var data = await Navigator.push(
                               context,

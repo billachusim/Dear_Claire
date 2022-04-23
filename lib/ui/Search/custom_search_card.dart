@@ -36,7 +36,7 @@ class CustomSearchCard extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: Container(
         width: 270,
-        height: 192,
+        height: 195,
         margin: EdgeInsets.symmetric(vertical: 2, horizontal: 3),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
         decoration: BoxDecoration(
@@ -46,109 +46,111 @@ class CustomSearchCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: (){
-                    visitedUsersID = element.userId!;
-                    visitedEgoName = element.userNickname!;
-                    String thisEgoName = visitedEgoName;
-                    String thisUser = visitedUsersID;
-                    PageRouter.gotoWidget(
-                        VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
-                        context);
-                    print("Visited User ID::: $visitedUsersID");
-                  },
-                  child: CachedNetworkImage(
-                      width: 33,
-                      height: 33,
-                      imageUrl: element.userAvatarUrl!,
-                      imageBuilder: (context, imageProvider) => Container(
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: imageProvider,
-                            fit: BoxFit.fill,
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: (){
+                      visitedUsersID = element.userId!;
+                      visitedEgoName = element.userNickname!;
+                      String thisEgoName = visitedEgoName;
+                      String thisUser = visitedUsersID;
+                      PageRouter.gotoWidget(
+                          VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                          context);
+                      print("Visited User ID::: $visitedUsersID");
+                    },
+                    child: CachedNetworkImage(
+                        width: 33,
+                        height: 33,
+                        imageUrl: element.userAvatarUrl!,
+                        imageBuilder: (context, imageProvider) => Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: imageProvider,
+                              fit: BoxFit.fill,
+                            ),
                           ),
                         ),
-                      ),
-                      placeholder: (context, url) => CircularProgressIndicator(),
-                      errorWidget: (context, url, error) => Image.asset(
-                        "assets/images/brown_boy_mask.png",
-                        width: 20,
-                        height: 20,
-                      ) //Icon(Icons.error),
+                        placeholder: (context, url) => CircularProgressIndicator(),
+                        errorWidget: (context, url, error) => Image.asset(
+                          "assets/images/brown_boy_mask.png",
+                          width: 20,
+                          height: 20,
+                        ) //Icon(Icons.error),
+                    ),
                   ),
-                ),
-                SizedBox(
-                  width: 6,
-                ),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                        onTap: (){
-                          visitedUsersID = element.userId!;
-                          visitedEgoName = element.userNickname!;
-                          String thisEgoName = visitedEgoName;
-                          String thisUser = visitedUsersID;
-                          PageRouter.gotoWidget(
-                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
-                              context);
-                          print("Visited User ID::: $visitedUsersID");
-                        },
-                        child: Text(element.userNickname!,
+                  SizedBox(
+                    width: 6,
+                  ),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GestureDetector(
+                          onTap: (){
+                            visitedUsersID = element.userId!;
+                            visitedEgoName = element.userNickname!;
+                            String thisEgoName = visitedEgoName;
+                            String thisUser = visitedUsersID;
+                            PageRouter.gotoWidget(
+                                VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                context);
+                            print("Visited User ID::: $visitedUsersID");
+                          },
+                          child: Text(element.userNickname!,
+                              textAlign: TextAlign.start,
+                              maxLines: 1,
+                              style: GoogleFonts.lato(
+                                  fontSize: 15.0,
+                                  color: Pallet.colorWhite,
+                                  fontWeight: FontWeight.w700)),
+                        ),
+                        SizedBox(
+                          height: 1,
+                        ),
+                        Text(timeConverter(element.timeCreated!),
                             textAlign: TextAlign.start,
                             maxLines: 1,
                             style: GoogleFonts.lato(
-                                fontSize: 15.0,
+                                fontSize: 10.0,
+                                color: Colors.white70,
+                                fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+
+                        Text(Mood.getMood(element.moodId) ?? "${Mood.getMood(1)}",
+                            textAlign: TextAlign.end,
+                            maxLines: 1,
+                            style: GoogleFonts.lato(
+                                fontSize: 11.0,
                                 color: Pallet.colorWhite,
                                 fontWeight: FontWeight.w700)),
-                      ),
-                      SizedBox(
-                        height: 1,
-                      ),
-                      Text(timeConverter(element.timeCreated!),
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 10.0,
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-
-                      Text(Mood.getMood(element.moodId) ?? "${Mood.getMood(1)}",
-                          textAlign: TextAlign.end,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 11.0,
-                              color: Pallet.colorWhite,
-                              fontWeight: FontWeight.w700)),
-                      SizedBox(
-                        height: 1,
-                      ),
-                      Text(element.location ?? "",
-                          textAlign: TextAlign.end,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 12.0,
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w700)
-                      ),
-                    ],
-                  ),
-                )
-              ],
+                        SizedBox(
+                          height: 1,
+                        ),
+                        Text(element.location ?? "",
+                            textAlign: TextAlign.end,
+                            maxLines: 1,
+                            style: GoogleFonts.lato(
+                                fontSize: 12.0,
+                                color: Colors.white70,
+                                fontWeight: FontWeight.w700)
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
             ),
             SizedBox(
               height: 3,
