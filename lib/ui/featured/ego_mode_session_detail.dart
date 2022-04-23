@@ -12,7 +12,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
-
+import 'package:timeago/timeago.dart' as timeago;
 import '../../utils/color.dart';
 import '../../widgets/comment_widget.dart';
 import '../splash_screen/custom_rotate_bacground.dart';
@@ -195,9 +195,29 @@ class _EgoModeSessionDetailState
         sender: _userModel.nickname.toString(),
         map: _commentModel.toJson());
     updateSessionTimeLastActivity(session);
-    incrementAdviseCount();
-    incrementTotalLoveCount();
+    isOriginalAdvise(context, comment, session);
     saveUserCommentActivity();
+  }
+
+
+
+  /// checks if advise meets original advise rules...
+  /// if it does, then increment necessary counts.
+  Future<bool> isOriginalAdvise(BuildContext context, String adviseText, Session session) async {
+    final sessionTime = session.timeCreated?.toDate();
+    final _time = timeago.format(sessionTime!);
+
+    final _advise = adviseText.toString();
+    final _length = _advise.length;
+    if (_advise.contains("darling"))
+      if (_length >= 20)
+
+      {
+        incrementAdviseCount();
+        incrementTotalLoveCount();
+        return true;
+      }
+    return false;
   }
 
 
@@ -280,9 +300,7 @@ class _EgoModeSessionDetailState
       'timeLastActivity': FieldValue.serverTimestamp(),
     },
     );
-    logger.d('Successfully increased advise count');
-    print('Session Count is: $FieldValue');
-
+    logger.d('Successfully updated time of last activity');
   }
 
   void _updateReaction(

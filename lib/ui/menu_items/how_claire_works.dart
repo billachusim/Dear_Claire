@@ -200,6 +200,8 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                 ))),
                     _alterEgo(context),
                     SizedBox(height: 5),
+                    _whatCounts(context),
+                    SizedBox(height: 5),
                     _appreciateClaireWidget(context),
                     SizedBox(height: 5),
                     _feedBackButton(context),
@@ -254,6 +256,42 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
             ])));
   }
 
+  _whatCounts(BuildContext context) {
+    return InkWell(
+        onTap: () {launchEmailApp();} ,
+        child: Container(
+            margin: EdgeInsets.all(10),
+            padding:EdgeInsets.all(20),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: Color.fromRGBO(87, 38, 2, 1.0),
+            ),
+            child: Column(
+              children: [
+                Center(
+                    child: Text("How Sessions/Advises Are Counted",
+                        style: GoogleFonts.lato(
+                            fontSize: 18.0,
+                            color: Pallet.colorWhite,
+                            fontWeight: FontWeight.w700)
+                    )
+                ),
+                Text("\nFor a diary session to be counted, it must contain the phrase Dear Claire and must be more than 50 characters\n\n"
+                    "For an advise to be counted, it must contain the word Darling, must be up to 20 characters and must be sent within 2 days of the diary session.\n\n"
+                    "Claire reserves the right to increase or decrease session and advise counts during the course of cash out verifications.",
+                    style: GoogleFonts.lato(
+                        fontSize: 15.0,
+                        color: Pallet.colorWhite,
+                        fontWeight: FontWeight.w600)
+                )
+              ],
+            )
+        )
+    );
+  }
+
+
   Widget _appreciateClaireWidget(BuildContext context) {
     return InkWell(
         onTap: () {
@@ -271,11 +309,13 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
             ),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text("Send Love To Claire\n",
-                  style: GoogleFonts.lato(
-                      fontSize: 17.0,
-                      color: Pallet.colorWhite,
-                      fontWeight: FontWeight.w700)),
+              Center(
+                child: Text("Send Love To Claire\n",
+                    style: GoogleFonts.lato(
+                        fontSize: 17.0,
+                        color: Pallet.colorWhite,
+                        fontWeight: FontWeight.w700)),
+              ),
               SizedBox(
                 height: 10,
               ),
@@ -335,7 +375,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
 
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
-      path: 'dearclaire@gmail.com',
+      path: 'dearclaireapp@gmail.com',
       query: encodeQueryParameters(
           <String, String>{'subject': 'Feedback From Claire'}),
     );

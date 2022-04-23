@@ -3,7 +3,7 @@ description: A secret diary chat.
 
 publish_to: 'none'
 
-version: 7.0.0+70
+version: 7.1.0+71
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -71,6 +71,8 @@ dependencies:
   screenshot: ^1.2.3
   image_gallery_saver: ^1.6.9
   path_provider: ^2.0.9
+  timeago: ^3.2.2
+
 
 dev_dependencies:
   flutter_test:

@@ -156,6 +156,23 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     _interstitialAd?.dispose();
   }
 
+
+  /// checks if advise meets original advise rules...
+  /// if it does, then increment necessary counts.
+  Future<bool> isOriginalSession(BuildContext context, String sessionText) async {
+    final _session = sessionText.toString();
+    final _length = _session.length;
+    if (_session.contains("Dear"))
+      if (_session.contains("Claire"))
+        if (_length >= 50)
+      {
+        incrementSessionCount();
+        incrementTotalLoveCount();
+        return true;
+      }
+    return false;
+  }
+
   /// Increase session count when user creates new session.
 
   Future<void> incrementSessionCount() async {
@@ -199,7 +216,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     },
       SetOptions(merge: true),
     );
-    logger.d('Increased advise count');
+    logger.d('Got the current love count');
     print('Current love Count is: $currentLoveCount');
 
   }
@@ -958,8 +975,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     Hive.box("draft").clear();
     categorize(sessionObject);
 
-    incrementSessionCount();
-    incrementTotalLoveCount();
+    //incrementSessionCount();
+    //incrementTotalLoveCount();
+    isOriginalSession(context, sessionTextEditingController.text);
     ascertainCurrentLoveCount();
 
       _showInterstitialAd();

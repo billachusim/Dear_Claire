@@ -14,6 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../services/firebase_services.dart';
 
@@ -188,8 +189,26 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         map: _commentModel.toJson());
 
     updateSessionTimeLastActivity(session);
-    incrementAdviseCount();
-    incrementTotalLoveCount();
+    isOriginalAdvise(context, comment, session);
+  }
+
+  /// checks if advise meets original advise rules...
+  /// if it does, then increment necessary counts.
+  Future<bool> isOriginalAdvise(BuildContext context, String adviseText, Session session) async {
+    final sessionTime = session.timeCreated?.toDate();
+    final _time = timeago.format(sessionTime!);
+
+    final _advise = adviseText.toString();
+    final _length = _advise.length;
+    if (_advise.contains("darling"))
+      if (_length >= 20)
+
+      {
+        incrementAdviseCount();
+        incrementTotalLoveCount();
+        return true;
+      }
+    return false;
   }
 
 
@@ -198,16 +217,15 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
 
   Future<void> incrementAdviseCount() async {
     FirebaseFirestore.instance
-        .collection("user_comment_counters")
+        .collection("users")
         .doc(currentUser?.uid)
         .set({
-      "numberOfComments": FieldValue.increment(1),
+      "adviseCount": FieldValue.increment(1),
     },
       SetOptions(merge: true),
-
     );
-    logger.d('Successfully increased advise count');
-    print('Session Count is: $FieldValue');
+    logger.d('Increased advise count');
+    print('Advise Count is: $FieldValue');
 
   }
 
@@ -216,7 +234,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
   Future<void> incrementTotalLoveCount() async {
     FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
       {
-        'totalLoveCount': FieldValue.increment(20),
+        'totalLoveCount': FieldValue.increment(10),
       },
       SetOptions(merge: true),
     );
@@ -235,8 +253,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
       'respondentUserId': currentUser!.uid,
     },
     );
-    logger.d('Successfully increased advise count');
-    print('Session Count is: $FieldValue');
+    logger.d('Successfully updated time of last activity');
 
   }
 

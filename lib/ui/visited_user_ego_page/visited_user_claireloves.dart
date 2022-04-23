@@ -848,7 +848,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(25)),
                           ),
-                          child: Text("Request Cash  🌺",
+                          child: Text("Send Love  🌺",
                               style: GoogleFonts.lato(
                                   fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
