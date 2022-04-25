@@ -20,11 +20,115 @@ class _LoginPage extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final FirebaseServices _firebaseServices = FirebaseServices();
 
+  late String _theEmail;
+
 
   void _launchClairePolicySite() async =>
       await canLaunch("https://sites.google.com/view/claire-diary/claire-privacy-policy")
           ? await launch("https://sites.google.com/view/claire-diary/claire-privacy-policy")
-          : throw 'Could not launch Instagram';
+          : throw 'Could not launch site';
+
+
+  launchEmailApp() {
+    String? encodeQueryParameters(Map<String, String> params) {
+      return params.entries
+          .map((e) =>
+      '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+    }
+
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'dearclaireapp@gmail.com',
+      query: encodeQueryParameters(
+          <String, String>{'subject': 'Dear Claire, What\'s My Ego Code? My Email is: $_theEmail'}),
+    );
+
+    launch(emailLaunchUri.toString());
+  }
+
+
+  /// Shows up when user clicks on forgot ego code.
+  Future<void> _showForgotEgoCodeDialog() async {
+    TextEditingController _emailController = TextEditingController();
+    final _formKey = GlobalKey<FormState>();  return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return Center(
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0)),
+            title: Container(
+              child: Text(AppString.retrieve_ego_code_header,
+                  textAlign: TextAlign.center),
+            ),
+            content: SingleChildScrollView(
+              child: Container(
+                color: Pallet.colorWhite,
+                child: TextFormField(
+                    onChanged: (value) {},
+                    validator: (value) {
+                      if (value!.isEmpty) {
+                        return "Enter Email";
+                      } else if (value.length < 4) {
+                        return "Email should be up to 4 digits";
+                      }
+                      return null;
+                    },
+                    textInputAction: TextInputAction.next,
+                    controller: _emailController,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.deny(RegExp("[ ]")),
+                    ],
+                    decoration: new InputDecoration(
+                      hintText: "clairejasmine@gmail.com",
+                      labelText: "Type your full Email Address.",
+                      labelStyle:
+                      TextStyle(color: Pallet.colorTextGray),
+                      focusedBorder: new OutlineInputBorder(
+                          borderSide: new BorderSide(
+                              color: Pallet.colorPrimary)),
+                      enabledBorder: new OutlineInputBorder(
+                          borderSide: new BorderSide(
+                              color: Pallet.colorTextGray)),
+                      contentPadding:
+                      EdgeInsets.only(right: 15, left: 15),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    style: GoogleFonts.lato(
+                        fontSize: 12.0,
+                        color: Pallet.colorBlack,
+                        fontWeight: FontWeight.w400)),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text(
+                  'Request Ego Code',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onPressed: () {
+                  _theEmail = _emailController.text.toString();
+                  launchEmailApp();
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
 
   @override
@@ -109,8 +213,8 @@ class _LoginPage extends State<LoginPage> {
                                 FilteringTextInputFormatter.deny(RegExp("[ ]")),
                               ],
                               decoration: new InputDecoration(
-                                hintText: "johndoe@gmail.com",
-                                labelText: "Email",
+                                hintText: "claireforme@gmail.com",
+                                labelText: "Type your full Email Address.",
                                 labelStyle:
                                     TextStyle(color: Pallet.colorTextGray),
                                 focusedBorder: new OutlineInputBorder(
@@ -139,14 +243,17 @@ class _LoginPage extends State<LoginPage> {
                         SizedBox(
                           height: 10,
                         ),
-                        Container(
-                          alignment: Alignment.topRight,
-                          child: Text("Forgot Ego Code?",
-                              textAlign: TextAlign.right,
-                              style: GoogleFonts.lato(
-                                  fontSize: 15.0,
-                                  color: Pallet.colorBlack,
-                                  fontWeight: FontWeight.w600)),
+                        GestureDetector(
+                          onTap: _showForgotEgoCodeDialog,
+                          child: Container(
+                            alignment: Alignment.topRight,
+                            child: Text("Forgot Ego Code?",
+                                textAlign: TextAlign.right,
+                                style: GoogleFonts.lato(
+                                    fontSize: 15.0,
+                                    color: Pallet.colorBlack,
+                                    fontWeight: FontWeight.w600)),
+                          ),
                         ),
                         SizedBox(height: 5,),
 
@@ -295,7 +402,7 @@ class _BuildSecretCodeField extends State<BuildSecretCodeField> {
         controller: widget._secretCodeController,
         decoration: InputDecoration(
           hintText: widget.hintText,
-          labelText: "Ego Code",
+          labelText: "Enter your Ego Code.",
           labelStyle: TextStyle(color: Pallet.colorTextGray),
           focusedBorder: new OutlineInputBorder(
               borderSide: new BorderSide(color: Pallet.colorPrimary)),

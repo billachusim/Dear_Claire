@@ -26,8 +26,6 @@ class SendClaireLoveForm extends StatefulWidget {
 
 class _SendClaireLoveFormState extends State<SendClaireLoveForm> {
   TextEditingController _accountNumberController = TextEditingController();
-  TextEditingController _bankNameController = TextEditingController();
-  TextEditingController _nameOnAccountController = TextEditingController();
   TextEditingController _whyRequestController = TextEditingController();
   TextEditingController _value4Controller = TextEditingController();
   TextEditingController _value5Controller = TextEditingController();

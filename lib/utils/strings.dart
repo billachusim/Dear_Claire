@@ -30,6 +30,9 @@ class AppString{
 
   static const String terms_of_use = '';
 
+  static const String retrieve_ego_code_header = 'Retrieve Your Ego Code 🌺';
+
+
 
 
 

@@ -114,8 +114,8 @@ class _SignUpPage extends State<SignUpPage> {
                                   FilteringTextInputFormatter.deny(RegExp("[ ]")),
                                 ],
                                 decoration: new InputDecoration(
-                                  hintText: "johndoe@gmail.com",
-                                  labelText: "Email",
+                                  hintText: "claireamaka@gmail.com",
+                                  labelText: "Type your full Email Address",
                                   labelStyle:
                                       TextStyle(color: Pallet.colorTextGray),
                                   focusedBorder: new OutlineInputBorder(
@@ -320,7 +320,7 @@ class _BuildPasswordFieldState extends State<BuildPasswordField> {
         },
         validator: (value) {
           if (value!.isEmpty) {
-            return "Enter Ego code";
+            return "Enter Ego code. Ego Code means password.";
           } else if (value.length < 4) {
             return "Ego code should be up to 4 digits";
           }
@@ -330,7 +330,7 @@ class _BuildPasswordFieldState extends State<BuildPasswordField> {
         controller: widget._secretCodeController,
         decoration: InputDecoration(
           hintText: widget.hintText,
-          labelText: "Ego Code",
+          labelText: "Choose an Ego Code. It means password.",
           labelStyle: TextStyle(color: Pallet.colorTextGray),
           focusedBorder: new OutlineInputBorder(
               borderSide: new BorderSide(color: Pallet.colorPrimary)),
