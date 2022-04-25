@@ -4,6 +4,7 @@ import 'package:dear_claire/utils/strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -50,6 +51,38 @@ class _SendClaireLoveFormState extends State<SendClaireLoveForm> {
             key: _formKey,
             child: ListView(
               children: [
+
+                Align(
+                  alignment:Alignment.topLeft,
+                  child: Row(
+                    children: [
+                      Container(
+                        padding:EdgeInsets.only(left: 20, top:4, bottom: 4),
+                        child: GestureDetector(
+                            onTap: (){
+                              print("Clicking on X");
+                              Navigator.pop(context);
+                            },
+                            child: SvgPicture.asset("assets/images/ic_close.svg",
+                              width: 17.0,
+                              height: 17.0,)
+                        ),
+                      ),
+
+                      SizedBox( width: 12,),
+
+                      Text(
+                        "Send Clairelove Form",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 24,
+                          color: Pallet.colorSecondaryDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
                 Container(
                   color: Pallet.colorGrey.withOpacity(0.3),
                   child: Padding(

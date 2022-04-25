@@ -672,18 +672,20 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   }
 
   Widget showFontSelectionDialog(BuildContext context) {
-    return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: Constant.ALTER_EGO_FONT_STYLES
-            .map((e) => ListTile(
-                  title: e,
-                  onTap: () {
-                    var index = Constant.ALTER_EGO_FONT_STYLES.indexOf(e);
-                    c.selectFont(index);
-                    Navigator.pop(context);
-                  },
-                ))
-            .toList());
+    return SingleChildScrollView(
+      child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: Constant.ALTER_EGO_FONT_STYLES
+              .map((e) => ListTile(
+                    title: e,
+                    onTap: () {
+                      var index = Constant.ALTER_EGO_FONT_STYLES.indexOf(e);
+                      c.selectFont(index);
+                      Navigator.pop(context);
+                    },
+                  ))
+              .toList()),
+    );
   }
 
   Widget _imagesGridView() {

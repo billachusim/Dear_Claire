@@ -3,6 +3,7 @@ import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AuthSelectionPage extends StatelessWidget {
@@ -35,8 +36,31 @@ class AuthSelectionPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      Align(
+                        alignment:Alignment.topLeft,
+                        child: Row(
+                          children: [
+                            Container(
+                              padding:EdgeInsets.only(left: 20, top:4, bottom: 4),
+                              child: GestureDetector(
+                                  onTap: (){
+                                    print("Clicking on X");
+                                    Navigator.pop(context);
+                                  },
+                                  child: SvgPicture.asset("assets/images/ic_close.svg",
+                                    width: 17.0,
+                                    height: 17.0,
+                                    color: Colors.white,)
+                              ),
+                            ),
+
+                            SizedBox( width: 12,),
+
+                          ],
+                        ),
+                      ),
                       SizedBox(
-                        height: 130,
+                        height: 80,
                       ),
                       RotateImage(78, 78),
                       SizedBox(
