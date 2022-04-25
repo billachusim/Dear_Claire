@@ -114,7 +114,7 @@ class AppString{
 
   static const String shareLink = "https://claire.page.link/featured";
 
-  static const String sendClaireLink = "https://claire.page.link/ReceiveClaire";
+  static const String sendClaireLink = "https://dearclaire.page.link/InstallNow";
 
 
   static const int appSessionLength = 50;
@@ -161,8 +161,9 @@ class AppString{
 
 
   static const String sendClaireToSomeoneHeader =
-      "You have to check out this beautiful app trending on Playstore: Dear Claire - Secret Diary Chat. \n"
-      "I use it to WRITE or RECORD anything ANONYMOUSLY and then get or give advises.";
+      "Just had to share this beautiful app with you, It's currently trending on Playstore. It's called Dear Claire and it's like chatting with a secret diary. \n"
+      "I use it to WRITE or RECORD anything ANONYMOUSLY and then get or even give advises.\n"
+      "Points can be converted to cash every end of month.";
 
 
 

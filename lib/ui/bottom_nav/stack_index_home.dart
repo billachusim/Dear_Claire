@@ -42,6 +42,24 @@ class _HomeDashboardPageState extends State<HomePage>
     EgoProfilePage(),
   ];
 
+  launchEmailApp() {
+    String? encodeQueryParameters(Map<String, String> params) {
+      return params.entries
+          .map((e) =>
+      '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+    }
+
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'dearclaireapp@gmail.com',
+      query: encodeQueryParameters(
+          <String, String>{'subject': 'Questions About Dear Claire'}),
+    );
+
+    launch(emailLaunchUri.toString());
+  }
+
 
   void _launchInstagram() async =>
       await canLaunch("https://instgram.com/socialfaculty")
@@ -224,7 +242,7 @@ class _HomeDashboardPageState extends State<HomePage>
                 ListTile(
                   title: Text("Contact Us",
                       style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: () =>onContinueToWhatsAppClicked(),
+                  onTap: () =>launchEmailApp(),
                   leading: Icon(Icons.email, color: Pallet.colorWhite),
                 ),
               ],
