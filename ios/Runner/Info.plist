@@ -46,11 +46,7 @@
     <key>NSCameraUsageDescription</key>
     <string>This app requires access to the camera.</string>
 	<key>UIBackgroundModes</key>
-	<key>NSAppTransportSecurity</key>
-    <dict>
-        <key>NSAllowsArbitraryLoads</key>
-        <true/>
-    </dict>
+
 	<array>
 		<string>audio</string>
 		<string>fetch</string>
@@ -77,5 +73,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSAppTransportSecurity</key>
+	<key>NSAllowsArbitraryLoads</key>
 </dict>
 </plist>
