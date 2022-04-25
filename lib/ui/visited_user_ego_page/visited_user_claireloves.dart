@@ -82,12 +82,13 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
     final withdrawnLoveCount = currentWithdrawal + totalWithdrawal;
     _toRequest = currentWithdrawal * int.parse(_rate.toString());
     _currentWithdrawal = _toRequest;
+    final visitedCurrentLoveCount = visitedUserModel.currentLoveCount;
+    final newVisitedCurrentLoveCount = visitedCurrentLoveCount + _toRequest;
     FirebaseFirestore.instance
         .collection("users")
         .doc(widget.visitedUsersID)
         .set({
-      "withdrawnLoveCount": withdrawnLoveCount,
-      "currentLoveCount": _currentLoveCount,
+      "currentLoveCount": newVisitedCurrentLoveCount,
     },
       SetOptions(merge: true),
     );
@@ -791,70 +792,73 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
 
                   SizedBox(height: 8,),
 
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
+                  Visibility(
+                    visible: currentUser?.uid != widget.visitedUsersID,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
 
-                      Align(
-                        alignment: Alignment.center,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setState(() {
-
-                            });
-                            if (_amountController.text.isNotEmpty) {
+                        Align(
+                          alignment: Alignment.center,
+                          child: OutlinedButton(
+                            onPressed: () {
                               setState(() {
-                                setWithdrawalAmount();
-                                _showRequestButton = true;
+
                               });
-                            }
-                          },
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: Pallet.colorSecondary,
-                            padding: EdgeInsets.all(8),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25)),
+                              if (_amountController.text.isNotEmpty) {
+                                setState(() {
+                                  setWithdrawalAmount();
+                                  _showRequestButton = true;
+                                });
+                              }
+                            },
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Pallet.colorSecondary,
+                              padding: EdgeInsets.all(8),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25)),
+                            ),
+                            child: Text("Show Cash Out",
+                                style: GoogleFonts.lato(
+                                    fontSize: 12.0, fontWeight: FontWeight.w700, color: Colors.white)),
                           ),
-                          child: Text("Show Cash Out",
-                              style: GoogleFonts.lato(
-                                  fontSize: 12.0, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
-                      ),
 
-                      SizedBox(width: 10,),
+                        SizedBox(width: 10,),
 
-                      Visibility(
-                        visible: _showRequestButton,
-                        child: OutlinedButton(
-                          onPressed: (){
-                            ascertainWithdrawnLoveCount();
-                            PageRouter.gotoWidget(
-                                SendClaireLoveForm(
-                                  amountToSend: _currentWithdrawal.toString(),
-                                  userId: _userId.toString(),
-                                  visitedUsersId: widget.visitedUsersID,
-                                  visitedUser: widget.visitedEgoName,
-                                ), context);
+                        Visibility(
+                          visible: _showRequestButton,
+                          child: OutlinedButton(
+                            onPressed: (){
+                              ascertainWithdrawnLoveCount();
+                              PageRouter.gotoWidget(
+                                  SendClaireLoveForm(
+                                    amountToSend: _currentWithdrawal.toString(),
+                                    userId: _userId.toString(),
+                                    visitedUsersId: widget.visitedUsersID,
+                                    visitedUser: widget.visitedEgoName,
+                                  ), context);
 
-                            print("Requested Amount Is::: $_currentWithdrawal");
-                            print("Available Amount Is::: $_currentLoveCount");
+                              print("Requested Amount Is::: $_currentWithdrawal");
+                              print("Available Amount Is::: $_currentLoveCount");
 
 
-                          },
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: Pallet.colorSecondary,
-                            padding: EdgeInsets.all(17),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25)),
+                            },
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Pallet.colorSecondary,
+                              padding: EdgeInsets.all(17),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25)),
+                            ),
+                            child: Text("Send Love  🌺",
+                                style: GoogleFonts.lato(
+                                    fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
                           ),
-                          child: Text("Send Love  🌺",
-                              style: GoogleFonts.lato(
-                                  fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
-                      ),
 
-                    ],
+                      ],
+                    ),
                   ),
 
                 ],
