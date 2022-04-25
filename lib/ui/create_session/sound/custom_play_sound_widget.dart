@@ -85,7 +85,7 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
       print("selected file path is: ${widget.filePath!}");
       _audioPlayer.play(
         widget.filePath!,
-        isLocal: true,
+        isLocal: false,
       );
       _audioPlayer.onDurationChanged.listen((Duration d) {
         print('Max duration: $d');
