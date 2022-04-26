@@ -140,7 +140,7 @@ class _SignUpPage extends State<SignUpPage> {
                           Container(
                             color: Pallet.colorWhite.withAlpha(20),
                             child: BuildPasswordField(
-                                "****", _secretCodeController),
+                                "******", _secretCodeController),
                           ),
 
                           SizedBox(
@@ -330,7 +330,7 @@ class _BuildPasswordFieldState extends State<BuildPasswordField> {
         controller: widget._secretCodeController,
         decoration: InputDecoration(
           hintText: widget.hintText,
-          labelText: "Choose an Ego Code. It means password.",
+          labelText: "Choose Ego Code, up to 6 digits. It means password.",
           labelStyle: TextStyle(color: Pallet.colorTextGray),
           focusedBorder: new OutlineInputBorder(
               borderSide: new BorderSide(color: Pallet.colorPrimary)),

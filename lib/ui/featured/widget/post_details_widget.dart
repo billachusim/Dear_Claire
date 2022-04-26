@@ -464,7 +464,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   }
 
 // Edit session function
-  Future<void> editAdvise() async {
+  Future<void> editSession() async {
     final sessionId = widget.sessionId;
     final message = editSessionController.text;
     FirebaseFirestore.instance
@@ -534,7 +534,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                   style: TextStyle(color: Colors.red),
                 ),
                 onPressed: () {
-                  editAdvise();
+                  editSession();
                   Navigator.of(context).pop();
                   setState(() {
                     editSessionController.text = "";

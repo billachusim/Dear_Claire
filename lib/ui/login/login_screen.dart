@@ -115,7 +115,7 @@ class _LoginPage extends State<LoginPage> {
               TextButton(
                 child: Text(
                   'Request Ego Code',
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(color: Pallet.colorSecondary),
                 ),
                 onPressed: () {
                   _theEmail = _emailController.text.toString();
@@ -202,8 +202,8 @@ class _LoginPage extends State<LoginPage> {
                               validator: (value) {
                                 if (value!.isEmpty) {
                                   return "Enter Email";
-                                } else if (value.length < 4) {
-                                  return "Email should be up to 4 digits";
+                                } else if (value.length < 6) {
+                                  return "Email should be up to 6 digits";
                                 }
                                 return null;
                               },
@@ -238,7 +238,7 @@ class _LoginPage extends State<LoginPage> {
                         Container(
                           color: Pallet.colorWhite.withAlpha(20),
                           child: BuildSecretCodeField(
-                              "****", _secretCodeController),
+                              "******", _secretCodeController),
                         ),
                         SizedBox(
                           height: 10,
@@ -402,7 +402,7 @@ class _BuildSecretCodeField extends State<BuildSecretCodeField> {
         controller: widget._secretCodeController,
         decoration: InputDecoration(
           hintText: widget.hintText,
-          labelText: "Enter your Ego Code.",
+          labelText: "Enter a secret code, up to 6 digits.",
           labelStyle: TextStyle(color: Pallet.colorTextGray),
           focusedBorder: new OutlineInputBorder(
               borderSide: new BorderSide(color: Pallet.colorPrimary)),

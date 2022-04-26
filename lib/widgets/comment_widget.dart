@@ -52,12 +52,12 @@ class _CommentWidgetState extends State<CommentWidget> {
     final sessionId = widget.sessionId;
     final commentId = widget.commentSessionModel!.commentId;
     final advise = editAdviseController.text;
-    FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
+    final document = FirebaseFirestore.instance
+        .collection("sessions")
         .doc(sessionId)
-        .collection(AppString.appFeaturedSessionsComments)
-        .doc(commentId)
-        .update({
+        .collection("comments")
+        .doc(commentId);
+        await document.update({
       "message": advise,
     },
     );
