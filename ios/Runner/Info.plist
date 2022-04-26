@@ -73,7 +73,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>NSAppTransportSecurity</key>
-	<key>NSAllowsArbitraryLoads</key>
 </dict>
 </plist>
