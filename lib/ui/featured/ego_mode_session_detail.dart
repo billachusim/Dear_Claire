@@ -209,9 +209,8 @@ class _EgoModeSessionDetailState
 
     final _advise = adviseText.toString();
     final _length = _advise.length;
-    if (_advise.contains("darling"))
+    if (_advise.contains("arling"))
       if (_length >= 20)
-      if (_advise.contains("Darling"))
 
       {
         incrementAdviseCount();

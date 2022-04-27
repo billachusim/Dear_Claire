@@ -162,8 +162,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   Future<bool> isOriginalSession(BuildContext context, String sessionText) async {
     final _session = sessionText.toString();
     final _length = _session.length;
-    if (_session.contains("Dear"))
-      if (_session.contains("Claire"))
+    if (_session.contains("ear"))
+      if (_session.contains("laire"))
         if (_length >= 50)
       {
         incrementSessionCount();
