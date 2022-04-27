@@ -66,6 +66,7 @@ class TheFeaturedSessions extends StatelessWidget {
                 child: ListView(
                   children: [
                     CategoryStreams(),
+                    FeaturedSessionNotice(),
                     ..._sessionList!
                         .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                         .toList(),
@@ -80,6 +81,27 @@ class TheFeaturedSessions extends StatelessWidget {
   }
 
 
+}
+
+/// This shows a notice header about featured sessions.
+class FeaturedSessionNotice extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        child: Text(
+          "Featured Diary Sessions are selected ONLY from public diary sessions.\n"
+              "Your diary session can NOT appear here if you made it private.",
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 

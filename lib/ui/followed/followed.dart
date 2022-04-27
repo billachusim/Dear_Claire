@@ -69,6 +69,7 @@ class _FollowedPageState extends State<FollowedPage> {
                   return Scrollbar(
                     child: ListView(
                       children: [
+                        FollowedSessionNotice(),
                         ..._sessionList!
                             .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                             .toList(),
@@ -80,6 +81,27 @@ class _FollowedPageState extends State<FollowedPage> {
               },
             ),
         ]
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// This shows a notice header about followed sessions.
+class FollowedSessionNotice extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        child: Text(
+          "Followed Diary Sessions are the diary sessions you have followed from around the app.\n"
+              "You'll be notified of new activities. Follow your own sessions too to get notifications.",
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            fontStyle: FontStyle.italic,
           ),
         ),
       ),

@@ -66,6 +66,7 @@ class _DiaryPageState extends State<DiaryPage> {
                   if (session.hasData) {
                     return ListView(
                       children: [
+                        DiarySessionNotice(),
                         ...session.data!
                             .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                             .toList(),
@@ -76,6 +77,27 @@ class _DiaryPageState extends State<DiaryPage> {
                 }
                 ),
         ]
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// This shows a notice header about featured sessions.
+class DiarySessionNotice extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        child: Text(
+          "Only YOUR Diary Sessions appear here. Archived Sessions can be found on Ego page.\n"
+              "Open Up, write or record anything, share or save it and Claire will be there for you.",
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            fontStyle: FontStyle.italic,
           ),
         ),
       ),
