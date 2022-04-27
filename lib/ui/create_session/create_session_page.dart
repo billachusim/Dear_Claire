@@ -747,209 +747,692 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     /// Adding a category tag to every session created.
 
-    if (sessionTextEditingController.text.contains('love') &
-        sessionTextEditingController.text.contains('relationship')) {
+    if (sessionTextEditingController.text.contains('love'))
+    {
       sessionObject.category1 = 'love and relationship';
       sessionObject.category2 = 'sex and dating';
       sessionObject.category3 = 'boyfriend and girlfriend';
       sessionObject.category4 = 'birthdays and anniversary';
     }
 
-    if (sessionTextEditingController.text.contains('marriage') &
-        sessionTextEditingController.text.contains('family')) {
+    if (sessionTextEditingController.text.contains('relationship'))
+    {
+      sessionObject.category1 = 'love and relationship';
+      sessionObject.category2 = 'sex and dating';
+      sessionObject.category3 = 'boyfriend and girlfriend';
+      sessionObject.category4 = 'birthdays and anniversary';
+    }
+
+    if (sessionTextEditingController.text.contains('marriage'))
+    {
       sessionObject.category1 = 'marriage and family';
       sessionObject.category2 = 'husband and wife';
       sessionObject.category3 = 'birthdays and anniversary';
     }
 
-    if (sessionTextEditingController.text.contains('sex') &
-        sessionTextEditingController.text.contains('dating')) {
+    if (sessionTextEditingController.text.contains('family'))
+    {
+      sessionObject.category1 = 'marriage and family';
+      sessionObject.category2 = 'husband and wife';
+      sessionObject.category3 = 'birthdays and anniversary';
+    }
+
+
+    if (sessionTextEditingController.text.contains('sex'))
+    {
       sessionObject.category1 = 'sex and dating';
       sessionObject.category2 = 'love and relationship';
       sessionObject.category3 = 'boyfriend and girlfriend';
     }
 
-    if (sessionTextEditingController.text.contains('school') &
-        sessionTextEditingController.text.contains('education')) {
+    if (sessionTextEditingController.text.contains('dating'))
+    {
+      sessionObject.category1 = 'sex and dating';
+      sessionObject.category2 = 'love and relationship';
+      sessionObject.category3 = 'boyfriend and girlfriend';
+    }
+
+    if (sessionTextEditingController.text.contains('school'))
+    {
       sessionObject.category1 = 'school and education';
       sessionObject.category2 = 'work and career';
     }
 
-    if (sessionTextEditingController.text.contains('work') &
-        sessionTextEditingController.text.contains('career')) {
+    if (sessionTextEditingController.text.contains('education'))
+    {
+      sessionObject.category1 = 'school and education';
+      sessionObject.category2 = 'work and career';
+    }
+
+    if (sessionTextEditingController.text.contains('work'))
+    {
       sessionObject.category1 = 'work and career';
       sessionObject.category2 = 'business and entrepreneur';
     }
 
-    if (sessionTextEditingController.text.contains('hate') &
-        sessionTextEditingController.text.contains('abuse')) {
+    if (sessionTextEditingController.text.contains('career'))
+    {
+      sessionObject.category1 = 'work and career';
+      sessionObject.category2 = 'business and entrepreneur';
+    }
+
+    if (sessionTextEditingController.text.contains('hate'))
+    {
       sessionObject.category1 = 'hate and abuse';
       sessionObject.category2 = 'depression and anxiety';
       sessionObject.category3 = 'sad and depressed';
     }
 
-    if (sessionTextEditingController.text.contains('friends') &
-        sessionTextEditingController.text.contains('fun')) {
+    if (sessionTextEditingController.text.contains('abuse'))
+    {
+      sessionObject.category1 = 'hate and abuse';
+      sessionObject.category2 = 'depression and anxiety';
+      sessionObject.category3 = 'sad and depressed';
+    }
+
+    if (sessionTextEditingController.text.contains('friends'))
+    {
       sessionObject.category1 = 'friends and fun';
       sessionObject.category2 = 'life and living';
     }
 
-    if (sessionTextEditingController.text.contains('depression') &
-        sessionTextEditingController.text.contains('anxiety')) {
+    if (sessionTextEditingController.text.contains('fun'))
+    {
+      sessionObject.category1 = 'friends and fun';
+      sessionObject.category2 = 'life and living';
+    }
+
+    if (sessionTextEditingController.text.contains('depression'))
+    {
       sessionObject.category1 = 'depression and anxiety';
       sessionObject.category2 = 'sad and depressed';
       sessionObject.category3 = 'single and lonely';
     }
 
-    if (sessionTextEditingController.text.contains('help') &
-        sessionTextEditingController.text.contains('charity')) {
+    if (sessionTextEditingController.text.contains('anxiety'))
+    {
+      sessionObject.category1 = 'depression and anxiety';
+      sessionObject.category2 = 'sad and depressed';
+      sessionObject.category3 = 'single and lonely';
+    }
+
+    if (sessionTextEditingController.text.contains('help'))
+    {
       sessionObject.category1 = 'help and charity';
       sessionObject.category2 = 'life and living';
     }
 
-    if (sessionTextEditingController.text.contains('sick') &
-        sessionTextEditingController.text.contains('health') &
-        sessionTextEditingController.text.contains('fitness')) {
+    if (sessionTextEditingController.text.contains('charity'))
+    {
+      sessionObject.category1 = 'help and charity';
+      sessionObject.category2 = 'life and living';
+    }
+
+    if (sessionTextEditingController.text.contains('sick'))
+    {
       sessionObject.category1 = 'health and fitness';
       sessionObject.category2 = 'life and living';
       sessionObject.category3 = 'food and drink';
     }
 
-    if (sessionTextEditingController.text.contains('husband') &
-        sessionTextEditingController.text.contains('wife')) {
+    if (sessionTextEditingController.text.contains('health'))
+    {
+      sessionObject.category1 = 'health and fitness';
+      sessionObject.category2 = 'life and living';
+      sessionObject.category3 = 'food and drink';
+    }
+
+    if (sessionTextEditingController.text.contains('fitness'))
+    {
+      sessionObject.category1 = 'health and fitness';
+      sessionObject.category2 = 'life and living';
+      sessionObject.category3 = 'food and drink';
+    }
+
+    if (sessionTextEditingController.text.contains('husband'))
+    {
       sessionObject.category1 = 'husband and wife';
       sessionObject.category2 = 'marriage and family';
       sessionObject.category3 = 'life and living';
       sessionObject.category4 = 'birthdays and anniversary';
     }
 
-    if (sessionTextEditingController.text.contains('boyfriend') &
-        sessionTextEditingController.text.contains('girlfriend')) {
+    if (sessionTextEditingController.text.contains('wife'))
+    {
+      sessionObject.category1 = 'husband and wife';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'life and living';
+      sessionObject.category4 = 'birthdays and anniversary';
+    }
+
+    if (sessionTextEditingController.text.contains('married'))
+    {
+      sessionObject.category1 = 'husband and wife';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'life and living';
+      sessionObject.category4 = 'birthdays and anniversary';
+    }
+
+    if (sessionTextEditingController.text.contains('inlaw'))
+    {
+      sessionObject.category1 = 'husband and wife';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'life and living';
+      sessionObject.category4 = 'birthdays and anniversary';
+    }
+
+    if (sessionTextEditingController.text.contains('boyfriend'))
+    {
       sessionObject.category1 = 'love and relationship';
       sessionObject.category2 = 'sex and dating';
       sessionObject.category3 = 'birthdays and anniversary';
       sessionObject.category4 = 'boyfriend and girlfriend';
     }
 
-    if (sessionTextEditingController.text.contains('food') &
-        sessionTextEditingController.text.contains('drink')) {
+    if (sessionTextEditingController.text.contains('girlfriend'))
+    {
+      sessionObject.category1 = 'love and relationship';
+      sessionObject.category2 = 'sex and dating';
+      sessionObject.category3 = 'birthdays and anniversary';
+      sessionObject.category4 = 'boyfriend and girlfriend';
+    }
+
+    if (sessionTextEditingController.text.contains('bf'))
+    {
+      sessionObject.category1 = 'love and relationship';
+      sessionObject.category2 = 'sex and dating';
+      sessionObject.category3 = 'birthdays and anniversary';
+      sessionObject.category4 = 'boyfriend and girlfriend';
+    }
+
+    if (sessionTextEditingController.text.contains('gf'))
+    {
+      sessionObject.category1 = 'love and relationship';
+      sessionObject.category2 = 'sex and dating';
+      sessionObject.category3 = 'birthdays and anniversary';
+      sessionObject.category4 = 'boyfriend and girlfriend';
+    }
+
+    if (sessionTextEditingController.text.contains('food'))
+    {
       sessionObject.category1 = 'food and drink';
       sessionObject.category2 = 'health and fitness';
       sessionObject.category3 = 'friends and fun';
     }
 
-    if (sessionTextEditingController.text.contains('birthday') &
-        sessionTextEditingController.text.contains('anniversary')) {
+    if (sessionTextEditingController.text.contains('drink'))
+    {
+      sessionObject.category1 = 'food and drink';
+      sessionObject.category2 = 'health and fitness';
+      sessionObject.category3 = 'friends and fun';
+    }
+
+    if (sessionTextEditingController.text.contains('birthday'))
+    {
       sessionObject.category1 = 'birthday and anniversary';
       sessionObject.category2 = 'love and relationship';
       sessionObject.category3 = 'marriage and family';
       sessionObject.category4 = 'friends and fun';
     }
 
-    if (sessionTextEditingController.text.contains('pray') &
-        sessionTextEditingController.text.contains('God')) {
+    if (sessionTextEditingController.text.contains('anniversary'))
+    {
+      sessionObject.category1 = 'birthday and anniversary';
+      sessionObject.category2 = 'love and relationship';
+      sessionObject.category3 = 'marriage and family';
+      sessionObject.category4 = 'friends and fun';
+    }
+
+    if (sessionTextEditingController.text.contains('pray'))
+    {
       sessionObject.category1 = 'prayer and thanksgiving';
       sessionObject.category2 = 'life and living';
     }
 
-    if (sessionTextEditingController.text.contains('childhood') &
-        sessionTextEditingController.text.contains('memory')) {
+    if (sessionTextEditingController.text.contains('God'))
+    {
+      sessionObject.category1 = 'prayer and thanksgiving';
+      sessionObject.category2 = 'life and living';
+    }
+
+    if (sessionTextEditingController.text.contains('church'))
+    {
+      sessionObject.category1 = 'prayer and thanksgiving';
+      sessionObject.category2 = 'life and living';
+    }
+
+    if (sessionTextEditingController.text.contains('prayer'))
+    {
+      sessionObject.category1 = 'prayer and thanksgiving';
+      sessionObject.category2 = 'life and living';
+    }
+
+    if (sessionTextEditingController.text.contains('praises'))
+    {
+      sessionObject.category1 = 'prayer and thanksgiving';
+      sessionObject.category2 = 'life and living';
+    }
+
+    if (sessionTextEditingController.text.contains('childhood'))
+    {
       sessionObject.category1 = 'childhood and memory';
       sessionObject.category2 = 'life and living';
       sessionObject.category3 = 'marriage and family';
       sessionObject.category4 = 'parents and children';
     }
 
-    if (sessionTextEditingController.text.contains('parents') &
-        sessionTextEditingController.text.contains('children')) {
+    if (sessionTextEditingController.text.contains('memory'))
+    {
+      sessionObject.category1 = 'childhood and memory';
+      sessionObject.category2 = 'life and living';
+      sessionObject.category3 = 'marriage and family';
+      sessionObject.category4 = 'parents and children';
+    }
+
+
+    if (sessionTextEditingController.text.contains('old'))
+    {
+      sessionObject.category1 = 'childhood and memory';
+      sessionObject.category2 = 'life and living';
+      sessionObject.category3 = 'marriage and family';
+      sessionObject.category4 = 'parents and children';
+    }
+
+    if (sessionTextEditingController.text.contains('parents'))
+    {
       sessionObject.category1 = 'parents and children';
       sessionObject.category2 = 'marriage and family';
       sessionObject.category3 = 'husband and wife';
       sessionObject.category4 = 'childhood and memory';
     }
 
-    if (sessionTextEditingController.text.contains('business') &
-        sessionTextEditingController.text.contains('entrepreneur')) {
+    if (sessionTextEditingController.text.contains('children'))
+    {
+      sessionObject.category1 = 'parents and children';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'husband and wife';
+      sessionObject.category4 = 'childhood and memory';
+    }
+
+    if (sessionTextEditingController.text.contains('father'))
+    {
+      sessionObject.category1 = 'parents and children';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'husband and wife';
+      sessionObject.category4 = 'childhood and memory';
+    }
+
+    if (sessionTextEditingController.text.contains('mother'))
+    {
+      sessionObject.category1 = 'parents and children';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'husband and wife';
+      sessionObject.category4 = 'childhood and memory';
+    }
+
+    if (sessionTextEditingController.text.contains('dad'))
+    {
+      sessionObject.category1 = 'parents and children';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'husband and wife';
+      sessionObject.category4 = 'childhood and memory';
+    }
+
+    if (sessionTextEditingController.text.contains('mom'))
+    {
+      sessionObject.category1 = 'parents and children';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'husband and wife';
+      sessionObject.category4 = 'childhood and memory';
+    }
+
+    if (sessionTextEditingController.text.contains('stepmom'))
+    {
+      sessionObject.category1 = 'parents and children';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'husband and wife';
+      sessionObject.category4 = 'childhood and memory';
+    }
+
+    if (sessionTextEditingController.text.contains('stepdad'))
+    {
+      sessionObject.category1 = 'parents and children';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'husband and wife';
+      sessionObject.category4 = 'childhood and memory';
+    }
+
+    if (sessionTextEditingController.text.contains('business'))
+    {
       sessionObject.category1 = 'business and entrepreneur';
       sessionObject.category2 = 'work and career';
       sessionObject.category3 = 'school and education';
     }
 
-    if (sessionTextEditingController.text.contains('art') &
-        sessionTextEditingController.text.contains('photography')) {
+    if (sessionTextEditingController.text.contains('entrepreneur'))
+    {
+      sessionObject.category1 = 'business and entrepreneur';
+      sessionObject.category2 = 'work and career';
+      sessionObject.category3 = 'school and education';
+    }
+
+
+    if (sessionTextEditingController.text.contains('startup'))
+    {
+      sessionObject.category1 = 'business and entrepreneur';
+      sessionObject.category2 = 'work and career';
+      sessionObject.category3 = 'school and education';
+    }
+
+
+    if (sessionTextEditingController.text.contains('sales'))
+    {
+      sessionObject.category1 = 'business and entrepreneur';
+      sessionObject.category2 = 'work and career';
+      sessionObject.category3 = 'school and education';
+    }
+
+    if (sessionTextEditingController.text.contains('art'))
+    {
       sessionObject.category1 = 'arts and photography';
       sessionObject.category2 = 'work and career';
       sessionObject.category3 = 'business and entrepreneur';
     }
 
-    if (sessionTextEditingController.text.contains('music') &
-        sessionTextEditingController.text.contains('video')) {
+    if (sessionTextEditingController.text.contains('photography'))
+    {
+      sessionObject.category1 = 'arts and photography';
+      sessionObject.category2 = 'work and career';
+      sessionObject.category3 = 'business and entrepreneur';
+    }
+
+    if (sessionTextEditingController.text.contains('studio'))
+    {
+      sessionObject.category1 = 'arts and photography';
+      sessionObject.category2 = 'work and career';
+      sessionObject.category3 = 'business and entrepreneur';
+    }
+
+    if (sessionTextEditingController.text.contains('camera'))
+    {
+      sessionObject.category1 = 'arts and photography';
+      sessionObject.category2 = 'work and career';
+      sessionObject.category3 = 'business and entrepreneur';
+    }
+
+    if (sessionTextEditingController.text.contains('music'))
+    {
       sessionObject.category1 = 'music and videos';
       sessionObject.category2 = 'arts and photography';
       sessionObject.category3 = 'work and career';
       sessionObject.category4 = 'comedy and entertainment';
     }
 
-    if (sessionTextEditingController.text.contains('riddles') &
-        sessionTextEditingController.text.contains('jokes')) {
+    if (sessionTextEditingController.text.contains('video'))
+    {
+      sessionObject.category1 = 'music and videos';
+      sessionObject.category2 = 'arts and photography';
+      sessionObject.category3 = 'work and career';
+      sessionObject.category4 = 'comedy and entertainment';
+    }
+
+    if (sessionTextEditingController.text.contains('riddles'))
+    {
       sessionObject.category1 = 'riddles and jokes';
       sessionObject.category2 = 'friends Aad fun';
       sessionObject.category3 = 'comedy and entertainment';
     }
 
-    if (sessionTextEditingController.text.contains('television') &
-        sessionTextEditingController.text.contains('movie')) {
+    if (sessionTextEditingController.text.contains('joke'))
+    {
+      sessionObject.category1 = 'riddles and jokes';
+      sessionObject.category2 = 'friends Aad fun';
+      sessionObject.category3 = 'comedy and entertainment';
+    }
+
+    if (sessionTextEditingController.text.contains('comedy'))
+    {
+      sessionObject.category1 = 'riddles and jokes';
+      sessionObject.category2 = 'friends Aad fun';
+      sessionObject.category3 = 'comedy and entertainment';
+    }
+
+    if (sessionTextEditingController.text.contains('laugh'))
+    {
+      sessionObject.category1 = 'riddles and jokes';
+      sessionObject.category2 = 'friends Aad fun';
+      sessionObject.category3 = 'comedy and entertainment';
+    }
+
+    if (sessionTextEditingController.text.contains('television'))
+    {
       sessionObject.category1 = 'television and movies';
       sessionObject.category2 = 'music Aad videos';
       sessionObject.category3 = 'arts and photography';
       sessionObject.category4 = 'comedy and entertainment';
     }
 
-    if (sessionTextEditingController.text.contains('puzzle') &
-        sessionTextEditingController.text.contains('game')) {
+    if (sessionTextEditingController.text.contains('movie'))
+    {
+      sessionObject.category1 = 'television and movies';
+      sessionObject.category2 = 'music Aad videos';
+      sessionObject.category3 = 'arts and photography';
+      sessionObject.category4 = 'comedy and entertainment';
+    }
+
+    if (sessionTextEditingController.text.contains('cinema'))
+    {
+      sessionObject.category1 = 'television and movies';
+      sessionObject.category2 = 'music Aad videos';
+      sessionObject.category3 = 'arts and photography';
+      sessionObject.category4 = 'comedy and entertainment';
+    }
+
+    if (sessionTextEditingController.text.contains('puzzle'))
+    {
       sessionObject.category1 = 'puzzles and games';
       sessionObject.category2 = 'riddles Aad jokes';
       sessionObject.category3 = 'comedy and entertainment';
     }
 
-    if (sessionTextEditingController.text.contains('life') &
-        sessionTextEditingController.text.contains('living')) {
+    if (sessionTextEditingController.text.contains('games'))
+    {
+      sessionObject.category1 = 'puzzles and games';
+      sessionObject.category2 = 'riddles Aad jokes';
+      sessionObject.category3 = 'comedy and entertainment';
+    }
+
+    if (sessionTextEditingController.text.contains('life'))
+    {
       sessionObject.category1 = 'life and living';
       sessionObject.category2 = 'happy and blessed';
       sessionObject.category3 = 'childhood and memory';
       sessionObject.category4 = 'work and career';
     }
 
-    if (sessionTextEditingController.text.contains('single') &
-        sessionTextEditingController.text.contains('lonely')) {
+    if (sessionTextEditingController.text.contains('living'))
+    {
+      sessionObject.category1 = 'life and living';
+      sessionObject.category2 = 'happy and blessed';
+      sessionObject.category3 = 'childhood and memory';
+      sessionObject.category4 = 'work and career';
+    }
+
+    if (sessionTextEditingController.text.contains('house'))
+    {
+      sessionObject.category1 = 'life and living';
+      sessionObject.category2 = 'happy and blessed';
+      sessionObject.category3 = 'childhood and memory';
+      sessionObject.category4 = 'work and career';
+    }
+
+
+    if (sessionTextEditingController.text.contains('bedroom'))
+    {
+      sessionObject.category1 = 'life and living';
+      sessionObject.category2 = 'happy and blessed';
+      sessionObject.category3 = 'childhood and memory';
+      sessionObject.category4 = 'work and career';
+    }
+
+    if (sessionTextEditingController.text.contains('single'))
+    {
       sessionObject.category1 = 'single and lonely';
       sessionObject.category2 = 'sad Aad depressed';
       sessionObject.category3 = 'love and relationship';
     }
 
-    if (sessionTextEditingController.text.contains('sad') &
-        sessionTextEditingController.text.contains('depressed')) {
+    if (sessionTextEditingController.text.contains('lonely'))
+    {
+      sessionObject.category1 = 'single and lonely';
+      sessionObject.category2 = 'sad Aad depressed';
+      sessionObject.category3 = 'love and relationship';
+    }
+
+    if (sessionTextEditingController.text.contains('alone'))
+    {
+      sessionObject.category1 = 'single and lonely';
+      sessionObject.category2 = 'sad Aad depressed';
+      sessionObject.category3 = 'love and relationship';
+    }
+
+    if (sessionTextEditingController.text.contains('mingle'))
+    {
+      sessionObject.category1 = 'single and lonely';
+      sessionObject.category2 = 'sad Aad depressed';
+      sessionObject.category3 = 'love and relationship';
+    }
+
+    if (sessionTextEditingController.text.contains('sad'))
+    {
       sessionObject.category1 = 'sad and depressed';
       sessionObject.category2 = 'single and lonely';
       sessionObject.category3 = 'life and living';
     }
 
-    if (sessionTextEditingController.text.contains('brother') &
-        sessionTextEditingController.text.contains('sister')) {
+    if (sessionTextEditingController.text.contains('depressed'))
+    {
+      sessionObject.category1 = 'sad and depressed';
+      sessionObject.category2 = 'single and lonely';
+      sessionObject.category3 = 'life and living';
+    }
+
+
+    if (sessionTextEditingController.text.contains('suicide'))
+    {
+      sessionObject.category1 = 'sad and depressed';
+      sessionObject.category2 = 'single and lonely';
+      sessionObject.category3 = 'life and living';
+    }
+
+
+    if (sessionTextEditingController.text.contains('die'))
+    {
+      sessionObject.category1 = 'sad and depressed';
+      sessionObject.category2 = 'single and lonely';
+      sessionObject.category3 = 'life and living';
+    }
+
+    if (sessionTextEditingController.text.contains('brother'))
+    {
       sessionObject.category1 = 'brothers and sisters';
       sessionObject.category2 = 'marriage and family';
       sessionObject.category3 = 'husband and wife';
     }
 
-    if (sessionTextEditingController.text.contains('comedy') &
-        sessionTextEditingController.text.contains('entertainment')) {
+    if (sessionTextEditingController.text.contains('sister'))
+    {
+      sessionObject.category1 = 'brothers and sisters';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'husband and wife';
+    }
+
+    if (sessionTextEditingController.text.contains('bro'))
+    {
+      sessionObject.category1 = 'brothers and sisters';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'husband and wife';
+    }
+
+    if (sessionTextEditingController.text.contains('sis'))
+    {
+      sessionObject.category1 = 'brothers and sisters';
+      sessionObject.category2 = 'marriage and family';
+      sessionObject.category3 = 'husband and wife';
+    }
+
+    if (sessionTextEditingController.text.contains('comedy'))
+    {
       sessionObject.category1 = 'comedy and entertainment';
       sessionObject.category2 = 'music Aad videos';
       sessionObject.category3 = 'riddles and jokes';
     }
 
-    if (sessionTextEditingController.text.contains('happy') &
-        sessionTextEditingController.text.contains('blessed')) {
+    if (sessionTextEditingController.text.contains('entertainment'))
+    {
+      sessionObject.category1 = 'comedy and entertainment';
+      sessionObject.category2 = 'music Aad videos';
+      sessionObject.category3 = 'riddles and jokes';
+    }
+
+    if (sessionTextEditingController.text.contains('happy'))
+    {
+      sessionObject.category1 = 'happy and blessed';
+      sessionObject.category2 = 'life Aad living';
+      sessionObject.category3 = 'love and relationship';
+      sessionObject.category4 = 'marriage and family';
+    }
+
+    if (sessionTextEditingController.text.contains('blessed'))
+    {
+      sessionObject.category1 = 'happy and blessed';
+      sessionObject.category2 = 'life Aad living';
+      sessionObject.category3 = 'love and relationship';
+      sessionObject.category4 = 'marriage and family';
+    }
+
+    if (sessionTextEditingController.text.contains('excited'))
+    {
+      sessionObject.category1 = 'happy and blessed';
+      sessionObject.category2 = 'life Aad living';
+      sessionObject.category3 = 'love and relationship';
+      sessionObject.category4 = 'marriage and family';
+    }
+
+    if (sessionTextEditingController.text.contains('grateful'))
+    {
+      sessionObject.category1 = 'happy and blessed';
+      sessionObject.category2 = 'life Aad living';
+      sessionObject.category3 = 'love and relationship';
+      sessionObject.category4 = 'marriage and family';
+    }
+
+    if (sessionTextEditingController.text.contains('joyful'))
+    {
+      sessionObject.category1 = 'happy and blessed';
+      sessionObject.category2 = 'life Aad living';
+      sessionObject.category3 = 'love and relationship';
+      sessionObject.category4 = 'marriage and family';
+    }
+
+    if (sessionTextEditingController.text.contains('dance'))
+    {
+      sessionObject.category1 = 'happy and blessed';
+      sessionObject.category2 = 'life Aad living';
+      sessionObject.category3 = 'love and relationship';
+      sessionObject.category4 = 'marriage and family';
+    }
+
+    if (sessionTextEditingController.text.contains('dancing'))
+    {
+      sessionObject.category1 = 'happy and blessed';
+      sessionObject.category2 = 'life Aad living';
+      sessionObject.category3 = 'love and relationship';
+      sessionObject.category4 = 'marriage and family';
+    }
+
+    if (sessionTextEditingController.text.contains('beach'))
+    {
       sessionObject.category1 = 'happy and blessed';
       sessionObject.category2 = 'life Aad living';
       sessionObject.category3 = 'love and relationship';
