@@ -57,6 +57,8 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   final TextEditingController _visitorMantraController = TextEditingController();
   GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
   GlobalKey<FlipCardState> cardKey2 = GlobalKey<FlipCardState>();
+  late String mantraUserId;
+  late String mantraEgoName;
 
 
 
@@ -980,24 +982,36 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                     Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
                                     return ListTile(
                                       leading: ClipOval(
-                                        child: CachedNetworkImage(
-                                          width: 40,
-                                          height: 40,
-                                          imageUrl: data['egoImage'].toString(),
-                                          imageBuilder: (context, imageProvider) => Container(
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                image: imageProvider,
-                                                fit: BoxFit.fill,
+                                        child: GestureDetector(
+                                          onTap: (){
+                                            mantraUserId = data['userId'];
+                                            mantraEgoName = data['egoName'];
+                                            String thisUserId = mantraUserId;
+                                            String thisUserEgoName = mantraEgoName;
+                                            PageRouter.gotoWidget(
+                                                VisitedUserEgoProfilePage(visitedUsersID: thisUserId, visitedEgoName: thisUserEgoName),
+                                                context);
+                                            print("Visited User ID::: $mantraUserId");
+                                          },
+                                          child: CachedNetworkImage(
+                                            width: 40,
+                                            height: 40,
+                                            imageUrl: data['egoImage'].toString(),
+                                            imageBuilder: (context, imageProvider) => Container(
+                                              decoration: BoxDecoration(
+                                                image: DecorationImage(
+                                                  image: imageProvider,
+                                                  fit: BoxFit.fill,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          placeholder: (context, url) =>
-                                              CircularProgressIndicator(),
-                                          errorWidget: (context, url, error) => Image.asset(
-                                            "assets/images/brown_boy_mask.png",
-                                            width: 30,
-                                            height: 30,
+                                            placeholder: (context, url) =>
+                                                CircularProgressIndicator(),
+                                            errorWidget: (context, url, error) => Image.asset(
+                                              "assets/images/brown_boy_mask.png",
+                                              width: 30,
+                                              height: 30,
+                                            ),
                                           ),
                                         ),
                                       ),
