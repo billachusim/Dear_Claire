@@ -32,33 +32,34 @@ class AuthSelectionPage extends StatelessWidget {
                     ),
                   ),
 
+                  Align(
+                    alignment:Alignment.topLeft,
+                    child: Row(
+                      children: [
+                        Container(
+                          padding:EdgeInsets.only(left: 20, top:20, bottom: 4),
+                          child: GestureDetector(
+                              onTap: (){
+                                print("Clicking on X");
+                                Navigator.pop(context);
+                              },
+                              child: SvgPicture.asset("assets/images/ic_close.svg",
+                                width: 17.0,
+                                height: 17.0,
+                                color: Colors.white,)
+                          ),
+                        ),
+
+                        SizedBox( width: 12,),
+
+                      ],
+                    ),
+                  ),
+
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Align(
-                        alignment:Alignment.topLeft,
-                        child: Row(
-                          children: [
-                            Container(
-                              padding:EdgeInsets.only(left: 20, top:4, bottom: 4),
-                              child: GestureDetector(
-                                  onTap: (){
-                                    print("Clicking on X");
-                                    Navigator.pop(context);
-                                  },
-                                  child: SvgPicture.asset("assets/images/ic_close.svg",
-                                    width: 17.0,
-                                    height: 17.0,
-                                    color: Colors.white,)
-                              ),
-                            ),
-
-                            SizedBox( width: 12,),
-
-                          ],
-                        ),
-                      ),
                       SizedBox(
                         height: 80,
                       ),
@@ -70,7 +71,7 @@ class AuthSelectionPage extends StatelessWidget {
                         child: Text("Dear Claire",
                             textAlign: TextAlign.center,
                             style: GoogleFonts.lato(
-                                fontSize: 24.0,
+                                fontSize: 26.0,
                                 color: Pallet.colorWhite,
                                 //fontStyle: FontStyle.normal,
                                 fontWeight: FontWeight.w800)),
@@ -85,7 +86,7 @@ class AuthSelectionPage extends StatelessWidget {
                                 fontSize: 13.0,
                                 color: Pallet.colorWhite,
                                 //fontStyle: FontStyle.normal,
-                                fontWeight: FontWeight.w400)),
+                                fontWeight: FontWeight.w500)),
                       ),
                       SizedBox(
                         height: 168,

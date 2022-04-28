@@ -13,6 +13,7 @@ import 'package:dear_claire/widgets/share_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
@@ -99,9 +100,43 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
       backgroundColor: Pallet.colorSecondaryDark,
       body: Stack(
         children: [
-          //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
           ListView(
             children: [
+
+              Align(
+                alignment:Alignment.topLeft,
+                child: Row(
+                  children: [
+                    Container(
+                      padding:EdgeInsets.only(left: 20, top:8, bottom: 8),
+                      child: GestureDetector(
+                          onTap: (){
+                            print("Clicking on X");
+                            Navigator.pop(context);
+                          },
+                          child: SvgPicture.asset("assets/images/ic_close.svg",
+                            width: 17.0,
+                            height: 17.0,
+                            color: Colors.white,),
+                      ),
+                    ),
+
+                    SizedBox( width: 12,),
+
+                    Text(
+                      featuredSessionModel?.title.toString() ?? "",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 22,
+                        color: Pallet.colorWhite,
+                      ),
+                    ),
+
+                  ],
+                ),
+              ),
+
+
               PostDetailsWidget(
                 sessionId: widget.sessionId,
               ),
