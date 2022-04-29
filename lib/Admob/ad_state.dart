@@ -221,5 +221,82 @@ class AdState {
   }
 
 
+  // Create Visited User top of sessions banner ad unit.
+  String get visitedUserTopOfSessionBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/7804329017";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/9364026532";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
+
+  // Create Visited User bottom of sessions banner ad unit.
+  String get visitedUserBottomOfSessionsBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/1841555895";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/6546291501";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
+
+  // Create visited user top of activities banner ad unit.
+  String get visitedUserTopOfActivitiesBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/9028984611";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/7015412402";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
+
+  // Create visited user bottom of activities banner ad unit.
+  String get visitedUserBottomOfActivitiesBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/1150494592";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/4256800395";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
+
+  // Create ego page top of activities banner ad unit.
+  String get egoPageTopOfActivitiesBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/9028984611";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/7015412402";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
+
+  // Create ego page bottom of activities banner ad unit.
+  String get egoPageBottomOfActivitiesBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/1150494592";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/4256800395";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
 
 }

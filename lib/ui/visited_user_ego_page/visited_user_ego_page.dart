@@ -26,7 +26,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:provider/provider.dart';
 
+import '../../Admob/ad_state.dart';
 import '../../services/user_activity_model.dart';
 import '../../services/user_model.dart';
 import '../../utils/constant.dart';
@@ -88,6 +91,89 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   List<Session>? _sessionList = [];
   UserModel? _visitingUser = UserModel();
   bool? isFlagged;
+
+
+
+  // Admob Ad Units.
+  late BannerAd visitedUserTopOfSessionsBanner;
+  late BannerAd visitedUserBottomOfSessionsBanner;
+  late BannerAd visitedUserTopOfActivitiesBanner;
+  late BannerAd visitedUserBottomOfActivitiesBanner;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final adState = Provider.of<AdState>(context);
+
+    // Implement a top location banner ad unit.
+    adState.initialization.then((status) {
+      setState(() {
+        visitedUserTopOfSessionsBanner = BannerAd(
+            size: AdSize.banner,
+            adUnitId: adState.visitedUserTopOfSessionBannerAdUnitId,
+            request: AdRequest(),
+            listener: BannerAdListener(
+              onAdFailedToLoad: (ad, error) {
+                ad.dispose();
+              },
+            )
+        )..load();
+      });
+    });
+
+    // Implementing a bottom location banner ad unit.
+    super.didChangeDependencies();
+    adState.initialization.then((status) {
+      setState(() {
+        visitedUserBottomOfSessionsBanner = BannerAd(
+            size: AdSize.banner,
+            adUnitId: adState.visitedUserBottomOfSessionsBannerAdUnitId,
+            request: AdRequest(),
+            listener: BannerAdListener(
+              onAdFailedToLoad: (ad, error) {
+                ad.dispose();
+              },
+            )
+        )..load();
+      });
+    });
+
+
+
+    // Implement a top location banner ad unit.
+    super.didChangeDependencies();
+    adState.initialization.then((status) {
+      setState(() {
+        visitedUserTopOfActivitiesBanner = BannerAd(
+            size: AdSize.banner,
+            adUnitId: adState.visitedUserTopOfActivitiesBannerAdUnitId,
+            request: AdRequest(),
+            listener: BannerAdListener(
+              onAdFailedToLoad: (ad, error) {
+                ad.dispose();
+              },
+            )
+        )..load();
+      });
+    });
+
+    // Implementing a bottom location banner ad unit.
+    super.didChangeDependencies();
+    adState.initialization.then((status) {
+      setState(() {
+        visitedUserBottomOfActivitiesBanner = BannerAd(
+            size: AdSize.banner,
+            adUnitId: adState.visitedUserBottomOfActivitiesBannerAdUnitId,
+            request: AdRequest(),
+            listener: BannerAdListener(
+              onAdFailedToLoad: (ad, error) {
+                ad.dispose();
+              },
+            )
+        )..load();
+      });
+    });
+  }
 
 
 
@@ -1290,8 +1376,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
 
 
-
-
                         StreamBuilder(
                           stream: visitedUsersSessions(),
                           builder: (context, AsyncSnapshot<QuerySnapshot> session) {
@@ -1322,9 +1406,30 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                               return Scrollbar(
                                 child: ListView(
                                   children: [
+
+                                    // Top ad unit is here
+                                    if(visitedUserTopOfSessionsBanner == null)
+                                      SizedBox(height: 70)
+                                    else
+                                      Container(
+                                        height: 60,
+                                        child: AdWidget(ad: visitedUserTopOfSessionsBanner),
+                                      ),
+
+
                                     ..._sessionList!
                                         .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                                         .toList(),
+
+                                    // Top ad unit is here
+                                    if(visitedUserBottomOfSessionsBanner == null)
+                                      SizedBox(height: 70)
+                                    else
+                                      Container(
+                                        height: 60,
+                                        child: AdWidget(ad: visitedUserBottomOfSessionsBanner),
+                                      ),
+
                                   ],
                                 ),
                               );
@@ -1372,10 +1477,32 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                         if (userActivity.hasData) {
                           return ListView(
                             children: [
+
+                              // Top ad unit is here
+                              if(visitedUserTopOfActivitiesBanner == null)
+                                SizedBox(height: 70)
+                              else
+                                Container(
+                                  height: 60,
+                                  child: AdWidget(ad: visitedUserTopOfActivitiesBanner),
+                                ),
+
+
                               ...userActivity.data!
                                   .map((element) => VisitedUserActivityCard(element: element,)
                               )
                                   .toList(),
+
+
+                              // Top ad unit is here
+                              if(visitedUserBottomOfActivitiesBanner == null)
+                                SizedBox(height: 70)
+                              else
+                                Container(
+                                  height: 60,
+                                  child: AdWidget(ad: visitedUserBottomOfActivitiesBanner),
+                                ),
+
                             ],
                           );
                         }
