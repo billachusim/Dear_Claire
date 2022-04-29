@@ -25,7 +25,6 @@ class ChatRoomsPage extends StatelessWidget {
           backgroundColor: Pallet.colorSecondaryDark,
           body: Stack(
             children: [
-              //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
               ListView(
               children: RoomData.room().map((room) => ChatRoomWidget(element: room)).toList(),

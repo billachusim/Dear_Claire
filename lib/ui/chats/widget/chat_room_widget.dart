@@ -47,7 +47,7 @@ class ChatRoomWidget extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Anonymous Chatroom',
+                      Text('Anonymous  Diaryroom',
                           textAlign: TextAlign.start,
                           maxLines: 1,
                           style: GoogleFonts.lato(
@@ -57,7 +57,7 @@ class ChatRoomWidget extends StatelessWidget {
                       SizedBox(
                         height: 3,
                       ),
-                      Text('By Claire🌺',
+                      Text('By Claire 🌺',
                           textAlign: TextAlign.start,
                           maxLines: 1,
                           style: GoogleFonts.lato(
