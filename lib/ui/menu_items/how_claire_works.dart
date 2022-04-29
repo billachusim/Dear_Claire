@@ -270,14 +270,14 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
             child: Column(
               children: [
                 Center(
-                    child: Text("How Sessions/Advises Are Counted",
+                    child: Text("How Sessions And Advises Are Counted",
                         style: GoogleFonts.lato(
                             fontSize: 18.0,
                             color: Pallet.colorWhite,
                             fontWeight: FontWeight.w700)
                     )
                 ),
-                Text("\nFor a diary session to be counted, it must contain the phrase Dear Claire and must be more than 50 characters\n\n"
+                Text("\nFor a diary session to be counted, it must contain the phrase Dear Claire and must be more than 50 characters.\n\n"
                     "For an advise to be counted, it must contain the word Darling, must be up to 20 characters and must be sent within 2 days of the diary session.\n\n"
                     "Claire reserves the right to increase or decrease session and advise counts during the course of cash out verifications.",
                     style: GoogleFonts.lato(
@@ -295,8 +295,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
   Widget _appreciateClaireWidget(BuildContext context) {
     return InkWell(
         onTap: () {
-          Navigator.pushReplacementNamed(context, AppRoutes.donate);
-
+          onDonateClicked();
         },
         child: Container(
             width: double.infinity,
@@ -310,7 +309,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Center(
-                child: Text("Send Love To Claire\n",
+                child: Text("Top Up Your Loves",
                     style: GoogleFonts.lato(
                         fontSize: 17.0,
                         color: Pallet.colorWhite,
@@ -320,8 +319,8 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                 height: 10,
               ),
               Text(
-                "💕Claire will remain completely FREE to use but you can donate as little as you wish towards the Claire Project to enable claire introduce designed features and continue to be there for everyone.💕\n\n"
-                    "Note: Your donation is also converted to Claireloves and will be displayed on your Ego Profile.",
+                "💕 Dear Claire App will remain completely FREE to use but you can donate as little as you wish towards the Claire Project to enable claire introduce amazing new features and continue to be there for every darling in need 💕\n\n"
+                    "The Best Part Is: Your donation is converted to Claireloves and sent back to your Ego page; meaning you can still cash out your donations with interests later on.",
                 style: GoogleFonts.lato(
                     fontSize: 15.0,
                     color: Pallet.colorWhite,
@@ -382,4 +381,14 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
 
     launch(emailLaunchUri.toString());
   }
+
+  String? getDonateUrl(){
+    return AppString.donate_url;
+  }
+
+  onDonateClicked() {
+    var donateUrl = getDonateUrl();
+    launch(donateUrl!);
+  }
+
 }
