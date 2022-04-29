@@ -238,7 +238,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
               ),
               
               Center(
-                child: Text(" \n 🌸 What Is Alter-Ego?\n",
+                child: Text(" \n 🌺 What Is Alter-Ego?\n",
                     style: GoogleFonts.lato(
                         fontSize: 16.0,
                         color: Pallet.colorWhite,
@@ -319,8 +319,8 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                 height: 10,
               ),
               Text(
-                "💕 Dear Claire App will remain completely FREE to use but you can donate as little as you wish towards the Claire Project to enable claire introduce amazing new features and continue to be there for every darling in need 💕\n\n"
-                    "The Best Part Is: Your donation is converted to Claireloves and sent back to your Ego page; meaning you can still cash out your donations with interests later on.",
+                "💕 Dear Claire App will remain completely FREE to use but you can donate as little as you wish towards the Dear Claire Project to enable Claire introduce amazing new features and continue to be there for every darling in need 💕\n\n"
+                    "The Best Part Is: Your donations are converted and sent back to your Clairelove Wallet; meaning you can still cash out your donations anytime in the future.",
                 style: GoogleFonts.lato(
                     fontSize: 15.0,
                     color: Pallet.colorWhite,

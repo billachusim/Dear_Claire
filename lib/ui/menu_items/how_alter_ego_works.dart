@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/widgets.dart';
 import 'package:swipedetector/swipedetector.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HowAlterEgoWorks extends StatefulWidget {
   const HowAlterEgoWorks({Key? key}) : super(key: key);
@@ -148,11 +149,9 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
                     ),
                     SizedBox(height: 30),
                     InkWell(
-                      onTap: () {
-                          Navigator.of(context).pushReplacementNamed(AppRoutes.donate,);
-                      },
+                      onTap: onDonateClicked,
                         child: Container(
-                            padding: EdgeInsets.all(20),
+                            padding: EdgeInsets.all(12),
                             width: 150,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(25),
@@ -239,4 +238,14 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
                   horizontalSwipeMinVelocity: 200.0),
             ));
   }
+
+  String? getDonateUrl(){
+    return AppString.donate_url;
+  }
+
+  onDonateClicked() {
+    var donateUrl = getDonateUrl();
+    launch(donateUrl!);
+  }
+
 }
