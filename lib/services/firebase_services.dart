@@ -298,10 +298,10 @@ class FirebaseServices extends ChangeNotifier {
       final _value = await _firebaseFirestore
           .collection(AppString.appFeaturedSessions)
           .where("archived", isEqualTo: false)
-        //  .where("flagged", isEqualTo: false)
+          .where("featured", isEqualTo: false)
           .where("repliesEnabled", isEqualTo: true)
-          .where("respondentUserId", isEqualTo: '')
-         // .orderBy('timeLastActivity', descending: true)
+          .where("respondentUserId", isEqualTo: null)
+          .orderBy('timeCreated', descending: true)
           .limit(AppString.appSessionLength)
           .get();
 
