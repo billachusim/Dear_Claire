@@ -210,17 +210,8 @@ class _HomeDashboardPageState extends State<HomePage>
                       },
                       child: RotateImage(72.h, 72.w,)),
                 ),
-                SizedBox(height: 15,),
-                //SizedBox(height: 30.h,),
-                ListTile(
-                  title: Text("Settings",
-                      style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: () {
 
-                  },
-                  leading: Icon(Icons.settings, color: Pallet.colorWhite),
-                ),
-                SizedBox(height: 18,),
+                SizedBox(height: 28,),
                 ListTile(
                   title: Text("How Claire Works",
                       style: TextStyle(color: Pallet.colorWhite)),
