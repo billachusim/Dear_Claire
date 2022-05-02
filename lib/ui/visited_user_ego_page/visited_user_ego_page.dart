@@ -1145,6 +1145,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
     return SafeArea(
       child: Scaffold(
+        backgroundColor: Pallet.colorSecondaryDark,
         appBar: AppBar(
           centerTitle: true,
           title: Text(widget.visitedEgoName,
@@ -1193,7 +1194,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
 
             /// The three Ego page tabs are here
-            /// First tab is Activity Tab
+            /// First tab is Sessions Tab
 
             Expanded(
                 child: DefaultTabController(
@@ -1229,7 +1230,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                     borderRadius: BorderRadius.circular(25),
                                     color: currentTabIndex != 0
                                         ? Pallet.colorWhite
-                                        : null),
+                                        : Pallet.colorWhite),
                                 child: Padding(
                                   padding: const EdgeInsets.all(3.0),
                                   child: Row(
@@ -1283,7 +1284,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                     borderRadius: BorderRadius.circular(25),
                                     color: currentTabIndex != 1
                                         ? Pallet.colorWhite
-                                        : null),
+                                        : Pallet.colorWhite),
                                 child: Padding(
                                   padding: const EdgeInsets.all(3.0),
                                   child: Row(
@@ -1336,7 +1337,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                     borderRadius: BorderRadius.circular(25),
                                     color: currentTabIndex != 2
                                         ? Pallet.colorWhite
-                                        : null),
+                                        : Pallet.colorWhite),
                                 child: Padding(
                                   padding: const EdgeInsets.all(3.0),
                                   child: Row(

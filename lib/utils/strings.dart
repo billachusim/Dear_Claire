@@ -228,7 +228,7 @@ class AppString{
   static const String what_is_alter_ego_mode_header =  " \n\n\n 🌺 What is Alter-Ego Mode?";
   static const String what_is_alter_ego_mode_paragraph = " \n Alter Ego Mode is a psychical window into the thoughts and experiences of people around the world.\nAs an Alter Ego, you will be able to switch from a regular user of the Dear Claire Diary to a whole different mode that gives you real-time access to assist Claire directly, to read or listen to anonymous diary sessions before anyone else and respond positively to them just as Claire🌺\n\n"
       "Access to Alter-Ego Mode is currently only granted to individuals of particular ranges of age, gender, social and emotional quotients.\n\n"
-      "Interested users must have up to 2000 current loves in their Clairelove Wallet. If you don't have up to that, feel free to top up your Claireloves using the Top Up love button below.\n"
+      "Interested users must have up to 2000 current loves in their Clairelove Wallet. If you don't have up to that, keep using the app to earn more loves or feel free to top up your Claireloves using the Top Up love button below.\n"
       "Your Top Up will actually be converted and sent to your Claireloves Wallet and can still be cashed out by you anytime in the future.\n\n"
       "After a Successful Top Up, please tap the Request Access button and you'll be taken through Clairentation (assessment/interview/orientation) where you'll be provided with the secret details to access the Alter-Ego Mode.";
   static const String how_does_it_work = "\n\n\n 🌺 How Does it Work?";
