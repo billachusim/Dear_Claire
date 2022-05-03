@@ -80,6 +80,15 @@ class Constant {
     "#880E4F", "#1B5E20", "#004D40"
   ];
 
+  static const List<String> TOAST_NUMBERS =
+  [
+    "Toast1", "Toast2", "Toast3", "Toast4",
+    "Toast5", "Toast6", "Toast7", "Toast8",
+    "Toast9", "Toast10", "Toast11", "Toast12",
+    "Toast13", "Toast14", "Toast15","Toast16",
+    "Toast17", "Toast18", "Toast19"
+  ];
+
   static const String PREF_KEY_USER_AVATAR_URL = "PREF_KEY_USER_AVATAR_URL";
   static const String PREF_KEY_USER_FCM_ID = "PREF_KEY_USER_FCM_ID";
   static const String PREF_KEY_USER_GENDER = "PREF_KEY_USER_GENDER";

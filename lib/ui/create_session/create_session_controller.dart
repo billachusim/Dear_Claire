@@ -32,7 +32,7 @@ class CreateSessionController extends GetxController {
 
   void changeColor() {
     print(selectedBackgroundColor.value);
-    if (selectedBackgroundColor.value < 21) {
+    if (selectedBackgroundColor.value < 18) {
       selectedBackgroundColor++;
     } else {
       selectedBackgroundColor.value = 0;

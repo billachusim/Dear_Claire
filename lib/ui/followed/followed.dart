@@ -95,8 +95,8 @@ class FollowedSessionNotice extends StatelessWidget {
     return Center(
       child: Container(
         child: Text(
-          "Followed Diary Sessions are the diary sessions you have followed from around the app.\n"
-              "You'll be notified of new activities. Follow your own sessions too to get notifications.",
+          "Diary sessions you followed. You'll get notifications.\n"
+              "Follow your own diary sessions too. Unfollow to stop notifications.",
           style: TextStyle(
             color: Colors.white70,
             fontSize: 10,
