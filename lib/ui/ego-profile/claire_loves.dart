@@ -117,7 +117,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                 children: [
                   Container(
                     child: Text(
-                      "Clairelove Wallet 🌺",
+                      "Love Wallet 🌺",
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w600,
