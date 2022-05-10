@@ -85,7 +85,6 @@ class UserActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     getUser();
-    print("show User info $userModel");
     return Container(
       margin: EdgeInsets.all(5),
       child: Material(

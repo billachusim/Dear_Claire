@@ -84,7 +84,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     randomNumber == 18 ? "Ask Claire anything." :
     randomNumber == 19 ? "Don't forget to show love." :
 
-    1;
+    "It's Claire O'Clock!";
     await  Future.delayed(Duration(seconds: 6), () {
       Fluttertoast.showToast(
         toastLength: Toast.LENGTH_LONG,

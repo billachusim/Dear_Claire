@@ -963,10 +963,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                   builder: (_, snapshot) {
                     if (snapshot.hasData) {
                       var data = snapshot.data!.data();
-                      var withdrawnLoveCount = data?["withdrawnLoveCount"] ?? "0";
-                      // _withdrawnLoveCount = withdrawnLoveCount;
-                      debugPrint(
-                          " This is the Total number of love withdrawals by this user ${withdrawnLoveCount.toString()}");
                       return _pageHeader(
                         userName: data?["nickname"] ?? "Claire's Darling",
                         sessionCount: data?["sessionCount"].toString() ?? "0",
