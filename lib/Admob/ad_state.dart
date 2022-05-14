@@ -9,6 +9,30 @@ class AdState {
   AdState(this.initialization);
 
 
+
+  // Create interstitial ad unit whenever a user logs in.
+  String get loginInterstitialAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/7375897682";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/9223046415";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+  // Create interstitial ad unit whenever a user signs up.
+  String get signUpInterstitialAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/6980026455";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/1979266624";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
   // Create interstitial ad unit whenever a session is created.
   String get newSessionInterstitialAdUnitId {
     if (Platform.isAndroid) {

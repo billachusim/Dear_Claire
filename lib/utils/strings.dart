@@ -8,6 +8,7 @@ class AppString{
 
   static const String create_ego_complete_toast = "You are Claired up!";
   static const String open_up_toast = "You are in!";
+  static const String open_up_error = "Please check your details or network";
   static const String create_ego_error_toast = "This email is already in use or something.\n"
       "Please check your network or contact Admin via app menu.";
   static const String open_up_error_toast = "The email or password or network is bad.\n"

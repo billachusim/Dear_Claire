@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
@@ -7,12 +9,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SignUpPage extends StatefulWidget {
   @override
   _SignUpPage createState() => _SignUpPage();
 }
+
+const int maxFailedLoadAttempts = 3;
+
 
 class _SignUpPage extends State<SignUpPage> {
   TextEditingController _emailController = TextEditingController();
@@ -22,10 +28,65 @@ class _SignUpPage extends State<SignUpPage> {
   final FirebaseServices _firebaseServices = FirebaseServices();
 
 
+  @override
+  void initState() {
+    super.initState();
+    _createInterstitialAd();
+  }
+
+
   void _launchClairePolicySite() async =>
       await canLaunch("https://sites.google.com/view/claire-diary/claire-privacy-policy")
           ? await launch("https://sites.google.com/view/claire-diary/claire-privacy-policy")
           : throw 'Could not launch Instagram';
+
+
+
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+
+  // Create interstitial ad.
+
+  void _createInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/6980026455"
+          : Platform.isIOS
+          ? "ca-app-pub-2404156870680632/1979266624"
+          : '',
+      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _interstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+    }
+  }
 
 
 
@@ -217,9 +278,11 @@ class _SignUpPage extends State<SignUpPage> {
                                     context,
                                     _emailController.text,
                                     _secretCodeController.text,
-                                  _genderController.text,
-                                );
+                                  _genderController.text);
+                                _showInterstitialAd();
                               }
+                              else showToast(AppString.open_up_error);
+
                             },
                             child: Container(
                               width: MediaQuery.of(context).size.width,
@@ -293,6 +356,7 @@ class _SignUpPage extends State<SignUpPage> {
   void dispose() {
     _emailController.dispose();
     _secretCodeController.dispose();
+    _interstitialAd?.dispose();
     super.dispose();
   }
 }

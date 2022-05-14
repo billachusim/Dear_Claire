@@ -486,6 +486,7 @@ class FirebaseServices extends ChangeNotifier {
       } else if (e.code == 'wrong-email') {
         showToast('The email is invalid or the user does not have an email.');
       }
+      showToast(AppString.open_up_error);
       return false;
     } catch (e) {
       print(e);
@@ -622,6 +623,7 @@ class FirebaseServices extends ChangeNotifier {
         showToast('email is not invalid');
       }
       logger.e(e);
+      showToast(AppString.open_up_error);
       return false;
     } catch (e) {
       logger.e(e);
