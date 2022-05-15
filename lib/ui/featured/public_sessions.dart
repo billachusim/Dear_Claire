@@ -5,6 +5,7 @@ import 'package:dear_claire/ui/Categories/category_streams2.dart';
 import 'package:dear_claire/ui/featured/audio_stream_card.dart';
 import 'package:dear_claire/ui/featured/ego_stream.dart';
 import 'package:dear_claire/ui/featured/model/featured_session_model.dart';
+import 'package:dear_claire/ui/featured/widget/status_stream.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
@@ -106,7 +107,7 @@ class FeaturedSessionNotice extends StatelessWidget {
 
 
 
-/// This is a stream class showing love and relationship public sessions
+/// This is a stream class showing public audio sessions
 
 
 class FeaturedAudioSessions extends StatelessWidget {
@@ -191,6 +192,83 @@ class FeaturedAudioSessions extends StatelessWidget {
 
 }
 
+
+
+
+/// This is a stream class showing status stream
+
+
+class FeaturedStatusStreams extends StatelessWidget {
+
+  FeaturedStatusStreams({Key? key}) : super(key: key);
+
+  final List<Session>? _sessionList = [];
+
+
+  /// Get Featured sessions for "love and relationship" search
+  /// But not flagged or even archived
+  Stream<QuerySnapshot<Map<String, dynamic>>> showAudioSessions() {
+    return FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .where("repliesEnabled", isEqualTo: true)
+        .where("audioUrl", isGreaterThanOrEqualTo: "https")
+        .where("archived", isEqualTo: false)
+        .where("flagged", isEqualTo: false)
+        .limit(100)
+        .orderBy('audioUrl', descending: true)
+        .orderBy('timeLastActivity', descending: true)
+        .snapshots();
+  }
+
+
+
+
+  @override
+  Widget build(BuildContext context) {
+    return
+      Column(
+        children: [
+          Container(
+            child: StreamBuilder(
+              stream: showAudioSessions(),
+              builder: (context, AsyncSnapshot<QuerySnapshot> session) {
+                if (session.connectionState == ConnectionState.waiting) {
+                  return Text("");
+                }
+                if (!session.hasData) {
+                  return Text("");
+                }
+                if (session.hasData) {
+                  // clear list
+                  _sessionList!.clear();
+
+                  session.data!.docs.map((e) {
+                    _sessionList!.add(Session.fromJson(e.data()));
+                  }).toList();
+
+                  return Scrollbar(
+                    child: SizedBox(height: 82,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          ..._sessionList!
+                              .map((element) =>
+                              StatusStreamWidget(element: element))
+                              .toList(),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return Container();
+              },
+            ),
+          ),
+        ],
+      );
+  }
+
+}
 
 
 

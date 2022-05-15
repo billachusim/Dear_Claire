@@ -40,11 +40,11 @@ class _FeaturedPageState extends State<FeaturedPage> {
             Column(
             children: [
 
-             TheFeaturedSessions(),
+              FeaturedStatusStreams(),
+
+              TheFeaturedSessions(),
 
               CategoryStreams2(),
-
-              FeaturedAudioSessions(),
 
       ],
           ),
