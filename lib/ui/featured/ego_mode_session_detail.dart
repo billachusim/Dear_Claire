@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/Admob/ad_state.dart';
 import 'package:dear_claire/services/firebase_services.dart';
+import 'package:dear_claire/services/user_model.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -15,7 +15,6 @@ import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../utils/color.dart';
 import '../../widgets/comment_widget.dart';
-import '../splash_screen/custom_rotate_bacground.dart';
 import 'model/comment_session_model.dart';
 import 'model/session.dart';
 import 'widget/post_details_widget.dart';
@@ -40,6 +39,8 @@ class _EgoModeSessionDetailState
 
   List<CommentSessionModel> _commentSessionList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
+  UserModel? _visitingUser = UserModel();
+
 
 
   // Admob Ad Units.
@@ -303,24 +304,35 @@ class _EgoModeSessionDetailState
     logger.d('Successfully updated time of last activity');
   }
 
+  /// Get Visiting Ego User info
+  Future<UserModel> getVisitingUserInfo() async {
+    DocumentSnapshot response = await FirebaseFirestore.instance
+        .collection(AppString.users)
+        .doc(currentUser?.uid)
+        .get();
+
+    var visitingUser = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
+    _visitingUser = visitingUser;
+    logger.d('Successfully got the visiting user model');
+    return visitingUser;
+  }
+
   void _updateReaction(
       CommentSessionModel? commentSessionModel, Session session) async {
-    if (commentSessionModel!.commentId!.isEmpty) {
-      showToast('You can\'t react to this post at this time.');
+    if (!await firebaseServices.isUserSignIn(context)) {
+      showToast('You have to login first before reacting.');
       return;
     }
-    if (!await firebaseServices.isUserSignIn(context)) return;
-
-    final _userModel = await firebaseServices.getUserInfo();
+    final _userModel = _visitingUser;
     firebaseServices.addThanksReaction(
-        commentID: commentSessionModel.commentId!,
+        commentID: commentSessionModel!.commentId!.toString(),
         docId: session.sessionId!,
-        map: commentSessionModel.thanks!.contains(_userModel.userId)
+        map: commentSessionModel.thanks!.contains(_userModel?.userId)
             ? {
-                'thanks': FieldValue.arrayRemove([_userModel.userId])
+                'thanks': FieldValue.arrayRemove([_userModel?.userId])
               }
             : {
-                'thanks': FieldValue.arrayUnion([_userModel.userId])
+                'thanks': FieldValue.arrayUnion([_userModel?.userId])
               });
   }
 

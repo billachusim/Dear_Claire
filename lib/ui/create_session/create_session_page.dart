@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/user_model.dart';
 import 'package:dear_claire/ui/create_session/session_model.dart';
-import 'package:dear_claire/ui/create_session/sound/play_sound_widget.dart';
+import 'package:dear_claire/ui/create_session/sound/custom_play_sound_widget.dart';
 import 'package:dear_claire/ui/create_session/view_singlesession_widget.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
@@ -13,7 +13,6 @@ import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:emoji_chooser/emoji_chooser.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -24,7 +23,6 @@ import 'package:dear_claire/widgets/toast.dart';
 import 'package:hive/hive.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
-import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'create_session_controller.dart';
 import 'sound/sound_widget.dart';
@@ -135,6 +133,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     randomizeBackgroundColor();
     initializeDatabaseObject();
     sessionTextFocusNode = FocusNode();
+    sessionTextFocusNode.requestFocus();
     _createInterstitialAd();
     randomizeNewSessionToast();
   }
@@ -411,8 +410,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                           style: TextStyle(color: Pallet.colorSecondary)),
                 ),
                 onPressed: () {
-                  if (sessionTextEditingController.text.isNotEmpty &&
-                      sessionTitleController.text.isNotEmpty) {
+                  if (sessionTitleController.text.isNotEmpty) {
                     Navigator.of(context).pop();
                     createSession();
                     showToast(AppString.started_new_session);
@@ -459,7 +457,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         mainAxisSize: MainAxisSize.max,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          RotateImage(70, 70),
+                          RotateImage(60, 60),
                           SizedBox(
                             height: 10,
                           ),
@@ -479,6 +477,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         child: Container(
                           alignment: Alignment.center,
                           child: AutoSizeTextField(
+                            textAlign: TextAlign.center,
                             style: Constant
                                 .DIARY_FONT_STYLES[c.selectedFontIndex.value],
                             maxLines: null,
@@ -507,6 +506,34 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                           ),
                         ),
                       ),
+
+                      SizedBox(
+                        width: 15.w,
+                      ),
+                      Container(
+                          height: 100.h,
+                          width: 100.w,
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.mic_rounded,
+                              size: 80,
+                              color: Pallet.colorWhite,
+                            ),
+                            onPressed: () async {
+                              var data = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => SoundRecorderWidget(
+                                        onRecordComplete: (recordFile) {},
+                                      )));
+                              if (data != null) {
+                                recordFile = data;
+                                setState(() {});
+                              }
+                            },
+                          )),
+
+
                       recordFile != null
                           ? _recordFileWidget()
                           : SizedBox.shrink(),
@@ -644,30 +671,16 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   Widget _recordFileWidget() {
     return Container(
       height: 60.h,
-      width: 60.w,
+      //width: 60.w,
       child: Stack(
         fit: StackFit.expand,
         children: <Widget>[
           Center(
-              child: IconButton(
-                  icon: Icon(Icons.play_circle_fill_outlined,
-                      color: Colors.white, size: 40.r),
-                  onPressed: () {
-                    showDialog<void>(
-                      context: context,
-                      barrierDismissible: false, // user must tap button!
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          content: PlaySoundWidget(
-                            filePath: recordFile?.path,
-                          ),
-                        );
-                      },
-                    );
-                  })),
+              child: CustomPlaySoundWidget(filePath: recordFile?.path)
+          ),
           Positioned(
-              right: -5,
-              top: -9,
+              right: 25,
+              top: 3,
               child: IconButton(
                   icon: Icon(
                     Icons.cancel,
@@ -1495,14 +1508,14 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         await _firebaseServices.createSession(session: sessionObject);
 
     Hive.box("draft").clear();
+
     categorize(sessionObject);
 
-    //incrementSessionCount();
-    //incrementTotalLoveCount();
     isOriginalSession(context, sessionTextEditingController.text);
+
     ascertainCurrentLoveCount();
 
-      _showInterstitialAd();
+    _showInterstitialAd();
 
     navigateToNewSession(await _firebaseServices.getSingleSession(
         sessionId: sessionObject.sessionId));

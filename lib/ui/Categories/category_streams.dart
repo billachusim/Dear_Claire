@@ -176,7 +176,7 @@ class _CategoryStreamsState extends State<CategoryStreams> {
               });
             },
               child: Container(
-                width: 90.0,
+                width: 95.0,
                 margin: EdgeInsets.all(2),
                 decoration: BoxDecoration(
                     color: Colors.indigo,

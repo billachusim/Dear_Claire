@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/ui/ego-profile/claire_loves.dart';
 import 'package:dear_claire/ui/featured/widget/custom_post_details_screen.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_profile_page_model.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_user_claireloves.dart';
@@ -12,9 +11,6 @@ import 'package:flip_card/flip_card.dart';
 import 'package:flutter_svg/svg.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dear_claire/data/models/session_model.dart';
-import 'package:dear_claire/ui/ego-profile/acvitity.dart';
-import 'package:dear_claire/ui/ego-profile/archive.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
@@ -23,8 +19,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:focused_menu/focused_menu.dart';
-import 'package:focused_menu/modals.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
@@ -195,8 +189,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
     var visitingUser = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
     _visitingUser = visitingUser;
-    logger.d('Successfully got the visited user model');
-    print('Visited user is: $visitedUser');
+    logger.d('Successfully got the visiting user model');
     return visitingUser;
   }
 
@@ -247,7 +240,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
     var visitedUser = VisitedUserModel.fromFirestore(response.data() as Map<String, dynamic>);
     logger.d('Successfully got the visited user model');
-    print('Visited user is: $visitedUser');
     return visitedUser;
   }
 
