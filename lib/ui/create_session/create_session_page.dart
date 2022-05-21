@@ -146,6 +146,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     }
     );
     _createInterstitialAd();
+    _createQuickInterstitialAd();
     randomizeNewSessionToast();
   }
 
@@ -1654,24 +1655,45 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category4 = 'birthdays and anniversary';
     }
 
-    if (sessionTextEditingController.text.contains('school'))
+    if (sessionTextEditingController.text.contains('sad'))
     {
-      sessionObject.category1 = 'school and education';
+      sessionObject.category1 = 'sad and depressed';
+      sessionObject.category2 = 'hate and abuse';
+    }
+
+    if (sessionTextEditingController.text.contains('ginger'))
+    {
+      sessionObject.category1 = 'life and living';
       sessionObject.category2 = 'work and career';
     }
 
-    if (sessionTextEditingController.text.contains('marriage'))
+    if (sessionTextEditingController.text.contains('sick'))
     {
-      sessionObject.category1 = 'marriage and family';
-      sessionObject.category2 = 'husband and wife';
-      sessionObject.category3 = 'birthdays and anniversary';
+      sessionObject.category1 = 'health and fitness';
+      sessionObject.category2 = 'life and living';
     }
 
-    if (sessionTextEditingController.text.contains('family'))
+    if (sessionTextEditingController.text.contains('depressed'))
     {
-      sessionObject.category1 = 'marriage and family';
-      sessionObject.category2 = 'husband and wife';
-      sessionObject.category3 = 'birthdays and anniversary';
+      sessionObject.category1 = 'sad and depressed';
+      sessionObject.category2 = 'health and fitness';
+    }
+
+    if (sessionTextEditingController.text.contains('fly'))
+    {
+      sessionObject.category1 = 'happy and blessed';
+      sessionObject.category2 = 'life and living';
+    }
+
+    if (sessionTextEditingController.text.contains('jealous'))
+    {
+      sessionObject.category1 = 'life and living';
+    }
+
+    if (sessionTextEditingController.text.contains('anxious'))
+    {
+      sessionObject.category1 = 'friends and fun';
+      sessionObject.category2 = 'life and living';
     }
 
 
@@ -1700,7 +1722,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     ascertainCurrentLoveCount();
 
-    _showInterstitialAd();
+    _showQuickInterstitialAd();
 
     navigateToNewSession(await _firebaseServices.getSingleSession(
         sessionId: sessionObject.sessionId));
@@ -2456,7 +2478,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
-  CreateSessionModel sessionObject = CreateSessionModel();
 
   // Create interstitial ad.
 
@@ -2500,6 +2521,56 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       _interstitialAd!.show();
     }
   }
+
+
+
+  InterstitialAd? _quickInterstitialAd;
+  int _quickInterstitialLoadAttempts = 0;
+
+  // Create quick session interstitial ad.
+
+  void _createQuickInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/8800174899"
+          : Platform.isIOS
+          ? "ca-app-pub-2404156870680632/1147263196"
+          : '',
+      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _quickInterstitialAd = ad;
+          _quickInterstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _quickInterstitialLoadAttempts += 1;
+          _quickInterstitialAd = null;
+          if (_quickInterstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createQuickInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showQuickInterstitialAd() {
+    if (_quickInterstitialAd != null) {
+      _quickInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createQuickInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createQuickInterstitialAd();
+        },
+      );
+      _quickInterstitialAd!.show();
+    }
+  }
+
+
 
   void navigateToNewSession(CreateSessionModel? session) {
     print('done');
