@@ -13,6 +13,7 @@ import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:emoji_chooser/emoji_chooser.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -24,6 +25,9 @@ import 'package:hive/hive.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:uuid/uuid.dart';
+import '../Categories/category_sessions.dart';
+import '../Categories/category_streams2.dart';
+import '../routes/page_router_animation.dart';
 import 'create_session_controller.dart';
 import 'sound/sound_widget.dart';
 
@@ -41,8 +45,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   final FirebaseServices _firebaseServices = FirebaseServices();
   final c = Get.find<CreateSessionController>();
 
+  late final int mood;
+
   //object for hive database
   late final box;
+
+  bool isTyping = false;
 
 //obtain user id, nickname and avatarUrl linked to this user
   var currentUser = FirebaseAuth.instance.currentUser;
@@ -133,7 +141,10 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     randomizeBackgroundColor();
     initializeDatabaseObject();
     sessionTextFocusNode = FocusNode();
-    sessionTextFocusNode.requestFocus();
+    Future.delayed(Duration(seconds: 8), () {
+      sessionTextFocusNode.requestFocus();
+    }
+    );
     _createInterstitialAd();
     randomizeNewSessionToast();
   }
@@ -171,8 +182,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     randomNumber == 18 ? "I'm ready to read, listen and reply." :
     randomNumber == 19 ? "If you don't tell me, I won't know." :
 
-    1;
-    await  Future.delayed(Duration(seconds: 9), () {
+    "Go on, Darling, talk to me...";
+    await  Future.delayed(Duration(seconds: 8), () {
       Fluttertoast.showToast(
         toastLength: Toast.LENGTH_LONG,
         msg: message.toString(),
@@ -429,10 +440,10 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   @override
   Widget build(BuildContext context) {
-    // onTap: () => sessionTextFocusNode.requestFocus(),
     return Obx(
       () => SafeArea(
         child: Scaffold(
+          resizeToAvoidBottomInset: true,
           appBar: AppBar(
             centerTitle: true,
             backgroundColor:
@@ -468,84 +479,911 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                   color: Colors.white))
                         ],
                       )))
-              : Container(
-                  height: MediaQuery.of(context).size.height,
-                  padding: EdgeInsets.all(10),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: AutoSizeTextField(
-                            textAlign: TextAlign.center,
-                            style: Constant
-                                .DIARY_FONT_STYLES[c.selectedFontIndex.value],
-                            maxLines: null,
-                            minLines: 1,
-                            onChanged: (value) {
-                              if (value != null) {
-                                box.put("text", value);
-                              }
-                            },
-                            scrollPadding: EdgeInsets.all(20.0),
-                            controller: sessionTextEditingController,
-                            focusNode: sessionTextFocusNode,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.all(10),
-                              focusedBorder: InputBorder.none,
-                              disabledBorder: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              border: InputBorder.none,
-                              focusedErrorBorder: InputBorder.none,
-                              errorBorder: InputBorder.none,
-                              hintText:
-                                  "Start your text or voice note with Dear Claire",
-                              hintStyle: TextStyle(
-                                  color: Pallet.colorWhite, fontSize: 12.sp),
+              : SingleChildScrollView(
+                child: Container(
+                    height: MediaQuery.of(context).size.height,
+                    padding: EdgeInsets.all(10),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            alignment: Alignment.center,
+                            child: AutoSizeTextField(
+                              textAlign: TextAlign.center,
+                              style: Constant
+                                  .DIARY_FONT_STYLES[c.selectedFontIndex.value],
+                              maxLines: null,
+                              minLines: 1,
+                              onChanged: (text) {
+                                if (text != null) {
+                                  setState(() {
+                                    isTyping = true;
+                                    box.put("text", text);
+                                  });
+                                } else {
+                                  isTyping = false;
+                                  setState(() {
+                                    isTyping = false;
+                                  });
+                                }
+                              },
+
+                              scrollPadding: EdgeInsets.all(20.0),
+                              controller: sessionTextEditingController,
+                              focusNode: sessionTextFocusNode,
+                              decoration: InputDecoration(
+                                contentPadding: EdgeInsets.all(10),
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                border: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                hintText:
+                                    "Start your text or voice note with Dear Claire",
+                                hintStyle: TextStyle(
+                                    color: Pallet.colorWhite, fontSize: 12.sp),
+                              ),
                             ),
                           ),
                         ),
-                      ),
 
-                      SizedBox(
-                        width: 15.w,
-                      ),
-                      Container(
-                          height: 100.h,
-                          width: 100.w,
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.mic_rounded,
-                              size: 80,
-                              color: Pallet.colorWhite,
+                        SizedBox(
+                          width: 15.w,
+                        ),
+                        Container(
+                            height: 100.h,
+                            width: 100.w,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.mic_rounded,
+                                size: 80,
+                                color: Pallet.colorWhite,
+                              ),
+                              onPressed: () async {
+                                var data = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) => SoundRecorderWidget(
+                                          onRecordComplete: (recordFile) {},
+                                        )));
+                                if (data != null) {
+                                  recordFile = data;
+                                  setState(() {});
+                                }
+                              },
+                            )),
+
+                        SizedBox(height: 20,),
+
+
+
+                  /// Introducing Quick Sessions.
+
+
+                        Visibility(
+                          visible: !isTyping,
+                            child: Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              child: Column(
+                                children: [
+
+                                  Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Container(
+                                      padding: EdgeInsets.all(2),
+                                      height: 20,
+                                      width: 160,
+                                      decoration: BoxDecoration(
+                                          color: Pallet.colorWhite,
+                                          borderRadius: BorderRadius.circular(20)
+                                      ),
+                                      child: Text(
+                                        "Share A Quick Session",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 14,
+                                          fontStyle: FontStyle.italic,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  SizedBox(height: 5,),
+
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: <Widget>[
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire, I'm feeling so alive today!";
+                                            String quickSessionTitle = "Feeling Alive Today";
+                                            mood = 1;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 77.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.green,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("I'm Alive!",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire,\n"
+                                                "Hmmm. Something's in the air o...\n"
+                                                "It seems like I'm falling in love today!";
+                                            String quickSessionTitle = "Falling in Love Today";
+                                            mood = 4;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 110.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.red,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("Falling in love!",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire, I'm so motivated and ready to face today!\n"
+                                                "Ginger oh ginger... Na you dey ginger me o ginger!";
+                                            String quickSessionTitle = "Feeling Gingered Today";
+                                            mood = 15;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 135.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.orange,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("Feeling gingered!",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire, I'm feeling so fly today. Woo!\n"
+                                                "Flamboyance is a state of mind.\n"
+                                                "Nobody can tell me anything.";
+                                            String quickSessionTitle = "Feeling So Fly!";
+                                            mood = 16;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 45.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.purple,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("Fly!",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+
+                                      ],
+                                    ),
+                                  ),
+
+
+
+                                  SizedBox(height: 8,),
+
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: <Widget>[
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire, I'm feeling sad.\n"
+                                                "What could this be? I'm thinking, lost in my sad thoughts.";
+                                            String quickSessionTitle = "Feeling Sad";
+                                            mood = 2;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 112.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.blueAccent,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("Mtcheew, Sad",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire, I'm really surprised. WOW!";
+                                            String quickSessionTitle = "Surprise!!!";
+                                            mood = 11;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 75.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.brown,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("Surprise!",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire,\n"
+                                                "I'm kinda feeling anxious today txmqaqkcqtfch.\n"
+                                                "I really need to get hold of myselfkc";
+                                            String quickSessionTitle = "So Anxious Today";
+                                            mood = 8;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 80.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.blueGrey,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("Anxious",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire, I'm just so sick and tired.";
+                                            String quickSessionTitle = "Sick And Tired";
+                                            mood = 9;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 107.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.black54,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("Sick and tired",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+
+                                      ],
+                                    ),
+                                  ),
+
+
+
+
+
+
+
+                                  SizedBox(height: 8,),
+
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: <Widget>[
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire,\n"
+                                                "Hmmm. This must be jealousy all over me. I don't think I'm envious though.";
+                                            String quickSessionTitle = "Jealous Mood";
+                                            mood = 12;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 85.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.black,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("I'm jealous",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire,\n"
+                                                "I'm falling out of love again.\n"
+                                                "I don't want to get philosophical but our mistakes only leads us to becoming a better version of ourselves.\n"
+                                                "Heartbroken, yet, we move.";
+                                            String quickSessionTitle = "Out Of Love";
+                                            mood = 5;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 105.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.red,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("Heartbroken",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire, I'm afraid.\n"
+                                                "Just afraid. I'll be careful. I promise.";
+                                            String quickSessionTitle = "I'm Afraid Right Now";
+                                            mood = 10;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 80.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.deepPurpleAccent,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("I'm afraid",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire, I'm feeling so fly today!\n"
+                                                " Flamboyance is a state of mind";
+                                            String quickSessionTitle = "I'm So Embarrassed";
+                                            mood = 14;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 130.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.brown,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("I'm embarrassed",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+
+                                      ],
+                                    ),
+                                  ),
+
+
+
+                                  SizedBox(height: 8,),
+
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: <Widget>[
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire, I love you!.";
+                                            String quickSessionTitle = "Oh My Claire!";
+                                            mood = 17;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 100.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.deepPurple,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("I love Claire!",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire, Hala!\n"
+                                                "I'm feeling so excited today!\n"
+                                                "I'm so actually hyperactive right now. Woooo!! E for energy!.";
+                                            String quickSessionTitle = "I'm excited!";
+                                            mood = 3;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 70.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.pink,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("Excited!",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire,\n"
+                                                "I think I'm feeling depressed today.\n"
+                                                "I'm doing my best to shake out the beast.";
+                                            String quickSessionTitle = "I'm Depressed";
+                                            mood = 6;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 85.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.amber,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("Depressed",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+
+
+
+                                        GestureDetector(
+                                          onTap: (){
+                                            String quickSessionMessage = "Dear Claire,\n"
+                                                " I'm feeling upside down today!\n"
+                                                " Like... The up side is down... I repeat... The up side is down!";
+                                            String quickSessionTitle = "Up Side Is Down!";
+                                            mood = 13;
+                                            sessionTitleController.text = quickSessionTitle;
+                                            sessionTextEditingController.text = quickSessionMessage;
+                                            if (sessionTitleController.text.isNotEmpty) {
+                                              Navigator.of(context).pop();
+                                              createQuickSession();
+                                              showToast(AppString.started_new_session);
+                                            } else {
+                                              _interstitialAd?.dispose();
+                                              showToast(AppString.new_session_error);
+                                            }
+                                          },
+                                          child: Container(
+                                            width: 105.0,
+                                            margin: EdgeInsets.all(2),
+                                            padding: EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                                color: Colors.black,
+                                                borderRadius: BorderRadius.circular(15)
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text("Upside down",
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight: FontWeight.w600,
+                                                        fontStyle: FontStyle.italic,
+                                                        fontSize: 15,
+                                                      ),
+                                                    )),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+
+
+
+                                      ],
+                                    ),
+                                  ),
+
+
+                                ],
+                              ),
                             ),
-                            onPressed: () async {
-                              var data = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => SoundRecorderWidget(
-                                        onRecordComplete: (recordFile) {},
-                                      )));
-                              if (data != null) {
-                                recordFile = data;
-                                setState(() {});
-                              }
-                            },
-                          )),
+                        ),
 
 
-                      recordFile != null
-                          ? _recordFileWidget()
-                          : SizedBox.shrink(),
-                      Align(
-                          alignment: Alignment.bottomCenter,
-                          child: _imagesGridView()),
-                      SizedBox(
-                        height: 30.h,
-                      )
-                    ],
+                        recordFile != null
+                            ? _recordFileWidget()
+                            : SizedBox.shrink(),
+                        Align(
+                            alignment: Alignment.center,
+                            child: _imagesGridView()),
+
+                      ],
+                    ),
                   ),
-                ),
+              ),
           bottomSheet: Container(
               padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
               decoration: BoxDecoration(
@@ -555,8 +1393,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Container(
-                      height: 20.h,
-                      width: 25.w,
+                      height: 30.h,
+                      width: 35.w,
                       child: IconButton(
                         alignment: Alignment.topCenter,
                         icon: Icon(Icons.camera_enhance_rounded,
@@ -564,8 +1402,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         onPressed: loadAssets,
                       )),
                   SizedBox(
-                    width: 30.w,
-                    height: 40,
+                    width: 23.w,
                   ),
                   Container(
                       height: 20.h,
@@ -625,11 +1462,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         onPressed: () => c.changeColor(),
                       )),
                   SizedBox(
-                    width: 15.w,
+                    width: 20.w,
                   ),
                   Container(
-                      height: 20.h,
-                      width: 25.w,
+                      height: 30.h,
+                      width: 35.w,
                       child: IconButton(
                         icon: Icon(
                           Icons.mic_rounded,
@@ -775,6 +1612,102 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       ),
     );
   }
+
+
+
+  /// Create quick sessions.
+
+
+
+  createQuickSession() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    userModel = await _firebaseServices.getUserInfo();
+    CreateSessionModel sessionObject = CreateSessionModel();
+    if (recordFile != null) {
+      sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile!);
+    }
+
+    if (imageList != null) {
+      List<String> imageDownloadUrls = <String>[];
+      for (var image in imageList) {
+        imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
+      }
+      sessionObject.imageUrls = imageDownloadUrls;
+    }
+
+    /// Adding a category tag to every session created.
+
+    if (sessionTextEditingController.text.contains('alive'))
+    {
+      sessionObject.category1 = 'life and living';
+      sessionObject.category2 = 'happy and blessed';
+    }
+
+    if (sessionTextEditingController.text.contains('love'))
+    {
+      sessionObject.category1 = 'love and relationship';
+      sessionObject.category2 = 'sex and dating';
+      sessionObject.category3 = 'boyfriend and girlfriend';
+      sessionObject.category4 = 'birthdays and anniversary';
+    }
+
+    if (sessionTextEditingController.text.contains('school'))
+    {
+      sessionObject.category1 = 'school and education';
+      sessionObject.category2 = 'work and career';
+    }
+
+    if (sessionTextEditingController.text.contains('marriage'))
+    {
+      sessionObject.category1 = 'marriage and family';
+      sessionObject.category2 = 'husband and wife';
+      sessionObject.category3 = 'birthdays and anniversary';
+    }
+
+    if (sessionTextEditingController.text.contains('family'))
+    {
+      sessionObject.category1 = 'marriage and family';
+      sessionObject.category2 = 'husband and wife';
+      sessionObject.category3 = 'birthdays and anniversary';
+    }
+
+
+    sessionObject.userAvatarUrl = userModel.avatarUrl;
+    sessionObject.userNickname = userModel.nickname;
+    sessionObject.title = sessionTitleController.text;
+    sessionObject.private = c.acceptReplies.value;
+    sessionObject.repliesEnabled = true;
+    sessionObject.message = sessionTextEditingController.text;
+    sessionObject.colorHex =
+    Constant.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
+    sessionObject.sessionId = uuid.v1();
+    sessionObject.userId = userModel.userId;
+    sessionObject.moodId = mood;
+    sessionObject.location = 'in Claire World';
+    sessionObject.timeLastActivity = Timestamp.now();
+
+    bool isSuccessfull =
+    await _firebaseServices.createSession(session: sessionObject);
+
+    Hive.box("draft").clear();
+
+    categorize(sessionObject);
+
+    isOriginalSession(context, sessionTextEditingController.text);
+
+    ascertainCurrentLoveCount();
+
+    _showInterstitialAd();
+
+    navigateToNewSession(await _firebaseServices.getSingleSession(
+        sessionId: sessionObject.sessionId));
+  }
+
+
+
 
   createSession() async {
     setState(() {
