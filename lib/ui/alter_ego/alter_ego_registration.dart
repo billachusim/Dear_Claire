@@ -734,8 +734,8 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
     var shortBio = _shortBioController.text.isEmpty ? "null" : _shortBioController.text;
     var interestedInBecoming = _value1Controller.text.isEmpty ? "No" : _value1Controller.text;
     var makeWorldBetter = _value2Controller.text.isEmpty ? "No" : _value2Controller.text;
-    var followingOnInstagram = _value3Controller.text.isEmpty ? "No" : _value3Controller.text;
-    var learnedOnInstagram = _value4Controller.text.isEmpty ? "No" : _value4Controller.text;
+    var humbleAndSelfless = _value3Controller.text.isEmpty ? "No" : _value3Controller.text;
+    var learnedOnSocialMedia = _value4Controller.text.isEmpty ? "No" : _value4Controller.text;
     var ratedOnPlaystore = _value5Controller.text.isEmpty ? "No" : _value5Controller.text;
     var believeInClaire = _value6Controller.text.isEmpty ? "No" : _value6Controller.text;
     var readyToBeClaire = _value7Controller.text.isEmpty ? "No" : _value7Controller.text;
@@ -777,9 +777,9 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
 
       *Do you believe that the world will be a better place if people treat other people like themselves wish to be treated?*: $makeWorldBetter
 
-      *Are you following @socialfaculty on Instagram?*: $followingOnInstagram
+      *Do you believe that humility and selfless leadership are good practises for life?*: $humbleAndSelfless
 
-      *Did you first learn about Claire on Instagram?*: $learnedOnInstagram
+      *Did you first learn about Claire on social media Like IG or Whatsapp?*: $learnedOnSocialMedia
 
       *Have you rated Claire Diary five stars with a short sweet review on Playstore?*: $ratedOnPlaystore
 

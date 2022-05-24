@@ -147,7 +147,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     );
     _createInterstitialAd();
     _createQuickInterstitialAd();
-    randomizeNewSessionToast();
+    randomizeNewDiarySessionToast();
   }
 
   void initializeDatabaseObject() async {
@@ -159,7 +159,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     }
   }
 
-  randomizeNewSessionToast() async {
+  randomizeNewDiarySessionToast() async {
     Random random = new Random();
     int randomNumber = random.nextInt(Constant.TOAST_NUMBERS.length);
     var message = randomNumber == 1 ? "Go on, Darling, talk to me..." :
@@ -202,6 +202,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     sessionTitleController.dispose();
     super.dispose();
     _interstitialAd?.dispose();
+    _quickInterstitialAd?.dispose();
   }
 
 
@@ -609,6 +610,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -655,6 +657,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -699,6 +702,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -745,6 +749,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -803,6 +808,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -846,6 +852,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -891,6 +898,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -935,6 +943,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -997,6 +1006,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -1044,6 +1054,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -1088,6 +1099,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -1133,6 +1145,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -1190,6 +1203,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -1235,6 +1249,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -1281,6 +1296,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
@@ -1329,6 +1345,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
+                                              _showQuickInterstitialAd();
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
