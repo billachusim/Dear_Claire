@@ -634,7 +634,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                 userType == 'REGULAR'? 'Ego' :
                                 userType == 'ADMIN'? 'Alter Ego' :
                                 userType == 'SUPER_ADMIN'? 'Super Ego' :
-                                '',
+                                'Ego',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,

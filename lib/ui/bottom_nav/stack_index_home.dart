@@ -1,3 +1,5 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/notification.dart';
 import 'package:dear_claire/ui/chats/chatrooms.dart';
 import 'package:dear_claire/ui/dairy/diary.dart';
@@ -31,6 +33,8 @@ class _HomeDashboardPageState extends State<HomePage>
   var currentUser = FirebaseAuth.instance.currentUser;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
+  String userName = "";
+  String userType = "";
 
   PageController _pageController = PageController(initialPage: 0);
 
@@ -100,7 +104,7 @@ class _HomeDashboardPageState extends State<HomePage>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, {String? avatarUrl}) {
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
@@ -192,14 +196,98 @@ class _HomeDashboardPageState extends State<HomePage>
                 UserAccountsDrawerHeader(
                   decoration: BoxDecoration(color: Pallet.colorPrimary,
                   ),
-                  accountEmail: Text("Secret Diary Chat",
-                      style: TextStyle(color: Pallet.colorWhite, fontWeight: FontWeight.w600,
-                      fontSize: 12.0, fontStyle: FontStyle.italic
-                      )),
-                  accountName: Text("Dear Claire",
+                  accountEmail: Text(
+                  "You'll never be not truly loved.",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  accountName: Text(userName,
                       style: TextStyle(color: Pallet.colorWhite,
-                          fontSize: 21.0, fontWeight: FontWeight.w700,)),
-                  currentAccountPicture: InkWell(
+                          fontSize: 19.0, fontWeight: FontWeight.w700,)),
+                  currentAccountPicture: FutureBuilder<
+                      DocumentSnapshot<Map<String, dynamic>>>(
+                    future: FirebaseFirestore.instance
+                        .collection("users")
+                        .doc(currentUser?.uid)
+                        .get(),
+                    builder: (_, snapshot) {
+                      if (snapshot.hasData) {
+                        var data = snapshot.data!.data();
+                        userName = data?["nickname"] ?? " ";
+                        userType = data?["userType"] ?? " ";
+                        avatarUrl = data?["avatarUrl"] ?? " ";
+                        return
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.of(context)
+                                  .pushNamed(AppRoutes.egoPage);
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: userType == 'REGULAR'? Pallet.colorPrimary
+                                    : userType == 'ADMIN'? Pallet.colorSecondary
+                                    : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
+                                    :Pallet.colorBlue,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              margin: EdgeInsets.only(left: 0),
+                              child: Container(
+                                height: 75,
+                                width: 75,
+                                margin: EdgeInsets.all(4),
+                                child: CachedNetworkImage(
+                                    width: 60,
+                                    height: 60,
+                                    imageUrl: avatarUrl ??"",
+                                    imageBuilder: (context, imageProvider) => Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(100),
+                                        image: DecorationImage(
+                                          image: imageProvider,
+                                          fit: BoxFit.fill,
+                                        ),
+                                      ),
+                                    ),
+                                    placeholder: (context, url) =>
+                                        CircularProgressIndicator(),
+                                    errorWidget: (context, url, error) => Image.asset(
+                                      "assets/images/brown_boy_mask.png",
+                                      width: 50,
+                                      height: 50,
+                                    ) //Icon(Icons.error),
+                                ),
+                              ),
+                            ),
+                          );
+                      }
+
+                      return CircularProgressIndicator();
+                    },
+                  ),
+
+                  otherAccountsPictures: [
+                    InkWell(
+                        onTap: () async {
+                          String id = await sharedPreference.getAlterEgoId();
+                          String accessCode = await sharedPreference.getAlterEgoAccessCode();
+                          print("Show Alter details:: $id || $accessCode");
+                          id.isNotEmpty && accessCode.isNotEmpty ? await firebaseServices.getUserAlterEgo(context,id, accessCode)
+                              : Navigator.of(context)
+                              .pushNamed(AppRoutes.alterEgoLogin);
+                        },
+                        child: Image.asset(
+                          "assets/images/claire_icon.png",
+                          height: 50,
+                          width: 50,
+                        ),
+                    ),
+
+                    GestureDetector(
                       onTap: () async {
                         String id = await sharedPreference.getAlterEgoId();
                         String accessCode = await sharedPreference.getAlterEgoAccessCode();
@@ -208,7 +296,21 @@ class _HomeDashboardPageState extends State<HomePage>
                             : Navigator.of(context)
                             .pushNamed(AppRoutes.alterEgoLogin);
                       },
-                      child: RotateImage(72.h, 72.w,)),
+                      child: Text(
+                        userType == 'REGULAR'? 'Ego' :
+                        userType == 'ADMIN'? 'Alter Ego' :
+                        userType == 'SUPER_ADMIN'? 'Super Ego' :
+                        'Ego',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Pallet.colorSecondaryDark,
+                        ),
+                      ),
+                    ),
+                  ],
+
                 ),
 
                 SizedBox(height: 28,),
