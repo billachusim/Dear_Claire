@@ -21,7 +21,7 @@ class CategorySessions extends StatelessWidget {
 
   List<Session>? _sessionList = [];
 
-  /// Get sessions from the category and have been featured
+  /// Get sessions from the category and have been marked to receive public replies.
   /// But not flagged or even archived
   /// and does not have the [userId] found in the followers field
   Stream<QuerySnapshot<Map<String, dynamic>>> getCategorySessions() {
@@ -32,7 +32,7 @@ class CategorySessions extends StatelessWidget {
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(AppString.appSessionLength)
-    //.orderBy('timeLastActivity', descending: true)
+        .orderBy('timeLastActivity', descending: true)
         .snapshots();
   }
 
