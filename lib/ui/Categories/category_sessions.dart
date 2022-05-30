@@ -29,10 +29,7 @@ class CategorySessions extends StatelessWidget {
         .collection(AppString.appFeaturedSessions)
         .where("category1", isEqualTo: visitedCategory.toString())
         .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-        .orderBy('timeLastActivity', descending: true)
+        .limit(100)
         .snapshots();
   }
 

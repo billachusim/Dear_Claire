@@ -109,24 +109,23 @@ class FeaturedSessionNotice extends StatelessWidget {
 /// This is a stream class showing public audio sessions
 
 
-class FeaturedAudioSessions extends StatelessWidget {
+class TrendingCategories extends StatelessWidget {
 
-  FeaturedAudioSessions({Key? key}) : super(key: key);
+  TrendingCategories({Key? key}) : super(key: key);
 
   final List<Session>? _sessionList = [];
 
 
   /// Get Featured sessions for "love and relationship" search
   /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showAudioSessions() {
+  Stream<QuerySnapshot<Map<String, dynamic>>> trendingCategoryCards() {
     return FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
         .where("repliesEnabled", isEqualTo: true)
-        .where("audioUrl", isGreaterThanOrEqualTo: "https")
+        .where("category1", isNotEqualTo: null)
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
-        .limit(100)
-        .orderBy('audioUrl', descending: true)
+        .limit(25)
         .orderBy('timeLastActivity', descending: true)
         .snapshots();
   }
@@ -141,7 +140,7 @@ class FeaturedAudioSessions extends StatelessWidget {
         children: [
           Container(
             child: StreamBuilder(
-              stream: showAudioSessions(),
+              stream: trendingCategoryCards(),
               builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                 if (session.connectionState == ConnectionState.waiting) {
                   return Text("");
@@ -168,13 +167,13 @@ class FeaturedAudioSessions extends StatelessWidget {
                   }).toList();
 
                   return Scrollbar(
-                    child: SizedBox(height: 140,
+                    child: SizedBox(height: 33,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
                           ..._sessionList!
                               .map((element) =>
-                              AudioStreamCard(element: element, visitedUsersID: '', visitedEgoName: '',))
+                              CategoryStreams2(element: element))
                               .toList(),
                         ],
                       ),

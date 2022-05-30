@@ -13,7 +13,6 @@ class Session {
   String? sessionId;
   Timestamp? timeCreated;
   Timestamp? timeLastActivity;
-
   String? title;
   String? userAvatarUrl;
   String? userId;
@@ -29,6 +28,7 @@ class Session {
   List<dynamic>? meHiFive;
   List<dynamic>? meFlower;
   String? location;
+  String? category1;
 
   Session(
       {this.audioUrl,
@@ -56,7 +56,8 @@ class Session {
       this.meHiFive,
       this.location,
       this.meFlower,
-      this.followers});
+      this.followers,
+      this.category1});
 
   factory Session.fromJson(json) {
     return Session(
@@ -85,6 +86,7 @@ class Session {
       meHiFive: json['meHiFive'] ?? [],
       meFlower: json['meFlower'] ?? [],
       location: json['location'] ?? '',
+      category1: json['category1'] ?? '',
     );
   }
 
@@ -93,6 +95,6 @@ class Session {
 
   @override
   String toString() {
-    return 'Session{audioUrl: $audioUrl, location: $location, colorHex: $colorHex, archived: $archived, flagged: $flagged, featured: $featured, imageUrls: $imageUrls, message: $message, respondentUserId: $respondentUserId, sessionId: $sessionId, timeCreated: $timeCreated, timeLastActivity: $timeLastActivity, title: $title, userAvatarUrl: $userAvatarUrl, userId: $userId, userNickname: $userNickname, private: $private, repliesEnabled: $repliesEnabled, font: $font, meTooFollowCount: $meTooFollowCount, moodId: $moodId, followers: $followers, meToos: $meToos, meLove: $meLove, meHiFive: $meHiFive, meFlower: $meFlower}';
+    return 'Session{audioUrl: $audioUrl, location: $location, colorHex: $colorHex, archived: $archived, flagged: $flagged, featured: $featured, imageUrls: $imageUrls, message: $message, respondentUserId: $respondentUserId, sessionId: $sessionId, timeCreated: $timeCreated, timeLastActivity: $timeLastActivity, title: $title, userAvatarUrl: $userAvatarUrl, userId: $userId, userNickname: $userNickname, private: $private, repliesEnabled: $repliesEnabled, font: $font, meTooFollowCount: $meTooFollowCount, moodId: $moodId, followers: $followers, meToos: $meToos, meLove: $meLove, meHiFive: $meHiFive, meFlower: $meFlower, category1: $category1,}';
   }
 }

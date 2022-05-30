@@ -1,3 +1,4 @@
+import 'package:dear_claire/ui/Categories/category_streams.dart';
 import 'package:dear_claire/ui/alter_ego/widgets/alter_ego_session_card.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/utils/color.dart';
@@ -38,7 +39,7 @@ class _NewDiariesPageState extends State<NewDiariesPage> {
                 future: firebaseServices.getAlterEgoNonAssignedSessions(),
                 builder: (context, AsyncSnapshot<List<Session>> session) {
                   if (session.connectionState == ConnectionState.waiting) {
-                    return RotateImage(70, 70);
+                    return RotateImage(40, 40);
                   }
                   if (!session.hasData) {
                     return Center(
@@ -71,9 +72,11 @@ class _NewDiariesPageState extends State<NewDiariesPage> {
                   if (session.hasData) {
                     return ListView(
                       children: [
+                        CategoryStreams(),
                         ...session.data!
                             .map((element) => AlterEgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                             .toList(),
+                        CategoryStreams(),
                       ],
                     );
                   }

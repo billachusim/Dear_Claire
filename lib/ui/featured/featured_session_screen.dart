@@ -44,7 +44,7 @@ class _FeaturedPageState extends State<FeaturedPage> {
 
               TheFeaturedSessions(),
 
-              CategoryStreams(),
+              TrendingCategories(),
 
       ],
           ),

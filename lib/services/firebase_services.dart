@@ -300,7 +300,8 @@ class FirebaseServices extends ChangeNotifier {
           .where("archived", isEqualTo: false)
           .where("featured", isEqualTo: false)
           .where("repliesEnabled", isEqualTo: true)
-          .where("respondentUserId", isEqualTo: null)
+          .where("respondentUserId", isNotEqualTo: currentUser?.uid)
+          .orderBy('respondentUserId', descending: true)
           .orderBy('timeCreated', descending: true)
           .limit(AppString.appSessionLength)
           .get();
