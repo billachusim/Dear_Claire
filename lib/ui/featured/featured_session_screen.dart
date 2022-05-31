@@ -16,6 +16,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shake/shake.dart';
+import 'package:flutter_vibrate/flutter_vibrate.dart';
 
 import '../../utils/helper.dart';
 import 'model/session.dart';
@@ -38,6 +39,10 @@ class _FeaturedPageState extends State<FeaturedPage> {
     super.initState();
     ShakeDetector detector = ShakeDetector.autoStart(
       onPhoneShake: () async {
+
+      var _type = FeedbackType.error;
+      Vibrate.feedback(_type);
+      
         String id = await sharedPreference.getAlterEgoId();
                     String accessCode = await sharedPreference.getAlterEgoAccessCode();
                     print("Show Alter details:: $id || $accessCode");
