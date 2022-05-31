@@ -37,8 +37,13 @@ class _FeaturedPageState extends State<FeaturedPage> {
   void initState() {
     super.initState();
     ShakeDetector detector = ShakeDetector.autoStart(
-      onPhoneShake: () {
-        PageRouter.gotoWidget(AlterEgoHomePage(), context);
+      onPhoneShake: () async {
+        String id = await sharedPreference.getAlterEgoId();
+                    String accessCode = await sharedPreference.getAlterEgoAccessCode();
+                    print("Show Alter details:: $id || $accessCode");
+                    id.isNotEmpty && accessCode.isNotEmpty ? await firebaseServices.getUserAlterEgo(context,id, accessCode)
+                        : Navigator.of(context)
+                        .pushNamed(AppRoutes.alterEgoLogin);
       },
     );
 
