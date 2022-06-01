@@ -830,7 +830,8 @@ class FirebaseServices extends ChangeNotifier {
         .collection(AppString.appChats)
         .doc(chatRoomPodo.id.toString())
         .collection(chatRoomPodo.title!)
-        .add(chatModel.toJson())
+        .doc(currentUser!.uid.toString())
+        .set(chatModel.toJson())
         .whenComplete(() {
       /// automatically subscribe user to this topic
       _subscribeToChatRoom(chatRoomPodo.id.toString());
@@ -846,7 +847,7 @@ class FirebaseServices extends ChangeNotifier {
         .collection(AppString.appChats)
         .doc(chatRoomPodo!.id.toString())
         .collection(chatRoomPodo.title!)
-        .doc(key)
+        .doc(key.toString())
         .collection(chatModel.userId!)
         .orderBy('timeCreated', descending: true)
         .limit(AppString.appSessionLength)
@@ -868,8 +869,8 @@ class FirebaseServices extends ChangeNotifier {
         .collection(AppString.appChats)
         .doc(chatRoomPodo.id.toString())
         .collection(chatRoomPodo.title!)
-        .doc(key)
-        .collection(chatModel.userId!)
+        .doc(key.toString())
+        .collection(key.toString())
         .add(chatModel.toJson())
         .whenComplete(() {
       _subscribeToChatRoom(chatModel.userId!);

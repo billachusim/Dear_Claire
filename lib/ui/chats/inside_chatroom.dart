@@ -3,6 +3,7 @@ import 'package:dear_claire/Admob/ad_state.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/data/chats.dart';
+import 'package:dear_claire/ui/chats/widget/chat_room_widget.dart';
 import 'package:dear_claire/ui/dairy/diary_details_widget.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/featured_session_model.dart';
@@ -28,7 +29,7 @@ class Temp {
 }
 
 class ChatScreen extends StatefulWidget {
-  ChatRoomPodo? chatRoomPodo;
+  ChatRoomPodo chatRoomPodo;
 
   ChatScreen({Key? key, required this.chatRoomPodo}) : super(key: key);
 
@@ -91,7 +92,6 @@ class _ChatScreenState extends State<ChatScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
             ListView(
               children: [
                 StreamBuilder(
@@ -107,6 +107,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             .toList();
                         return Column(
                           children: [
+                            ChatRoomWidget(element: widget.chatRoomPodo),
 
                             // Top ad unit is here
                             if(insideChatroomTopBanner == null)

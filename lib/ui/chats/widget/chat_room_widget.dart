@@ -101,7 +101,7 @@ class ChatRoomWidget extends StatelessWidget {
               child: GestureDetector(
                 child: Container(
                   padding: EdgeInsets.all(5),
-                  width: double.infinity,
+                  width: 200,
                   height: 40,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20.0),
@@ -110,14 +110,14 @@ class ChatRoomWidget extends StatelessWidget {
                       end: Alignment(1.2428571464417884, 2.526316110739735),
                       stops: [0.0, 0.856177031993866, 1.0],
                       colors: [
-                        Pallet.colorWhite,
-                        Pallet.colorSecondary,
+                        Colors.white70,
+                        Pallet.colorPrimary,
                         Pallet.colorSecondaryDark,
                       ],
                     ),
                   ),
                   child: Center(
-                    child: Text('ENTER',
+                    child: Text('O P E N',
                       style: GoogleFonts.lato(
                           fontSize: 15.0,
                           color: Pallet.colorSecondaryDark,

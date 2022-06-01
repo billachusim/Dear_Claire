@@ -20,6 +20,7 @@ class ChatModel {
   String? userAvatarUrl;
   String? userId;
   String? userNickname;
+  String? location;
   List<dynamic>? members;
   Map<String, dynamic>? subMessage;
 
@@ -44,7 +45,9 @@ class ChatModel {
       this.userAvatarUrl,
       required this.userId,
       this.members,
-      this.userNickname});
+      this.userNickname,
+      this.location,
+      });
 
   ChatModel.fromJson(Map<String, dynamic> json) {
     if (json['imageUrls'] != null) {
@@ -63,6 +66,10 @@ class ChatModel {
     timeCreated = json['timeCreated'];
     if (json['timeLastActivity'] != null) {
       timeLastActivity = json['timeLastActivity'];
+    }
+
+    if (json['location'] != null) {
+      location = json['location'];
     }
 
     userAvatarUrl = json['userAvatarUrl'];
@@ -99,6 +106,10 @@ class ChatModel {
     }
     if (moodId != null) {
       data['moodId'] = moodId;
+    }
+
+    if (location != null) {
+      data['location'] = location;
     }
 
     data['repliesEnabled'] = repliesEnabled;

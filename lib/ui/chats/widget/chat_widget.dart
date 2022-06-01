@@ -35,6 +35,7 @@ class ChatWidget extends StatelessWidget {
   bool? isSubChat;
   late String visitedUsersID;
   late String visitedEgoName;
+  late UserModel _userModel;
 
   ChatWidget(
       {Key? key,
@@ -62,6 +63,7 @@ class ChatWidget extends StatelessWidget {
                   return Container();
                 }
                 UserModel? _user = snap.data;
+                _userModel = snap.data!;
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -160,34 +162,53 @@ class ChatWidget extends StatelessWidget {
           ),
           Align(
             alignment: Alignment.bottomRight,
-            child: Visibility(
-                visible: !chatRoomPodo!.isOpen! && !isSubChat!,
-                child: InkWell(
-                  onTap: () {
-                    if (!_isCompleted(chatModel, chatRoomPodo))
-                      PageRouter.gotoWidget(
-                          SubChatScreen(
-                              documentID: documentID,
-                              chatModel: chatModel,
-                              chatRoomPodo: chatRoomPodo),
-                          context);
-                  },
-                  child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5),
-                          border: Border.all(
-                              color: _isCompleted(chatModel, chatRoomPodo)
-                                  ? Pallet.blueGreyBgColor
-                                  : Pallet.colorSplashScreen)),
-                      child: Text(
-                        '${chatModel!.members!.length} Join chat',
-                        style: TextStyle(
-                            color: _isCompleted(chatModel, chatRoomPodo)
-                                ? Pallet.blueGreyBgColor
-                                : Pallet.colorSplashScreen),
-                      )),
-                )),
+            child: InkWell(
+              onTap: () {
+
+                visitedUsersID = _userModel.userId ?? '';
+                String thisUser = visitedUsersID;
+
+                if (!_isCompleted(chatModel, chatRoomPodo))
+                  PageRouter.gotoWidget(
+                      SubChatScreen(
+                          documentID: thisUser,
+                          chatModel: chatModel,
+                          chatRoomPodo: chatRoomPodo,
+                      ),
+                      context);
+              },
+              child: Container(
+                  padding: EdgeInsets.all(5),
+                  width: 110,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20.0),
+                    border: Border.all(
+                        color: _isCompleted(chatModel, chatRoomPodo)
+                            ? Pallet.blueGreyBgColor
+                            : Pallet.colorSplashScreen),
+                    gradient: LinearGradient(
+                      begin: Alignment(
+                          -0.37857140550652835, -1.9473685559777252),
+                      end: Alignment(1.2428571464417884, 2.526316110739735),
+                      stops: [0.0, 0.856177031993866, 1.0],
+                      colors: [
+                        Colors.white70,
+                        Pallet.colorPrimary,
+                        Pallet.colorSecondaryDark,
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${chatModel!.members!.length} Join chat',
+                      style: TextStyle(
+                          color: _isCompleted(chatModel, chatRoomPodo)
+                              ? Pallet.blueGreyBgColor
+                              : Pallet.colorSplashScreen),
+                    ),
+                  )),
+            ),
           )
         ],
       ),
