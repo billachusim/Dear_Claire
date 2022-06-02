@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/user_model.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
@@ -18,6 +19,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../utils/strings.dart';
 import '../../../widgets/toast.dart';
 
 class ChatWidget extends StatelessWidget {
@@ -163,10 +165,39 @@ class ChatWidget extends StatelessWidget {
                 fontWeight: FontWeight.normal),
           ),
 
-          SizedBox(height: 4,),
+          SizedBox(height: 5,),
 
           Row(
             children: [
+
+
+              Visibility(
+                visible: chatModel!.userId == currentUser!.uid && chatModel!.members!.contains(currentUser!.uid),
+                child: GestureDetector(
+                  onTap: () {
+                    if (chatModel!.userId == currentUser?.uid)
+                      deletedAdviseAlertDialog(context);
+                  },
+                  child: Visibility(
+                    visible: chatModel!.userId == currentUser?.uid,
+                    child: Container(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                         ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.delete_forever_rounded,
+                            color: Pallet.colorPrimaryDark,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
 
               if (chatModel!.members!.contains(currentUser!.uid))
               Align(
@@ -187,10 +218,6 @@ class ChatWidget extends StatelessWidget {
                       height: 25,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20.0),
-                        border: Border.all(
-                            color: _isCompleted(chatModel, chatRoomPodo)
-                                ? Pallet.colorPrimary
-                                : Pallet.colorSplashScreen),
                         gradient: LinearGradient(
                           begin: Alignment(
                               -0.37857140550652835, -1.9473685559777252),
@@ -199,7 +226,7 @@ class ChatWidget extends StatelessWidget {
                           colors: [
                             Colors.white70,
                             Pallet.colorPrimary,
-                            Pallet.colorSecondaryDark,
+                            Pallet.colorPrimaryDark,
                           ],
                         ),
                       ),
@@ -244,10 +271,7 @@ class ChatWidget extends StatelessWidget {
                         height: 25,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.0),
-                          border: Border.all(
-                              color: _isCompleted(chatModel, chatRoomPodo)
-                                  ? Pallet.blueGreyBgColor
-                                  : Pallet.colorSplashScreen),
+
                           gradient: LinearGradient(
                             begin: Alignment(
                                 -0.37857140550652835, -1.9473685559777252),
@@ -264,9 +288,7 @@ class ChatWidget extends StatelessWidget {
                           child: Text(
                             'Continue',
                             style: TextStyle(
-                                color: _isCompleted(chatModel, chatRoomPodo)
-                                    ? Pallet.blueGreyBgColor
-                                    : Pallet.colorSplashScreen,
+                                color: Pallet.colorPrimaryDark,
                             fontWeight: FontWeight.w600),
                           ),
                         )),
@@ -306,10 +328,6 @@ class ChatWidget extends StatelessWidget {
                         height: 25,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.0),
-                          border: Border.all(
-                              color: _isCompleted(chatModel, chatRoomPodo)
-                                  ? Pallet.blueGreyBgColor
-                                  : Pallet.colorSplashScreen),
                           gradient: LinearGradient(
                             begin: Alignment(
                                 -0.37857140550652835, -1.9473685559777252),
@@ -355,6 +373,56 @@ class ChatWidget extends StatelessWidget {
       chatModel!.members!.remove(userID);
     }
     firebaseServices.updateMembers(chatModel!.userId.toString(), chatRoomPodo, chatModel!);
+  }
+
+
+  deletedAdviseAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Wait First"),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Delete Now"),
+      onPressed:  () {
+        deleteAdvise();
+        showToast("You have deleted the chat. Keep your aura clean!");
+        Navigator.of(context).pop();
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Delete This Chat?"),
+      content: Text(AppString.delete_advise_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  /// Delete an Advise
+
+  Future<void> deleteAdvise() async {
+    final collection = FirebaseFirestore.instance
+        .collection(AppString.appChats)
+        .doc(chatRoomPodo!.id.toString())
+        .collection(chatRoomPodo!.title!);
+    await collection.doc(currentUser!.uid.toString()).delete();
+    logger.d('Successfully deleted an chat session');
   }
 
 
