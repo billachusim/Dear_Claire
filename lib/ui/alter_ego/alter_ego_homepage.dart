@@ -14,6 +14,8 @@ import '../../utils/helper.dart';
 import '../../utils/strings.dart';
 import '../splash_screen/custom_rotate_bacground.dart';
 import 'chatrooms.dart';
+import 'package:shake/shake.dart';
+import 'package:flutter_vibrate/flutter_vibrate.dart';
 
 class AlterEgoHomePage extends StatefulWidget {
   const AlterEgoHomePage({Key? key}) : super(key: key);

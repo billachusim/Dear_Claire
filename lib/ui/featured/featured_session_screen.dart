@@ -14,6 +14,7 @@ import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shake/shake.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
@@ -37,12 +38,21 @@ class _FeaturedPageState extends State<FeaturedPage> {
   @override
   void initState() {
     super.initState();
+    ShakeDevice();
+  }
+
+  ShakeDevice() async {
     ShakeDetector detector = ShakeDetector.autoStart(
       onPhoneShake: () async {
-
+        
       var _type = FeedbackType.error;
       Vibrate.feedback(_type);
-      
+      Fluttertoast.showToast(
+        toastLength: Toast.LENGTH_LONG,
+        msg: "Switching Ego",	
+        textColor: Colors.white,
+        backgroundColor: Pallet.colorSplashScreen,
+      );
         String id = await sharedPreference.getAlterEgoId();
                     String accessCode = await sharedPreference.getAlterEgoAccessCode();
                     print("Show Alter details:: $id || $accessCode");
@@ -51,10 +61,10 @@ class _FeaturedPageState extends State<FeaturedPage> {
                         .pushNamed(AppRoutes.alterEgoLogin);
       },
     );
-
+}
     // To close: detector.stopListening();
     // ShakeDetector.waitForStart() waits for user to call detector.startListening();
-  }
+  
 
   @override
   Widget build(BuildContext context) {
