@@ -18,6 +18,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../widgets/toast.dart';
+
 class ChatWidget extends StatelessWidget {
 
   UserModel userModel = UserModel();
@@ -160,55 +162,180 @@ class ChatWidget extends StatelessWidget {
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: InkWell(
-              onTap: () {
 
-                visitedUsersID = _userModel.userId ?? '';
-                String thisUser = visitedUsersID;
+          SizedBox(height: 4,),
 
-                if (!_isCompleted(chatModel, chatRoomPodo))
-                  PageRouter.gotoWidget(
-                      SubChatScreen(
-                          documentID: thisUser,
-                          chatModel: chatModel,
-                          chatRoomPodo: chatRoomPodo,
+          Row(
+            children: [
+
+              if (chatModel!.members!.contains(currentUser!.uid))
+              Align(
+                alignment: Alignment.bottomLeft,
+                child: InkWell(
+                  onTap: () {
+
+                    visitedUsersID = _userModel.userId ?? '';
+                    String thisUser = visitedUsersID;
+                      showToast('Thanks for your time.');
+
+                    updateMembers(joining: false);
+
+                  },
+                  child: Container(
+                      padding: EdgeInsets.all(5),
+                      width: 80,
+                      height: 25,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.0),
+                        border: Border.all(
+                            color: _isCompleted(chatModel, chatRoomPodo)
+                                ? Pallet.colorPrimary
+                                : Pallet.colorSplashScreen),
+                        gradient: LinearGradient(
+                          begin: Alignment(
+                              -0.37857140550652835, -1.9473685559777252),
+                          end: Alignment(1.2428571464417884, 2.526316110739735),
+                          stops: [0.0, 0.856177031993866, 1.0],
+                          colors: [
+                            Colors.white70,
+                            Pallet.colorPrimary,
+                            Pallet.colorSecondaryDark,
+                          ],
+                        ),
                       ),
-                      context);
-              },
-              child: Container(
-                  padding: EdgeInsets.all(5),
-                  width: 110,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20.0),
-                    border: Border.all(
-                        color: _isCompleted(chatModel, chatRoomPodo)
-                            ? Pallet.blueGreyBgColor
-                            : Pallet.colorSplashScreen),
-                    gradient: LinearGradient(
-                      begin: Alignment(
-                          -0.37857140550652835, -1.9473685559777252),
-                      end: Alignment(1.2428571464417884, 2.526316110739735),
-                      stops: [0.0, 0.856177031993866, 1.0],
-                      colors: [
-                        Colors.white70,
-                        Pallet.colorPrimary,
-                        Pallet.colorSecondaryDark,
-                      ],
-                    ),
+                      child: Center(
+                        child: Text(
+                          '${chatModel!.members!.length} LEAVE',
+                          style: TextStyle(
+                              color: _isCompleted(chatModel, chatRoomPodo)
+                                  ? Pallet.colorPrimaryDark
+                                  : Pallet.colorSplashScreen),
+                        ),
+                      )),
+                ),
+              ),
+
+              Spacer(flex: 1,),
+
+
+              if (chatModel!.members!.contains(currentUser!.uid))
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: InkWell(
+                    onTap: () {
+
+                      visitedUsersID = _userModel.userId ?? '';
+                      String thisUser = visitedUsersID;
+
+                      if (!_isCompleted(chatModel, chatRoomPodo))
+                        showToast('Welcome back.');
+
+                      PageRouter.gotoWidget(
+                          SubChatScreen(
+                            documentID: thisUser,
+                            chatModel: chatModel,
+                            chatRoomPodo: chatRoomPodo,
+                          ),
+                          context);
+                    },
+                    child: Container(
+                        padding: EdgeInsets.all(5),
+                        width: 85,
+                        height: 25,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.0),
+                          border: Border.all(
+                              color: _isCompleted(chatModel, chatRoomPodo)
+                                  ? Pallet.blueGreyBgColor
+                                  : Pallet.colorSplashScreen),
+                          gradient: LinearGradient(
+                            begin: Alignment(
+                                -0.37857140550652835, -1.9473685559777252),
+                            end: Alignment(1.2428571464417884, 2.526316110739735),
+                            stops: [0.0, 0.856177031993866, 1.0],
+                            colors: [
+                              Colors.lightGreen,
+                              Pallet.green,
+                              Pallet.deepGreen,
+                            ],
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Continue',
+                            style: TextStyle(
+                                color: _isCompleted(chatModel, chatRoomPodo)
+                                    ? Pallet.blueGreyBgColor
+                                    : Pallet.colorSplashScreen,
+                            fontWeight: FontWeight.w600),
+                          ),
+                        )),
                   ),
-                  child: Center(
-                    child: Text(
-                      '${chatModel!.members!.length} Join chat',
-                      style: TextStyle(
-                          color: _isCompleted(chatModel, chatRoomPodo)
-                              ? Pallet.blueGreyBgColor
-                              : Pallet.colorSplashScreen),
-                    ),
-                  )),
-            ),
+                ),
+
+              Spacer(flex: 1,),
+
+
+              if (!chatModel!.members!.contains(currentUser!.uid))
+                Visibility(
+                  visible: !_isCompleted(chatModel, chatRoomPodo),
+                  child: Align(
+                  alignment: Alignment.bottomRight,
+                  child: InkWell(
+                    onTap: () {
+
+                      visitedUsersID = _userModel.userId ?? '';
+                      String thisUser = visitedUsersID;
+
+                      if (!_isCompleted(chatModel, chatRoomPodo))
+
+                        updateMembers(joining: true);
+                        showToast('Welcome. Positive vibes only.');
+
+                      PageRouter.gotoWidget(
+                            SubChatScreen(
+                                documentID: thisUser,
+                                chatModel: chatModel,
+                                chatRoomPodo: chatRoomPodo,
+                            ),
+                            context);
+                    },
+                    child: Container(
+                        padding: EdgeInsets.all(5),
+                        width: 80,
+                        height: 25,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.0),
+                          border: Border.all(
+                              color: _isCompleted(chatModel, chatRoomPodo)
+                                  ? Pallet.blueGreyBgColor
+                                  : Pallet.colorSplashScreen),
+                          gradient: LinearGradient(
+                            begin: Alignment(
+                                -0.37857140550652835, -1.9473685559777252),
+                            end: Alignment(1.2428571464417884, 2.526316110739735),
+                            stops: [0.0, 0.856177031993866, 1.0],
+                            colors: [
+                              Colors.lightGreen,
+                              Pallet.green,
+                              Pallet.deepGreen,
+                            ],
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${chatModel!.members!.length} JOIN',
+                            style: TextStyle(
+                                color: _isCompleted(chatModel, chatRoomPodo)
+                                    ? Pallet.blueGreyBgColor
+                                    : Pallet.colorSplashScreen,
+                            fontWeight: FontWeight.w600),
+                          ),
+                        )),
+                  ),
+              ),
+                ),
+            ],
           )
         ],
       ),
@@ -218,4 +345,17 @@ class ChatWidget extends StatelessWidget {
   bool _isCompleted(ChatModel? chatModel, ChatRoomPodo? chatRoomPodo) {
     return chatModel!.members!.length == chatRoomPodo?.numberOfParticipants;
   }
+
+  void updateMembers({required bool joining}) async {
+    final userID = currentUser!.uid.toString();
+    if (joining) {
+      chatModel!.members!.add(userID);
+    }
+    if (!joining) {
+      chatModel!.members!.remove(userID);
+    }
+    firebaseServices.updateMembers(chatModel!.userId.toString(), chatRoomPodo, chatModel!);
+  }
+
+
 }

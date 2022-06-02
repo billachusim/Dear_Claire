@@ -9,7 +9,7 @@ class RoomData {
         title: "Love and Relationship Garden",
         font: "Default",
         hex: "#88050B",
-        text: "Hello Darlings,\n" +
+        text: "Hello, Lovers,\n" +
             "For all of us that believe that falling in love and building good relationships is not far from the only reason of our existence; Welcome to the Love and Relationship Diary Room.");
     chatRoomPojoList.add(chatRoomPojo);
 
@@ -19,7 +19,7 @@ class RoomData {
         font: "Default",
         hex: "#0407ED",
         text: "Hello Darlings,\n" +
-            "What's cooking in the streets? Who bit Beyoncé? Which celebrity took everyone's attention yesterday and who is taking it this weekend? But for today, please, who can make us laugh? Welcome to the Entertainment and Comedy Diary Room.");
+            "What's cooking in the streets? Which celebrity took everyone's attention yesterday and who is taking it this weekend? But, for today, please, who can make us laugh? Welcome to the Entertainment and Comedy Diary Room.");
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
@@ -83,8 +83,8 @@ class RoomData {
         title: "One On One Room",
         font: "Default",
         hex: "#4A148C",
-        text: "Hello Darlings,\n" +
-            "Here, you can start a heart to heart chat with just one unknown and anonymous darling just to talk about a topic of mutual interest, offload some burdens or exchange secrets. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
+        text: "Shhhhhhhhh,\n" +
+            "Here, you can start or enter a heart to heart room with just one unknown and anonymous darling to chat about a topic of mutual interest, offload some burdens or exchange secrets. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(

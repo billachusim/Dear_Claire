@@ -7,9 +7,13 @@ import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../services/firebase_services.dart';
+import '../../services/user_model.dart';
+import '../../widgets/toast.dart';
 import 'widget/chat_widget.dart';
 
 class Temp {
@@ -38,15 +42,17 @@ class _SubChatScreenState extends State<SubChatScreen> {
 
   List<Temp> _chatList = [];
 
+  User? currentUser = FirebaseAuth.instance.currentUser;
+  UserModel? _visitingUser = UserModel();
+
   @override
   void initState() {
-    updateMembers(joining: true);
+    //updateMembers(joining: true);
     super.initState();
   }
 
   @override
   void dispose() {
-    updateMembers(joining: false);
     super.dispose();
   }
 
@@ -121,10 +127,11 @@ class _SubChatScreenState extends State<SubChatScreen> {
             userId: _user.userId,
             timeCreated: Timestamp.now(),
             members: [_user.userId]));
+    updateDiaryroomTimeLastActivity(_user.userId.toString(), widget.chatRoomPodo!);
   }
 
   void updateMembers({required bool joining}) async {
-    final userID = firebaseServices.getUsersId();
+    final userID = currentUser!.uid.toString();
     if (joining) {
       widget.chatModel!.members!.add(userID);
     }
@@ -133,4 +140,35 @@ class _SubChatScreenState extends State<SubChatScreen> {
     }
     firebaseServices.updateMembers(widget.documentID!, widget.chatRoomPodo, widget.chatModel!);
   }
+
+
+  /// Update a session's timeLastActivity when new comment is made.
+
+  Future<void> updateDiaryroomTimeLastActivity(String key, ChatRoomPodo chatRoomPodo) async {
+    FirebaseFirestore.instance
+        .collection(AppString.appChats)
+        .doc(chatRoomPodo.id.toString())
+        .collection(chatRoomPodo.title!)
+        .doc(key)
+        .update({
+      'timeLastActivity': FieldValue.serverTimestamp(),
+    },
+    );
+    logger.d('Successfully updated time of last activity');
+  }
+
+  /// Get Visiting Ego User info
+  Future<UserModel> getVisitingUserInfo() async {
+    DocumentSnapshot response = await FirebaseFirestore.instance
+        .collection(AppString.users)
+        .doc(currentUser?.uid)
+        .get();
+
+    var visitingUser = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
+    _visitingUser = visitingUser;
+    logger.d('Successfully got the visiting user model');
+    return visitingUser;
+  }
+
+
 }

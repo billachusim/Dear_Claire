@@ -321,6 +321,7 @@ class _EgoModeSessionDetailState
       CommentSessionModel? commentSessionModel, Session session) async {
     if (!await firebaseServices.isUserSignIn(context)) {
       showToast('You have to login first before reacting.');
+      await getVisitingUserInfo();
       return;
     }
     final _userModel = _visitingUser;

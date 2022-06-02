@@ -4,6 +4,7 @@ import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/data/chats.dart';
 import 'package:dear_claire/ui/chats/widget/chat_room_widget.dart';
+import 'package:dear_claire/ui/chats/widget/sub_diaryroom_widget.dart';
 import 'package:dear_claire/ui/dairy/diary_details_widget.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/featured_session_model.dart';
@@ -107,7 +108,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             .toList();
                         return Column(
                           children: [
-                            ChatRoomWidget(element: widget.chatRoomPodo),
+                            SubDiaryRoomWidget(element: widget.chatRoomPodo),
 
                             // Top ad unit is here
                             if(insideChatroomTopBanner == null)
