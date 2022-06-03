@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/data/chats.dart';
 import 'package:dear_claire/ui/chats/widget/inside_inside_diaryrooms.dart';
 import 'package:dear_claire/ui/chats/widget/inside_inside_inside_diaryroom.dart';
+import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
@@ -10,11 +12,11 @@ import 'package:dear_claire/widgets/chat_edit_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:provider/provider.dart';
+import '../../Admob/ad_state.dart';
 import '../../services/firebase_services.dart';
 import '../../services/user_model.dart';
-import '../../widgets/toast.dart';
-import 'widget/chat_widget.dart';
 
 class Temp {
   String id;
@@ -38,42 +40,125 @@ class SubChatScreen extends StatefulWidget {
   _SubChatScreenState createState() => _SubChatScreenState();
 }
 
+const int maxFailedLoadAttempts = 3;
+
+
 class _SubChatScreenState extends State<SubChatScreen> {
 
   List<Temp> _chatList = [];
 
   User? currentUser = FirebaseAuth.instance.currentUser;
-  UserModel? _visitingUser = UserModel();
+
+
 
   @override
   void initState() {
-    //updateMembers(joining: true);
     super.initState();
+    _createSubChatInterstitialAd();
   }
+
+
 
   @override
   void dispose() {
     super.dispose();
+    _interstitialAd?.dispose();
   }
+
+
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+
+  /// Create new sub chat interstitial ad.
+
+  void _createSubChatInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/9839548530" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/8291211887" :
+      '',      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _interstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createSubChatInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showSubChatInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createSubChatInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createSubChatInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+    }
+  }
+
+
+  // Admob Ad Units.
+  late BannerAd insideInsideChatroomTopBanner;
+  late BannerAd insideInsideChatroomBottomBanner;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final adState = Provider.of<AdState>(context);
+
+    // Implement a top location banner ad unit.
+    adState.initialization.then((status) {
+      setState(() {
+        insideInsideChatroomTopBanner = BannerAd(
+            size: AdSize.banner,
+            adUnitId: adState.insideInsideChatroomTopBannerAdUnitId,
+            request: AdRequest(),
+            listener: BannerAdListener()
+        )..load();
+      });
+    });
+
+    // Implementing a bottom location banner ad unit.
+    super.didChangeDependencies();
+    adState.initialization.then((status) {
+      setState(() {
+        insideInsideChatroomBottomBanner = BannerAd(
+            size: AdSize.banner,
+            adUnitId: adState.insideInsideChatroomBottomBannerAdUnitId,
+            request: AdRequest(),
+            listener: BannerAdListener()
+        )..load();
+      });
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Pallet.colorSecondaryDark,
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),
-        title: Text(widget.chatModel!.message ?? ''),
+        title: Text(widget.chatModel!.message ?? 'Diary Room'),
         elevation: 0,
       ),
       body: SafeArea(
         child: Stack(
           children: [
-            Image.asset(
-              AppImages.appChatBg,
-              height: getDeviceHeight(context),
-              width: getDeviceWidth(context),
-              fit: BoxFit.cover,
-            ),
             ListView(
               children: [
                 StreamBuilder(
@@ -92,6 +177,16 @@ class _SubChatScreenState extends State<SubChatScreen> {
                           children: [
                             InsideInsideChatWidget(documentID: widget.documentID, chatModel: widget.chatModel, chatRoomPodo: widget.chatRoomPodo),
 
+                            // Top ad unit is here
+                            if(insideInsideChatroomTopBanner == null)
+                              SizedBox(height: 70)
+                            else
+                              Container(
+                                height: 60,
+                                child: AdWidget(ad: insideInsideChatroomTopBanner),
+                              ),
+
+
                             ..._chatList
                                 .map((element) => InsideInsideInsideChatWidget(
                                       isSubChat: true,
@@ -100,6 +195,15 @@ class _SubChatScreenState extends State<SubChatScreen> {
                                       chatRoomPodo: widget.chatRoomPodo,
                                     ))
                                 .toList(),
+
+                            // Bottom ad unit is here
+                            if(insideInsideChatroomBottomBanner == null)
+                              SizedBox(height: 70)
+                            else
+                              Container(
+                                height: 60,
+                                child: AdWidget(ad: insideInsideChatroomBottomBanner),
+                              ),
                           ],
                         );
                       }
@@ -128,7 +232,11 @@ class _SubChatScreenState extends State<SubChatScreen> {
             timeCreated: Timestamp.now(),
             members: [_user.userId]));
     updateDiaryroomTimeLastActivity(_user.userId.toString(), widget.chatRoomPodo!);
-  }
+    Future.delayed(Duration(seconds: 4), () {
+     // _showSubChatInterstitialAd();
+    });  }
+
+
 
   void updateMembers({required bool joining}) async {
     final userID = currentUser!.uid.toString();
@@ -165,7 +273,6 @@ class _SubChatScreenState extends State<SubChatScreen> {
         .get();
 
     var visitingUser = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
-    _visitingUser = visitingUser;
     logger.d('Successfully got the visiting user model');
     return visitingUser;
   }

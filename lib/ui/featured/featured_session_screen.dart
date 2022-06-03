@@ -22,7 +22,7 @@ class _FeaturedPageState extends State<FeaturedPage> {
   @override
   void initState() {
     super.initState();
-    ShakeDevice();
+   // ShakeDevice();
   }
 
   ShakeDevice() async {

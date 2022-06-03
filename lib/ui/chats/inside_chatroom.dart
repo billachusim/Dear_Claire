@@ -1,26 +1,17 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/Admob/ad_state.dart';
-import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/data/chats.dart';
-import 'package:dear_claire/ui/chats/widget/chat_room_widget.dart';
 import 'package:dear_claire/ui/chats/widget/sub_diaryroom_widget.dart';
-import 'package:dear_claire/ui/dairy/diary_details_widget.dart';
-import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
-import 'package:dear_claire/ui/featured/model/featured_session_model.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
-import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
-import 'package:dear_claire/widgets/comment_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
-
 import '../../utils/color.dart';
-import '../splash_screen/custom_rotate_bacground.dart';
-import '../splash_screen/rotate_logo.dart';
 import 'widget/chat_widget.dart';
 
 class Temp {
@@ -38,12 +29,74 @@ class ChatScreen extends StatefulWidget {
   _ChatScreenState createState() => _ChatScreenState(chatRoomPodo);
 }
 
+const int maxFailedLoadAttempts = 3;
+
+
 class _ChatScreenState extends State<ChatScreen> {
   ChatRoomPodo? chatRoomPodo;
 
   _ChatScreenState(this.chatRoomPodo);
 
   List<Temp> _chatList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _createNewChatInterstitialAd();
+  }
+
+
+
+  @override
+  void dispose() {
+    super.dispose();
+    _interstitialAd?.dispose();
+  }
+
+
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+
+  // Create interstitial ad.
+
+  void _createNewChatInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/9695244155" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/6685937430" :
+      '',      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _interstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createNewChatInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showNewChatInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createNewChatInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createNewChatInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+    }
+  }
+
 
   // Admob Ad Units.
   late BannerAd insideChatroomTopBanner;
@@ -118,6 +171,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                 height: 60,
                                 child: AdWidget(ad: insideChatroomTopBanner),
                               ),
+
+
                             ..._chatList
                                 .map((element) => ChatWidget(
                                       documentID: element.id,
@@ -125,6 +180,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       chatRoomPodo: chatRoomPodo,
                                     ))
                                 .toList(),
+
 
                             // Bottom ad unit is here
                             if(insideChatroomBottomBanner == null)
@@ -163,5 +219,7 @@ class _ChatScreenState extends State<ChatScreen> {
             userId: _user.userId,
             timeCreated: Timestamp.now(),
             members: [_user.userId]));
-  }
+    Future.delayed(Duration(seconds: 4), () {
+      _showNewChatInterstitialAd();
+    });  }
 }

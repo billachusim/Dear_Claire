@@ -1,9 +1,7 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/ego-profile/claire_loves.dart';
-import 'package:dear_claire/ui/featured/ego_stream.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/toast.dart';
@@ -11,27 +9,20 @@ import 'package:flip_card/flip_card.dart';
 import 'package:flutter_svg/svg.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dear_claire/data/models/profile_page_model.dart';
-import 'package:dear_claire/data/models/session_model.dart';
 import 'package:dear_claire/services/user_model.dart';
-import 'package:dear_claire/ui/chats/chatrooms.dart';
 import 'package:dear_claire/ui/ego-profile/acvitity.dart';
 import 'package:dear_claire/ui/ego-profile/archive.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
-import 'package:dear_claire/utils/textFormatter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-
-import '../Search/search_page.dart';
 import '../create_session/create_session_page.dart';
 import '../routes/page_router_animation.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
@@ -44,6 +35,9 @@ class EgoProfilePage extends StatefulWidget {
   @override
   _EgoProfilePageState createState() => _EgoProfilePageState();
 }
+
+const int maxFailedLoadAttempts = 3;
+
 
 
 class _EgoProfilePageState extends State<EgoProfilePage>

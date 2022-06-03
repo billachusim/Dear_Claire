@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
@@ -18,6 +20,7 @@ import 'package:dear_claire/widgets/thanks_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../utils/strings.dart';
 import '../../../widgets/toast.dart';
@@ -26,6 +29,9 @@ class ChatWidget extends StatelessWidget {
 
   UserModel userModel = UserModel();
   User? currentUser = FirebaseAuth.instance.currentUser;
+
+  int maxFailedLoadAttempts = 3;
+
 
   getUser() async {
     userModel = await firebaseServices.getUserInfo();
@@ -48,6 +54,138 @@ class ChatWidget extends StatelessWidget {
       required this.chatRoomPodo,
       this.isSubChat = false})
       : super(key: key);
+
+  InterstitialAd? _joinChatInterstitialAd;
+  int _joinChatInterstitialLoadAttempts = 0;
+
+  /// Create and show Join Chat interstitial ad.
+
+  void _createJoinChatInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/7417113912" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/7030101104" :
+      '',      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _joinChatInterstitialAd = ad;
+          _joinChatInterstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _joinChatInterstitialLoadAttempts += 1;
+          _joinChatInterstitialAd = null;
+          if (_joinChatInterstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createJoinChatInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showJoinChatInterstitialAd() {
+    if (_joinChatInterstitialAd != null) {
+      _joinChatInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createJoinChatInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createJoinChatInterstitialAd();
+        },
+      );
+      _joinChatInterstitialAd!.show();
+    }
+  }
+
+
+
+  InterstitialAd? _leaveChatInterstitialAd;
+  int _leaveChatInterstitialLoadAttempts = 0;
+
+  /// Create Leave Chat interstitial ad.
+
+  void _createLeaveChatInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/3286297210" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/1011487667" :
+      '',      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _leaveChatInterstitialAd = ad;
+          _leaveChatInterstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _leaveChatInterstitialLoadAttempts += 1;
+          _leaveChatInterstitialAd = null;
+          if (_leaveChatInterstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createLeaveChatInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showLeaveChatInterstitialAd() {
+    if (_leaveChatInterstitialAd != null) {
+      _leaveChatInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createLeaveChatInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createLeaveChatInterstitialAd();
+        },
+      );
+      _leaveChatInterstitialAd!.show();
+    }
+  }
+
+
+  InterstitialAd? _contChatInterstitialAd;
+  int _contChatInterstitialLoadAttempts = 0;
+
+  /// Create and show Continue Chat interstitial ad.
+
+  void _createContChatInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/2293350565" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/3728601600" :
+      '',      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _contChatInterstitialAd = ad;
+          _contChatInterstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _contChatInterstitialLoadAttempts += 1;
+          _contChatInterstitialAd = null;
+          if (_contChatInterstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createContChatInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showContChatInterstitialAd() {
+    if (_contChatInterstitialAd != null) {
+      _contChatInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createContChatInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createContChatInterstitialAd();
+        },
+      );
+      _contChatInterstitialAd!.show();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -204,12 +342,16 @@ class ChatWidget extends StatelessWidget {
                 alignment: Alignment.bottomLeft,
                 child: InkWell(
                   onTap: () {
-
+                    _createLeaveChatInterstitialAd();
                     visitedUsersID = _userModel.userId ?? '';
                     String thisUser = visitedUsersID;
                       showToast('Thanks for your time.');
 
                     updateMembers(joining: false);
+
+                    Future.delayed(Duration(seconds: 4), () {
+                      _showLeaveChatInterstitialAd();
+                    });
 
                   },
                   child: Container(
@@ -250,12 +392,16 @@ class ChatWidget extends StatelessWidget {
                   alignment: Alignment.bottomRight,
                   child: InkWell(
                     onTap: () {
-
+                      _createContChatInterstitialAd();
                       visitedUsersID = _userModel.userId ?? '';
                       String thisUser = visitedUsersID;
 
                       if (!_isCompleted(chatModel, chatRoomPodo))
                         showToast('Welcome back.');
+
+                      Future.delayed(Duration(seconds: 4), () {
+                        _showContChatInterstitialAd();
+                      });
 
                       PageRouter.gotoWidget(
                           SubChatScreen(
@@ -305,7 +451,7 @@ class ChatWidget extends StatelessWidget {
                   alignment: Alignment.bottomRight,
                   child: InkWell(
                     onTap: () {
-
+                      _createJoinChatInterstitialAd();
                       visitedUsersID = _userModel.userId ?? '';
                       String thisUser = visitedUsersID;
 
@@ -313,6 +459,10 @@ class ChatWidget extends StatelessWidget {
 
                         updateMembers(joining: true);
                         showToast('Welcome. Positive vibes only.');
+
+                      Future.delayed(Duration(seconds: 4), () {
+                        _showJoinChatInterstitialAd();
+                      });
 
                       PageRouter.gotoWidget(
                             SubChatScreen(

@@ -22,16 +22,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
-
 import '../../Admob/ad_state.dart';
 import '../../services/user_activity_model.dart';
 import '../../services/user_model.dart';
 import '../../utils/constant.dart';
 import '../../widgets/ego_mode_session_card.dart';
-import '../Search/search_page.dart';
 import '../featured/model/comment_session_model.dart';
 import '../featured/model/session.dart';
-import '../featured/widget/post_details_widget.dart';
 import '../routes/page_router_animation.dart';
 
 class VisitedUserEgoProfilePage extends StatefulWidget {
@@ -1140,7 +1137,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
         backgroundColor: Pallet.colorSecondaryDark,
         appBar: AppBar(
           centerTitle: true,
-          title: Text(widget.visitedEgoName,
+          title: Text(widget.visitedEgoName.toString(),
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w600,

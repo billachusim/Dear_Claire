@@ -1,6 +1,4 @@
-
 import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
@@ -13,9 +11,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-
 import '../../widgets/toast.dart';
-import '../create_session/create_session_page.dart';
 import '../routes/routes.dart';
 
 
@@ -24,6 +20,9 @@ class EditClairevatar extends StatefulWidget {
   @override
   _EditClairevatarState createState() => _EditClairevatarState();
 }
+
+const int maxFailedLoadAttempts = 3;
+
 
 class _EditClairevatarState extends State<EditClairevatar> {
 
@@ -42,6 +41,7 @@ class _EditClairevatarState extends State<EditClairevatar> {
   @override
   void dispose() {
     super.dispose();
+    _interstitialAd?.dispose();
   }
 
   /// Query Clairevatars from Firestore

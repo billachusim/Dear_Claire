@@ -95,7 +95,7 @@ class RoomData {
         font: "Default",
         hex: "#0D47A1",
         text: "Hello Darlings,\n" +
-            "Here, you can start a small room of closed chat between you and just four other anonymous users online. All chats are gone when you leave the room. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
+            "Here, you can start a small room of closed chat between you and just four other anonymous users online. Positive vibes only. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
@@ -106,7 +106,7 @@ class RoomData {
         font: "Default",
         hex: "#1B5E20",
         text: "Hello Darlings,\n" +
-            "Here, you can start a small room of closed chat between you and ten other anonymous users online. All chats are gone when you leave the room. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
+            "Here, you can start a small room of closed chat between you and ten other anonymous users online. Positive vibes only. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
     chatRoomPojoList.add(chatRoomPojo);
 
     return chatRoomPojoList;

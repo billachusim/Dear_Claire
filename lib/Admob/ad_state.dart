@@ -198,6 +198,32 @@ class AdState {
   }
 
 
+
+  // Create Inside Inside Chatroom top of comments banner ad unit.
+  String get insideInsideChatroomTopBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/8362815330";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/1534231843";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
+
+  // Create Chatroom bottom of comments banner ad unit.
+  String get insideInsideChatroomBottomBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/9484325310";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/4504010119";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
   // Create Search Page middle banner ad unit.
   String get searchPageMiddleBannerAdUnitId {
     if (Platform.isAndroid) {
