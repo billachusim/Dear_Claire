@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/Admob/ad_state.dart';
 import 'package:dear_claire/services/firebase_services.dart';
@@ -8,7 +10,6 @@ import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +32,9 @@ class EgoModeSessionDetail extends StatefulWidget {
       _EgoModeSessionDetailState(featuredSessionModel);
 }
 
+const int maxFailedLoadAttempts = 3;
+
+
 class _EgoModeSessionDetailState
     extends State<EgoModeSessionDetail> {
   Session? featuredSessionModel;
@@ -40,6 +44,67 @@ class _EgoModeSessionDetailState
   List<CommentSessionModel> _commentSessionList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
   UserModel? _visitingUser = UserModel();
+
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    _createAdviseInterstitialAd();
+  }
+
+
+
+  @override
+  void dispose() {
+    super.dispose();
+    _interstitialAd?.dispose();
+  }
+
+
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+
+  /// Create new sub chat interstitial ad.
+
+  void _createAdviseInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/9839548530" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/8291211887" :
+      '',      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _interstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createAdviseInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showAdviseInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createAdviseInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createAdviseInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+    }
+  }
 
 
 
@@ -216,6 +281,10 @@ class _EgoModeSessionDetailState
       {
         incrementAdviseCount();
         incrementTotalLoveCount();
+        showToast("Thanks! You earned 10 Loves.");
+        Future.delayed(Duration(seconds: 4), () {
+          _showAdviseInterstitialAd();
+        });
         return true;
       }
     return false;
