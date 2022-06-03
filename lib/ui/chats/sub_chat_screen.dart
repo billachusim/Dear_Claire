@@ -234,7 +234,8 @@ class _SubChatScreenState extends State<SubChatScreen> {
     updateDiaryroomTimeLastActivity(_user.userId.toString(), widget.chatRoomPodo!);
     Future.delayed(Duration(seconds: 4), () {
      // _showSubChatInterstitialAd();
-    });  }
+    });
+  }
 
 
 

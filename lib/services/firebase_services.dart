@@ -871,7 +871,8 @@ class FirebaseServices extends ChangeNotifier {
         .collection(chatRoomPodo.title!)
         .doc(key.toString())
         .collection(key.toString())
-        .add(chatModel.toJson())
+        .doc(currentUser!.uid.toString())
+        .set(chatModel.toJson())
         .whenComplete(() {
       _subscribeToChatRoom(chatModel.userId!);
       notificationService.sendNotification(_notificationModel.toJson());

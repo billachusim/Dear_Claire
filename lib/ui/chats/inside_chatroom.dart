@@ -221,5 +221,6 @@ class _ChatScreenState extends State<ChatScreen> {
             members: [_user.userId]));
     Future.delayed(Duration(seconds: 4), () {
       _showNewChatInterstitialAd();
-    });  }
+    });
+  }
 }

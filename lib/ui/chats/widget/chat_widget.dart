@@ -344,9 +344,9 @@ class ChatWidget extends StatelessWidget {
                   onTap: () {
                     _createLeaveChatInterstitialAd();
                     visitedUsersID = _userModel.userId ?? '';
-                    String thisUser = visitedUsersID;
                       showToast('Thanks for your time.');
 
+                    deleteSubChat();
                     updateMembers(joining: false);
 
                     Future.delayed(Duration(seconds: 4), () {
@@ -539,7 +539,7 @@ class ChatWidget extends StatelessWidget {
     Widget continueButton = TextButton(
       child: Text("Delete Now"),
       onPressed:  () {
-        deleteAdvise();
+        deleteChat();
         showToast("You have deleted the chat. Keep your aura clean!");
         Navigator.of(context).pop();
       },
@@ -566,11 +566,23 @@ class ChatWidget extends StatelessWidget {
 
   /// Delete an Advise
 
-  Future<void> deleteAdvise() async {
+  Future<void> deleteChat() async {
     final collection = FirebaseFirestore.instance
         .collection(AppString.appChats)
         .doc(chatRoomPodo!.id.toString())
         .collection(chatRoomPodo!.title!);
+    await collection.doc(currentUser!.uid.toString()).delete();
+    logger.d('Successfully deleted an chat session');
+  }
+
+
+  Future<void> deleteSubChat() async {
+    final collection = FirebaseFirestore.instance
+        .collection(AppString.appChats)
+        .doc(chatRoomPodo!.id.toString())
+        .collection(chatRoomPodo!.title!)
+        .doc(chatModel!.userId.toString())
+        .collection(chatModel!.userId.toString());
     await collection.doc(currentUser!.uid.toString()).delete();
     logger.d('Successfully deleted an chat session');
   }
