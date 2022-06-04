@@ -824,7 +824,7 @@ class FirebaseServices extends ChangeNotifier {
             collapseKey: 'type_a',
             notification: pushNotification.Notification(
                 title: chatRoomPodo.title!,
-                body: 'You have an unread message!'));
+                body: 'A new chat was started!'));
 
     _firebaseFirestore
         .collection(AppString.appChats)
@@ -863,7 +863,7 @@ class FirebaseServices extends ChangeNotifier {
             collapseKey: 'type_a',
             notification: pushNotification.Notification(
               title: chatRoomPodo!.title!,
-              body: 'You have an unread message!',
+              body: 'There is a new sub chat!',
             ));
     _firebaseFirestore
         .collection(AppString.appChats)
@@ -871,10 +871,10 @@ class FirebaseServices extends ChangeNotifier {
         .collection(chatRoomPodo.title!)
         .doc(key.toString())
         .collection(key.toString())
-        .doc(currentUser!.uid.toString())
+        .doc(key.toString())
         .set(chatModel.toJson())
         .whenComplete(() {
-      _subscribeToChatRoom(chatModel.userId!);
+      _subscribeToChatRoom(key);
       notificationService.sendNotification(_notificationModel.toJson());
       logger.d('SubMessage sent ${chatModel.toJson()}');
     });

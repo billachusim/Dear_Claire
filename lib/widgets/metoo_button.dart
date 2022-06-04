@@ -58,7 +58,7 @@ class MetooButton extends StatelessWidget {
                       fontWeight: FontWeight.w900))),
         ],
         initialReaction: Reaction(
-            icon: Text('${me2 ?? 0}  Me2🌺',
+            icon: Text('${me2 ?? 0}  🌺Me2',
                 style: GoogleFonts.lato (
                     fontSize: 13.0,
                     color: Colors.white,

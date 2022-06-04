@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../utils/color.dart';
+
 final ClairNotification clairNotification = ClairNotification();
 
 Future<void> _firebaseMessagingBackgroundHandler(
@@ -40,6 +42,12 @@ class ClairNotification {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
+    triggerAndroidNotifications();
+
+     flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+     triggerIosNotifications();
 
     await FirebaseMessaging.instance
         .setForegroundNotificationPresentationOptions(
@@ -49,20 +57,21 @@ class ClairNotification {
     );
   }
 
-  void triggerNotifications() async {
+  void triggerAndroidNotifications() async {
     String? _usersID = currentUser?.uid.toString();
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       RemoteNotification? notification = message.notification!;
       AndroidNotification? android = message.notification!.android;
-      if (android != null && _usersID != message.data['id']) {
+      if (android != null)
+      {
         flutterLocalNotificationsPlugin.show(notification.hashCode,
             notification.title, notification.body, _notificationDetails());
       }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      logger.d('A new onMessageOpenedApp event was published!');
+      logger.d('You tapped on a new notification');
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       if (notification != null && android != null) {
@@ -71,13 +80,58 @@ class ClairNotification {
     });
   }
 
-  void triggerReminder() async {
+
+  void triggerIosNotifications() async {
+    String? _usersID = currentUser?.uid.toString();
+
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('User granted permission');
+    } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+      print('User granted provisional permission');
+    } else {
+      print('User declined or has not accepted permission');
+    }
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification? notification = message.notification!;
+      AppleNotification? apple = message.notification!.apple;
+      if (apple != null)
+      {
+        flutterLocalNotificationsPlugin.show(notification.hashCode,
+            notification.title, notification.body, _notificationDetails());
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      logger.d('You tapped on a new notification!');
+      RemoteNotification? notification = message.notification;
+      AppleNotification? apple = message.notification?.apple;
+      if (notification != null && apple != null) {
+        logger.d(notification.toString());
+      }
+    });
+  }
+
+
+  void triggerReminder() {
     if (_itsTime()) {
       flutterLocalNotificationsPlugin.show(0, 'Claireminder',
           'Erm, what\'s happening there/?', _notificationDetails());
       return;
     }
-    await _prefs!.setString('reminder', DateTime.now().toString());
+    _prefs!.setString('reminder', DateTime.now().toString());
   }
 
   bool _itsTime() {
@@ -88,7 +142,7 @@ class ClairNotification {
 
       final _difference = DateTime.now().difference(_dateTime);
 
-      if (_difference.inDays == 3) {
+      if (_difference.inDays < 1) {
         return true;
       }
     }
@@ -99,7 +153,7 @@ class ClairNotification {
     return NotificationDetails(
         android: AndroidNotificationDetails(
             channel.id, channel.name, channel.description,
-            color: Colors.blue,
+            color: Pallet.colorPrimary,
             playSound: true,
             icon: '@drawable/claire_icon',
             enableLights: true,
@@ -107,6 +161,8 @@ class ClairNotification {
             showWhen: true,
             channelShowBadge: true),
         iOS: IOSNotificationDetails(
-            presentAlert: true, presentBadge: true, presentSound: true));
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true));
   }
 }

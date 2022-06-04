@@ -313,6 +313,12 @@ class _CommentWidgetState extends State<CommentWidget> {
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(
+            AppImages.appChatBg,
+          ),
+          fit: BoxFit.fill,
+        ),
           borderRadius: BorderRadius.circular(30), color: Pallet.colorWhite),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dear_claire/ui/Categories/category_streams.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
@@ -73,6 +74,7 @@ class _FollowedPageState extends State<FollowedPage> {
                         ..._sessionList!
                             .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                             .toList(),
+                        CategoryStreams(),
                       ],
                     ),
                   );

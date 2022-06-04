@@ -57,6 +57,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     randomizeNewAppSessionToast();
     randomizeSecondAppSessionToast();
+    clairNotification.triggerReminder();
   }
 
 

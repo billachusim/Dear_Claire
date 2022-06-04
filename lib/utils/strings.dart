@@ -82,6 +82,7 @@ class AppString{
   static const String flagged_ego_alert_note = "💡 Did you do something bad?\n"
       "\nClaire is checking your ego for violations and if you are a two-time offender, you might be blocked.";
 
+  static const String delete_chat_alert_note = "💡 Do you want to delete this discussion and your corner in the room permanently?";
 
 
 

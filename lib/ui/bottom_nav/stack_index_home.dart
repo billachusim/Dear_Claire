@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/services/notification.dart';
 import 'package:dear_claire/ui/chats/chatrooms.dart';
 import 'package:dear_claire/ui/dairy/diary.dart';
 import 'package:dear_claire/ui/ego-profile/profile.dart';
@@ -18,9 +17,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../../utils/helper.dart';
-import '../splash_screen/custom_rotate_bacground.dart';
 import 'destination.dart';
 
 class HomePage extends StatefulWidget {
@@ -98,8 +95,6 @@ class _HomeDashboardPageState extends State<HomePage>
 
   @override
   void initState() {
-    clairNotification.triggerNotifications();
-    clairNotification.triggerReminder();
     super.initState();
   }
 

@@ -15,6 +15,7 @@ import 'package:dear_claire/widgets/thanks_button.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../utils/strings.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 
 class InsideInsideInsideChatWidget extends StatelessWidget {
@@ -42,6 +43,12 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6),
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+              AppImages.appChatBg,
+            ),
+            fit: BoxFit.fill,
+          ),
           borderRadius: BorderRadius.circular(25), color: Pallet.colorWhite),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

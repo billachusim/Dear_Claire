@@ -310,7 +310,7 @@ class ChatWidget extends StatelessWidget {
 
 
               Visibility(
-                visible: chatModel!.userId == currentUser!.uid && chatModel!.members!.contains(currentUser!.uid),
+                visible: chatModel!.userId == currentUser!.uid,
                 child: GestureDetector(
                   onTap: () {
                     if (chatModel!.userId == currentUser?.uid)
@@ -393,7 +393,7 @@ class ChatWidget extends StatelessWidget {
                   child: InkWell(
                     onTap: () {
                       _createContChatInterstitialAd();
-                      visitedUsersID = _userModel.userId ?? '';
+                      visitedUsersID = chatModel!.userId!.toString();
                       String thisUser = visitedUsersID;
 
                       if (!_isCompleted(chatModel, chatRoomPodo))
@@ -547,8 +547,8 @@ class ChatWidget extends StatelessWidget {
 
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
-      title: Text("Delete This Chat?"),
-      content: Text(AppString.delete_advise_alert_note),
+      title: Text("End And Delete Your Chat Corner?"),
+      content: Text(AppString.delete_chat_alert_note),
       actions: [
         cancelButton,
         continueButton,
