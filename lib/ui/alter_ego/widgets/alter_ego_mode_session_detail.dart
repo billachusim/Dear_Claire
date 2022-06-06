@@ -12,10 +12,13 @@ import 'package:dear_claire/widgets/comment_widget.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../services/firebase_services.dart';
+import '../../../utils/color.dart';
+import '../../Categories/category_streams.dart';
 
 class AlterEgoModeSessionDetail extends StatefulWidget {
   var featuredSessionModel;
@@ -40,6 +43,9 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
   User? currentUser = FirebaseAuth.instance.currentUser;
 
 
+
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
 
 
 
@@ -198,6 +204,8 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                                   ))
                               .toList(),
 
+                          CategoryStreams(),
+
                           // Bottom ad unit is here
                           if(alterEgoModeSessionDetailBottomBanner == null)
                             SizedBox(height: 70)
@@ -270,12 +278,39 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         incrementAdviseCount();
         incrementTotalLoveCount();
         showToast("Thanks! You earned 10 Loves.");
+        flutterLocalNotificationsPlugin.show(0, 'ClaireLove Wallet',
+            "Thanks for that original advise. You just earned 10 Loves.", _notificationDetails());
         Future.delayed(Duration(seconds: 4), () {
           _showAdviseInterstitialAd();
         });
         return true;
       }
     return false;
+  }
+
+
+  final AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel', // id
+      'High Importance Notifications', // title
+      'This channel is used for important notifications.', // description
+      importance: Importance.high,
+      playSound: true);
+
+  NotificationDetails? _notificationDetails() {
+    return NotificationDetails(
+        android: AndroidNotificationDetails(
+            channel.id, channel.name, channel.description,
+            color: Pallet.colorPrimary,
+            playSound: true,
+            icon: '@drawable/claire_icon',
+            enableLights: true,
+            enableVibration: true,
+            showWhen: true,
+            channelShowBadge: true),
+        iOS: IOSNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true));
   }
 
 

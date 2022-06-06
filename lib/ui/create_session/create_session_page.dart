@@ -15,6 +15,7 @@ import 'package:emoji_chooser/emoji_chooser.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoding/geocoding.dart';
@@ -44,6 +45,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   TextEditingController sessionTitleController = TextEditingController();
   final FirebaseServices _firebaseServices = FirebaseServices();
   final c = Get.find<CreateSessionController>();
+
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
 
   late final int mood;
 
@@ -138,6 +142,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   @override
   void initState() {
     super.initState();
+    _createInterstitialAd();
+    _createQuickInterstitialAd();
     randomizeBackgroundColor();
     initializeDatabaseObject();
     sessionTextFocusNode = FocusNode();
@@ -145,8 +151,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionTextFocusNode.requestFocus();
     }
     );
-    _createInterstitialAd();
-    _createQuickInterstitialAd();
     randomizeNewDiarySessionToast();
   }
 
@@ -211,16 +215,54 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   Future<bool> isOriginalSession(BuildContext context, String sessionText) async {
     final _session = sessionText.toString();
     final _length = _session.length;
+
     if (_session.contains("ear"))
       if (_session.contains("laire"))
         if (_length >= 50)
+        if (acceptReplies)
+
       {
         incrementSessionCount();
         incrementTotalLoveCount();
+
+        flutterLocalNotificationsPlugin.show(0, 'Clairelove Wallet',
+            "You started and shared an original diary session. You just earned 10 Loves.", _notificationDetails());
+
+        Future.delayed(Duration(seconds: 4), () {
+          _showInterstitialAd();
+        });
+
         return true;
       }
     return false;
   }
+
+
+  final AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel', // id
+      'High Importance Notifications', // title
+      'This channel is used for important notifications.', // description
+      importance: Importance.high,
+      playSound: true);
+
+  NotificationDetails? _notificationDetails() {
+    return NotificationDetails(
+        android: AndroidNotificationDetails(
+            channel.id, channel.name, channel.description,
+            color: Pallet.colorPrimary,
+            playSound: true,
+            icon: '@drawable/claire_icon',
+            enableLights: true,
+            enableVibration: true,
+            showWhen: true,
+            channelShowBadge: true),
+        iOS: IOSNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true));
+  }
+
+
 
   /// Increase session count when user creates new session.
 
@@ -337,6 +379,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                 value: c.acceptReplies.value,
                                 onChanged: (value) {
                                   c.acceptReplies.value = value;
+                                  acceptReplies = value;
                                 },
                                 // activeTrackColor: Colors.lightGreenAccent,
                                 // activeColor: Colors.green,
@@ -606,6 +649,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 1;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -616,6 +660,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 77.0,
                                             margin: EdgeInsets.all(2),
@@ -653,6 +698,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 4;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -663,6 +709,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 110.0,
                                             margin: EdgeInsets.all(2),
@@ -698,6 +745,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 15;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -708,6 +756,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 135.0,
                                             margin: EdgeInsets.all(2),
@@ -745,6 +794,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 16;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -755,6 +805,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 45.0,
                                             margin: EdgeInsets.all(2),
@@ -780,9 +831,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             ),
                                           ),
                                         ),
-
-
-
                                       ],
                                     ),
                                   ),
@@ -804,6 +852,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 2;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -814,6 +863,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 112.0,
                                             margin: EdgeInsets.all(2),
@@ -848,6 +898,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 11;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -858,6 +909,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 75.0,
                                             margin: EdgeInsets.all(2),
@@ -894,6 +946,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 8;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -904,6 +957,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 80.0,
                                             margin: EdgeInsets.all(2),
@@ -939,6 +993,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 9;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -949,6 +1004,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 107.0,
                                             margin: EdgeInsets.all(2),
@@ -974,9 +1030,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             ),
                                           ),
                                         ),
-
-
-
                                       ],
                                     ),
                                   ),
@@ -1002,16 +1055,18 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 12;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
+
                                             } else {
                                               _interstitialAd?.dispose();
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 85.0,
                                             margin: EdgeInsets.all(2),
@@ -1050,6 +1105,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 5;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -1060,6 +1116,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 105.0,
                                             margin: EdgeInsets.all(2),
@@ -1095,6 +1152,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 10;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -1105,6 +1163,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 80.0,
                                             margin: EdgeInsets.all(2),
@@ -1141,6 +1200,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 14;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -1151,6 +1211,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 130.0,
                                             margin: EdgeInsets.all(2),
@@ -1176,9 +1237,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             ),
                                           ),
                                         ),
-
-
-
                                       ],
                                     ),
                                   ),
@@ -1199,6 +1257,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 17;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -1209,6 +1268,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 100.0,
                                             margin: EdgeInsets.all(2),
@@ -1245,6 +1305,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 3;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -1255,6 +1316,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 70.0,
                                             margin: EdgeInsets.all(2),
@@ -1292,6 +1354,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 6;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -1302,6 +1365,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 85.0,
                                             margin: EdgeInsets.all(2),
@@ -1341,6 +1405,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             mood = 13;
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
+
                                             if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
@@ -1351,6 +1416,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                               showToast(AppString.new_session_error);
                                             }
                                           },
+
                                           child: Container(
                                             width: 105.0,
                                             margin: EdgeInsets.all(2),
@@ -1376,15 +1442,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             ),
                                           ),
                                         ),
-
-
-
-
                                       ],
                                     ),
                                   ),
-
-
                                 ],
                               ),
                             ),
@@ -1746,6 +1806,10 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   }
 
 
+
+
+
+  /// CREATE NEW SESSION METHOD IS HERE
 
 
   createSession() async {
@@ -2493,6 +2557,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         sessionId: sessionObject.sessionId));
   }
 
+
+
+
+  /// Create new session interstitial ad.
+
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
 
@@ -2598,6 +2667,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                   sessionModel: session,
                 )));
   }
+
+
 
   void categorize(CreateSessionModel createSessionModel) {
     if (createSessionModel.message!.contains('love') &&

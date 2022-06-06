@@ -21,13 +21,20 @@ class CommentsButton extends StatelessWidget {
               border: Border.all(color: Colors.white)),
           child: Row(
             children: [
+              Text(
+                  '$count ',
+                  style: GoogleFonts.lato(
+                      fontSize: 13.0,
+                      color: Pallet.colorWhite,
+                      fontWeight: FontWeight.w900)
+              ),
               Icon(
                 Icons.chat,
                 size: 15,
                 color: Pallet.colorWhite,
               ),
               Text(
-                  '$count  Advises',
+                  'Advises',
                   style: GoogleFonts.lato(
                       fontSize: 13.0,
                       color: Pallet.colorWhite,

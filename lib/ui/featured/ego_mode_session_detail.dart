@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/Admob/ad_state.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/user_model.dart';
+import 'package:dear_claire/ui/featured/public_sessions.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
@@ -11,6 +12,7 @@ import 'package:dear_claire/widgets/chat_edit_field.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -44,6 +46,9 @@ class _EgoModeSessionDetailState
   List<CommentSessionModel> _commentSessionList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
   UserModel? _visitingUser = UserModel();
+
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
 
 
 
@@ -210,6 +215,8 @@ class _EgoModeSessionDetailState
                           ))
                               .toList(),
 
+                          TrendingCategories(),
+
                           // Bottom ad unit is here
                           if(egoModeSessionDetailBottomBanner == null)
                             SizedBox(height: 70)
@@ -229,10 +236,12 @@ class _EgoModeSessionDetailState
               )
             ],
           ),
+
           ChatEditField(
             onTap: (String comment, voiceNote) =>
                 _sendComment(comment, voiceNote, featuredSessionModel!),
           )
+
         ],
       ),
     );
@@ -281,13 +290,43 @@ class _EgoModeSessionDetailState
       {
         incrementAdviseCount();
         incrementTotalLoveCount();
+
         showToast("Thanks! You earned 10 Loves.");
-        Future.delayed(Duration(seconds: 4), () {
+
+        flutterLocalNotificationsPlugin.show(0, 'ClaireLove Wallet',
+            "Thanks for that original advise. You just earned 10 Loves.", _notificationDetails());
+
+        Future.delayed(Duration(seconds: 5), () {
           _showAdviseInterstitialAd();
         });
         return true;
       }
     return false;
+  }
+
+
+  final AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel', // id
+      'High Importance Notifications', // title
+      'This channel is used for important notifications.', // description
+      importance: Importance.high,
+      playSound: true);
+
+  NotificationDetails? _notificationDetails() {
+    return NotificationDetails(
+        android: AndroidNotificationDetails(
+            channel.id, channel.name, channel.description,
+            color: Pallet.colorPrimary,
+            playSound: true,
+            icon: '@drawable/claire_icon',
+            enableLights: true,
+            enableVibration: true,
+            showWhen: true,
+            channelShowBadge: true),
+        iOS: IOSNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true));
   }
 
 
