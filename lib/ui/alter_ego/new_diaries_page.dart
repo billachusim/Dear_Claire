@@ -76,7 +76,6 @@ class _NewDiariesPageState extends State<NewDiariesPage> {
                         ...session.data!
                             .map((element) => AlterEgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                             .toList(),
-                        CategoryStreams(),
                       ],
                     );
                   }

@@ -1,16 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/ui/Categories/category_streams.dart';
-import 'package:dear_claire/ui/featured/ego_stream.dart';
-import 'package:dear_claire/ui/featured/model/featured_session_model.dart';
 import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../../utils/strings.dart';
 import '../featured/model/session.dart';
 import '../../widgets/ego_mode_session_card.dart';
@@ -29,8 +23,9 @@ class UsersCategorySessions extends StatelessWidget {
   Stream<QuerySnapshot<Map<String, dynamic>>> getUsersCategorySessions() {
     return FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
-       // .where("category1", isEqualTo: visitedCategory.toString())
+        .where("category1", isEqualTo: visitedCategory)
         .where("userId", isEqualTo: currentUser!.uid.toString())
+        .orderBy("timeCreated", descending: false)
         .limit(100)
         .snapshots();
   }

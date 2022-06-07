@@ -140,7 +140,7 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
                   fontSize: 12,
                 ),
               ),
-              UsersCategoryStreams(),
+              UsersArchiveCategories(),
             ]);
           }
           return Container();

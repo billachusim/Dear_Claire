@@ -27,7 +27,7 @@ class UsersMoodStream extends StatelessWidget {
         .where("moodId", isNotEqualTo: null)
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
-        .limit(25)
+        .limit(50)
         .orderBy('timeLastActivity', descending: true)
         .snapshots();
   }

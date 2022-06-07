@@ -77,11 +77,6 @@ class _FeaturedPageState extends State<FeaturedPage> {
                   child: UsersMoodStream()
               ),
 
-              Visibility(
-                visible: showFilter,
-                  child: CategoryStreams()
-              ),
-
       ],
           ),
       ],

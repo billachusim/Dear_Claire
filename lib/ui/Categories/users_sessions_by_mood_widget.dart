@@ -1,3 +1,5 @@
+import 'package:dear_claire/ui/Categories/users_category_sessions.dart';
+import 'package:dear_claire/ui/Categories/users_mood_sessions.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/color.dart';
@@ -31,10 +33,10 @@ class _UsersMoodStreamWidget extends State<UsersMoodStreamWidget> {
 
             GestureDetector(onTap: (){
               setState(() {
-                String featuredCategory1 = widget.element.category1.toString();
-                String thisCategory = featuredCategory1;
+                int? featuredSessionMood = Mood.getMoodId(widget.element.moodId);
+                int? moodId = featuredSessionMood;
                 PageRouter.gotoWidget(
-                    EgoModeSessionDetail(featuredSessionModel: widget.element),
+                    UsersMoodSessions(sessionMood: moodId!),
                     context);
               });
             },

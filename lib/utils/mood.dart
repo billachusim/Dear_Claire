@@ -36,5 +36,14 @@ class Mood {
     }
   }
 
+  static int? getMoodId(int? moodId) {
+
+    for (var mood in MOODS) {
+      if (mood.id == moodId) {
+        return mood.id;
+      }
+    }
+  }
+
 }
 

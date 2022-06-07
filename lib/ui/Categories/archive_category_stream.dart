@@ -1,19 +1,20 @@
+import 'package:dear_claire/ui/Categories/archive_category_sessions.dart';
 import 'package:dear_claire/ui/Categories/category_sessions.dart';
 import 'package:flutter/material.dart';
 import '../../utils/helper.dart';
 import '../featured/model/session.dart';
 import '../routes/page_router_animation.dart';
 
-class CategoryStreams2 extends StatefulWidget {
+class ArchiveCategoryStream extends StatefulWidget {
   Session element;
 
-  CategoryStreams2({Key? key, required this.element}) : super(key: key);
+  ArchiveCategoryStream({Key? key, required this.element}) : super(key: key);
 
   @override
-  _CategoryStreams2State createState() => _CategoryStreams2State();
+  _ArchiveCategoryStream createState() => _ArchiveCategoryStream();
 }
 
-class _CategoryStreams2State extends State<CategoryStreams2> {
+class _ArchiveCategoryStream extends State<ArchiveCategoryStream> {
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +32,7 @@ class _CategoryStreams2State extends State<CategoryStreams2> {
                 String featuredCategory1 = widget.element.category1.toString();
                 String thisCategory = featuredCategory1;
                 PageRouter.gotoWidget(
-                    CategorySessions(visitedCategory: widget.element.category1.toString()),
+                    ArchiveCategorySessions(visitedCategory: widget.element.category1.toString()),
                     context);
               });
             },

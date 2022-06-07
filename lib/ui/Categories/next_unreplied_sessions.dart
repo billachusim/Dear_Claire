@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/Categories/similar_sessions_stream.dart';
+import 'package:dear_claire/ui/Categories/unreplied_sessions_stream.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,11 +25,12 @@ class NextUnrepliedSession extends StatelessWidget {
     return FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
         .where("repliesEnabled", isEqualTo: true)
-        .where("respondentUserId", isLessThan: null)
+        .where("category1", isEqualTo: element.category1.toString())
+        .where("respondentUserId", isEqualTo: null)
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(50)
-        .orderBy('respondentUserId', descending: true)
+        .orderBy('timeCreated', descending: true)
         .snapshots();
   }
 
@@ -75,7 +77,7 @@ class NextUnrepliedSession extends StatelessWidget {
                         children: [
                           ..._sessionList!
                               .map((element) =>
-                              SimilarSessionsStream(element: element))
+                              UnrepliedSessionsStream(element: element))
                               .toList(),
                         ],
                       ),
