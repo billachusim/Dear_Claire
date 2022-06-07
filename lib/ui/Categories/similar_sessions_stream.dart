@@ -4,16 +4,16 @@ import '../featured/ego_mode_session_detail.dart';
 import '../featured/model/session.dart';
 import '../routes/page_router_animation.dart';
 
-class CategoryStreams2 extends StatefulWidget {
+class SimilarSessionsStream extends StatefulWidget {
   Session element;
 
-  CategoryStreams2({Key? key, required this.element}) : super(key: key);
+  SimilarSessionsStream({Key? key, required this.element}) : super(key: key);
 
   @override
-  _CategoryStreams2State createState() => _CategoryStreams2State();
+  _SimilarSessionsStream createState() => _SimilarSessionsStream();
 }
 
-class _CategoryStreams2State extends State<CategoryStreams2> {
+class _SimilarSessionsStream extends State<SimilarSessionsStream> {
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +44,7 @@ class _CategoryStreams2State extends State<CategoryStreams2> {
                 child: Column(
                   children: [
                     SizedBox(height: 3,),
-                    Text(widget.element.category1.toString(),
+                    Text(widget.element.title.toString(),
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,

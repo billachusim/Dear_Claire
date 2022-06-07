@@ -310,7 +310,7 @@ class _CommentWidgetState extends State<CommentWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         image: DecorationImage(
@@ -574,29 +574,21 @@ class _CommentWidgetState extends State<CommentWidget> {
             if (widget.commentSessionModel!.isUserAdmin)
               CupertinoButton(
                   padding: EdgeInsets.zero,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: Pallet.colorSecondary,
-                        )),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.share_rounded,
-                          size: 15,
-                          color: Pallet.colorSecondary,
-                        ),
-                        Text(
-                          'Share',
-                          style: GoogleFonts.lato(
-                              fontSize: 13.0,
-                              color: Pallet.colorSecondary,
-                              fontWeight: FontWeight.w800),
-                        ),
-                      ],
-                    ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.share_rounded,
+                        size: 15,
+                        color: Pallet.colorSecondary,
+                      ),
+                      Text(
+                        'Share',
+                        style: GoogleFonts.lato(
+                            fontSize: 13.0,
+                            color: Pallet.colorSecondary,
+                            fontWeight: FontWeight.w800),
+                      ),
+                    ],
                   ),
                   onPressed: widget.onShare
               ),
@@ -649,59 +641,42 @@ class _CommentWidgetState extends State<CommentWidget> {
                     flagAlertDialog(context);
                   else unflagAlertDialog(context);
                 },
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 0, horizontal: 5),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: Pallet.colorPrimaryDark,
-                      )),
-                  child: Row(
-                    children: [
-                      Icon(
-                        widget.commentSessionModel?.flagged == true ? Icons.flag : Icons.flag_outlined,
-                        color: Pallet.colorPrimaryDark,
-                        size: 15,
-                      ),
-                      SizedBox(width: 2,),
-                      Text(
-                        'Flag',
-                        style: GoogleFonts.lato(
-                            fontSize: 11.0,
-                            color: Pallet.colorPrimaryDark,
-                            fontWeight: FontWeight.w800),
-                      ),
-                    ],
-                  ),
+                child: Row(
+                  children: [
+                    Icon(
+                      widget.commentSessionModel?.flagged == true ? Icons.flag : Icons.flag_outlined,
+                      color: Pallet.colorPrimaryDark,
+                      size: 15,
+                    ),
+                    Text(
+                      'Flag',
+                      style: GoogleFonts.lato(
+                          fontSize: 11.0,
+                          color: Pallet.colorPrimaryDark,
+                          fontWeight: FontWeight.w800),
+                    ),
+                  ],
                 ),
               ),
 
             if (widget.commentSessionModel!.userId == currentUser?.uid)
             CupertinoButton(
                 padding: EdgeInsets.zero,
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: Pallet.colorSecondary,
-                      )),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.edit,
-                        size: 15,
-                        color: Pallet.colorSecondary,
-                      ),
-                      Text(
-                        'Edit',
-                        style: GoogleFonts.lato(
-                            fontSize: 12.0,
-                            color: Pallet.colorSecondary,
-                            fontWeight: FontWeight.w800),
-                      ),
-                    ],
-                  ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.edit,
+                      size: 15,
+                      color: Pallet.colorSecondary,
+                    ),
+                    Text(
+                      'Edit',
+                      style: GoogleFonts.lato(
+                          fontSize: 12.0,
+                          color: Pallet.colorSecondary,
+                          fontWeight: FontWeight.w800),
+                    ),
+                  ],
                 ),
                 onPressed: _showCardDialog
             ),
@@ -723,29 +698,21 @@ class _CommentWidgetState extends State<CommentWidget> {
                       visible: userType != "REGULAR",
                       child: CupertinoButton(
                           padding: EdgeInsets.zero,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: Pallet.colorSecondary,
-                                )),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.edit,
-                                  size: 15,
-                                  color: Pallet.colorSecondary,
-                                ),
-                                Text(
-                                  'Moderate',
-                                  style: GoogleFonts.lato(
-                                      fontSize: 13.0,
-                                      color: Pallet.colorSecondary,
-                                      fontWeight: FontWeight.w800),
-                                ),
-                              ],
-                            ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.edit,
+                                size: 15,
+                                color: Pallet.colorSecondary,
+                              ),
+                              Text(
+                                'Moderate',
+                                style: GoogleFonts.lato(
+                                    fontSize: 13.0,
+                                    color: Pallet.colorSecondary,
+                                    fontWeight: FontWeight.w800),
+                              ),
+                            ],
                           ),
                           onPressed: _showCardDialog
                       ),

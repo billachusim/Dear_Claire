@@ -383,30 +383,21 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       flagAlertDialog(context);
                                     else unflagAlertDialog(context);
                                   },
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 0, horizontal: 5),
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: Pallet.colorWhite,
-                                        )),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          _session.flagged == true ? Icons.flag : Icons.flag_outlined,
-                                          color: Pallet.colorWhite,
-                                          size: 20,
-                                        ),
-                                        SizedBox(width: 2,),
-                                        Text(
-                                          'Flag',
-                                          style: GoogleFonts.lato(
-                                              fontSize: 13.0,
-                                              color: Pallet.colorWhite,
-                                              fontWeight: FontWeight.w800),
-                                        ),
-                                      ],
-                                    ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        _session.flagged == true ? Icons.flag : Icons.flag_outlined,
+                                        color: Pallet.colorWhite,
+                                        size: 20,
+                                      ),
+                                      Text(
+                                        'Flag',
+                                        style: GoogleFonts.lato(
+                                            fontSize: 13.0,
+                                            color: Pallet.colorWhite,
+                                            fontWeight: FontWeight.w800),
+                                      ),
+                                    ],
                                   ),
                                 ),
 
@@ -415,29 +406,21 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
                                 CupertinoButton(
                                     padding: EdgeInsets.zero,
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
-                                      decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: Pallet.colorWhite,
-                                          )),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.share_rounded,
-                                            size: 15,
-                                            color: Pallet.colorWhite,
-                                          ),
-                                          Text(
-                                            'Share',
-                                            style: GoogleFonts.lato(
-                                                fontSize: 13.0,
-                                                color: Pallet.colorWhite,
-                                                fontWeight: FontWeight.w800),
-                                          ),
-                                        ],
-                                      ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.share_rounded,
+                                          size: 15,
+                                          color: Pallet.colorWhite,
+                                        ),
+                                        Text(
+                                          'Share',
+                                          style: GoogleFonts.lato(
+                                              fontSize: 13.0,
+                                              color: Pallet.colorWhite,
+                                              fontWeight: FontWeight.w800),
+                                        ),
+                                      ],
                                     ),
                                     onPressed: () async {
                                       final image =

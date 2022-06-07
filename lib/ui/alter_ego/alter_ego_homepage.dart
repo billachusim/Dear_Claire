@@ -1,3 +1,5 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/data/repository/post_repository_impl.dart';
 import 'package:dear_claire/ui/alter_ego/advised_page.dart';
 import 'package:dear_claire/ui/alter_ego/all_page.dart';
@@ -6,16 +8,14 @@ import 'package:dear_claire/ui/alter_ego/new_diaries_page.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../utils/constant.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
-import '../splash_screen/custom_rotate_bacground.dart';
 import 'chatrooms.dart';
-import 'package:shake/shake.dart';
-import 'package:flutter_vibrate/flutter_vibrate.dart';
 
 class AlterEgoHomePage extends StatefulWidget {
   const AlterEgoHomePage({Key? key}) : super(key: key);
@@ -28,6 +28,11 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   PageController? _pageController;
   int currentIndex = 0;
+  String userName = "";
+  String userType = "";
+  String avatarUrl = "";
+  var currentUser = FirebaseAuth.instance.currentUser;
+
 
   @override
   void initState() {
@@ -50,7 +55,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context,) {
     return SafeArea(
         child: Scaffold(
             key: _scaffoldKey,
@@ -174,22 +179,103 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                 child: Column(
                   children: [
                     UserAccountsDrawerHeader(
-                      decoration: BoxDecoration(color: Pallet.colorSecondary,
-
+                      decoration: BoxDecoration(color: Pallet.colorPrimary,
                       ),
-                      accountEmail: Text("Secret Diary Chat",
-                          style: TextStyle(color: Pallet.colorWhite, fontWeight: FontWeight.w600,
-                              fontSize: 12.0, fontStyle: FontStyle.italic
-                          )),
-                      accountName: Text("Dear Claire",
+                      accountEmail: Text(
+                        "Influence the world positively.",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      accountName: Text(userType == 'REGULAR'? 'Ego' :
+                      userType == 'ADMIN'? 'Alter Ego' :
+                      userType == 'SUPER_ADMIN'? 'Super Ego' :
+                      'Ego',
                           style: TextStyle(color: Pallet.colorWhite,
-                            fontSize: 22.0, fontWeight: FontWeight.w700,)),
-                      currentAccountPicture: InkWell(
+                            fontSize: 19.0, fontWeight: FontWeight.w700,)),
+                      currentAccountPicture: FutureBuilder<
+                          DocumentSnapshot<Map<String, dynamic>>>(
+                        future: FirebaseFirestore.instance
+                            .collection("users")
+                            .doc(currentUser?.uid)
+                            .get(),
+                        builder: (_, snapshot) {
+                          if (snapshot.hasData) {
+                            var data = snapshot.data!.data();
+                            userName = data?["nickname"] ?? " ";
+                            userType = data?["userType"] ?? " ";
+                            avatarUrl = data?["avatarUrl"] ?? " ";
+                            return
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context)
+                                      .pushNamed(AppRoutes.home);
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: userType == 'REGULAR'? Pallet.colorPrimary
+                                        : userType == 'ADMIN'? Pallet.colorSecondary
+                                        : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
+                                        :Pallet.colorBlue,
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  margin: EdgeInsets.only(left: 0),
+                                  child: Container(
+                                    height: 75,
+                                    width: 75,
+                                    margin: EdgeInsets.all(4),
+                                    child: RotateImage(75.h, 75.w)),
+                                  ),
+                                );
+                          }
+
+                          return CircularProgressIndicator();
+                        },
+                      ),
+
+                      otherAccountsPictures: [
+                        CachedNetworkImage(
+                            width: 60,
+                            height: 60,
+                            imageUrl: avatarUrl,
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(100),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                CircularProgressIndicator(),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/brown_boy_mask.png",
+                              width: 50,
+                              height: 50,
+                            ) //Icon(Icons.error),
+                        ),
+
+                        GestureDetector(
                           onTap: () async {
-                            Navigator.of(context)
-                                .pushReplacementNamed(AppRoutes.home);
+                            lockAlertDialog(context);
                           },
-                          child: RotateImage(75.h, 75.w)),
+                          child: Text(
+                            "LOCK-OUT",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: Pallet.colorSecondaryDark,
+                            ),
+                          ),
+                        ),
+                      ],
+
                     ),
                     //SizedBox(height: 30.h,),
                     ListTile(
@@ -233,5 +319,42 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
 
   void _openEndDrawer() {
     _scaffoldKey.currentState!.openDrawer();
+  }
+
+  lockAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("No, Wait."),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Yes, Lock Out."),
+      onPressed:  () {
+        firebaseServices.logUserOut(context);
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Close and Lock Your Diary?"),
+      content: Text(AppString.lock_out_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 }

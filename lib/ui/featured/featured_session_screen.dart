@@ -1,12 +1,8 @@
+import 'package:dear_claire/ui/Categories/category_streams.dart';
+import 'package:dear_claire/ui/Categories/users_sessions_by_moods.dart';
 import 'package:dear_claire/ui/featured/public_sessions.dart';
-import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:shake/shake.dart';
-import 'package:flutter_vibrate/flutter_vibrate.dart';
-
-import '../../utils/constant.dart';
 
 class FeaturedPage extends StatefulWidget {
   FeaturedPage({Key? key, required this.title}) : super(key: key);
@@ -19,33 +15,13 @@ class FeaturedPage extends StatefulWidget {
 
 class _FeaturedPageState extends State<FeaturedPage> {
 
+  bool showFilter = false;
+
   @override
   void initState() {
     super.initState();
-   // ShakeDevice();
   }
 
-  ShakeDevice() async {
-    ShakeDetector detector = ShakeDetector.autoStart(
-      onPhoneShake: () async {
-
-      var _type = FeedbackType.error;
-      Vibrate.feedback(_type);
-      Fluttertoast.showToast(
-        toastLength: Toast.LENGTH_LONG,
-        msg: "Switching Ego",
-        textColor: Colors.white,
-        backgroundColor: Pallet.colorSplashScreen,
-      );
-        String id = await sharedPreference.getAlterEgoId();
-                    String accessCode = await sharedPreference.getAlterEgoAccessCode();
-                    print("Show Alter details:: $id || $accessCode");
-                    id.isNotEmpty && accessCode.isNotEmpty ? await firebaseServices.getUserAlterEgo(context,id, accessCode)
-                        : Navigator.of(context)
-                        .pushNamed(AppRoutes.alterEgoLogin);
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +39,48 @@ class _FeaturedPageState extends State<FeaturedPage> {
 
               TheFeaturedSessions(),
 
-              TrendingCategories(),
+              Row(
+                children: [
+
+                  Visibility(
+                    visible: !showFilter,
+                    child: TextButton(
+                      style: TextButton.styleFrom(fixedSize: Size.fromHeight(10)),
+                      onPressed: () {
+                        setState(() {
+                          showFilter = true;
+                        });
+                      },
+                      child: Text(
+                        showFilter == true? 'HIDE FILTER' :
+                        showFilter == false? 'SHOW FILTER' :
+                        "Show/Hide Filter",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ),
+                  FeaturedSessionNotice(),
+                ],
+              ),
+
+
+              Visibility(
+                  visible: showFilter,
+                  child: TrendingCategories()
+              ),
+
+              Visibility(
+                visible: showFilter,
+                  child: UsersMoodStream()
+              ),
+
+              Visibility(
+                visible: showFilter,
+                  child: CategoryStreams()
+              ),
 
       ],
           ),

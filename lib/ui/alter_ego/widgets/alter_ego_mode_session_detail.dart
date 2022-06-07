@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/Admob/ad_state.dart';
+import 'package:dear_claire/ui/Categories/next_unreplied_sessions.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/ui/featured/widget/post_details_widget.dart';
@@ -19,6 +20,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../services/firebase_services.dart';
 import '../../../utils/color.dart';
 import '../../Categories/category_streams.dart';
+import '../../Categories/similar_category_sessions.dart';
 
 class AlterEgoModeSessionDetail extends StatefulWidget {
   var featuredSessionModel;
@@ -204,8 +206,16 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                                   ))
                               .toList(),
 
-                          CategoryStreams(),
+                          SizedBox(height: 4,),
+                          Text(
+                            "Earn more> Respond to more sessions from category - " + featuredSessionModel!.category1.toString(),
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
 
+                          NextUnrepliedSession(element: featuredSessionModel!,),
                           // Bottom ad unit is here
                           if(alterEgoModeSessionDetailBottomBanner == null)
                             SizedBox(height: 70)

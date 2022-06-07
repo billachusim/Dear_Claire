@@ -18,6 +18,7 @@ import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../utils/color.dart';
 import '../../widgets/comment_widget.dart';
+import '../Categories/similar_category_sessions.dart';
 import 'model/comment_session_model.dart';
 import 'model/session.dart';
 import 'widget/post_details_widget.dart';
@@ -215,7 +216,16 @@ class _EgoModeSessionDetailState
                           ))
                               .toList(),
 
-                          TrendingCategories(),
+                          SizedBox(height: 4,),
+                          Text(
+                            "Check the next sessions from same category - " + featuredSessionModel!.category1.toString(),
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+
+                          SimilarCategorySessions(element: featuredSessionModel!,),
 
                           // Bottom ad unit is here
                           if(egoModeSessionDetailBottomBanner == null)

@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/Categories/category_streams.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
@@ -8,10 +7,7 @@ import 'package:dear_claire/widgets/ego_mode_session_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../utils/helper.dart';
 import '../routes/routes.dart';
-import '../splash_screen/custom_rotate_bacground.dart';
 
 class FollowedPage extends StatefulWidget {
   FollowedPage({Key? key, required this.title}) : super(key: key);
@@ -74,7 +70,6 @@ class _FollowedPageState extends State<FollowedPage> {
                         ..._sessionList!
                             .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                             .toList(),
-                        CategoryStreams(),
                       ],
                     ),
                   );

@@ -1,16 +1,17 @@
 import 'package:dear_claire/ui/Categories/category_sessions.dart';
+import 'package:dear_claire/ui/Categories/users_category_sessions.dart';
 import 'package:flutter/material.dart';
 import '../routes/page_router_animation.dart';
 
-class CategoryStreams extends StatefulWidget {
+class UsersCategoryStreams extends StatefulWidget {
 
-  CategoryStreams({Key? key,}) : super(key: key);
+  UsersCategoryStreams({Key? key,}) : super(key: key);
 
   @override
-  _CategoryStreamsState createState() => _CategoryStreamsState();
+  _UsersCategoryStreamsState createState() => _UsersCategoryStreamsState();
 }
 
-class _CategoryStreamsState extends State<CategoryStreams> {
+class _UsersCategoryStreamsState extends State<UsersCategoryStreams> {
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,7 @@ class _CategoryStreamsState extends State<CategoryStreams> {
                   String featuredCategory1 = "love and relationship";
                   String thisCategory = featuredCategory1;
                   PageRouter.gotoWidget(
-                      CategorySessions(visitedCategory: thisCategory,),
+                      UsersCategorySessions(visitedCategory: thisCategory,),
                       context);
                 });
               },

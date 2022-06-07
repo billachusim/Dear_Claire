@@ -218,8 +218,7 @@ class _HomeDashboardPageState extends State<HomePage>
                         return
                           GestureDetector(
                             onTap: () {
-                              Navigator.of(context)
-                                  .pushNamed(AppRoutes.egoPage);
+                              lockAlertDialog(context);
                             },
                             child: Container(
                               decoration: BoxDecoration(
@@ -343,4 +342,44 @@ class _HomeDashboardPageState extends State<HomePage>
   void _openEndDrawer() {
     _scaffoldKey.currentState!.openDrawer();
   }
+
+
+  lockAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Ego Profile"),
+      onPressed:  () {
+        Navigator.of(context)
+            .pushNamed(AppRoutes.egoPage);      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Lock Out."),
+      onPressed:  () {
+        firebaseServices.logUserOut(context);
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Lock Diary Or Visit Your Ego Profile?"),
+      content: Text(AppString.lock_out_ego_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
 }

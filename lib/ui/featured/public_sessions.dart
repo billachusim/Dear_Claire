@@ -1,10 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/ui/Categories/category_streams.dart';
 import 'package:dear_claire/ui/Categories/category_streams2.dart';
-import 'package:dear_claire/ui/featured/audio_stream_card.dart';
-import 'package:dear_claire/ui/featured/ego_stream.dart';
-import 'package:dear_claire/ui/featured/model/featured_session_model.dart';
+import 'package:dear_claire/ui/Categories/similar_sessions_stream.dart';
 import 'package:dear_claire/ui/featured/widget/status_stream.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
@@ -13,7 +9,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../../utils/strings.dart';
 import '../Search/custom_search_card.dart';
 import '../featured/model/session.dart';
@@ -66,7 +61,6 @@ class TheFeaturedSessions extends StatelessWidget {
               return Scrollbar(
                 child: ListView(
                   children: [
-                    FeaturedSessionNotice(),
                     ..._sessionList!
                         .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                         .toList(),
@@ -90,7 +84,7 @@ class FeaturedSessionNotice extends StatelessWidget {
     return Center(
       child: Container(
         child: Text(
-          "Featured Diary Sessions are selected ONLY from public diary sessions.\n"
+          "Featured Sessions are selected from public diary sessions.\n"
               "Your diary session can NOT appear here if you made it private.",
           style: TextStyle(
             color: Colors.white70,
@@ -106,7 +100,7 @@ class FeaturedSessionNotice extends StatelessWidget {
 
 
 
-/// This is a stream class showing public audio sessions
+/// This is a stream class showing public sessions based on their categories.
 
 
 class TrendingCategories extends StatelessWidget {
@@ -116,7 +110,7 @@ class TrendingCategories extends StatelessWidget {
   final List<Session>? _sessionList = [];
 
 
-  /// Get Featured sessions for "love and relationship" search
+  /// Get Featured session for the trending category.
   /// But not flagged or even archived
   Stream<QuerySnapshot<Map<String, dynamic>>> trendingCategoryCards() {
     return FirebaseFirestore.instance

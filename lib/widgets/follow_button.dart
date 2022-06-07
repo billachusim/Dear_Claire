@@ -15,27 +15,21 @@ class FollowButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoButton(
         padding: EdgeInsets.zero,
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Pallet.colorWhite)),
-          child: Row(
-            children: [
-              Icon(
-                Icons.add_circle,
-                size: 15,
-                color: Pallet.colorWhite,
-              ),
-              Text(
-                '$text $count',
-                style: GoogleFonts.lato(
-                    fontSize: 13.0,
-                    color: Pallet.colorWhite,
-                    fontWeight: FontWeight.w900)
-              ),
-            ],
-          ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.add_circle,
+              size: 15,
+              color: Pallet.colorWhite,
+            ),
+            Text(
+              '$text $count',
+              style: GoogleFonts.lato(
+                  fontSize: 13.0,
+                  color: Pallet.colorWhite,
+                  fontWeight: FontWeight.w900)
+            ),
+          ],
         ),
         onPressed: onPressed);
   }

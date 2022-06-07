@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../utils/color.dart';
 import '../../utils/helper.dart';
+import '../../utils/mood.dart';
 import '../featured/ego_mode_session_detail.dart';
 import '../featured/model/session.dart';
 import '../routes/page_router_animation.dart';
 
-class CategoryStreams2 extends StatefulWidget {
+class UsersMoodStreamWidget extends StatefulWidget {
   Session element;
 
-  CategoryStreams2({Key? key, required this.element}) : super(key: key);
+  UsersMoodStreamWidget({Key? key, required this.element}) : super(key: key);
 
   @override
-  _CategoryStreams2State createState() => _CategoryStreams2State();
+  _UsersMoodStreamWidget createState() => _UsersMoodStreamWidget();
 }
 
-class _CategoryStreams2State extends State<CategoryStreams2> {
+class _UsersMoodStreamWidget extends State<UsersMoodStreamWidget> {
 
   @override
   Widget build(BuildContext context) {
@@ -44,14 +47,13 @@ class _CategoryStreams2State extends State<CategoryStreams2> {
                 child: Column(
                   children: [
                     SizedBox(height: 3,),
-                    Text(widget.element.category1.toString(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontStyle: FontStyle.italic,
-                        fontSize: 17,
-                      ),
-                    ),
+                    Text(Mood.getMood(widget.element.moodId).toString(),
+                        textAlign: TextAlign.end,
+                        maxLines: 1,
+                        style: GoogleFonts.lato(
+                            fontSize: 17.0,
+                            color: Pallet.colorWhite,
+                            fontWeight: FontWeight.w700)),
                   ],
                 ),
               ),

@@ -1,7 +1,11 @@
 import 'dart:collection';
+import 'package:dear_claire/ui/Categories/category_streams.dart';
+import 'package:dear_claire/ui/Categories/users_diary_categories.dart';
+import 'package:dear_claire/ui/Categories/users_sessions_by_moods.dart';
 import 'package:dear_claire/ui/ego-profile/archived_sessions.dart';
 import 'package:dear_claire/ui/ego-profile/utils.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
+import 'package:dear_claire/ui/featured/public_sessions.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
@@ -10,7 +14,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class ArchiveWidget extends StatefulWidget {
-  const ArchiveWidget({ Key? key }) : super(key: key);
+  const ArchiveWidget({Key? key}) : super(key: key);
 
   @override
   State<ArchiveWidget> createState() => _ArchiveWidgetState();
@@ -20,7 +24,7 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
 
   final List<Session> sessions = [];
-  final List<DateTime> _dateLists=[];
+  final List<DateTime> _dateLists = [];
 
   DateTime? _focusedDay = DateTime.now();
 
@@ -40,14 +44,10 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
     hashCode: getHashCode,
   );
 
-
-
-
   List<Session> _getSessionForDay(DateTime day) {
     // Implementation example
     return kEvents[day] ?? [];
   }
-
 
   void extractDatesFromSession(AsyncSnapshot<List<Session>> userSessions) {
     sessions.addAll(userSessions.data!);
@@ -59,7 +59,6 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
 
     debugPrint(_dateLists.toString());
 
-
     ///After getting sessions, create events based on the sessions in each datetime Object
     // createEvents();
   }
@@ -69,23 +68,27 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
     debugPrint("tapped date is ${selectedDay.toString()}");
     List<Session> selectedSessions = [];
     sessions.forEach((element) {
-
-      if(DateTime(element.dateTime!.year, element.dateTime!.month, element.dateTime!.day)
-          .isAtSameMomentAs(DateTime(selectedDay.year, selectedDay.month, selectedDay.day)))
-      {
+      if (DateTime(element.dateTime!.year, element.dateTime!.month,
+              element.dateTime!.day)
+          .isAtSameMomentAs(
+              DateTime(selectedDay.year, selectedDay.month, selectedDay.day))) {
         selectedSessions.add(element);
       }
     });
 
     debugPrint("length is ${selectedSessions.length}");
-    Navigator.push(context, MaterialPageRoute(
-        builder: (_) => ArchivedSessions(sessions: selectedSessions,)));
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => ArchivedSessions(
+                  sessions: selectedSessions,
+                )));
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: firebaseServices.getUserSessionByDate(startDate:kFirstDay),
+        future: firebaseServices.getUserSessionByDate(startDate: kFirstDay),
         builder: (context, AsyncSnapshot<List<Session>> userSessions) {
           if (userSessions.connectionState == ConnectionState.waiting) {
             return RotateImage(70, 70);
@@ -110,11 +113,38 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
 
           if (userSessions.hasData) {
             extractDatesFromSession(userSessions);
-            return ListView(children: [calendarWidget()]);
+            return ListView(children: [
+              Text(
+                "Browse your sessions by calendar.",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
+              ),
+              SizedBox(height: 4,),
+              calendarWidget(),
+              SizedBox(height: 4,),
+              Text(
+                "Browse your sessions by mood.",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
+              ),
+              UsersMoodStream(),
+              SizedBox(height: 4,),
+              Text(
+                "Browse your sessions by categories.",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
+              ),
+              UsersCategoryStreams(),
+            ]);
           }
           return Container();
-        }
-    );
+        });
   }
 
   Widget calendarWidget() {
@@ -127,7 +157,9 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
         calendarStyle: CalendarStyle(
             defaultTextStyle: TextStyle(color: Colors.white),
             selectedDecoration: BoxDecoration(
-              color: Colors.green, shape: BoxShape.circle,),
+              color: Colors.green,
+              shape: BoxShape.circle,
+            ),
             weekendTextStyle: TextStyle(color: Colors.white)),
         firstDay: kFirstDay,
         lastDay: kLastDay,

@@ -84,6 +84,12 @@ class AppString{
 
   static const String delete_chat_alert_note = "💡 Do you want to delete this discussion and your corner in the room permanently?";
 
+  static const String lock_out_alert_note = "💡 Do you want to lock your Diary?\n"
+      "You'll need your email and ego code to open up again.";
+
+  static const String lock_out_ego_alert_note = "💡 Do you want to lock your Diary or check your ego?\n"
+      "If you lock out, you'll need your email and ego code to open up again.";
+
 
 
   static const String sessionCategories = "categories";
