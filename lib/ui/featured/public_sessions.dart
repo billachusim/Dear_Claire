@@ -205,8 +205,6 @@ class UsersArchiveCategories extends StatelessWidget {
         .collection(AppString.appFeaturedSessions)
         .where("repliesEnabled", isEqualTo: true)
         .where("category1", isNotEqualTo: null)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
         .limit(25)
         .orderBy('timeLastActivity', descending: true)
         .snapshots();

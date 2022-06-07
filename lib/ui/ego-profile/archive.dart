@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'package:dear_claire/ui/Categories/archive_mood_stream.dart';
 import 'package:dear_claire/ui/Categories/category_streams.dart';
 import 'package:dear_claire/ui/Categories/users_diary_categories.dart';
 import 'package:dear_claire/ui/Categories/users_sessions_by_moods.dart';
@@ -131,7 +132,7 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
                   fontSize: 12,
                 ),
               ),
-              UsersMoodStream(),
+              ArchiveMoodStream(),
               SizedBox(height: 4,),
               Text(
                 "Browse your sessions by categories.",

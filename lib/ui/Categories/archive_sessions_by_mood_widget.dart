@@ -1,3 +1,4 @@
+import 'package:dear_claire/ui/Categories/archive_mood_sessions.dart';
 import 'package:dear_claire/ui/Categories/users_mood_sessions.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,16 +8,16 @@ import '../../utils/mood.dart';
 import '../featured/model/session.dart';
 import '../routes/page_router_animation.dart';
 
-class UsersMoodStreamWidget extends StatefulWidget {
+class ArchiveMoodStreamWidget extends StatefulWidget {
   Session element;
 
-  UsersMoodStreamWidget({Key? key, required this.element}) : super(key: key);
+  ArchiveMoodStreamWidget({Key? key, required this.element}) : super(key: key);
 
   @override
-  _UsersMoodStreamWidget createState() => _UsersMoodStreamWidget();
+  _ArchiveMoodStreamWidget createState() => _ArchiveMoodStreamWidget();
 }
 
-class _UsersMoodStreamWidget extends State<UsersMoodStreamWidget> {
+class _ArchiveMoodStreamWidget extends State<ArchiveMoodStreamWidget> {
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +35,7 @@ class _UsersMoodStreamWidget extends State<UsersMoodStreamWidget> {
                 int? featuredSessionMood = Mood.getMoodId(widget.element.moodId);
                 int? moodId = featuredSessionMood;
                 PageRouter.gotoWidget(
-                    UsersMoodSessions(sessionMood: moodId!),
+                    ArchiveMoodSessions(sessionMood: moodId!),
                     context);
               });
             },
