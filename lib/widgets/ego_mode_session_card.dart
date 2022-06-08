@@ -18,6 +18,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../services/firebase_services.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
@@ -491,6 +492,15 @@ class EgoModeSessionCard extends StatelessWidget {
   }
 
 
+  String? getDonateUrl(){
+    return AppString.donate_url;
+  }
+
+  onDonateClicked() {
+    var donateUrl = getDonateUrl();
+    launch(donateUrl!);
+  }
+
 
 
 
@@ -498,15 +508,15 @@ class EgoModeSessionCard extends StatelessWidget {
 
     // set up the buttons
     Widget cancelButton = TextButton(
-      child: Text("Cancel"),
+      child: Text("TopUp Love"),
       onPressed:  () {
-        Navigator.of(context).pop();
+        onDonateClicked();
       },
     );
 
     Widget continueButton = TextButton(
       child: Text("Request Feature\n"
-          "Cost: 1,000+ CL"),
+          "Cost: 1,000+ Loves"),
       onPressed:  () {
        // setToFeatured();
         Navigator.pushReplacementNamed(context, AppRoutes.requestFeatureForm);

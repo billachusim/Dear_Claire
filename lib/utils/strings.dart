@@ -50,7 +50,7 @@ class AppString{
   static const String feature_alert_note = "💡 This session is not featured\nWould you like to feature it?";
   static const String unfeature_alert_note = "💡 Your session is featured!\n"
       "Would you like to unfeature it?";
-  static const String ego_mode_feature_alert_note = "💡 Your session is not featured\n"
+  static const String ego_mode_feature_alert_note = "💡 Your session is public but not featured.\n"
       "Would you like to feature it?";
 
   static const String archive_alert_note = "💡 This session is still open to visitors.\nWould you like to archive it?";
@@ -255,18 +255,20 @@ class AppString{
   static const String switchText6 = "Do you truly believe in the Claire Project? That everyone deserves a true friend in need and indeed?";
   static const String switchText7 = "Are you ready to become Claire now?";
   static const String switchHeaderTwo = "Please Answer The Following Questions By Switching Yes Or No";
-  static const String switchBottomHeader = "Thank you so much for coming this far ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Claire and cue in for your final Verification and Clairentation on Whatsapp where you will receive your Alter-Ego login details.";
+  static const String switchBottomHeader = "Thank you so much for coming this far ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Super Ego and cue in for your final Verification and Clairentation on Whatsapp where you will receive your Alter-Ego login details.";
   static const String WHATSAPP_URL = "https://api.whatsapp.com/send?phone=2348188578955&text=";
   static const String donate_url = "https://flutterwave.com/pay/top_up_love";
 
 
 
   static const String request_feature_form_header = "Hello Darling🌺\n\n"
-      "Sessions are automatically featured by Claire if they are marked to receive replies from other users at the time of creating the session.\n\n"
-      "There are also few other situations that must be met by the algorithm before Claire automatically features a session.\n\n"
+      "Featured Sessions are selected from public diary sessions and displayed on the home page of every darling in the world.\n"
+      "There are just a few situations that must be met by the algorithm before Claire automatically features a session.\n\n"
       "Whyever, if your session is not featured and you'll love for it to be; please complete the short process below.";
 
-  static const String request_feature_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Admin and cue in for final verification.";
+  static const String continue_feature_request_on_whatsapp = "Thank you so much for coming this far ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Super Ego and cue in for your final Verification and Feature.";
+
+  static const String request_feature_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Super Ego and cue in for final verification.";
   static const String request_feature_switchText7 = "Agree that Claire reserves the right to feature and unfeature any session, anytime?";
 
   static const String request_clairelove_form_header = "Hello Darling🌺\n\n"
@@ -282,7 +284,7 @@ class AppString{
 
 
   static const String requestLoveSwitchText7 = "Agree that Claire reserves the right to increase, decrease, delay, withhold and deny a cash request at anytime?";
-  static const String request_clairelove_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Admin and cue in for final verification.";
+  static const String request_clairelove_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Super Ego and cue in for final verification.";
 
 
   // App Toasts
