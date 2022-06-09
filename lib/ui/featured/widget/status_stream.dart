@@ -3,11 +3,7 @@ import 'package:dear_claire/ui/create_session/sound/status_stream_audio_player.d
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
-import 'package:dear_claire/utils/helper.dart';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 
 
 class StatusStreamWidget extends StatelessWidget {
@@ -22,9 +18,6 @@ class StatusStreamWidget extends StatelessWidget {
       width: 70,
       height: 70,
       margin: EdgeInsets.all(2),
-      decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: HexColor.fromHex(element.colorHex!)),
       child: Center(
         child: Stack(
           children: [
