@@ -14,10 +14,8 @@ import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:full_screen_image/full_screen_image.dart';
 import 'package:intl/intl.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
-
 import '../services/firebase_services.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
-import '../ui/create_session/sound/play_sound_widget.dart';
 import '../ui/create_session/sound/sound_widget.dart';
 import '../ui/featured/model/comment_session_model.dart';
 import '../ui/featured/model/session.dart';
@@ -285,6 +283,20 @@ class _ChatEditFieldState extends State<ChatEditField> {
               ),
             ),
 
+            Visibility(
+              visible: isTyping,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  "No form of abuse is allowed on this app. You will be banned.",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -373,6 +385,8 @@ class _ChatEditFieldState extends State<ChatEditField> {
                     : FloatingActionButton(
                   heroTag: "Record",
                         onPressed: () async {
+                          if (!await firebaseServices.isUserSignIn(context)) return;
+
                           var data = await Navigator.push(
                               context,
                               MaterialPageRoute(
