@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
+import 'package:dear_claire/ui/chats/widget/diaryroom_online_users_stream.dart';
+import 'package:dear_claire/ui/featured/public_sessions.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
@@ -7,25 +10,31 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../utils/constant.dart';
 import '../inside_chatroom.dart';
 
-class ChatRoomWidget extends StatelessWidget {
+class ChatRoomWidget extends StatefulWidget {
   ChatRoomPodo element;
 
   ChatRoomWidget({Key? key, required this.element}) : super(key: key);
 
   @override
+  State<ChatRoomWidget> createState() => _ChatRoomWidgetState();
+}
+
+class _ChatRoomWidgetState extends State<ChatRoomWidget> {
+  @override
   Widget build(BuildContext context) {
     return CupertinoButton(
       onPressed: () =>
-          PageRouter.gotoWidget(ChatScreen(chatRoomPodo: element), context),
+          PageRouter.gotoWidget(ChatScreen(chatRoomPodo: widget.element), context),
       padding: EdgeInsets.zero,
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: HexColor.fromHex(element.hex!)),
+            color: HexColor.fromHex(widget.element.hex!)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -67,13 +76,33 @@ class ChatRoomWidget extends StatelessWidget {
                     ],
                   ),
                 ),
+
+                StreamBuilder(
+                    stream: firebaseServices
+                        .getChats(widget.element),
+                    builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                      if (snapShot.hasError) {
+                        return Container();
+                      }
+                      if (snapShot.hasData) {
+                        return Text(
+                          snapShot.data!.docs.length.toString() + " Live Chats 🔥",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600
+                          ),
+                        );
+                      }
+                      return Container();
+                    }),
               ],
             ),
             SizedBox(
                 height: 6,
             ),
             Center(
-              child: Text(element.title!,
+              child: Text(widget.element.title!,
                   textAlign: TextAlign.start,
                   maxLines: 1,
                   style: GoogleFonts.lato(
@@ -85,7 +114,7 @@ class ChatRoomWidget extends StatelessWidget {
               height: 9,
             ),
             Text(
-              element.text!,
+              widget.element.text!,
               textAlign: TextAlign.start,
               style: GoogleFonts.lato(
                   fontSize: 16.0,
@@ -96,36 +125,45 @@ class ChatRoomWidget extends StatelessWidget {
             SizedBox(height: 8,),
 
 
-            Align(
-              alignment: Alignment.center,
-              child: GestureDetector(
-                child: Container(
-                  padding: EdgeInsets.all(5),
-                  width: 200,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20.0),
-                    gradient: LinearGradient(
-                      begin: Alignment(-0.37857140550652835, -1.9473685559777252),
-                      end: Alignment(1.2428571464417884, 2.526316110739735),
-                      stops: [0.0, 0.856177031993866, 1.0],
-                      colors: [
-                        Colors.white70,
-                        Pallet.colorPrimary,
-                        Pallet.colorSecondaryDark,
-                      ],
+            Row(
+              children: [
+                SizedBox(
+                  width: 220,
+                    child:
+                    OnlineRoomOwnersStream(roomData: widget.element,)
+                ),
+
+                Spacer(flex: 1,),
+
+                GestureDetector(
+                  child: Container(
+                    padding: EdgeInsets.all(5),
+                    width: 120,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20.0),
+                      gradient: LinearGradient(
+                        begin: Alignment(-0.37857140550652835, -1.9473685559777252),
+                        end: Alignment(1.2428571464417884, 2.526316110739735),
+                        stops: [0.0, 0.856177031993866, 1.0],
+                        colors: [
+                          Colors.white70,
+                          Pallet.colorPrimary,
+                          Pallet.colorSecondaryDark,
+                        ],
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: Text('O P E N',
-                      style: GoogleFonts.lato(
-                          fontSize: 15.0,
-                          color: Pallet.colorSecondaryDark,
-                          fontWeight: FontWeight.w700),
+                    child: Center(
+                      child: Text('O P E N',
+                        style: GoogleFonts.lato(
+                            fontSize: 15.0,
+                            color: Pallet.colorSecondaryDark,
+                            fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

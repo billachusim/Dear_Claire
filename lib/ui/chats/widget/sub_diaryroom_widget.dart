@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
+import 'package:dear_claire/ui/chats/widget/diaryroom_online_users_stream.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
@@ -7,6 +9,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../utils/constant.dart';
 import '../inside_chatroom.dart';
 
 class SubDiaryRoomWidget extends StatelessWidget {
@@ -61,6 +64,27 @@ class SubDiaryRoomWidget extends StatelessWidget {
                   ],
                 ),
               ),
+
+              StreamBuilder(
+                  stream: firebaseServices
+                      .getChats(element),
+                  builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                    if (snapShot.hasError) {
+                      return Container();
+                    }
+                    if (snapShot.hasData) {
+                      return Text(
+                        snapShot.data!.docs.length.toString() + " Live Chats 🔥",
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600
+                        ),
+                      );
+                    }
+                    return Container();
+                  }),
+
             ],
           ),
           SizedBox(
@@ -86,6 +110,10 @@ class SubDiaryRoomWidget extends StatelessWidget {
                 color: Pallet.colorWhite,
                 fontWeight: FontWeight.normal),
           ),
+
+          SizedBox(height: 4,),
+
+          OnlineRoomOwnersStream(roomData: element)
         ],
       ),
     );
