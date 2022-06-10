@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:intl/intl.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/data/models/profile_page_model.dart';
 import 'package:dear_claire/services/notification_service.dart';
@@ -14,24 +13,17 @@ import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
-import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'data/notification_model.dart' as pushNotification;
 import 'user_model.dart';
 
@@ -50,18 +42,15 @@ class FirebaseServices extends ChangeNotifier {
   final String alterEgoKey = 'alterEgo';
   final String alterEgoAccessCodeKey = 'alterEgoAccessCodeKey';
   String? _usersID;
-  String? _usersEgo;
 
   //var sharedPreference = SharedPreference.instance;
-  String? _alterEgoID;
-  String? _alterEgoAccessCode;
   UserModel? user;
   UserModel userModel = UserModel();
 
 
   /// subscribe user to a topic
   Future<void> _subscribeToSession(String sender, Session session) async {
-    //_usersID = await getUsersId();
+    _usersID = currentUser?.uid.toString();
 
     await _firebaseMessaging.subscribeToTopic(session.sessionId!);
     final pushNotification.NotificationModel _notificationModel =
@@ -425,38 +414,7 @@ class FirebaseServices extends ChangeNotifier {
         .snapshots();
   }
 
-  /// [featured Session Comment From Admin] -> get last comment from claire to user
-  Future<CommentSessionModel> getLastCommentFromAdmin({String? id}) async {
-    List<CommentSessionModel> _commentSession = [];
-    try {
-      final _value = await _firebaseFirestore
-          .collection(AppString.appFeaturedSessions)
-          .doc(id)
-          .collection(AppString.appFeaturedSessionsComments)
-          .orderBy('timeCreated', descending: false)
-          .where("flagged", isEqualTo: false)
-          .orderBy('timeCreated')
-          .limit(1)
-          .get();
 
-      _value.docs
-          .map((e) =>
-              _commentSession.addAll([CommentSessionModel.fromJson(e.data())]))
-          .toList();
-      Future<QuerySnapshot> getUserWithId({String? id}) {
-        return _firebaseFirestore
-            .collection(AppString.users)
-            .where("userId", isEqualTo: id)
-            .limit(1)
-            .get();
-      }
-
-      _commentSession.removeWhere((element) => !element.isUserAdmin);
-    } catch (e) {
-      logger.e(e);
-    }
-    return _commentSession.first;
-  }
 
   void updateUserInfo(UserModel userModel) async {
     _usersID = await getUsersId();
@@ -761,13 +719,13 @@ class FirebaseServices extends ChangeNotifier {
   }
 
   /// [User Activity] -> get user activity that a user made
-  Future<List<UserActivityModel>> getActivityByUser() async {
+  Future<List<UserActivityModel>> getActivityForUser() async {
     List<UserActivityModel> _userActivityList = [];
-    user = await getUserInfo();
+
     try {
       final _value = await _firebaseFirestore
           .collection(AppString.userActivity)
-          .where("userId", isEqualTo: user!.userId)
+          .where("userId", isEqualTo: currentUser?.uid.toString())
           .orderBy('dateCreated', descending: true)
           .limit(AppString.allSessionLength)
           .get();
@@ -782,27 +740,7 @@ class FirebaseServices extends ChangeNotifier {
     return _userActivityList;
   }
 
-  /// [User Activity] -> get user activity made on a user
-  Future<List<UserActivityModel>> getActivityForUser() async {
-    List<UserActivityModel> _userActivityList = [];
-    user = await getUserInfo();
-    try {
-      final _value = await _firebaseFirestore
-          .collection(AppString.userActivity)
-          .where("clientId", isEqualTo: user!.userId)
-          .orderBy('dateCreated', descending: true)
-          .limit(AppString.allSessionLength)
-          .get();
 
-      _value.docs
-          .map((e) =>
-          _userActivityList.addAll([UserActivityModel.fromJson(e.data())]))
-          .toList();
-    } catch (e) {
-      logger.e(e);
-    }
-    return _userActivityList;
-  }
 
   /// get chats
   Stream<QuerySnapshot<Map<String, dynamic>>> getChats(
@@ -942,9 +880,9 @@ class FirebaseServices extends ChangeNotifier {
       required Map<String, dynamic> map}) {
     _firebaseFirestore
         .collection(AppString.appFeaturedSessions)
-        .doc(docId)
+        .doc(docId.toString())
         .collection(AppString.appFeaturedSessionsComments)
-        .doc(commentID)
+        .doc(commentID.toString())
         .update(map);
   }
 

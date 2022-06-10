@@ -18,6 +18,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/helper.dart';
+import '../routes/page_router_animation.dart';
+import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'destination.dart';
 
 class HomePage extends StatefulWidget {
@@ -350,8 +352,15 @@ class _HomeDashboardPageState extends State<HomePage>
     Widget cancelButton = TextButton(
       child: Text("Ego Profile"),
       onPressed:  () {
-        Navigator.of(context)
-            .pushNamed(AppRoutes.egoPage);      },
+        String thisEgoName = "Guest View Of Your Ego";
+        String? thisUser = currentUser?.uid.toString();
+        PageRouter.gotoWidget(
+            VisitedUserEgoProfilePage(
+                visitedUsersID: thisUser.toString(),
+                visitedEgoName: thisEgoName),
+            context);
+        print("Visited User ID::: $thisEgoName");
+        },
     );
 
     Widget continueButton = TextButton(

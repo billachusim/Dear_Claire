@@ -23,6 +23,7 @@ import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../services/firebase_services.dart';
+import '../../../services/user_model.dart';
 import '../../../utils/strings.dart';
 import '../../../widgets/toast.dart';
 import '../../create_session/sound/custom_play_sound_widget.dart';
@@ -320,6 +321,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       context, index,
                                       session: _session,
                                       sender: _userModel.nickname ?? '');
+
+                                  saveUserMe2Activity();
                                 }
                               },
                               color: Pallet.colorWhite,
@@ -330,9 +333,11 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   ? 'Unfollow'
                                   : 'Follow',
                               onPressed: () async {
-                                saveUserFollowActivity();
                                 if (await firebaseServices.isUserSignIn(context))
-                                  firebaseServices.followThisSession(context,
+
+                                  saveUserFollowActivity();
+
+                                firebaseServices.followThisSession(context,
                                       session: _session);
                               },
                               count: _session.followers!.length,
@@ -659,39 +664,80 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   }
 
 
-  /// Save user comment activity
+  /// Save user follow activity
 
   Future<void> saveUserFollowActivity() async {
+    final UserModel _user = await firebaseServices.getUserInfo();
     final dateCreated = FieldValue.serverTimestamp();
-    final clientNickname = userModel.userType != "REGULAR"
-        ? "Claire"
-        : userModel.nickname ?? 'Claire\'s Darling';
     final sessionId = theSession?.sessionId;
-    final sessionOwner = theSession?.userId;
-    final sessionVisitor = currentUser?.uid;
-    final activityMessage = "$sessionVisitor followed $sessionOwner's session.";
+    final sessionOwnerId = theSession?.userId;
+    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
+    final sessionOwnerNickname = theSession?.userNickname.toString();
+    final sessionVisitorId = currentUser?.uid.toString();
+    final sessionVisitorNickname = _user.nickname.toString();
+    final sessionVisitorAvatar =  _user.userType != "REGULAR"
+        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
+        : _user.avatarUrl.toString();
+    final activityMessage = "$sessionVisitorNickname followed $sessionOwnerNickname's session.";
     final activityType = "follow";
     final userActivityId = "";
-    final avatarUrl = userModel.userType != "REGULAR"
-        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
-        : userModel.avatarUrl.toString();
     FirebaseFirestore.instance
-        .collection('ego_stream')
+        .collection('user_activity')
         .add({
       "activityMessage": activityMessage,
       "activityType": activityType,
-      "clientAvatarUrl": avatarUrl,
-      "clientId": sessionVisitor,
-      "clientNickname": clientNickname,
+      "clientAvatarUrl": sessionVisitorAvatar,
+      "clientId": sessionVisitorId,
+      "clientNickname": sessionVisitorNickname,
       "dateCreated": dateCreated,
       "sessionId": sessionId,
       "userActivityId": userActivityId,
-      "userId": sessionOwner,
+      "userId": sessionOwnerId,
+      "userNickname": sessionOwnerNickname,
+      "userAvatarUrl": sessionOwnerAvatar,
 
     },
-      //SetOptions(merge: true)
     );
     logger.d('Successfully saved your follow activity');
+    print('Activity Message: $activityMessage');
+
+  }
+
+  /// Save user reaction activity
+
+  Future<void> saveUserMe2Activity() async {
+    final UserModel _user = await firebaseServices.getUserInfo();
+    final dateCreated = FieldValue.serverTimestamp();
+    final sessionId = theSession?.sessionId;
+    final sessionOwnerId = theSession?.userId;
+    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
+    final sessionOwnerNickname = theSession?.userNickname.toString();
+    final sessionVisitorId = currentUser?.uid.toString();
+    final sessionVisitorNickname = _user.nickname.toString();
+    final sessionVisitorAvatar =  _user.userType != "REGULAR"
+        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
+        : _user.avatarUrl.toString();
+    final activityMessage = "$sessionVisitorNickname reacted to $sessionOwnerNickname's session.";
+    final activityType = "react";
+    final userActivityId = "";
+    FirebaseFirestore.instance
+        .collection('user_activity')
+        .add({
+      "activityMessage": activityMessage,
+      "activityType": activityType,
+      "clientAvatarUrl": sessionVisitorAvatar,
+      "clientId": sessionVisitorId,
+      "clientNickname": sessionVisitorNickname,
+      "dateCreated": dateCreated,
+      "sessionId": sessionId,
+      "userActivityId": userActivityId,
+      "userId": sessionOwnerId,
+      "userNickname": sessionOwnerNickname,
+      "userAvatarUrl": sessionOwnerAvatar,
+
+    },
+    );
+    logger.d('Successfully saved your reaction activity');
     print('Activity Message: $activityMessage');
 
   }

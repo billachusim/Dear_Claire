@@ -87,7 +87,7 @@ class AppString{
   static const String lock_out_alert_note = "💡 Do you want to lock your Diary?\n"
       "You'll need your email and ego code to open up again.";
 
-  static const String lock_out_ego_alert_note = "💡 Do you want to lock your Diary or check your ego?\n"
+  static const String lock_out_ego_alert_note = "💡 Do you want to lock your Diary or guest view your ego?\n"
       "If you lock out, you'll need your email and ego code to open up again.";
 
 

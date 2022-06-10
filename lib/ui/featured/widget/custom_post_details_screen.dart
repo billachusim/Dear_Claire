@@ -42,7 +42,7 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
 
   //initialize the audio record file that stores user audio record. null by default
   String? recordFile;
-  Session? featuredSessionModel;
+  Session featuredSessionModel = Session();
   List<CommentSessionModel> _commentSessionList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
 
@@ -124,7 +124,7 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
                     SizedBox( width: 12,),
 
                     Text(
-                      featuredSessionModel?.title.toString() ?? "",
+                      featuredSessionModel.title.toString(),
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 22,
@@ -173,8 +173,8 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
                               .map((element) => CommentWidget(
                             commentSessionModel: element,
                             onPressed: () => _updateReaction(
-                                element, featuredSessionModel!),
-                            onShare: () => _share(element.message), sessionId: '', userId: '',
+                                element, featuredSessionModel),
+                            onShare: () => _share(element.message), featuredSessionModel: featuredSessionModel, userId: '',
                           ))
                               .toList(),
 
@@ -199,7 +199,7 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
           ),
           ChatEditField(
             onTap: (String comment, voiceNote) =>
-                _sendComment(comment, voiceNote, featuredSessionModel!),
+                _sendComment(comment, voiceNote, featuredSessionModel),
           )
         ],
       ),

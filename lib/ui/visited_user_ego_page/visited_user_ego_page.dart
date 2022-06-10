@@ -1578,17 +1578,12 @@ class VisitedUserActivityCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    element.userId == userModel.userId && element.clientId == userModel.userId ?
-                    Text("You ${element.activityType}ed on this session",
-                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
-                        : element.userId == userModel.userId && element.clientId == userModel.userId ?
-                    Text("Someone ${element.activityType}ed on your session",
-                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,))
-                        : Text("${element.clientNickname} ${element.activityType}ed on this session",
-                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold,)),
+                    Text("${element.clientNickname} ${element.activityType}ed on this session",
+                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Pallet.colorSecondaryDark)),
                     Text(timeConverter(element.dateCreated!),
                         style: TextStyle(fontSize: 11.sp, color: Pallet.colorTextGray)),
-                  ],),
+                  ],
+                ),
               )
             ],),
           ),

@@ -41,6 +41,7 @@ const int maxFailedLoadAttempts = 3;
 class _EgoModeSessionDetailState
     extends State<EgoModeSessionDetail> {
   Session? featuredSessionModel;
+  CommentSessionModel? _commentSessionModel;
 
   _EgoModeSessionDetailState(this.featuredSessionModel);
 
@@ -210,7 +211,7 @@ class _EgoModeSessionDetailState
                                     onPressed: () => _updateReaction(
                                         element, featuredSessionModel!),
                                     onShare: () => _share(element.message),
-                                    sessionId: featuredSessionModel!.sessionId.toString(),
+                                    featuredSessionModel: featuredSessionModel!,
                                     userId: featuredSessionModel!.userId.toString(),
 
                           ))
@@ -264,9 +265,11 @@ class _EgoModeSessionDetailState
     final _commentModel = CommentSessionModel(
         alterEgoId: _userModel.alterEgoId,
         audioUrl: voiceNote,
-        commentId: '',
+        commentId: _userModel.userId,
         flagged: session.flagged!,
         imageUrls: [],
+        thanks: [],
+        numberOfThanks: 0,
         isUserAdmin: false,
         message: comment,
         timeCreated: Timestamp.now(),
@@ -279,6 +282,7 @@ class _EgoModeSessionDetailState
         docId: session.sessionId!,
         sender: _userModel.nickname.toString(),
         map: _commentModel.toJson());
+
     updateSessionTimeLastActivity(session);
     isOriginalAdvise(context, comment, session);
     saveUserCommentActivity();
@@ -374,39 +378,87 @@ class _EgoModeSessionDetailState
   /// Save user comment activity
 
   Future<void> saveUserCommentActivity() async {
+    final UserModel _user = await firebaseServices.getUserInfo();
+    final Session? theSession = featuredSessionModel;
     final dateCreated = FieldValue.serverTimestamp();
-    final clientNickname = userModel.userType != "REGULAR"
-        ? "Claire"
-        : userModel.nickname ?? 'Claire\'s Darling';
-    final sessionId = featuredSessionModel?.sessionId;
-    final sessionOwner = featuredSessionModel?.userId;
-    final sessionVisitor = currentUser?.uid;
-    final activityMessage = "$sessionVisitor advised $sessionOwner's session.";
+    final sessionId = theSession?.sessionId;
+    final sessionOwnerId = theSession?.userId;
+    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
+    final sessionOwnerNickname = theSession?.userNickname.toString();
+    final sessionVisitorId = currentUser?.uid.toString();
+    final sessionVisitorNickname = _user.nickname.toString();
+    final sessionVisitorAvatar =  _user.userType != "REGULAR"
+        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
+        : _user.avatarUrl.toString();
+    final activityMessage = "$sessionVisitorNickname commented on $sessionOwnerNickname's session.";
     final activityType = "comment";
     final userActivityId = "";
-    final avatarUrl = userModel.userType != "REGULAR"
-        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
-        : userModel.avatarUrl.toString();
     FirebaseFirestore.instance
-        .collection('ego_stream')
+        .collection('user_activity')
         .add({
       "activityMessage": activityMessage,
       "activityType": activityType,
-      "clientAvatarUrl": avatarUrl,
-      "clientId": sessionVisitor,
-      "clientNickname": clientNickname,
+      "clientAvatarUrl": sessionVisitorAvatar,
+      "clientId": sessionVisitorId,
+      "clientNickname": sessionVisitorNickname,
       "dateCreated": dateCreated,
       "sessionId": sessionId,
       "userActivityId": userActivityId,
-      "userId": sessionOwner,
+      "userId": sessionOwnerId,
+      "userNickname": sessionOwnerNickname,
+      "userAvatarUrl": sessionOwnerAvatar,
 
     },
-      //SetOptions(merge: true)
     );
     logger.d('Successfully saved your comment activity');
     print('Activity Message: $activityMessage');
 
   }
+
+
+
+  /// Save user comment activity
+
+  Future<void> saveUserThanksActivity() async {
+    final UserModel _user = await firebaseServices.getUserInfo();
+    final Session? theSession = featuredSessionModel;
+    final CommentSessionModel? theComment = _commentSessionModel;
+    final dateCreated = FieldValue.serverTimestamp();
+    final commentOwnerNickname = theComment?.userNickname.toString();
+    final sessionId = theSession?.sessionId;
+    final sessionOwnerId = theSession?.userId;
+    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
+    final sessionOwnerNickname = theSession?.userNickname.toString();
+    final sessionVisitorId = currentUser?.uid.toString();
+    final sessionVisitorNickname = _user.nickname.toString();
+    final sessionVisitorAvatar =  _user.userType != "REGULAR"
+        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
+        : _user.avatarUrl.toString();
+    final activityMessage = "$sessionVisitorNickname thanked $commentOwnerNickname's advise.";
+    final activityType = "thank";
+    final userActivityId = "";
+    FirebaseFirestore.instance
+        .collection('user_activity')
+        .add({
+      "activityMessage": activityMessage,
+      "activityType": activityType,
+      "clientAvatarUrl": sessionVisitorAvatar,
+      "clientId": sessionVisitorId,
+      "clientNickname": sessionVisitorNickname,
+      "dateCreated": dateCreated,
+      "sessionId": sessionId,
+      "userActivityId": userActivityId,
+      "userId": sessionOwnerId,
+      "userNickname": sessionOwnerNickname,
+      "userAvatarUrl": sessionOwnerAvatar,
+
+    },
+    );
+    logger.d('Successfully saved your thanks activity');
+    print('Activity Message: $activityMessage');
+
+  }
+
 
 
   /// Update a session's timeLastActivity when new comment is made.
@@ -422,37 +474,25 @@ class _EgoModeSessionDetailState
     logger.d('Successfully updated time of last activity');
   }
 
-  /// Get Visiting Ego User info
-  Future<UserModel> getVisitingUserInfo() async {
-    DocumentSnapshot response = await FirebaseFirestore.instance
-        .collection(AppString.users)
-        .doc(currentUser?.uid)
-        .get();
 
-    var visitingUser = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
-    _visitingUser = visitingUser;
-    logger.d('Successfully got the visiting user model');
-    return visitingUser;
-  }
-
-  void _updateReaction(
-      CommentSessionModel? commentSessionModel, Session session) async {
+  void _updateReaction(commentSessionModel, session) async {
     if (!await firebaseServices.isUserSignIn(context)) {
       showToast('You have to login first before reacting.');
-      await getVisitingUserInfo();
       return;
     }
-    final _userModel = _visitingUser;
+    final String commentId = commentSessionModel!.commentId.toString();
+    final String docId = session.sessionId.toString();
     firebaseServices.addThanksReaction(
-        commentID: commentSessionModel!.commentId!.toString(),
-        docId: session.sessionId!,
-        map: commentSessionModel.thanks!.contains(_userModel?.userId)
+        commentID: commentId.toString(),
+        docId: docId.toString(),
+        map: commentSessionModel.thanks!.contains(currentUser?.uid)
             ? {
-                'thanks': FieldValue.arrayRemove([_userModel?.userId])
+                'thanks': FieldValue.arrayRemove([currentUser?.uid])
               }
             : {
-                'thanks': FieldValue.arrayUnion([_userModel?.userId])
+                'thanks': FieldValue.arrayUnion([currentUser?.uid])
               });
+    saveUserThanksActivity();
   }
 
   _share(String? message) {

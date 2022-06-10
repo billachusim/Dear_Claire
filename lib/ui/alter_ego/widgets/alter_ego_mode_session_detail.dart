@@ -18,6 +18,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../services/firebase_services.dart';
+import '../../../services/user_model.dart';
 import '../../../utils/color.dart';
 import '../../Categories/category_streams.dart';
 import '../../Categories/similar_category_sessions.dart';
@@ -202,7 +203,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                                     commentSessionModel: element,
                             onPressed: () => _updateReaction(
                                 element, featuredSessionModel!),
-                            onShare: () => _share(element.message), sessionId: '', userId: '',
+                            onShare: () => _share(element.message), featuredSessionModel: featuredSessionModel!, userId: '',
                                   ))
                               .toList(),
 
@@ -271,6 +272,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
 
     updateSessionTimeLastActivity(session);
     isOriginalAdvise(context, comment, session);
+    saveAlterEgoCommentActivity();
   }
 
   /// checks if advise meets original advise rules...
@@ -353,6 +355,50 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     logger.d('Successfully increased total love count');
     print('Session Count is: $FieldValue');
   }
+
+
+
+
+  /// Save alter ego comment activity
+
+  Future<void> saveAlterEgoCommentActivity() async {
+    final UserModel _user = await firebaseServices.getUserInfo();
+    final Session? theSession = featuredSessionModel;
+    final dateCreated = FieldValue.serverTimestamp();
+    final sessionId = theSession?.sessionId;
+    final sessionOwnerId = theSession?.userId;
+    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
+    final sessionOwnerNickname = theSession?.userNickname.toString();
+    final sessionVisitorId = currentUser?.uid.toString();
+    final sessionVisitorNickname = _user.userType == 'ADMIN'? 'Alter Ego' :
+    _user.userType == 'SUPER_ADMIN'? 'Super Ego' :
+    'Alter-Ego';
+    final sessionVisitorAvatar = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691";
+    final activityMessage = "$sessionVisitorNickname commented on $sessionOwnerNickname's session.";
+    final activityType = "comment";
+    final userActivityId = "";
+    FirebaseFirestore.instance
+        .collection('user_activity')
+        .add({
+      "activityMessage": activityMessage,
+      "activityType": activityType,
+      "clientAvatarUrl": sessionVisitorAvatar,
+      "clientId": sessionVisitorId,
+      "clientNickname": sessionVisitorNickname,
+      "dateCreated": dateCreated,
+      "sessionId": sessionId,
+      "userActivityId": userActivityId,
+      "userId": sessionOwnerId,
+      "userNickname": sessionOwnerNickname,
+      "userAvatarUrl": sessionOwnerAvatar,
+
+    },
+    );
+    logger.d('Successfully saved your comment activity');
+    print('Activity Message: $activityMessage');
+
+  }
+
 
   /// Update a session's timeLastActivity when new comment is made.
 

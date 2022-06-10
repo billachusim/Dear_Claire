@@ -1,8 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dear_claire/services/user_activity_model.dart';
 import 'package:dear_claire/services/user_model.dart';
-import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
-import 'package:dear_claire/ui/featured/widget/post_details_widget.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
@@ -12,7 +10,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../featured/widget/custom_post_details_screen.dart';
 
 class ActivityWidget extends StatelessWidget {
@@ -21,7 +18,7 @@ ActivityWidget({ Key? key }) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: firebaseServices.getActivityByUser(),
+      future: firebaseServices.getActivityForUser(),
       builder: (context, AsyncSnapshot<List<UserActivityModel>> userActivity) {
         if (userActivity.connectionState == ConnectionState.waiting) {
           return RotateImage(70, 70);
@@ -105,7 +102,7 @@ class UserActivityCard extends StatelessWidget {
                 child: CachedNetworkImage(
                   width: 30,
                   height: 30,
-                  imageUrl: element.clientAvatarUrl ?? "",
+                  imageUrl: element.clientAvatarUrl!,
                   imageBuilder: (context, imageProvider) => Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
@@ -129,17 +126,12 @@ class UserActivityCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    element.userId == currentUser?.uid && element.clientId == currentUser?.uid ?
-                    Text("You ${element.activityType}ed a session",
-                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Pallet.colorSecondaryDark))
-                    : element.userId == userModel.userId && element.clientId == userModel.userId ?
-                    Text("Someone ${element.activityType}ed your session",
-                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Pallet.colorSecondaryDark))
-                    : Text("${element.clientNickname} ${element.activityType}ed on this session",
+                    Text("${element.clientNickname} ${element.activityType}ed on your session",
                         style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Pallet.colorSecondaryDark)),
                     Text(timeConverter(element.dateCreated!),
                         style: TextStyle(fontSize: 11.sp, color: Pallet.colorTextGray)),
-                  ],),
+                  ],
+                ),
               )
             ],),
           ),

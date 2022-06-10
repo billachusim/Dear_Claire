@@ -1214,7 +1214,8 @@ class topBarWidget extends StatelessWidget {
                       style: TextStyle(color: Colors.redAccent),
                     ),
                     onPressed: () async =>
-                        firebaseServices.logUserOut(context)),
+                        lockAlertDialog(context),
+                ),
               ],
               onPressed: () {},
               child: Icon(Icons.unfold_more_sharp,
@@ -1226,4 +1227,42 @@ class topBarWidget extends StatelessWidget {
       ),
     );
   }
+}
+
+
+lockAlertDialog(BuildContext context) {
+
+  // set up the buttons
+  Widget cancelButton = TextButton(
+    child: Text("No, Wait."),
+    onPressed:  () {
+      Navigator.of(context).pop();
+    },
+  );
+
+  Widget continueButton = TextButton(
+    child: Text("Yes, Lock Out."),
+    onPressed:  () {
+      firebaseServices.logUserOut(context);
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    },
+  );
+
+  // set up the AlertDialog
+  AlertDialog alert = AlertDialog(
+    title: Text("Close and Lock Your Diary?"),
+    content: Text(AppString.lock_out_alert_note),
+    actions: [
+      cancelButton,
+      continueButton,
+    ],
+  );
+
+  // show the dialog
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
 }

@@ -1,6 +1,7 @@
 
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dear_claire/data/models/session_model.dart';
 import 'package:dear_claire/ui/create_session/session_details_widget.dart';
 import 'package:dear_claire/ui/create_session/session_model.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
@@ -11,6 +12,8 @@ import 'package:dear_claire/widgets/chat_edit_field.dart';
 import 'package:dear_claire/widgets/comment_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import '../featured/model/session.dart';
 
 
 
@@ -31,6 +34,8 @@ class _SessionPostDetailsScreenState extends State<SessionPostDetailsScreen> {
   _SessionPostDetailsScreenState(this.sessionModel);
 
   List<CommentSessionModel> _commentSessionList = [];
+
+  Session featuredSessionModel = Session();
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +67,7 @@ class _SessionPostDetailsScreenState extends State<SessionPostDetailsScreen> {
                       return Column(
                         children: [
                           ..._commentSessionList
-                              .map((element) => CommentWidget(commentSessionModel: element, sessionId: '', userId: '',))
+                              .map((element) => CommentWidget(commentSessionModel: element, featuredSessionModel: featuredSessionModel, userId: '',))
                               .toList(),
                         ],
                       );

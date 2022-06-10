@@ -21,6 +21,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/firebase_services.dart';
+import '../services/user_model.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../utils/strings.dart';
 
@@ -349,11 +350,21 @@ class EgoModeSessionCard extends StatelessWidget {
                     me2: element.meFlower!.length,
                     color: Pallet.colorWhite,
                     onReactionChanged: (reaction, index) async {
-                      final _userModel = await firebaseServices.getUserInfo();
-                      firebaseServices.addUsersReactionToASession(
-                          context, index,
-                          session: element, sender: _userModel.nickname ?? '');
-                    }),
+                      if (await firebaseServices
+                          .isUserSignIn(context)) {
+                        final _userModel =
+                        await firebaseServices.getUserInfo();
+
+                        firebaseServices.addUsersReactionToASession(
+                            context, index,
+                            session: element,
+                            sender: _userModel.nickname ?? '');
+
+                        saveUserMe2Activity();
+                      }
+
+                    }
+                    ),
 
                 new Spacer(),
 
@@ -652,6 +663,46 @@ class EgoModeSessionCard extends StatelessWidget {
         return alert;
       },
     );
+  }
+
+
+  /// Save user reaction activity
+
+  Future<void> saveUserMe2Activity() async {
+    final UserModel _user = await firebaseServices.getUserInfo();
+    final dateCreated = FieldValue.serverTimestamp();
+    final sessionId = element.sessionId;
+    final sessionOwnerId = element.userId;
+    final sessionOwnerAvatar = element.userAvatarUrl.toString();
+    final sessionOwnerNickname = element.userNickname.toString();
+    final sessionVisitorId = currentUser?.uid.toString();
+    final sessionVisitorNickname = _user.nickname.toString();
+    final sessionVisitorAvatar =  _user.userType != "REGULAR"
+        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
+        : _user.avatarUrl.toString();
+    final activityMessage = "$sessionVisitorNickname reacted to $sessionOwnerNickname's session.";
+    final activityType = "react";
+    final userActivityId = "";
+    FirebaseFirestore.instance
+        .collection('user_activity')
+        .add({
+      "activityMessage": activityMessage,
+      "activityType": activityType,
+      "clientAvatarUrl": sessionVisitorAvatar,
+      "clientId": sessionVisitorId,
+      "clientNickname": sessionVisitorNickname,
+      "dateCreated": dateCreated,
+      "sessionId": sessionId,
+      "userActivityId": userActivityId,
+      "userId": sessionOwnerId,
+      "userNickname": sessionOwnerNickname,
+      "userAvatarUrl": sessionOwnerAvatar,
+
+    },
+    );
+    logger.d('Successfully saved your reaction activity');
+    print('Activity Message: $activityMessage');
+
   }
 
 

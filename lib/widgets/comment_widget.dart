@@ -15,7 +15,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/user_model.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
+import '../ui/featured/model/session.dart';
 import '../ui/routes/page_router_animation.dart';
 import '../ui/visited_user_ego_page/visited_user_ego_page.dart';
 import '../utils/strings.dart';
@@ -25,7 +27,7 @@ class CommentWidget extends StatefulWidget {
       {Key? key,
       this.onPressed,
       this.onShare,
-      required this.commentSessionModel, required this.sessionId, required this.userId})
+      required this.commentSessionModel, required this.featuredSessionModel, required this.userId})
       : super(key: key);
 
   CommentSessionModel? commentSessionModel;
@@ -33,7 +35,7 @@ class CommentWidget extends StatefulWidget {
   final Function()? onShare;
   late String visitedUsersID;
   late String visitedEgoName;
-  final String sessionId;
+  Session? featuredSessionModel;
   final String userId;
 
   @override
@@ -48,8 +50,76 @@ class _CommentWidgetState extends State<CommentWidget> {
   bool? isFlagged;
 
 
+
+  void _updateReaction() async {
+    if (!await firebaseServices.isUserSignIn(context)) {
+      showToast('You have to login first before reacting.');
+      return;
+    }
+    final String commentId = widget.commentSessionModel!.commentId.toString();
+    final String docId = widget.featuredSessionModel!.sessionId.toString();
+    firebaseServices.addThanksReaction(
+        commentID: commentId.toString(),
+        docId: docId.toString(),
+        map: widget.commentSessionModel!.thanks!.contains(currentUser?.uid)
+            ? {
+          'thanks': FieldValue.arrayRemove([currentUser?.uid])
+        }
+            : {
+          'thanks': FieldValue.arrayUnion([currentUser?.uid])
+        });
+    saveUserThanksActivity();
+  }
+
+
+
+
+
+  /// Save user comment activity
+
+  Future<void> saveUserThanksActivity() async {
+    final UserModel _user = await firebaseServices.getUserInfo();
+    final Session? theSession = widget.featuredSessionModel;
+    final CommentSessionModel? theComment = widget.commentSessionModel;
+    final dateCreated = FieldValue.serverTimestamp();
+    final commentOwnerNickname = theComment?.userNickname.toString();
+    final sessionId = theSession?.sessionId;
+    final sessionOwnerId = theSession?.userId;
+    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
+    final sessionOwnerNickname = theSession?.userNickname.toString();
+    final sessionVisitorId = currentUser?.uid.toString();
+    final sessionVisitorNickname = _user.nickname.toString();
+    final sessionVisitorAvatar =  _user.userType != "REGULAR"
+        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
+        : _user.avatarUrl.toString();
+    final activityMessage = "$sessionVisitorNickname thanked $commentOwnerNickname's advise.";
+    final activityType = "thank";
+    final userActivityId = "";
+    FirebaseFirestore.instance
+        .collection('user_activity')
+        .add({
+      "activityMessage": activityMessage,
+      "activityType": activityType,
+      "clientAvatarUrl": sessionVisitorAvatar,
+      "clientId": sessionVisitorId,
+      "clientNickname": sessionVisitorNickname,
+      "dateCreated": dateCreated,
+      "sessionId": sessionId,
+      "userActivityId": userActivityId,
+      "userId": sessionOwnerId,
+      "userNickname": sessionOwnerNickname,
+      "userAvatarUrl": sessionOwnerAvatar,
+
+    },
+    );
+    logger.d('Successfully saved your thanks activity');
+    print('Activity Message: $activityMessage');
+
+  }
+
+
   Future<void> editAdvise() async {
-    final sessionId = widget.sessionId;
+    final sessionId = widget.featuredSessionModel!.sessionId;
     final commentId = widget.commentSessionModel!.commentId;
     final advise = editAdviseController.text;
     final document = FirebaseFirestore.instance
@@ -178,7 +248,7 @@ class _CommentWidgetState extends State<CommentWidget> {
   /// Delete an Advise
 
   Future<void> deleteAdvise() async {
-    final sessionId = widget.sessionId;
+    final sessionId = widget.featuredSessionModel!.sessionId;
     final commentId = widget.commentSessionModel!.commentId;
     final collection = FirebaseFirestore.instance
         .collection('sessions')
@@ -231,7 +301,7 @@ class _CommentWidgetState extends State<CommentWidget> {
   /// Flag an Advise
 
   Future<bool?> sendToFlagged() async {
-    final sessionId = widget.sessionId;
+    final sessionId = widget.featuredSessionModel!.sessionId;
     final commentId = widget.commentSessionModel!.commentId;
     final value = true;
     FirebaseFirestore.instance
@@ -288,7 +358,7 @@ class _CommentWidgetState extends State<CommentWidget> {
 
 
   Future<bool?> removeFromFlagged() async {
-    final sessionId = widget.sessionId;
+    final sessionId = widget.featuredSessionModel!.sessionId;
     final commentId = widget.commentSessionModel!.commentId;
     final value = false;
     FirebaseFirestore.instance
@@ -433,10 +503,13 @@ class _CommentWidgetState extends State<CommentWidget> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  ThanksButton(
-                    count: widget.commentSessionModel!.thanks!.length,
-                    onPressed: widget.onPressed,
-                    color: 1 == 2 ? Pallet.colorPink : Pallet.colorTextGray,
+                  GestureDetector(
+                    onTap: _updateReaction,
+                    child: ThanksButton(
+                      count: widget.commentSessionModel!.thanks!.length,
+                      onPressed: widget.onPressed,
+                      color: 1 == 2 ? Pallet.colorPink : Pallet.colorTextGray,
+                    ),
                   ),
                 ],
               ),

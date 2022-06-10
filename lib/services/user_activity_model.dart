@@ -10,6 +10,8 @@ class UserActivityModel {
   String? activityType;
   String? sessionId;
   String? clientAvatarUrl;
+  String? userNickname;
+  String? userAvatarUrl;
 
 UserActivityModel({
     this.userActivityId,
@@ -21,6 +23,8 @@ UserActivityModel({
     this.activityType,
     this.sessionId,
     this.clientAvatarUrl,
+    this.userNickname,
+    this.userAvatarUrl,
   });
 
   factory UserActivityModel.fromJson(dynamic json) {
@@ -34,6 +38,10 @@ UserActivityModel({
       activityType: json['activityType'] ?? '',
       sessionId: json['sessionId'] ?? '',
       clientAvatarUrl: json['avatarUrl'] ?? '',
+      userNickname: json['userNickname'] ?? '',
+      userAvatarUrl: json['userAvatarUrl'] ?? '',
+
+
     );
   }
 }
