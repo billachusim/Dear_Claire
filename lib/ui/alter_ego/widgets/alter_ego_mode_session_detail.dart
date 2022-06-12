@@ -237,7 +237,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
           ),
           ChatEditField(
             onTap: (String comment, voiceNote) =>
-                _sendComment(comment, voiceNote, featuredSessionModel!),
+                _sendComment(comment, voiceNote, widget.featuredSessionModel!),
           )
         ],
       ),
@@ -260,7 +260,8 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         timeCreated: Timestamp.now(),
         userAvatarUrl: _userModel.avatarUrl,
         userId: _userModel.userId,
-        userNickname: _userModel.nickname);
+        userNickname: _userModel.nickname,
+        originalAdviseCategory: session.category1);
 
     firebaseServices.addComment(
         title: session.title ?? '',

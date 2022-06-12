@@ -15,6 +15,7 @@ class CommentSessionModel {
   List<dynamic>? imageUrls = [];
   int? numberOfThanks;
   List<dynamic>? thanks = [];
+  String? originalAdviseCategory;
 
   CommentSessionModel(
       {this.alterEgoId = '',
@@ -29,7 +30,8 @@ class CommentSessionModel {
       this.isUserAdmin = false,
       this.imageUrls,
       this.numberOfThanks = 0,
-      this.thanks});
+      this.thanks,
+      this.originalAdviseCategory});
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
@@ -44,6 +46,7 @@ class CommentSessionModel {
     data["userId"] = this.userId;
     data["isUserAdmin"] = this.isUserAdmin;
     data["numberOfThanks"] = this.numberOfThanks;
+    data["originalAdviseCategory"] = this.originalAdviseCategory;
     if (this.imageUrls != null)
       data["imageUrls"] = this.imageUrls?.map((e) => e.toJson()).toList();
     if (this.thanks != null)
@@ -65,6 +68,8 @@ class CommentSessionModel {
         isUserAdmin: json['isUserAdmin'] ?? false,
         numberOfThanks: json['numberOfThanks'] ?? 0, //
         thanks: json['thanks'] ?? [], //
-        userId: json['userId']);
+        userId: json['userId'] ?? '',
+        originalAdviseCategory: json['originalAdviseCategory'] ?? '',
+        );
   }
 }

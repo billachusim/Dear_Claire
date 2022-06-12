@@ -23,6 +23,12 @@ import 'model/comment_session_model.dart';
 import 'model/session.dart';
 import 'widget/post_details_widget.dart';
 
+class Temp {
+  String id;
+  CommentSessionModel commentModel;
+  Temp(this.id, this.commentModel);
+}
+
 class EgoModeSessionDetail extends StatefulWidget {
   var featuredSessionModel;
 
@@ -45,7 +51,7 @@ class _EgoModeSessionDetailState
 
   _EgoModeSessionDetailState(this.featuredSessionModel);
 
-  List<CommentSessionModel> _commentSessionList = [];
+  List<CommentSessionModel> _commentList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
   UserModel? _visitingUser = UserModel();
 
@@ -178,18 +184,18 @@ class _EgoModeSessionDetailState
               ),
               StreamBuilder(
                   stream: firebaseServices.getFeaturedSessionsComments(
-                      featuredSessionModel!.sessionId!),
+                      widget.featuredSessionModel!.sessionId.toString()),
                   builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
                     if (snapShot.hasError) {
                       return Container();
                     }
 
                     if (snapShot.hasData) {
-                      _commentSessionList.clear();
+                      _commentList.clear();
 
                       /// clear list
                       snapShot.data!.docs
-                          .map((e) => _commentSessionList
+                          .map((e) => _commentList
                               .add(CommentSessionModel.fromJson(e.data())))
                           .toList();
                       return Column(
@@ -205,14 +211,14 @@ class _EgoModeSessionDetailState
                               child: AdWidget(ad: egoModeSessionDetailTopBanner),
                             ),
 
-                          ..._commentSessionList
+                          ..._commentList
                               .map((element) => CommentWidget(
                                     commentSessionModel: element,
                                     onPressed: () => _updateReaction(
-                                        element, featuredSessionModel!),
+                                        element, widget.featuredSessionModel!),
                                     onShare: () => _share(element.message),
-                                    featuredSessionModel: featuredSessionModel!,
-                                    userId: featuredSessionModel!.userId.toString(),
+                                    featuredSessionModel: widget.featuredSessionModel!,
+                                    userId: widget.featuredSessionModel!.userId.toString(),
 
                           ))
                               .toList(),
@@ -250,7 +256,7 @@ class _EgoModeSessionDetailState
 
           ChatEditField(
             onTap: (String comment, voiceNote) =>
-                _sendComment(comment, voiceNote, featuredSessionModel!),
+                _sendComment(comment, voiceNote, widget.featuredSessionModel!),
           )
 
         ],
@@ -421,7 +427,7 @@ class _EgoModeSessionDetailState
 
   Future<void> saveUserThanksActivity() async {
     final UserModel _user = await firebaseServices.getUserInfo();
-    final Session? theSession = featuredSessionModel;
+    final Session? theSession = widget.featuredSessionModel;
     final CommentSessionModel? theComment = _commentSessionModel;
     final dateCreated = FieldValue.serverTimestamp();
     final commentOwnerNickname = theComment?.userNickname.toString();
@@ -483,9 +489,9 @@ class _EgoModeSessionDetailState
     final String commentId = commentSessionModel!.commentId.toString();
     final String docId = session.sessionId.toString();
     firebaseServices.addThanksReaction(
-        commentID: commentId.toString(),
-        docId: docId.toString(),
-        map: commentSessionModel.thanks!.contains(currentUser?.uid)
+        commentID: commentId,
+        docId: docId,
+        map: commentSessionModel!.thanks!.contains(currentUser?.uid)
             ? {
                 'thanks': FieldValue.arrayRemove([currentUser?.uid])
               }

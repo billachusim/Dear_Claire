@@ -124,7 +124,7 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
                     SizedBox( width: 12,),
 
                     Text(
-                      featuredSessionModel.title.toString(),
+                      featuredSessionModel.title ?? "This Session",
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 22,
@@ -192,15 +192,9 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
                     return Container();
                   }
               ),
-              SizedBox(
-                height: 70,
-              )
             ],
           ),
-          ChatEditField(
-            onTap: (String comment, voiceNote) =>
-                _sendComment(comment, voiceNote, featuredSessionModel),
-          )
+
         ],
       ),
     );

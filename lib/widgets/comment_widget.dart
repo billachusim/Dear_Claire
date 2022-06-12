@@ -503,13 +503,10 @@ class _CommentWidgetState extends State<CommentWidget> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  GestureDetector(
-                    onTap: _updateReaction,
-                    child: ThanksButton(
-                      count: widget.commentSessionModel!.thanks!.length,
-                      onPressed: widget.onPressed,
-                      color: 1 == 2 ? Pallet.colorPink : Pallet.colorTextGray,
-                    ),
+                  ThanksButton(
+                    count: widget.commentSessionModel!.thanks!.length,
+                    onPressed: widget.onPressed,
+                    color: 1 == 2 ? Pallet.colorPink : Pallet.colorTextGray,
                   ),
                 ],
               ),
