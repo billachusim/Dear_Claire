@@ -5,6 +5,7 @@ import 'package:dear_claire/ui/alter_ego/advised_page.dart';
 import 'package:dear_claire/ui/alter_ego/all_page.dart';
 import 'package:dear_claire/ui/alter_ego/flagged_sessions_page.dart';
 import 'package:dear_claire/ui/alter_ego/new_diaries_page.dart';
+import 'package:dear_claire/ui/alter_ego/widgets/all_activities_tab.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
@@ -100,7 +101,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                   NewDiariesPage(),
                   AllDiariesPage(),
                   FlaggedDiariesPage(),
-                  ChatRooms()
+                  AllActivitiesTab(),
                 ],
               ),
           ]

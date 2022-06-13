@@ -102,7 +102,7 @@ class UserActivityCard extends StatelessWidget {
                 child: CachedNetworkImage(
                   width: 30,
                   height: 30,
-                  imageUrl: element.clientAvatarUrl!,
+                  imageUrl: element.userAvatarUrl.toString(),
                   imageBuilder: (context, imageProvider) => Container(
                     decoration: BoxDecoration(
                       image: DecorationImage(
@@ -126,7 +126,7 @@ class UserActivityCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("${element.clientNickname} ${element.activityType}ed on your session",
+                    Text(element.activityMessage.toString(),
                         style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Pallet.colorSecondaryDark)),
                     Text(timeConverter(element.dateCreated!),
                         style: TextStyle(fontSize: 11.sp, color: Pallet.colorTextGray)),

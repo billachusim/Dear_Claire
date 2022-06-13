@@ -741,6 +741,28 @@ class FirebaseServices extends ChangeNotifier {
   }
 
 
+  /// [User Activity] -> get all users activities for super ego tab.
+  Future<List<UserActivityModel>> getAllUsersActivities() async {
+    List<UserActivityModel> _userActivityList = [];
+
+    try {
+      final _value = await _firebaseFirestore
+          .collection(AppString.userActivity)
+          .orderBy('dateCreated', descending: true)
+          .limit(AppString.allSessionLength)
+          .get();
+
+      _value.docs
+          .map((e) =>
+          _userActivityList.addAll([UserActivityModel.fromJson(e.data())]))
+          .toList();
+    } catch (e) {
+      logger.e(e);
+    }
+    return _userActivityList;
+  }
+
+
 
   /// get chats
   Stream<QuerySnapshot<Map<String, dynamic>>> getChats(
