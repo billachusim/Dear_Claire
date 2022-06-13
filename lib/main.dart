@@ -25,12 +25,19 @@ import 'package:provider/provider.dart';
 import 'Admob/ad_state.dart';
 import 'data/core/config.dart';
 
+/// Receive message when the app is closed and in background.
+Future<void> backgroundHandler(RemoteMessage message) async{
+print(message.data.toString());
+print(message.notification.title);
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final initFuture = MobileAds.instance.initialize();
   final adState = AdState(initFuture);
 
   await Firebase.initializeApp();
+  FirebaseMessaging.onBackgroundMessage(backgroundHandler);
   await clairNotification.initializeNotification();
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   Config.appFlavor = Flavor.DEVELOPMENT;
@@ -83,6 +90,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   void triggerAndroidNotifications() async {
     String _usersID = currentUser?.uid.toString();
+
+    ///Get the message user is going to tap when app is closed
+    FirebaseMessaging.instance.getInitialMessage().then((message) {
+      final routeForMessage = message.data["route"];
+      if (message != null) {
+        navigatorKey.currentState.pushNamed(routeForMessage);
+      }
+    });
 
     /// Foreground work for android
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {

@@ -24,7 +24,8 @@ Future<void> _firebaseMessagingBackgroundHandler(
 class ClairNotification {
   User? currentUser = FirebaseAuth.instance.currentUser;
 
-  SharedPreferences? _prefs;
+
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
       'high_importance_channel', // id
@@ -37,7 +38,6 @@ class ClairNotification {
       FlutterLocalNotificationsPlugin();
 
   Future<void> initializeNotification() async {
-    _prefs = await SharedPreferences.getInstance();
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -45,7 +45,7 @@ class ClairNotification {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
-    //triggerAndroidNotifications();
+    triggerAndroidNotifications();
 
      flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -58,6 +58,44 @@ class ClairNotification {
       badge: true,
       sound: true,
     );
+  }
+
+  void triggerAndroidNotifications() async {
+
+    ///Get the message user is going to tap when app is closed
+    FirebaseMessaging.instance.getInitialMessage().then((message) {
+      final routeForMessage = message?.data["route"];
+      if (message != null) {
+        navigatorKey.currentState?.pushNamed(routeForMessage);
+      }
+    });
+
+    /// Foreground work for android
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification? notification = message.notification!;
+      AndroidNotification? android = message.notification!.android;
+      if (android != null)
+      {
+        flutterLocalNotificationsPlugin.show(notification.hashCode,
+            notification.title, notification.body, _notificationDetails());
+      }
+    });
+
+    /// When android app is open in background and user taps on it.
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      logger.d('You tapped on a new notification');
+      RemoteNotification? notification = message.notification!;
+      AndroidNotification? android = message.notification!.android;
+      final routeForMessage = message.data["route"];
+      if (notification != null && android != null) {
+
+        logger.d(notification.toString());
+        print(routeForMessage);
+
+        navigatorKey.currentState?.pushNamed(routeForMessage);
+
+      }
+    });
   }
 
 
@@ -83,6 +121,13 @@ class ClairNotification {
     } else {
       print('User declined or has not accepted permission');
     }
+
+    FirebaseMessaging.instance.requestPermission().then((value) {
+      print(value);});
+    FirebaseMessaging.instance.getToken().then((token){
+      print(token);});
+    FirebaseMessaging.instance.getAPNSToken().then((APNStoken){
+      print(APNStoken);});
 
     /// Foreground work for iOS
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
