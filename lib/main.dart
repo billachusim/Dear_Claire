@@ -4,13 +4,17 @@ import 'dart:math';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/notification.dart';
 import 'package:dear_claire/ui/create_session/create_session_controller.dart';
+import 'package:dear_claire/ui/create_session/create_session_page.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/ui/splash_screen/splash.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
@@ -48,15 +52,81 @@ class MyApp extends StatefulWidget {
 
 // This widget is the root of your application.
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+
+  User currentUser = FirebaseAuth.instance.currentUser;
+
   //initialize controller for create session interactions
   final c = Get.put(CreateSessionController());
+
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+  final AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel', // id
+      'High Importance Notifications', // title
+      'This channel is used for important notifications.', // description
+      importance: Importance.high,
+      playSound: true);
+
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
+    triggerAndroidNotifications();
     randomizeNewAppSessionToast();
     clairNotification.randomizeReminderNotes();
+  }
+
+
+  void triggerAndroidNotifications() async {
+    String _usersID = currentUser?.uid.toString();
+
+    /// Foreground work for android
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification notification = message.notification;
+      AndroidNotification android = message.notification.android;
+      if (android != null)
+      {
+        flutterLocalNotificationsPlugin.show(notification.hashCode,
+            notification.title, notification.body, _notificationDetails());
+      }
+    });
+
+    /// When android app is open in background and user taps on it.
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      logger.d('You tapped on a new notification');
+      RemoteNotification notification = message.notification;
+      AndroidNotification android = message.notification?.android;
+      final routeForMessage = message.data["route"];
+      if (notification != null && android != null) {
+
+        logger.d(notification.toString());
+        print(routeForMessage);
+
+        navigatorKey.currentState.pushNamed(routeForMessage);
+
+      }
+    });
+  }
+
+  NotificationDetails _notificationDetails() {
+    return NotificationDetails(
+        android: AndroidNotificationDetails(
+            channel.id, channel.name, channel.description,
+            color: Pallet.colorPrimary,
+            playSound: true,
+            icon: '@drawable/claire_icon',
+            enableLights: true,
+            enableVibration: true,
+            showWhen: true,
+            channelShowBadge: true),
+        iOS: IOSNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true));
   }
 
 
@@ -116,7 +186,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             primarySwatch: Colors.pink,
           ),
           home: SplashPage(),
-          //AuthSelectionPage(), FirestoreTest(),
+          routes: {
+            "createSessionPage": (_) => CreateSessionPage(),
+          },
+          navigatorKey: navigatorKey,
           onGenerateRoute: AppRouter.generateRoute,
         ),
       ),

@@ -45,7 +45,7 @@ class ClairNotification {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
-    triggerAndroidNotifications();
+    //triggerAndroidNotifications();
 
      flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
@@ -58,29 +58,6 @@ class ClairNotification {
       badge: true,
       sound: true,
     );
-  }
-
-  void triggerAndroidNotifications() async {
-    String? _usersID = currentUser?.uid.toString();
-
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      RemoteNotification? notification = message.notification!;
-      AndroidNotification? android = message.notification!.android;
-      if (android != null)
-      {
-        flutterLocalNotificationsPlugin.show(notification.hashCode,
-            notification.title, notification.body, _notificationDetails());
-      }
-    });
-
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      logger.d('You tapped on a new notification');
-      RemoteNotification? notification = message.notification;
-      AndroidNotification? android = message.notification?.android;
-      if (notification != null && android != null) {
-        logger.d(notification.toString());
-      }
-    });
   }
 
 
@@ -107,6 +84,7 @@ class ClairNotification {
       print('User declined or has not accepted permission');
     }
 
+    /// Foreground work for iOS
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       RemoteNotification? notification = message.notification!;
       AppleNotification? apple = message.notification!.apple;
@@ -117,6 +95,7 @@ class ClairNotification {
       }
     });
 
+    /// When iOS app is open in background and user taps on it.
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       logger.d('You tapped on a new notification!');
       RemoteNotification? notification = message.notification;
