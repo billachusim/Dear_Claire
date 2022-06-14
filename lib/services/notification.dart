@@ -7,8 +7,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/color.dart';
 
@@ -100,7 +98,6 @@ class ClairNotification {
 
 
   void triggerIosNotifications() async {
-    String? _usersID = currentUser?.uid.toString();
 
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 
@@ -109,7 +106,7 @@ class ClairNotification {
       announcement: false,
       badge: true,
       carPlay: false,
-      criticalAlert: false,
+      criticalAlert: true,
       provisional: false,
       sound: true,
     );
@@ -145,8 +142,13 @@ class ClairNotification {
       logger.d('You tapped on a new notification!');
       RemoteNotification? notification = message.notification;
       AppleNotification? apple = message.notification?.apple;
+
+      final routeForMessage = message.data["route"];
       if (notification != null && apple != null) {
         logger.d(notification.toString());
+
+        navigatorKey.currentState?.pushNamed(routeForMessage);
+
       }
     });
   }

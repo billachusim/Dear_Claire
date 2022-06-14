@@ -2,6 +2,7 @@
 import 'dart:math';
 
 import 'package:dear_claire/services/firebase_services.dart';
+import 'package:dear_claire/services/local_notification_service.dart';
 import 'package:dear_claire/services/notification.dart';
 import 'package:dear_claire/ui/create_session/create_session_controller.dart';
 import 'package:dear_claire/ui/create_session/create_session_page.dart';
@@ -82,6 +83,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
+    LocalNotificationService.initialize(context);
     triggerAndroidNotifications();
     randomizeNewAppSessionToast();
     clairNotification.randomizeReminderNotes();
@@ -108,6 +110,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         flutterLocalNotificationsPlugin.show(notification.hashCode,
             notification.title, notification.body, _notificationDetails());
       }
+
+      LocalNotificationService.display(message);
     });
 
     /// When android app is open in background and user taps on it.

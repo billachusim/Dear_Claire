@@ -22,6 +22,9 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-2404156870680632~1437179020"/>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="socialFaculty"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
