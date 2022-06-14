@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import '../utils/color.dart';
 
@@ -26,10 +27,10 @@ class ClairNotification {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'high_importance_channel', // id
-      'High Importance Notifications', // title
-      'This channel is used for important notifications.', // description
-      importance: Importance.high,
+      'socialFaculty', // id
+      'Social Faculty Channel', // title
+      'This is our channel.', // description
+      importance: Importance.max,
       playSound: true);
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -184,6 +185,41 @@ class ClairNotification {
           message.toString(), _notificationDetails());
     }
     );
+  }
+
+
+  randomizeNewAppSessionToast() async {
+    Random random = new Random();
+    int randomNumber = random.nextInt(Constant.TOAST_NUMBERS.length);
+    var message = randomNumber == 1 ? "It's Claire O'clock!" :
+    randomNumber == 2 ? "I'm glad you are here" :
+    randomNumber == 3 ? "You have come to a safe place." :
+    randomNumber == 4 ? "Grow your ego." :
+    randomNumber == 5 ? "Positive vibes only." :
+    randomNumber == 5 ? "Let's have a heart to heart." :
+    randomNumber == 6 ? "Go ahead, advise anonymously." :
+    randomNumber == 7 ? "Welcome to Featured Sessions" :
+    randomNumber == 8 ? "Different people, different situations." :
+    randomNumber == 9 ? "You'll never be not truly loved." :
+    randomNumber == 10 ? "A problem shared is..." :
+    randomNumber == 11 ? "You are completely anonymous." :
+    randomNumber == 12 ? "Advise people positively." :
+    randomNumber == 13 ? "Tap the spinning flower anytime." :
+    randomNumber == 14 ? "It's you and me time." :
+    randomNumber == 15 ? "Bored? Check out Diary Rooms." :
+    randomNumber == 16 ? "Browse Love and other categories." :
+    randomNumber == 17 ? "Be ready to be nice." :
+    randomNumber == 18 ? "Ask Claire anything." :
+    randomNumber == 19 ? "Don't forget to show love." :
+
+    "It's Claire O'Clock!";
+    await  Future.delayed(Duration(seconds: 6), () {
+      Fluttertoast.showToast(
+        toastLength: Toast.LENGTH_LONG,
+        msg: message.toString(),
+        textColor: Colors.white,
+        backgroundColor: Pallet.colorSplashScreen,
+      );    });
   }
 
 

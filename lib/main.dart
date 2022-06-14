@@ -61,6 +61,8 @@ class MyApp extends StatefulWidget {
 // This widget is the root of your application.
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   User currentUser = FirebaseAuth.instance.currentUser;
 
   //initialize controller for create session interactions
@@ -70,13 +72,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   FlutterLocalNotificationsPlugin();
 
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'high_importance_channel', // id
-      'High Importance Notifications', // title
-      'This channel is used for important notifications.', // description
-      importance: Importance.high,
+      'socialfaculty', // id
+      'Social Faculty Channel', // title
+      'This is our channel.', // description
+      importance: Importance.max,
       playSound: true);
-
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 
   @override
@@ -85,13 +85,23 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     LocalNotificationService.initialize(context);
     triggerAndroidNotifications();
-    randomizeNewAppSessionToast();
+    triggerIosNotifications();
+    clairNotification.randomizeNewAppSessionToast();
     clairNotification.randomizeReminderNotes();
   }
 
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+
+
+
+
   void triggerAndroidNotifications() async {
-    String _usersID = currentUser?.uid.toString();
 
     ///Get the message user is going to tap when app is closed
     FirebaseMessaging.instance.getInitialMessage().then((message) {
@@ -110,8 +120,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         flutterLocalNotificationsPlugin.show(notification.hashCode,
             notification.title, notification.body, _notificationDetails());
       }
-
-      LocalNotificationService.display(message);
     });
 
     /// When android app is open in background and user taps on it.
@@ -131,6 +139,69 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     });
   }
 
+
+
+  void triggerIosNotifications() async {
+
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: true,
+      provisional: false,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('User granted permission');
+    } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+      print('User granted provisional permission');
+    } else {
+      print('User declined or has not accepted permission');
+    }
+
+
+
+    ///Get the message user is going to tap when app is closed
+    FirebaseMessaging.instance.getInitialMessage().then((message) {
+      final routeForMessage = message.data["route"];
+      if (message != null) {
+        navigatorKey.currentState.pushNamed(routeForMessage);
+      }
+    });
+
+    /// Foreground work for iOS
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification notification = message.notification;
+      AppleNotification apple = message.notification.apple;
+      if (apple != null)
+      {
+        flutterLocalNotificationsPlugin.show(notification.hashCode,
+            notification.title, notification.body, _notificationDetails());
+      }
+    });
+
+    /// When iOS app is open in background and user taps on it.
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      logger.d('You tapped on a new notification!');
+      RemoteNotification notification = message.notification;
+      AppleNotification apple = message.notification?.apple;
+
+      final routeForMessage = message.data["route"];
+      if (notification != null && apple != null) {
+        logger.d(notification.toString());
+
+        navigatorKey.currentState?.pushNamed(routeForMessage);
+
+      }
+    });
+  }
+
+
+
   NotificationDetails _notificationDetails() {
     return NotificationDetails(
         android: AndroidNotificationDetails(
@@ -149,48 +220,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
 
-  randomizeNewAppSessionToast() async {
-    Random random = new Random();
-    int randomNumber = random.nextInt(Constant.TOAST_NUMBERS.length);
-    var message = randomNumber == 1 ? "It's Claire O'clock!" :
-    randomNumber == 2 ? "I'm glad you are here" :
-    randomNumber == 3 ? "You have come to a safe place." :
-    randomNumber == 4 ? "Grow your ego." :
-    randomNumber == 5 ? "Positive vibes only." :
-    randomNumber == 5 ? "Let's have a heart to heart." :
-    randomNumber == 6 ? "Go ahead, advise anonymously." :
-    randomNumber == 7 ? "Welcome to Featured Sessions" :
-    randomNumber == 8 ? "Different people, different situations." :
-    randomNumber == 9 ? "You'll never be not truly loved." :
-    randomNumber == 10 ? "A problem shared is..." :
-    randomNumber == 11 ? "You are completely anonymous." :
-    randomNumber == 12 ? "Advise people positively." :
-    randomNumber == 13 ? "Tap the spinning flower anytime." :
-    randomNumber == 14 ? "It's you and me time." :
-    randomNumber == 15 ? "Bored? Check out Diary Rooms." :
-    randomNumber == 16 ? "Browse Love and other categories." :
-    randomNumber == 17 ? "Be ready to be nice." :
-    randomNumber == 18 ? "Ask Claire anything." :
-    randomNumber == 19 ? "Don't forget to show love." :
-
-    "It's Claire O'Clock!";
-    await  Future.delayed(Duration(seconds: 6), () {
-      Fluttertoast.showToast(
-        toastLength: Toast.LENGTH_LONG,
-        msg: message.toString(),
-        textColor: Colors.white,
-        backgroundColor: Pallet.colorSplashScreen,
-      );    });
-  }
 
 
-
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
