@@ -7,16 +7,12 @@ import 'package:dear_claire/services/user_model.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/data/chats.dart';
 import 'package:dear_claire/ui/chats/sub_chat_screen.dart';
-import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
-import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_user_ego_page.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
-import 'package:dear_claire/widgets/share_button.dart';
-import 'package:dear_claire/widgets/thanks_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -344,7 +340,7 @@ class ChatWidget extends StatelessWidget {
                   onTap: () {
                     _createLeaveChatInterstitialAd();
                     visitedUsersID = _userModel.userId ?? '';
-                      showToast('Thanks for your time.');
+                      showToast('Thanks for your time. Just a short ad please.');
 
                     deleteSubChat();
                     updateMembers(joining: false);
@@ -397,9 +393,9 @@ class ChatWidget extends StatelessWidget {
                       String thisUser = visitedUsersID;
 
                       if (!_isCompleted(chatModel, chatRoomPodo))
-                        showToast('Welcome back.');
+                        showToast('Welcome back. Continue chatting after this ad.');
 
-                      Future.delayed(Duration(seconds: 4), () {
+                      Future.delayed(Duration(seconds: 7), () {
                         _showContChatInterstitialAd();
                       });
 
@@ -441,7 +437,6 @@ class ChatWidget extends StatelessWidget {
                   ),
                 ),
 
-              Spacer(flex: 1,),
 
 
               if (!chatModel!.members!.contains(currentUser!.uid))
@@ -458,9 +453,9 @@ class ChatWidget extends StatelessWidget {
                       if (!_isCompleted(chatModel, chatRoomPodo))
 
                         updateMembers(joining: true);
-                        showToast('Welcome. Positive vibes only.');
+                        showToast('Welcome. Start chatting after this ad.');
 
-                      Future.delayed(Duration(seconds: 4), () {
+                      Future.delayed(Duration(seconds: 7), () {
                         _showJoinChatInterstitialAd();
                       });
 
@@ -502,6 +497,55 @@ class ChatWidget extends StatelessWidget {
                         )),
                   ),
               ),
+                ),
+
+
+              if (!chatModel!.members!.contains(currentUser!.uid))
+                Visibility(
+                  visible: _isCompleted(chatModel, chatRoomPodo),
+                  child: Align(
+                    alignment: Alignment.bottomRight,
+                    child: InkWell(
+                      onTap: () {
+                        _createJoinChatInterstitialAd();
+
+                        showToast('Sorry, this room is full.\n'
+                            'Start your own room after this ad.');
+
+                        Future.delayed(Duration(seconds: 7), () {
+                          _showJoinChatInterstitialAd();
+                        });
+                      },
+                      child: Container(
+                          padding: EdgeInsets.all(5),
+                          width: 100,
+                          height: 25,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20.0),
+                            gradient: LinearGradient(
+                              begin: Alignment(
+                                  -0.37857140550652835, -1.9473685559777252),
+                              end: Alignment(1.2428571464417884, 2.526316110739735),
+                              stops: [0.0, 0.856177031993866, 1.0],
+                              colors: [
+                                Colors.black45,
+                                Pallet.grey,
+                                Pallet.deepGreen,
+                              ],
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${chatModel!.members!.length} Room Full',
+                              style: TextStyle(
+                                  color: _isCompleted(chatModel, chatRoomPodo)
+                                      ? Pallet.blueGreyBgColor
+                                      : Pallet.colorSplashScreen,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          )),
+                    ),
+                  ),
                 ),
             ],
           )

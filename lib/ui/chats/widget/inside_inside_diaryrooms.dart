@@ -1,17 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/user_model.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/data/chats.dart';
-import 'package:dear_claire/ui/chats/sub_chat_screen.dart';
+import 'package:dear_claire/ui/chats/widget/sub_diaryroom_online_users_stream.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
-import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
-import 'package:dear_claire/widgets/share_button.dart';
-import 'package:dear_claire/widgets/thanks_button.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -155,39 +151,48 @@ class InsideInsideChatWidget extends StatelessWidget {
             height: 6,
           ),
 
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Container(
-                padding: EdgeInsets.all(5),
-                width: 110,
-                height: 30,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20.0),
-                  border: Border.all(
-                      color: _isCompleted(chatModel, chatRoomPodo)
-                          ? Pallet.blueGreyBgColor
-                          : Pallet.colorSplashScreen),
-                  gradient: LinearGradient(
-                    begin: Alignment(
-                        -0.37857140550652835, -1.9473685559777252),
-                    end: Alignment(1.2428571464417884, 2.526316110739735),
-                    stops: [0.0, 0.856177031993866, 1.0],
-                    colors: [
-                      Colors.white70,
-                      Pallet.colorPrimary,
-                      Pallet.colorSecondaryDark,
-                    ],
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    '${chatModel!.members!.length} Online',
-                    style: TextStyle(
-                        color: _isCompleted(chatModel, chatRoomPodo)
-                            ? Pallet.blueGreyBgColor
-                            : Pallet.colorSplashScreen),
-                  ),
-                )),
+          Row(
+            children: [
+
+              OnlineRoomVisitorsStream(roomData: chatRoomPodo!, roomModel: chatModel!, docId: documentID!,),
+
+              Spacer(flex: 1,),
+
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Container(
+                    padding: EdgeInsets.all(5),
+                    width: 110,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(
+                          color: _isCompleted(chatModel, chatRoomPodo)
+                              ? Pallet.blueGreyBgColor
+                              : Pallet.colorSplashScreen),
+                      gradient: LinearGradient(
+                        begin: Alignment(
+                            -0.37857140550652835, -1.9473685559777252),
+                        end: Alignment(1.2428571464417884, 2.526316110739735),
+                        stops: [0.0, 0.856177031993866, 1.0],
+                        colors: [
+                          Colors.white70,
+                          Pallet.colorPrimary,
+                          Pallet.colorSecondaryDark,
+                        ],
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${chatModel!.members!.length} Online',
+                        style: TextStyle(
+                            color: _isCompleted(chatModel, chatRoomPodo)
+                                ? Pallet.blueGreyBgColor
+                                : Pallet.colorSplashScreen),
+                      ),
+                    )),
+              ),
+            ],
           )
         ],
       ),

@@ -22,8 +22,8 @@ class OnlineRoomOwnerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 50,
-      height: 50,
+      width: 40,
+      height: 40,
       margin: EdgeInsets.all(1),
       child: Center(
         child: Stack(
@@ -54,8 +54,8 @@ class OnlineRoomOwnerWidget extends StatelessWidget {
                             print("Visited User ID::: $visitedUsersID");
                           },
                           child: CachedNetworkImage(
-                              width: 50,
-                              height: 50,
+                              width: 40,
+                              height: 40,
                               imageUrl: _user!.avatarUrl ?? '',
                               imageBuilder: (context, imageProvider) => Container(
                                 decoration: BoxDecoration(
