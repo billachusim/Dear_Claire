@@ -5,6 +5,7 @@ import 'package:dear_claire/ui/Categories/next_unreplied_sessions.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/ui/featured/widget/post_details_widget.dart';
+import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/ui/splash_screen/custom_rotate_bacground.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
@@ -247,14 +248,24 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
   void _sendComment(String comment, String voiceNote, Session session) async {
     if (!await firebaseServices.isUserSignIn(context)) return;
 
-    final _userModel = await firebaseServices.getUserInfo();
 
+    CollectionReference ref =
+    FirebaseFirestore.instance
+        .collection("sessions")
+        .doc(session.sessionId!)
+        .collection("comments");
+
+    String docId = ref.doc().id;
+
+    final _userModel = await firebaseServices.getUserInfo();
     final _commentModel = CommentSessionModel(
         alterEgoId: _userModel.alterEgoId,
         audioUrl: voiceNote,
-        commentId: '',
+        commentId: docId,
         flagged: session.flagged!,
         imageUrls: [],
+        thanks: [],
+        numberOfThanks: 0,
         isUserAdmin: true,
         message: comment,
         timeCreated: Timestamp.now(),
@@ -263,13 +274,17 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         userNickname: _userModel.nickname,
         originalAdviseCategory: session.category1);
 
-    firebaseServices.addComment(
+    await ref.doc(docId).set(_commentModel.toJson());
+
+
+    firebaseServices.addCommentNotification(
         title: session.title ?? '',
         docId: session.sessionId!,
         sender: _userModel.userType == 'ADMIN'? 'Claire' :
         _userModel.userType == 'SUPER_ADMIN'? 'Claire' :
         _userModel.nickname.toString(),
-        map: _commentModel.toJson());
+        route: AppRoutes.egoModeSessionDetail,
+    );
 
     updateSessionTimeLastActivity(session);
     isOriginalAdvise(context, comment, session);

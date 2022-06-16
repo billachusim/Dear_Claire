@@ -51,72 +51,6 @@ class _CommentWidgetState extends State<CommentWidget> {
 
 
 
-  void _updateReaction() async {
-    if (!await firebaseServices.isUserSignIn(context)) {
-      showToast('You have to login first before reacting.');
-      return;
-    }
-    final String commentId = widget.commentSessionModel!.commentId.toString();
-    final String docId = widget.featuredSessionModel!.sessionId.toString();
-    firebaseServices.addThanksReaction(
-        commentID: commentId.toString(),
-        docId: docId.toString(),
-        map: widget.commentSessionModel!.thanks!.contains(currentUser?.uid)
-            ? {
-          'thanks': FieldValue.arrayRemove([currentUser?.uid])
-        }
-            : {
-          'thanks': FieldValue.arrayUnion([currentUser?.uid])
-        });
-    saveUserThanksActivity();
-  }
-
-
-
-
-
-  /// Save user comment activity
-
-  Future<void> saveUserThanksActivity() async {
-    final UserModel _user = await firebaseServices.getUserInfo();
-    final Session? theSession = widget.featuredSessionModel;
-    final CommentSessionModel? theComment = widget.commentSessionModel;
-    final dateCreated = FieldValue.serverTimestamp();
-    final commentOwnerNickname = theComment?.userNickname.toString();
-    final sessionId = theSession?.sessionId;
-    final sessionOwnerId = theSession?.userId;
-    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
-    final sessionOwnerNickname = theSession?.userNickname.toString();
-    final sessionVisitorId = currentUser?.uid.toString();
-    final sessionVisitorNickname = _user.nickname.toString();
-    final sessionVisitorAvatar =  _user.userType != "REGULAR"
-        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
-        : _user.avatarUrl.toString();
-    final activityMessage = "$sessionVisitorNickname thanked $commentOwnerNickname's advise.";
-    final activityType = "thank";
-    final userActivityId = "";
-    FirebaseFirestore.instance
-        .collection('user_activity')
-        .add({
-      "activityMessage": activityMessage,
-      "activityType": activityType,
-      "clientAvatarUrl": sessionVisitorAvatar,
-      "clientId": sessionVisitorId,
-      "clientNickname": sessionVisitorNickname,
-      "dateCreated": dateCreated,
-      "sessionId": sessionId,
-      "userActivityId": userActivityId,
-      "userId": sessionOwnerId,
-      "userNickname": sessionOwnerNickname,
-      "userAvatarUrl": sessionOwnerAvatar,
-
-    },
-    );
-    logger.d('Successfully saved your thanks activity');
-    print('Activity Message: $activityMessage');
-
-  }
-
 
   Future<void> editAdvise() async {
     final sessionId = widget.featuredSessionModel!.sessionId;
@@ -275,7 +209,7 @@ class _CommentWidgetState extends State<CommentWidget> {
       onPressed:  () {
         sendToFlagged();
         showToast("Thank You!\n An Alter Ego will check this advise for violations.");
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        Navigator.of(context).pop();
       },
     );
 
@@ -333,7 +267,7 @@ class _CommentWidgetState extends State<CommentWidget> {
       child: Text("Unflag"),
       onPressed:  () {
         removeFromFlagged();
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        Navigator.of(context).pop();
       },
     );
 

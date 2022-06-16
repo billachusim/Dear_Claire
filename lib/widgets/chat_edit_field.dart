@@ -87,39 +87,6 @@ class _ChatEditFieldState extends State<ChatEditField> {
     });
   }
 
-  void _sendComment(Session session) async {
-    if (!await firebaseServices.isUserSignIn(context)) return;
-
-    final _userModel = await firebaseServices.getUserInfo();
-
-    List<String> imageDownloadUrls = <String>[];
-    for (var image in imageList) {
-      imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
-    }
-    final _commentModel = CommentSessionModel(
-        alterEgoId: _userModel.alterEgoId,
-        audioUrl: _recordFile.toString(),
-        commentId: '',
-        flagged: false,
-        imageUrls: imageDownloadUrls,
-        isUserAdmin: false,
-        message: _controller.text,
-        timeCreated: Timestamp.now(),
-        userAvatarUrl: _userModel.avatarUrl,
-        userId: _userModel.userId,
-        userNickname:  _userModel.nickname);
-
-    firebaseServices.addComment(
-        title: session.title ?? '',
-        docId: session.sessionId!,
-        sender: _userModel.userType == 'ADMIN' ? 'Claire' :
-        _userModel.userType == 'SUPER_ADMIN' ? 'Claire' :
-        _userModel.nickname!,
-        map: _commentModel.toJson());
-    updateSessionTimeLastActivity(session);
-    incrementAdviseCount();
-    incrementTotalLoveCount();
-  }
 
 
   /// Increase advise counter when user creates new comment.

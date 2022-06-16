@@ -376,28 +376,20 @@ class FirebaseServices extends ChangeNotifier {
 
 
   /// adds a comment to a post
-  void addComment(
+  void addCommentNotification(
       {required String title,
       required String docId,
       required String sender,
-      required Map<String, dynamic> map}) {
+      required route}) {
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
       to: '/topics/$docId',
       collapseKey: 'type_a',
-      data: pushNotification.Data(id: sender),
+      data: pushNotification.Data(id: sender, route: route),
       notification: pushNotification.Notification(
           title: title, body: '$sender added comment to the session'),
     );
-
-    _firebaseFirestore
-        .collection(AppString.appFeaturedSessions)
-        .doc(docId)
-        .collection(AppString.appFeaturedSessionsComments)
-        .add(map)
-        .whenComplete(() =>
-            notificationService.sendNotification(_notificationModel.toJson()));
-
+    notificationService.sendNotification(_notificationModel.toJson());
   }
 
 

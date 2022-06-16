@@ -5,6 +5,7 @@ import 'package:dear_claire/Admob/ad_state.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/user_model.dart';
 import 'package:dear_claire/ui/featured/public_sessions.dart';
+import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
@@ -267,11 +268,20 @@ class _EgoModeSessionDetailState
   void _sendComment(String comment, String voiceNote, Session session) async {
     if (!await firebaseServices.isUserSignIn(context)) return;
 
+
+    CollectionReference ref =
+    FirebaseFirestore.instance
+        .collection("sessions")
+        .doc(session.sessionId!)
+        .collection("comments");
+
+    String docId = ref.doc().id;
+
     final _userModel = await firebaseServices.getUserInfo();
     final _commentModel = CommentSessionModel(
         alterEgoId: _userModel.alterEgoId,
         audioUrl: voiceNote,
-        commentId: _userModel.userId,
+        commentId: docId,
         flagged: session.flagged!,
         imageUrls: [],
         thanks: [],
@@ -283,11 +293,15 @@ class _EgoModeSessionDetailState
         userId: _userModel.userId,
         userNickname:  _userModel.nickname);
 
-    firebaseServices.addComment(
+    await ref.doc(docId).set(_commentModel.toJson());
+
+
+    firebaseServices.addCommentNotification(
         title: session.title ?? '',
         docId: session.sessionId!,
         sender: _userModel.nickname.toString(),
-        map: _commentModel.toJson());
+        route: AppRoutes.egoModeSessionDetail,
+    );
 
     updateSessionTimeLastActivity(session);
     isOriginalAdvise(context, comment, session);
