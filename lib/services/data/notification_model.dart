@@ -55,16 +55,20 @@ class Notification {
 class Data {
   String? id;
 
-  Data({this.id});
+  String? route;
+
+  Data({this.id, this.route});
 
   Data.fromJson(Map<String, dynamic> json) {
     this.id = json["id"];
+    this.route = json["route"];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
 
     data["id"] = this.id;
+    data["route"] = this.route;
     return data;
   }
 }

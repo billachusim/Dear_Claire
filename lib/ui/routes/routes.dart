@@ -13,6 +13,7 @@ import 'package:dear_claire/ui/donate/donate.dart';
 import 'package:dear_claire/ui/ego-profile/clairevatar.dart';
 import 'package:dear_claire/ui/ego-profile/profile.dart';
 import 'package:dear_claire/ui/ego-profile/request_claire_love_form.dart';
+import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
 import 'package:dear_claire/ui/featured/request_feature_form.dart';
 import 'package:dear_claire/ui/login/login_screen.dart';
 import 'package:dear_claire/ui/menu_items/how_claire_works.dart';
@@ -20,12 +21,16 @@ import 'package:dear_claire/ui/menu_items/how_alter_ego_works.dart';
 import 'package:dear_claire/ui/menu_items/view_model.dart';
 import 'package:dear_claire/ui/sign_up/sign_up.dart';
 import 'package:dear_claire/widgets/route_error_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../Search/search_page.dart';
 import '../splash_screen/custom_splash.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
+
+User? currentUser = FirebaseAuth.instance.currentUser;
+
 
 class AppRoutes {
   static const home = '/featured';
@@ -38,6 +43,7 @@ class AppRoutes {
   static const alterEgoLogin = '/alterEgoLogin';
   static const alterEgoHomepage = '/alterEgoHomepage';
   static const createSessionPage = '/create_session';
+  static const egoModeSessionDetail = '/egoModeSessionDetail';
   static const donate = '/donate';
   static const howClaireWorks = '/how_claire_works';
   static const howAlterEgoWorks = '/how_alter_ego_works';
@@ -126,6 +132,13 @@ class AppRouter {
           fullscreenDialog: true,
         );
 
+      case AppRoutes.egoModeSessionDetail:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => EgoModeSessionDetail(featuredSessionModel: ''),
+          settings: settings,
+          fullscreenDialog: true,
+        );
+
       case AppRoutes.howClaireWorks:
         return MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider(
@@ -201,7 +214,7 @@ class AppRouter {
 
       case AppRoutes.visitedUserEgoPage:
         return MaterialPageRoute<dynamic>(
-          builder: (_) => VisitedUserEgoProfilePage(visitedUsersID: "", visitedEgoName: '',),
+          builder: (_) => VisitedUserEgoProfilePage(visitedUsersID: currentUser!.uid, visitedEgoName: 'Activities',),
           settings: settings,
           fullscreenDialog: false,
         );

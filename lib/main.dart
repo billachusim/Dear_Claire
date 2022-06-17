@@ -6,6 +6,8 @@ import 'package:dear_claire/services/local_notification_service.dart';
 import 'package:dear_claire/services/notification.dart';
 import 'package:dear_claire/ui/create_session/create_session_controller.dart';
 import 'package:dear_claire/ui/create_session/create_session_page.dart';
+import 'package:dear_claire/ui/ego/ego.dart';
+import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/ui/splash_screen/splash.dart';
 import 'package:dear_claire/utils/color.dart';
@@ -39,7 +41,6 @@ Future<void> main() async {
 
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
-  await clairNotification.initializeNotification();
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   Config.appFlavor = Flavor.DEVELOPMENT;
   await Hive.initFlutter();
@@ -105,9 +106,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     ///Get the message user is going to tap when app is closed
     FirebaseMessaging.instance.getInitialMessage().then((message) {
-      final routeForMessage = message.data["route"];
       if (message != null) {
-        navigatorKey.currentState.pushNamed(routeForMessage);
+        navigatorKey.currentState.pushNamed(AppRoutes.egoPage);
       }
     });
 
@@ -133,7 +133,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         logger.d(notification.toString());
         print(routeForMessage);
 
-        navigatorKey.currentState.pushNamed(routeForMessage);
+        navigatorKey.currentState.pushNamed(AppRoutes.egoPage);
 
       }
     });
@@ -237,7 +237,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           ),
           home: SplashPage(),
           routes: {
-            "createSessionPage": (_) => CreateSessionPage(),
+            "egoPage": (_) => EgoPage(),
           },
           navigatorKey: navigatorKey,
           onGenerateRoute: AppRouter.generateRoute,
