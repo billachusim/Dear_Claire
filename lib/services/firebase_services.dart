@@ -823,7 +823,7 @@ class FirebaseServices extends ChangeNotifier {
         .collection(chatRoomPodo.title!)
         .doc(key.toString())
         .collection(key.toString())
-        .doc(key.toString())
+        .doc(currentUser!.uid.toString())
         .set(chatModel.toJson())
         .whenComplete(() {
       _subscribeToChatRoom(key);
