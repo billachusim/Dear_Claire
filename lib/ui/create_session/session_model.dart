@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/services/firebase_services.dart';
 
 class CreateSessionModel {
   bool? archived;
@@ -26,6 +25,7 @@ class CreateSessionModel {
   String? category2;
   String? category3;
   String? category4;
+  List<dynamic>? followers;
 
   CreateSessionModel(
       {this.archived = false,
@@ -52,6 +52,7 @@ class CreateSessionModel {
       this.category2,
       this.category3,
       this.category4,
+      this.followers,
       }
       );
 
@@ -102,6 +103,10 @@ class CreateSessionModel {
     category2 = json['category2'];
     category3 = json['category3'];
     category4 = json['category4'];
+
+    if (json['followers'] != null) {
+      followers = json['followers'];
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -143,6 +148,7 @@ class CreateSessionModel {
     data['category2'] = category2;
     data['category3'] = category3;
     data['category4'] = category4;
+    data['followers'] = followers;
 
 
 

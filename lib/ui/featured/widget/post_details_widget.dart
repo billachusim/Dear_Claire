@@ -9,7 +9,6 @@ import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/mood.dart';
 import 'package:dear_claire/widgets/follow_button.dart';
 import 'package:dear_claire/widgets/metoo_button.dart';
-import 'package:dear_claire/widgets/share_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -25,9 +24,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../services/firebase_services.dart';
 import '../../../services/user_model.dart';
 import '../../../utils/strings.dart';
-import '../../../widgets/toast.dart';
 import '../../create_session/sound/custom_play_sound_widget.dart';
-import '../../create_session/sound/play_sound_widget.dart';
 import '../../routes/page_router_animation.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 
@@ -44,7 +41,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   TextEditingController editSessionController = TextEditingController();
 
   User? currentUser = FirebaseAuth.instance.currentUser;
-
 
   late String visitedUsersID;
   late String visitedEgoName;
@@ -70,8 +66,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                   final _session = Session.fromJson(snaps.data!.data()!);
                   theSession = _session;
                   return Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6.0, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6.0, vertical: 5),
                     decoration: BoxDecoration(
                         color: HexColor.fromHex(_session.colorHex!)),
                     child: Column(
@@ -109,8 +105,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                           ),
                                         ),
                                       ),
-                                  placeholder: (context, url) =>
-                                      Center(child: CircularProgressIndicator()),
+                                  placeholder: (context, url) => Center(
+                                      child: CircularProgressIndicator()),
                                   errorWidget: (context, url, error) =>
                                       Image.asset(
                                         "assets/images/brown_boy_mask.png",
@@ -184,8 +180,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       style: GoogleFonts.lato(
                                           fontSize: 12.0,
                                           color: Colors.white70,
-                                          fontWeight: FontWeight.w700)
-                                  ),
+                                          fontWeight: FontWeight.w700)),
                                 ],
                               ),
                             )
@@ -227,8 +222,9 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             child: Row(
                               children: [
                                 _session.audioUrl!.isNotEmpty
-                                    ? CustomPlaySoundWidget(filePath: _session.audioUrl)
-                              : SizedBox.shrink(),
+                                    ? CustomPlaySoundWidget(
+                                        filePath: _session.audioUrl)
+                                    : SizedBox.shrink(),
                               ],
                             ),
                           ),
@@ -244,13 +240,16 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       child: CachedNetworkImage(
                                           height: 120,
                                           width: 120,
-                                          imageUrl: _session.imageUrls!.isNotEmpty
-                                              ? _session.imageUrls!.first
-                                              : '',
-                                          imageBuilder: (context, imageProvider) =>
+                                          imageUrl:
+                                              _session.imageUrls!.isNotEmpty
+                                                  ? _session.imageUrls!.first
+                                                  : '',
+                                          imageBuilder: (context,
+                                                  imageProvider) =>
                                               Container(
                                                 decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(25),
+                                                  borderRadius:
+                                                      BorderRadius.circular(25),
                                                   image: DecorationImage(
                                                     image: imageProvider,
                                                     fit: BoxFit.fill,
@@ -258,7 +257,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                                 ),
                                               ),
                                           placeholder: (context, url) => Center(
-                                              child: CircularProgressIndicator()),
+                                              child:
+                                                  CircularProgressIndicator()),
                                           errorWidget: (context, url, error) =>
                                               Image.asset(
                                                 "assets/images/brown_boy_mask.png",
@@ -267,20 +267,25 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                               ) //Icon(Icons.error),
                                           ),
                                     )),
-                                SizedBox(width: 5,),
+                                SizedBox(
+                                  width: 5,
+                                ),
                                 Visibility(
                                     visible: _session.imageUrls!.isNotEmpty,
                                     child: FullScreenWidget(
                                       child: CachedNetworkImage(
                                           height: 120,
                                           width: 120,
-                                          imageUrl: _session.imageUrls!.isNotEmpty
-                                              ? _session.imageUrls!.last
-                                              : '',
-                                          imageBuilder: (context, imageProvider) =>
+                                          imageUrl:
+                                              _session.imageUrls!.isNotEmpty
+                                                  ? _session.imageUrls!.last
+                                                  : '',
+                                          imageBuilder: (context,
+                                                  imageProvider) =>
                                               Container(
                                                 decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(25),
+                                                  borderRadius:
+                                                      BorderRadius.circular(25),
                                                   image: DecorationImage(
                                                     image: imageProvider,
                                                     fit: BoxFit.fill,
@@ -288,14 +293,15 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                                 ),
                                               ),
                                           placeholder: (context, url) => Center(
-                                              child: CircularProgressIndicator()),
+                                              child:
+                                                  CircularProgressIndicator()),
                                           errorWidget: (context, url, error) =>
                                               Image.asset(
                                                 "assets/images/brown_boy_mask.png",
                                                 width: 48,
                                                 height: 48,
                                               ) //Icon(Icons.error),
-                                      ),
+                                          ),
                                     )),
                               ],
                             ),
@@ -327,29 +333,59 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                               },
                               color: Pallet.colorWhite,
                             ),
-                            new SizedBox(width: 10,),
-                            FollowButton(
-                              text: _session.followers!.contains(currentUser?.uid)
-                                  ? 'Unfollow'
-                                  : 'Follow',
-                              onPressed: () async {
-                                if (await firebaseServices.isUserSignIn(context))
-
-                                  saveUserFollowActivity();
-
-                                firebaseServices.followThisSession(context,
-                                      session: _session);
-                              },
-                              count: _session.followers!.length,
+                            new SizedBox(
+                              width: 10,
                             ),
+                            _session.userId == currentUser?.uid
+                                ? TextButton(
+                                    onPressed: () async {
+                                      firebaseServices.followYourSession(
+                                          context,
+                                          session: _session);
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Text(_session.followers!.length.toString(),
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                            fontWeight: FontWeight.w900,
+                                        ),
+                                        ),
 
+                                        Icon(
+                                          _session.followers!
+                                                  .contains(currentUser?.uid)
+                                              ? Icons.notifications_active_rounded
+                                              : Icons.notifications_off_outlined,
+                                          color: Pallet.colorWhite,
+                                          size: 24,
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : FollowButton(
+                                    text: _session.followers!
+                                            .contains(currentUser?.uid)
+                                        ? 'Unfollow'
+                                        : 'Follow',
+                                    onPressed: () async {
+                                      if (await firebaseServices.isUserSignIn(
+                                          context)) saveUserFollowActivity();
+
+                                      firebaseServices.followThisSession(
+                                          context,
+                                          session: _session);
+                                    },
+                                    count: _session.followers!.length,
+                                  ),
                             new Spacer(),
-
                             if (_session.userId == currentUser?.uid)
                               CupertinoButton(
                                   padding: EdgeInsets.zero,
                                   child: Container(
-                                    padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 7),
+                                    padding: EdgeInsets.symmetric(
+                                        vertical: 2.5, horizontal: 7),
                                     decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(10),
                                         border: Border.all(
@@ -362,7 +398,9 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                           size: 15,
                                           color: Pallet.colorWhite,
                                         ),
-                                        SizedBox(width: 2,),
+                                        SizedBox(
+                                          width: 2,
+                                        ),
                                         Text(
                                           'Edit',
                                           style: GoogleFonts.lato(
@@ -373,42 +411,55 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       ],
                                     ),
                                   ),
-                                  onPressed: _showCardDialog
-                              ),
-
+                                  onPressed: _showCardDialog),
                             new Spacer(),
-
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (_session.repliesEnabled == true)
                                   GestureDetector(
-                                  onTap: () {
-                                    if (_session.flagged == false)
-                                      flagAlertDialog(context);
-                                    else unflagAlertDialog(context);
-                                  },
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        _session.flagged == true ? Icons.flag : Icons.flag_outlined,
-                                        color: Pallet.colorWhite,
-                                        size: 20,
-                                      ),
-                                      Text(
-                                        'Flag',
-                                        style: GoogleFonts.lato(
-                                            fontSize: 13.0,
-                                            color: Pallet.colorWhite,
-                                            fontWeight: FontWeight.w800),
-                                      ),
-                                    ],
+                                    onTap: () {
+                                      if (_session.flagged == false)
+                                        showCustomDialog(context,
+                                          message: _session.flagged == true
+                                              ? AppString.unflag_alert_note
+                                              : AppString.flag_alert_note,
+                                          onPressed: () {
+                                            PageRouter.goBack(context);
+                                            sendToFlagged();
+                                          });
+                                      else
+                                        showCustomDialog(context,
+                                            message: _session.flagged == false
+                                                ? AppString.flag_alert_note
+                                                : AppString.unflag_alert_note,
+                                            onPressed: () {
+                                              PageRouter.goBack(context);
+                                              removeFromFlagged();
+                                            });
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          _session.flagged == true
+                                              ? Icons.flag
+                                              : Icons.flag_outlined,
+                                          color: Pallet.colorWhite,
+                                          size: 20,
+                                        ),
+                                        Text(
+                                          'Flag',
+                                          style: GoogleFonts.lato(
+                                              fontSize: 13.0,
+                                              color: Pallet.colorWhite,
+                                              fontWeight: FontWeight.w800),
+                                        ),
+                                      ],
+                                    ),
                                   ),
+                                new SizedBox(
+                                  width: 10,
                                 ),
-
-                                new SizedBox(width: 10,),
-
-
                                 CupertinoButton(
                                     padding: EdgeInsets.zero,
                                     child: Row(
@@ -433,11 +484,9 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       if (image == null) return;
                                       await saveImage(image);
                                       saveAndShare(image);
-                                    }
-                                ),
+                                    }),
                               ],
                             ),
-
                           ],
                         )
                       ],
@@ -458,14 +507,14 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
         .doc(sessionId)
-        .update({
-      "message": message,
-    },
+        .update(
+      {
+        "message": message,
+      },
     );
     logger.d('Successfully saved edited session');
     print('Edited Session: $message');
   }
-
 
   //show up when user clicks on the FAB to edit an advise
   Future<void> _showCardDialog() async {
@@ -495,8 +544,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                         minLines: 8,
                         maxLines: 2000,
                         decoration: InputDecoration(
-                          //border: InputBorder,
-                        ),
+                            //border: InputBorder,
+                            ),
                       ),
                       SizedBox(
                         height: 10,
@@ -539,9 +588,9 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   Future<String> saveImage(Uint8List bytes) async {
     await [Permission.storage].request();
     final time = DateTime.now()
-    .toIso8601String()
-    .replaceAll('.', '-')
-    .replaceAll(':', '-');
+        .toIso8601String()
+        .replaceAll('.', '-')
+        .replaceAll(':', '-');
     final name = 'ClaireShot_$time';
     final result = await ImageGallerySaver.saveImage(bytes, name: name);
     return result['filepath'];
@@ -556,44 +605,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   }
 
 
-  flagAlertDialog(BuildContext context) {
-
-    // set up the buttons
-    Widget cancelButton = TextButton(
-      child: Text("Cancel"),
-      onPressed:  () {
-        Navigator.of(context).pop();
-      },
-    );
-
-    Widget continueButton = TextButton(
-      child: Text("Flag"),
-      onPressed:  () {
-        sendToFlagged();
-        showToast("Thank You!\n An Alter Ego will check this session for violations.");
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Flag This Session?"),
-      content: Text(AppString.flag_alert_note),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
   /// Flag a session
 
   Future<bool?> sendToFlagged() async {
@@ -601,9 +612,10 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     FirebaseFirestore.instance
         .collection('sessions')
         .doc(theSession?.sessionId)
-        .update({
-      "flagged": value,
-    },
+        .update(
+      {
+        "flagged": value,
+      },
     );
     logger.d('Successfully flagged a session');
     print('Is Flagged?: $value');
@@ -612,57 +624,21 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   }
 
 
-  unflagAlertDialog(BuildContext context) {
-
-    // set up the buttons
-    Widget cancelButton = TextButton(
-      child: Text("Cancel"),
-      onPressed:  () {
-        Navigator.of(context).pop();      },
-    );
-    Widget continueButton = TextButton(
-      child: Text("Unflag"),
-      onPressed:  () {
-        removeFromFlagged();
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Unflag This Session?"),
-      content: Text(AppString.unflag_alert_note),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
-
   Future<bool?> removeFromFlagged() async {
     final value = false;
     FirebaseFirestore.instance
         .collection('sessions')
         .doc(theSession?.sessionId)
-        .update({
-      "flagged": value,
-    },
+        .update(
+      {
+        "flagged": value,
+      },
     );
     logger.d('Successfully changed archive');
     print('Is Flagged?: $value');
     isFlagged = value;
     return value;
   }
-
 
   /// Save user follow activity
 
@@ -675,32 +651,30 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     final sessionOwnerNickname = theSession?.userNickname.toString();
     final sessionVisitorId = currentUser?.uid.toString();
     final sessionVisitorNickname = _user.nickname.toString();
-    final sessionVisitorAvatar =  _user.userType != "REGULAR"
+    final sessionVisitorAvatar = _user.userType != "REGULAR"
         ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
         : _user.avatarUrl.toString();
-    final activityMessage = "$sessionVisitorNickname followed $sessionOwnerNickname's session.";
+    final activityMessage =
+        "$sessionVisitorNickname followed $sessionOwnerNickname's session.";
     final activityType = "follow";
     final userActivityId = "";
-    FirebaseFirestore.instance
-        .collection('user_activity')
-        .add({
-      "activityMessage": activityMessage,
-      "activityType": activityType,
-      "clientAvatarUrl": sessionVisitorAvatar,
-      "clientId": sessionVisitorId,
-      "clientNickname": sessionVisitorNickname,
-      "dateCreated": dateCreated,
-      "sessionId": sessionId,
-      "userActivityId": userActivityId,
-      "userId": sessionOwnerId,
-      "userNickname": sessionOwnerNickname,
-      "userAvatarUrl": sessionOwnerAvatar,
-
-    },
+    FirebaseFirestore.instance.collection('user_activity').add(
+      {
+        "activityMessage": activityMessage,
+        "activityType": activityType,
+        "clientAvatarUrl": sessionVisitorAvatar,
+        "clientId": sessionVisitorId,
+        "clientNickname": sessionVisitorNickname,
+        "dateCreated": dateCreated,
+        "sessionId": sessionId,
+        "userActivityId": userActivityId,
+        "userId": sessionOwnerId,
+        "userNickname": sessionOwnerNickname,
+        "userAvatarUrl": sessionOwnerAvatar,
+      },
     );
     logger.d('Successfully saved your follow activity');
     print('Activity Message: $activityMessage');
-
   }
 
   /// Save user reaction activity
@@ -714,33 +688,29 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     final sessionOwnerNickname = theSession?.userNickname.toString();
     final sessionVisitorId = currentUser?.uid.toString();
     final sessionVisitorNickname = _user.nickname.toString();
-    final sessionVisitorAvatar =  _user.userType != "REGULAR"
+    final sessionVisitorAvatar = _user.userType != "REGULAR"
         ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
         : _user.avatarUrl.toString();
-    final activityMessage = "$sessionVisitorNickname reacted to $sessionOwnerNickname's session.";
+    final activityMessage =
+        "$sessionVisitorNickname reacted to $sessionOwnerNickname's session.";
     final activityType = "react";
     final userActivityId = "";
-    FirebaseFirestore.instance
-        .collection('user_activity')
-        .add({
-      "activityMessage": activityMessage,
-      "activityType": activityType,
-      "clientAvatarUrl": sessionVisitorAvatar,
-      "clientId": sessionVisitorId,
-      "clientNickname": sessionVisitorNickname,
-      "dateCreated": dateCreated,
-      "sessionId": sessionId,
-      "userActivityId": userActivityId,
-      "userId": sessionOwnerId,
-      "userNickname": sessionOwnerNickname,
-      "userAvatarUrl": sessionOwnerAvatar,
-
-    },
+    FirebaseFirestore.instance.collection('user_activity').add(
+      {
+        "activityMessage": activityMessage,
+        "activityType": activityType,
+        "clientAvatarUrl": sessionVisitorAvatar,
+        "clientId": sessionVisitorId,
+        "clientNickname": sessionVisitorNickname,
+        "dateCreated": dateCreated,
+        "sessionId": sessionId,
+        "userActivityId": userActivityId,
+        "userId": sessionOwnerId,
+        "userNickname": sessionOwnerNickname,
+        "userAvatarUrl": sessionOwnerAvatar,
+      },
     );
     logger.d('Successfully saved your reaction activity');
     print('Activity Message: $activityMessage');
-
   }
-
-
 }

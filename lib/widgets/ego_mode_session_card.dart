@@ -5,14 +5,12 @@ import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_user_ego_page.dart';
-import 'package:dear_claire/ui/visited_user_ego_page/visited_user_model.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/mood.dart';
 import 'package:dear_claire/widgets/comments_button.dart';
 import 'package:dear_claire/widgets/metoo_button.dart';
-import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -373,8 +371,21 @@ class EgoModeSessionCard extends StatelessWidget {
                           child: GestureDetector(
                             onTap: () {
                               if (element.featured == false)
-                                featureAlertDialog(context);
-                              else unfeatureAlertDialog(context);
+                                showCustomDialog(context,
+                                    message: element.featured == true
+                                        ? AppString.unfeature_alert_note
+                                        : AppString.feature_alert_note,
+                                    onPressed: () {
+                                      Navigator.pushReplacementNamed(context, AppRoutes.requestFeatureForm);
+                                    });
+                              else
+                                showCustomDialog(context,
+                                    message: element.featured == false
+                                        ? AppString.feature_alert_note
+                                        : AppString.unfeature_alert_note,
+                                    onPressed: () {
+                                      onDonateClicked();
+                                    });
                             },
                             child: Container(
                               child: Visibility(
@@ -397,9 +408,25 @@ class EgoModeSessionCard extends StatelessWidget {
                   child: GestureDetector(
                     onTap: () {
                       if (element.archived == false)
-                        archiveAlertDialog(context);
-                      else unarchiveAlertDialog(context);
+                        showCustomDialog(context,
+                            message: element.archived == true
+                                ? AppString.unarchive_alert_note
+                                : AppString.archive_alert_note,
+                            onPressed: () {
+                              sendToArchive();
+                              Navigator.pushReplacementNamed(context, AppRoutes.egoPage);
+                            });
+                      else
+                        showCustomDialog(context,
+                            message: element.archived == false
+                                ? AppString.archive_alert_note
+                                : AppString.unarchive_alert_note,
+                            onPressed: () {
+                              Navigator.pushReplacementNamed(context, AppRoutes.egoPage);
+                              removeFromArchive();
+                            });
                     },
+
                     child: Container(
                       child: Visibility(
                         visible: element.userId == currentUser?.uid,
@@ -513,157 +540,6 @@ class EgoModeSessionCard extends StatelessWidget {
   }
 
 
-
-
-  featureAlertDialog(BuildContext context) {
-
-    // set up the buttons
-    Widget cancelButton = TextButton(
-      child: Text("TopUp Love"),
-      onPressed:  () {
-        onDonateClicked();
-      },
-    );
-
-    Widget continueButton = TextButton(
-      child: Text("Request Feature\n"
-          "Cost: 1,000+ Loves"),
-      onPressed:  () {
-       // setToFeatured();
-        Navigator.pushReplacementNamed(context, AppRoutes.requestFeatureForm);
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Feature This Session?"),
-      content: Text(AppString.ego_mode_feature_alert_note),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
-
-  unfeatureAlertDialog(BuildContext context) {
-
-    // set up the buttons
-    Widget cancelButton = TextButton(
-      child: Text("Cancel"),
-      onPressed:  () {
-        Navigator.of(context).pop();      },
-    );
-    Widget continueButton = TextButton(
-      child: Text("Unfeature"),
-      onPressed:  () {
-        removeFromFeatured();
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Unfeature This Session?"),
-      content: Text(AppString.unfeature_alert_note),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
-
-
-
-  archiveAlertDialog(BuildContext context) {
-
-    // set up the buttons
-    Widget cancelButton = TextButton(
-      child: Text("Cancel"),
-      onPressed:  () {
-        Navigator.of(context).pop();
-      },
-    );
-
-    Widget continueButton = TextButton(
-      child: Text("Archive"),
-      onPressed:  () {
-        sendToArchive();
-        Navigator.pushReplacementNamed(context, AppRoutes.diarySessions);
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Archive This Session?"),
-      content: Text(AppString.archive_alert_note),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
-
-  unarchiveAlertDialog(BuildContext context) {
-
-    // set up the buttons
-    Widget cancelButton = TextButton(
-      child: Text("Cancel"),
-      onPressed:  () {
-        Navigator.of(context).pop();      },
-    );
-    Widget continueButton = TextButton(
-      child: Text("Unarchive"),
-      onPressed:  () {
-        removeFromArchive();
-        Navigator.pushReplacementNamed(context, AppRoutes.diarySessions);
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Unarchive This Session?"),
-      content: Text(AppString.unarchive_alert_note),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
 
 
   /// Save user reaction activity

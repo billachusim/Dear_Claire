@@ -65,6 +65,24 @@ class FirebaseServices extends ChangeNotifier {
     logger.d('Following this session: ${session.title!}');
   }
 
+
+  /// subscribe user to a topic
+  Future<void> _subscribeToYourSession(String sender, CreateSessionModel session) async {
+    _usersID = currentUser?.uid.toString();
+
+    await _firebaseMessaging.subscribeToTopic(session.sessionId!);
+    final pushNotification.NotificationModel _notificationModel =
+    pushNotification.NotificationModel(
+      to: '/topics/${session.sessionId}',
+      collapseKey: 'type_a',
+      data: pushNotification.Data(id: _usersID),
+      notification: pushNotification.Notification(
+          title: session.title ?? '', body: '$sender followed the session'),
+    );
+    notificationService.sendNotification(_notificationModel.toJson());
+    logger.d('Following this session: ${session.title!}');
+  }
+
   /// subscribe user to chat room
   Future<void> _subscribeToChatRoom(String id) async {
     await _firebaseMessaging.subscribeToTopic(id);
@@ -582,6 +600,36 @@ class FirebaseServices extends ChangeNotifier {
     }
   }
 
+
+
+
+  /// follow a featured session
+  Future<void> followYourSessionImmediately(BuildContext context,
+      {CreateSessionModel? session}) async {
+    _firebaseFirestore
+        .collection(AppString.appFeaturedSessions)
+        .doc(session!.sessionId)
+        .update({
+      'followers': FieldValue.arrayUnion([_usersID]),
+      'timeLastActivity': FieldValue.serverTimestamp(),
+      //"featured": false,
+    });
+    _subscribeToYourSession(session.userNickname.toString(), session);
+  }
+
+
+
+  /// Mute or allow your session notifications
+  void followYourSession(BuildContext context, {Session? session}) {
+    showCustomDialog(context,
+        message: session!.followers!.contains(_usersID)
+            ? AppString.unFollowYourDiarySessions
+            : AppString.followYourDiarySessions, onPressed: () {
+          PageRouter.goBack(context);
+          _followYourSession(context, session: session);
+        });
+  }
+
   /// request to follow a featured session
   void followThisSession(BuildContext context, {Session? session}) {
     showCustomDialog(context,
@@ -592,6 +640,48 @@ class FirebaseServices extends ChangeNotifier {
       _followASession(context, session: session);
     });
   }
+
+
+  /// follow a featured session
+  Future<void>? _followYourSession(BuildContext context,
+      {Session? session}) async {
+    final _user = await getUserInfo();
+    String _name = _user.userType == 'ADMIN' ? 'Claire' : _user.nickname!;
+    !session!.followers!.contains(_usersID)
+        ? _firebaseFirestore
+        .collection(AppString.appFeaturedSessions)
+        .doc(session.sessionId)
+        .update({
+      'followers': FieldValue.arrayUnion([_usersID]),
+      'timeLastActivity': FieldValue.serverTimestamp(),
+      //"featured": false,
+    }).whenComplete(() {
+      _subscribeToSession(_name, session);
+
+      showToast(
+        AppString.followingYourDiarySessionMessage,
+        bgColor: Color(
+          int.parse(
+            session.colorHex!.replaceAll('#', '0xff'),
+          ),
+        ),
+      );
+    })
+        : _firebaseFirestore
+        .collection(AppString.appFeaturedSessions)
+        .doc(session.sessionId)
+        .update({
+      'followers': FieldValue.arrayRemove([_usersID]),
+      // "featured": true,
+    }).whenComplete(() {
+      _unSubscribeToSession(session.sessionId!);
+
+      showToast(AppString.unfollowingYourDiarySessionMessage,
+          bgColor: Color(
+              int.parse(session.colorHex!.replaceAll('#', '0xff'))));
+    });
+  }
+
 
   /// follow a featured session
   Future<void>? _followASession(BuildContext context,

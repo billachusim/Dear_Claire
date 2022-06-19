@@ -140,45 +140,6 @@ class _CommentWidgetState extends State<CommentWidget> {
 
 
 
-
-  deletedAdviseAlertDialog(BuildContext context) {
-
-    // set up the buttons
-    Widget cancelButton = TextButton(
-      child: Text("Wait First"),
-      onPressed:  () {
-        Navigator.of(context).pop();
-      },
-    );
-
-    Widget continueButton = TextButton(
-      child: Text("Delete Now"),
-      onPressed:  () {
-        deleteAdvise();
-        showToast("You have deleted that advise. Keep your aura clean!");
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Delete This Advise?"),
-      content: Text(AppString.delete_advise_alert_note),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
   /// Delete an Advise
 
   Future<void> deleteAdvise() async {
@@ -194,43 +155,6 @@ class _CommentWidgetState extends State<CommentWidget> {
 
 
 
-  flagAlertDialog(BuildContext context) {
-
-    // set up the buttons
-    Widget cancelButton = TextButton(
-      child: Text("Cancel"),
-      onPressed:  () {
-        Navigator.of(context).pop();
-      },
-    );
-
-    Widget continueButton = TextButton(
-      child: Text("Flag"),
-      onPressed:  () {
-        sendToFlagged();
-        showToast("Thank You!\n An Alter Ego will check this advise for violations.");
-        Navigator.of(context).pop();
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Flag This Advise?"),
-      content: Text(AppString.flag_advise_alert_note),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
 
   /// Flag an Advise
 
@@ -253,42 +177,6 @@ class _CommentWidgetState extends State<CommentWidget> {
     return value;
   }
 
-
-
-  unflagAlertDialog(BuildContext context) {
-
-    // set up the buttons
-    Widget cancelButton = TextButton(
-      child: Text("Back"),
-      onPressed:  () {
-        Navigator.of(context).pop();      },
-    );
-    Widget continueButton = TextButton(
-      child: Text("Unflag"),
-      onPressed:  () {
-        removeFromFlagged();
-        Navigator.of(context).pop();
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Unflag This Advise?"),
-      content: Text(AppString.unflag_advise_alert_note),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
 
 
   Future<bool?> removeFromFlagged() async {
@@ -603,8 +491,12 @@ class _CommentWidgetState extends State<CommentWidget> {
                 child: GestureDetector(
                   onTap: () {
                     if (widget.userId == currentUser?.uid)
-                      deletedAdviseAlertDialog(context);
-                  },
+                      showCustomDialog(context,
+                          message: AppString.delete_advise_alert_note,
+                          onPressed: () {
+                            PageRouter.goBack(context);
+                            deleteAdvise();
+                          });                  },
                   child: Visibility(
                     visible: widget.userId == currentUser?.uid,
                     child: Container(
@@ -617,7 +509,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                       child: Row(
                         children: [
                           Icon(
-                            widget.commentSessionModel?.flagged == true ? Icons.delete_forever_rounded : Icons.delete_forever_outlined,
+                            Icons.delete_forever_rounded,
                             color: Pallet.colorPrimaryDark,
                             size: 15,
                           ),
@@ -642,13 +534,30 @@ class _CommentWidgetState extends State<CommentWidget> {
               GestureDetector(
                 onTap: () {
                   if (widget.commentSessionModel?.flagged == false)
-                    flagAlertDialog(context);
-                  else unflagAlertDialog(context);
+                    showCustomDialog(context,
+                        message: widget.commentSessionModel!.flagged == true
+                            ? AppString.unflag_advise_alert_note
+                            : AppString.flag_advise_alert_note,
+                        onPressed: () {
+                          PageRouter.goBack(context);
+                          sendToFlagged();
+                        });
+                  else
+                    showCustomDialog(context,
+                        message: widget.commentSessionModel!.flagged == false
+                            ? AppString.flag_advise_alert_note
+                            : AppString.unflag_advise_alert_note,
+                        onPressed: () {
+                          PageRouter.goBack(context);
+                          removeFromFlagged();
+                        });
                 },
                 child: Row(
                   children: [
                     Icon(
-                      widget.commentSessionModel?.flagged == true ? Icons.flag : Icons.flag_outlined,
+                      widget.commentSessionModel!.flagged == true
+                          ? Icons.flag
+                          : Icons.flag_outlined,
                       color: Pallet.colorPrimaryDark,
                       size: 15,
                     ),

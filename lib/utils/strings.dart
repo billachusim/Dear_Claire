@@ -47,7 +47,9 @@ class AppString{
   static const String appChats = "chats";
 
   static const String featuredPageNote = "Featured Sessions! \n Your session won't appear here unless you allow. \n Please contribute positive vibes only and no ads.";
-  static const String feature_alert_note = "💡 This session is not featured\nWould you like to feature it?";
+  static const String feature_alert_note = "💡 This session is not featured\nWould you like to feature it?\n\n"
+      "Note: This will cost above 1,000 Loves.\n"
+      "Click No to top up Loves.";
   static const String unfeature_alert_note = "💡 Your session is featured!\n"
       "Would you like to unfeature it?";
   static const String ego_mode_feature_alert_note = "💡 Your session is public but not featured.\n"
@@ -59,7 +61,7 @@ class AppString{
 
   static const String flag_alert_note = "💡 Does this session contain something bad?\nReport it so Claire can check for violations?";
   static const String unflag_alert_note = "💡 This session is flagged!\n"
-      "An Alter Ego will moderate or delete it asap\n"
+      "An Alter Ego will moderate or delete it asap.\n"
       "Would you like to unflag it?";
 
   static const String flag_advise_alert_note = "💡 Does this advise contain something bad?"
@@ -137,13 +139,22 @@ class AppString{
 
 
   static const String followDiarySessions =
-      "Do you want to follow this Diary Session?";
+      "Do you want to follow this Diary Session and receive notifications?";
   static const String unFollowDiarySessions =
-      "Do you want to unfollow this Diary Session?";
+      "Do you want to unfollow this Diary Session and stop notifications?";
   static const String followingDiarySessionMessage =
-      "Following Diary Session.(You'll be notified of new comments)";
+      "Now following this Diary Session.(You'll be notified of new advises.)";
   static const String unfollowingDiarySessionMessage =
-      "Unfollowed Diary Session.(Thanks for everything)";
+      "Unfollowed this Diary Session.(Thanks for everything.)";
+
+  static const String followYourDiarySessions =
+      "Do you want to follow your Diary Session and get notifications?";
+  static const String unFollowYourDiarySessions =
+      "Do you want to unfollow your Diary Session and stop notifications?";
+  static const String followingYourDiarySessionMessage =
+      "Now following this Diary Session.(You'll be notified of new advises)";
+  static const String unfollowingYourDiarySessionMessage =
+      "Unfollowed this Diary Session.(No more Notifications)";
 
   static const String search_bar_hint = ' Search Claire...';
   static const String im_so_happy = '  " I\'m so happy... "';

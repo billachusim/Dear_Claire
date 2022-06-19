@@ -78,7 +78,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   User? currentUser = FirebaseAuth.instance.currentUser;
   VisitedUserModel? visitedUser = VisitedUserModel();
   String? visitedUsersID;
-  String? _visitedUsersId;
   List<Session>? _sessionList = [];
   UserModel? _visitingUser = UserModel();
   bool? isFlagged;
@@ -479,7 +478,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
   Future<VisitedEgoProfileInfo> getVisitedUserEgoProfileInfo()async{
     VisitedEgoProfileInfo visitedProfileInfo = VisitedEgoProfileInfo();
-    _visitedUsersId = widget.visitedUsersID;
     visitedUser = await getVisitedUserInfo();
 
     visitedProfileInfo = VisitedEgoProfileInfo(visitedUserModel: visitedUser);
@@ -851,9 +849,28 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
                       GestureDetector(
                         onTap: () {
-                          if (visitedUser?.flagged == false)
-                            flagEgoAlertDialog(context);
-                          else unflagEgoAlertDialog(context);
+                          if (visitedUser!.flagged == false)
+                            showCustomDialog(context,
+                                message: visitedUser!.flagged == true
+                                    ? AppString.unflag_ego_alert_note
+                                    : AppString.flag_ego_alert_note,
+                                onPressed: () {
+                              setState(() {
+                                PageRouter.goBack(context);
+                                sendToFlagged();
+                              });
+                                });
+                          else
+                            showCustomDialog(context,
+                                message: visitedUser!.flagged == false
+                                    ? AppString.flag_ego_alert_note
+                                    : AppString.unflag_ego_alert_note,
+                                onPressed: () {
+                              setState(() {
+                                PageRouter.goBack(context);
+                                removeFromFlagged();
+                              });
+                                });
                         },
                         child: Container(
                           margin: EdgeInsets.only(right: 6),

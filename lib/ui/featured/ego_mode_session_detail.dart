@@ -4,11 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/Admob/ad_state.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/user_model.dart';
-import 'package:dear_claire/ui/featured/public_sessions.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
-import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -48,13 +46,12 @@ const int maxFailedLoadAttempts = 3;
 class _EgoModeSessionDetailState
     extends State<EgoModeSessionDetail> {
   Session? featuredSessionModel;
-  CommentSessionModel? _commentSessionModel;
+  CommentSessionModel? commentSessionModel;
 
   _EgoModeSessionDetailState(this.featuredSessionModel);
 
   List<CommentSessionModel> _commentList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
-  UserModel? _visitingUser = UserModel();
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
@@ -439,10 +436,10 @@ class _EgoModeSessionDetailState
 
   /// Save user comment activity
 
-  Future<void> saveUserThanksActivity() async {
+  Future<void> saveUserThanksActivity(CommentSessionModel commentSessionModel) async {
     final UserModel _user = await firebaseServices.getUserInfo();
     final Session? theSession = widget.featuredSessionModel;
-    final CommentSessionModel? theComment = _commentSessionModel;
+    final CommentSessionModel? theComment = commentSessionModel;
     final dateCreated = FieldValue.serverTimestamp();
     final commentOwnerNickname = theComment?.userNickname.toString();
     final sessionId = theSession?.sessionId;
@@ -512,7 +509,7 @@ class _EgoModeSessionDetailState
             : {
                 'thanks': FieldValue.arrayUnion([currentUser?.uid])
               });
-    saveUserThanksActivity();
+    saveUserThanksActivity(commentSessionModel);
   }
 
   _share(String? message) {

@@ -13,7 +13,6 @@ import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:emoji_chooser/emoji_chooser.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -26,9 +25,6 @@ import 'package:hive/hive.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:uuid/uuid.dart';
-import '../Categories/category_sessions.dart';
-import '../Categories/category_streams2.dart';
-import '../routes/page_router_animation.dart';
 import 'create_session_controller.dart';
 import 'sound/sound_widget.dart';
 
@@ -1795,11 +1791,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     categorize(sessionObject);
 
-    isOriginalSession(context, sessionTextEditingController.text);
-
     ascertainCurrentLoveCount();
 
     _showQuickInterstitialAd();
+
+    _firebaseServices.followYourSessionImmediately(context, session: sessionObject);
+
+    isOriginalSession(context, sessionTextEditingController.text);
 
     navigateToNewSession(await _firebaseServices.getSingleSession(
         sessionId: sessionObject.sessionId));
@@ -2552,6 +2550,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     ascertainCurrentLoveCount();
 
     _showInterstitialAd();
+
+    _firebaseServices.followYourSessionImmediately(context, session: sessionObject);
 
     navigateToNewSession(await _firebaseServices.getSingleSession(
         sessionId: sessionObject.sessionId));
