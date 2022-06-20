@@ -86,7 +86,7 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
                       }
                       if (snapShot.hasData) {
                         return Text(
-                          snapShot.data!.docs.length.toString() + " Live Chats 🔥",
+                          snapShot.data!.docs.length.toString() + " Live Rooms 🔥",
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 12,

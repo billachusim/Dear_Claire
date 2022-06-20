@@ -89,6 +89,12 @@ class FirebaseServices extends ChangeNotifier {
     logger.d('Following this chat room: $id');
   }
 
+  /// subscribe user to chat room
+  Future<void> unsubscribeToChatRoom(String id) async {
+    await _firebaseMessaging.unsubscribeFromTopic(id);
+    logger.d('unfollowing this chat room: $id');
+  }
+
   /// unsubscribe user from a topic
   Future<void> _unSubscribeToSession(String topic) async {
     await _firebaseMessaging.unsubscribeFromTopic(topic);
@@ -905,7 +911,7 @@ class FirebaseServices extends ChangeNotifier {
             collapseKey: 'type_a',
             notification: pushNotification.Notification(
               title: chatRoomPodo!.title!,
-              body: 'There is a new sub chat!',
+              body: 'There is a new sub chat.',
             ));
     _firebaseFirestore
         .collection(AppString.appChats)

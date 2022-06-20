@@ -284,6 +284,27 @@ class ChatWidget extends StatelessWidget {
                         ),
                       ),
                     ),
+
+                    StreamBuilder(
+                        stream: firebaseServices
+                            .getSubMessages(documentID!, chatRoomPodo!, chatModel!),
+                        builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                          if (snapShot.hasError) {
+                            return Container();
+                          }
+                          if (snapShot.hasData) {
+                            return Text(
+                              snapShot.data!.docs.length.toString() + " Joined 🟢",
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600
+                              ),
+                            );
+                          }
+                          return Container();
+                        }),
+
                   ],
                 );
               }),
@@ -344,6 +365,7 @@ class ChatWidget extends StatelessWidget {
 
                     deleteSubChat();
                     updateMembers(joining: false);
+                    firebaseServices.unsubscribeToChatRoom(chatModel!.userId.toString());
 
                     Future.delayed(Duration(seconds: 4), () {
                       _showLeaveChatInterstitialAd();
@@ -393,9 +415,9 @@ class ChatWidget extends StatelessWidget {
                       String thisUser = visitedUsersID;
 
                       if (!_isCompleted(chatModel, chatRoomPodo))
-                        showToast('Welcome back. Continue chatting after this ad.');
+                        showToast('Welcome back. Positive vibes only.');
 
-                      Future.delayed(Duration(seconds: 7), () {
+                      Future.delayed(Duration(minutes: 5), () {
                         _showContChatInterstitialAd();
                       });
 
@@ -455,7 +477,7 @@ class ChatWidget extends StatelessWidget {
                         updateMembers(joining: true);
                         showToast('Welcome. Start chatting after this ad.');
 
-                      Future.delayed(Duration(seconds: 7), () {
+                      Future.delayed(Duration(seconds: 5), () {
                         _showJoinChatInterstitialAd();
                       });
 
@@ -507,13 +529,13 @@ class ChatWidget extends StatelessWidget {
                     alignment: Alignment.bottomRight,
                     child: InkWell(
                       onTap: () {
-                        _createJoinChatInterstitialAd();
+                        _createLeaveChatInterstitialAd();
 
                         showToast('Sorry, this room is full.\n'
                             'Start your own room after this ad.');
 
-                        Future.delayed(Duration(seconds: 7), () {
-                          _showJoinChatInterstitialAd();
+                        Future.delayed(Duration(seconds: 5), () {
+                          _showLeaveChatInterstitialAd();
                         });
                       },
                       child: Container(
@@ -585,6 +607,7 @@ class ChatWidget extends StatelessWidget {
       onPressed:  () {
         deleteChat();
         showToast("You have deleted the chat. Keep your aura clean!");
+        firebaseServices.unsubscribeToChatRoom(chatRoomPodo!.id.toString());
         Navigator.of(context).pop();
       },
     );
@@ -616,6 +639,7 @@ class ChatWidget extends StatelessWidget {
         .doc(chatRoomPodo!.id.toString())
         .collection(chatRoomPodo!.title!);
     await collection.doc(currentUser!.uid.toString()).delete();
+    firebaseServices.unsubscribeToChatRoom(chatModel!.userId.toString());
     logger.d('Successfully deleted an chat session');
   }
 
@@ -628,6 +652,7 @@ class ChatWidget extends StatelessWidget {
         .doc(chatModel!.userId.toString())
         .collection(chatModel!.userId.toString());
     await collection.doc(currentUser!.uid.toString()).delete();
+    firebaseServices.unsubscribeToChatRoom(chatModel!.userId.toString());
     logger.d('Successfully deleted an chat session');
   }
 
