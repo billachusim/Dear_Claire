@@ -361,7 +361,7 @@ class EgoModeSessionCard extends StatelessWidget {
                         saveUserMe2Activity();
                       }
 
-                    }
+                    }, session: element,
                     ),
 
                 new Spacer(),
