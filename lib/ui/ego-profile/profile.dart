@@ -939,7 +939,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
       child: WillPopScope(
         onWillPop: (){
           Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.home);
+              .pushReplacementNamed(AppRoutes.diaryRooms);
           return Future.value(false);
         },
         child: Scaffold(

@@ -102,172 +102,194 @@ class _HomeDashboardPageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context, {String? avatarUrl}) {
-    return Scaffold(
-        key: _scaffoldKey,
-        appBar: AppBar(
-          backgroundColor: Pallet.colorPrimary,
-          centerTitle: false,
-          title: Text(AppString.appTitle,
-              textAlign: TextAlign.start,
-              maxLines: 1,
-              style: GoogleFonts.lato(
-                  fontSize: 25.0,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600)),
-          actions: [
-            CupertinoButton(
-                child: Icon(
-                  Icons.search,
+    return WillPopScope(
+      onWillPop: (){
+        Navigator.of(context)
+            .pushReplacementNamed(AppRoutes.diaryRooms);
+        return Future.value(false);
+      },
+      child: Scaffold(
+          key: _scaffoldKey,
+          appBar: AppBar(
+            backgroundColor: Pallet.colorPrimary,
+            centerTitle: false,
+            title: Text(AppString.appTitle,
+                textAlign: TextAlign.start,
+                maxLines: 1,
+                style: GoogleFonts.lato(
+                    fontSize: 25.0,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600)),
+            actions: [
+              CupertinoButton(
+                  child: Icon(
+                    Icons.search,
+                    color: Pallet.colorWhite,
+                  ),
+                  onPressed: () {
+                    Navigator.of(context)
+                        .pushNamed(AppRoutes.searchPage);
+                  })
+            ],
+            leading: IconButton(
+                icon: Icon(
+                  Icons.menu,
                   color: Pallet.colorWhite,
                 ),
                 onPressed: () {
-                  Navigator.of(context)
-                      .pushNamed(AppRoutes.searchPage);
-                })
-          ],
-          leading: IconButton(
-              icon: Icon(
-                Icons.menu,
-                color: Pallet.colorWhite,
-              ),
-              onPressed: () {
-                _openEndDrawer();
-              }),
-        ),
-        body: Stack(
-          children: [
-            PageView(
-            controller: _pageController,
-            onPageChanged: (index){
-              setState(() {
-                _currentIndex  = index;
-              });
-            },
-            children: _body
+                  _openEndDrawer();
+                }),
           ),
-      ]
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Pallet.colorBottomNav,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          elevation: 0,
-          iconSize: 22,
-          selectedFontSize: 0,
-          unselectedFontSize: 0,
-          onTap: (int index) => setTabIndex(index),
-          items: allDestinations.map((Destination destination) {
-            return BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  destination.icon,
-                ),
-                activeIcon: SvgPicture.asset(
-                  destination.activeIcon,
-                ),
-                backgroundColor: destination.color,
-                label: destination.title);
-          }).toList(),
-        ),
-        floatingActionButton: FloatingActionButton(
-          heroTag: null,
-          backgroundColor: Pallet.colorSplashScreen,
-          onPressed: () {
-            if (currentUser == null) {
-              Navigator.of(context)
-                  .pushReplacementNamed(AppRoutes.authSelection);
-            } else {
-              Navigator.of(context).pushNamed(AppRoutes.createSessionPage);
-            }
-          },
-          tooltip: 'Hi, Darling!',
-          child: RotateImage(45, 45),
-        ),
-        drawer: Drawer(
-          child: Container(
-            width: 200.w,
-            color: Pallet.colorSecondaryDark,
-            child: Column(
-              children: [
-                UserAccountsDrawerHeader(
-                  decoration: BoxDecoration(color: Pallet.colorPrimary,
+          body: Stack(
+            children: [
+              PageView(
+              controller: _pageController,
+              onPageChanged: (index){
+                setState(() {
+                  _currentIndex  = index;
+                });
+              },
+              children: _body
+            ),
+        ]
+          ),
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Pallet.colorBottomNav,
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            elevation: 0,
+            iconSize: 22,
+            selectedFontSize: 0,
+            unselectedFontSize: 0,
+            onTap: (int index) => setTabIndex(index),
+            items: allDestinations.map((Destination destination) {
+              return BottomNavigationBarItem(
+                  icon: SvgPicture.asset(
+                    destination.icon,
                   ),
-                  accountEmail: Text(
-                  "You'll never be not truly loved.",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      fontStyle: FontStyle.italic,
+                  activeIcon: SvgPicture.asset(
+                    destination.activeIcon,
+                  ),
+                  backgroundColor: destination.color,
+                  label: destination.title);
+            }).toList(),
+          ),
+          floatingActionButton: FloatingActionButton(
+            heroTag: null,
+            backgroundColor: Pallet.colorSplashScreen,
+            onPressed: () {
+              if (currentUser == null) {
+                Navigator.of(context)
+                    .pushReplacementNamed(AppRoutes.authSelection);
+              } else {
+                Navigator.of(context).pushNamed(AppRoutes.createSessionPage);
+              }
+            },
+            tooltip: 'Hi, Darling!',
+            child: RotateImage(45, 45),
+          ),
+          drawer: Drawer(
+            child: Container(
+              width: 200.w,
+              color: Pallet.colorSecondaryDark,
+              child: Column(
+                children: [
+                  UserAccountsDrawerHeader(
+                    decoration: BoxDecoration(color: Pallet.colorPrimary,
                     ),
-                  ),
-                  accountName: Text(userName,
-                      style: TextStyle(color: Pallet.colorWhite,
-                          fontSize: 19.0, fontWeight: FontWeight.w700,)),
-                  currentAccountPicture: FutureBuilder<
-                      DocumentSnapshot<Map<String, dynamic>>>(
-                    future: FirebaseFirestore.instance
-                        .collection("users")
-                        .doc(currentUser?.uid)
-                        .get(),
-                    builder: (_, snapshot) {
-                      if (snapshot.hasData) {
-                        var data = snapshot.data!.data();
-                        userName = data?["nickname"] ?? " ";
-                        userType = data?["userType"] ?? " ";
-                        avatarUrl = data?["avatarUrl"] ?? " ";
-                        return
-                          GestureDetector(
-                            onTap: () {
-                              lockAlertDialog(context);
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: userType == 'REGULAR'? Pallet.colorPrimary
-                                    : userType == 'ADMIN'? Pallet.colorSecondary
-                                    : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                                    :Pallet.colorBlue,
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                              margin: EdgeInsets.only(left: 0),
+                    accountEmail: Text(
+                    "You'll never be not truly loved.",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                    accountName: Text(userName,
+                        style: TextStyle(color: Pallet.colorWhite,
+                            fontSize: 19.0, fontWeight: FontWeight.w700,)),
+                    currentAccountPicture: FutureBuilder<
+                        DocumentSnapshot<Map<String, dynamic>>>(
+                      future: FirebaseFirestore.instance
+                          .collection("users")
+                          .doc(currentUser?.uid)
+                          .get(),
+                      builder: (_, snapshot) {
+                        if (snapshot.hasData) {
+                          var data = snapshot.data!.data();
+                          userName = data?["nickname"] ?? " ";
+                          userType = data?["userType"] ?? " ";
+                          avatarUrl = data?["avatarUrl"] ?? " ";
+                          return
+                            GestureDetector(
+                              onTap: () {
+                                lockAlertDialog(context);
+                              },
                               child: Container(
-                                height: 75,
-                                width: 75,
-                                margin: EdgeInsets.all(4),
-                                child: CachedNetworkImage(
-                                    width: 60,
-                                    height: 60,
-                                    imageUrl: avatarUrl ??"",
-                                    imageBuilder: (context, imageProvider) => Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(100),
-                                        image: DecorationImage(
-                                          image: imageProvider,
-                                          fit: BoxFit.fill,
+                                decoration: BoxDecoration(
+                                  color: userType == 'REGULAR'? Pallet.colorPrimary
+                                      : userType == 'ADMIN'? Pallet.colorSecondary
+                                      : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
+                                      :Pallet.colorBlue,
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                margin: EdgeInsets.only(left: 0),
+                                child: Container(
+                                  height: 75,
+                                  width: 75,
+                                  margin: EdgeInsets.all(4),
+                                  child: CachedNetworkImage(
+                                      width: 60,
+                                      height: 60,
+                                      imageUrl: avatarUrl ??"",
+                                      imageBuilder: (context, imageProvider) => Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(100),
+                                          image: DecorationImage(
+                                            image: imageProvider,
+                                            fit: BoxFit.fill,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    placeholder: (context, url) =>
-                                        CircularProgressIndicator(),
-                                    errorWidget: (context, url, error) => Image.asset(
-                                      "assets/images/brown_boy_mask.png",
-                                      width: 50,
-                                      height: 50,
-                                    ) //Icon(Icons.error),
+                                      placeholder: (context, url) =>
+                                          CircularProgressIndicator(),
+                                      errorWidget: (context, url, error) => Image.asset(
+                                        "assets/images/brown_boy_mask.png",
+                                        width: 50,
+                                        height: 50,
+                                      ) //Icon(Icons.error),
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                      }
+                            );
+                        }
 
-                      return CircularProgressIndicator();
-                    },
-                  ),
+                        return CircularProgressIndicator();
+                      },
+                    ),
 
-                  otherAccountsPictures: [
-                    InkWell(
+                    otherAccountsPictures: [
+                      InkWell(
+                          onTap: () async {
+                            String id = await sharedPreference.getAlterEgoId();
+                            String accessCode = await sharedPreference.getAlterEgoAccessCode();
+                            print("Show Alter details:: $id || $accessCode");
+                            id.isNotEmpty && accessCode.isNotEmpty ? await firebaseServices.getUserAlterEgo(context,id, accessCode)
+                                : Navigator.of(context)
+                                .pushNamed(AppRoutes.alterEgoLogin);
+                          },
+                          child: Image.asset(
+                            "assets/images/claire_icon.png",
+                            height: 50,
+                            width: 50,
+                          ),
+                      ),
+
+                      GestureDetector(
                         onTap: () async {
                           String id = await sharedPreference.getAlterEgoId();
                           String accessCode = await sharedPreference.getAlterEgoAccessCode();
@@ -276,68 +298,53 @@ class _HomeDashboardPageState extends State<HomePage>
                               : Navigator.of(context)
                               .pushNamed(AppRoutes.alterEgoLogin);
                         },
-                        child: Image.asset(
-                          "assets/images/claire_icon.png",
-                          height: 50,
-                          width: 50,
-                        ),
-                    ),
-
-                    GestureDetector(
-                      onTap: () async {
-                        String id = await sharedPreference.getAlterEgoId();
-                        String accessCode = await sharedPreference.getAlterEgoAccessCode();
-                        print("Show Alter details:: $id || $accessCode");
-                        id.isNotEmpty && accessCode.isNotEmpty ? await firebaseServices.getUserAlterEgo(context,id, accessCode)
-                            : Navigator.of(context)
-                            .pushNamed(AppRoutes.alterEgoLogin);
-                      },
-                      child: Text(
-                        userType == 'REGULAR'? 'Ego' :
-                        userType == 'ADMIN'? 'Alter Ego' :
-                        userType == 'SUPER_ADMIN'? 'Super Ego' :
-                        'Ego',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: Pallet.colorSecondaryDark,
+                        child: Text(
+                          userType == 'REGULAR'? 'Ego' :
+                          userType == 'ADMIN'? 'Alter Ego' :
+                          userType == 'SUPER_ADMIN'? 'Super Ego' :
+                          'Ego',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: Pallet.colorSecondaryDark,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
 
-                ),
+                  ),
 
-                SizedBox(height: 28,),
-                ListTile(
-                  title: Text("How Claire Works",
-                      style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: () {
-                    Navigator. pop(context);
-                    Navigator.of(context).pushNamed(AppRoutes.howClaireWorks);
-                  },
-                  leading: Icon(Icons.info_rounded,
-                      color: Pallet.colorWhite),
-                ),
-                SizedBox(height: 18,),
-                ListTile(
-                  title: Text("Send Claire to Someone",
-                      style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: ()=>sendClaireToSomeone(),
-                  leading: Icon(Icons.share, color: Pallet.colorWhite),
-                ),
-                SizedBox(height: 18,),
-                ListTile(
-                  title: Text("Contact Us",
-                      style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: () =>launchEmailApp(),
-                  leading: Icon(Icons.email, color: Pallet.colorWhite),
-                ),
-              ],
+                  SizedBox(height: 28,),
+                  ListTile(
+                    title: Text("How Claire Works",
+                        style: TextStyle(color: Pallet.colorWhite)),
+                    onTap: () {
+                      Navigator. pop(context);
+                      Navigator.of(context).pushNamed(AppRoutes.howClaireWorks);
+                    },
+                    leading: Icon(Icons.info_rounded,
+                        color: Pallet.colorWhite),
+                  ),
+                  SizedBox(height: 18,),
+                  ListTile(
+                    title: Text("Send Claire to Someone",
+                        style: TextStyle(color: Pallet.colorWhite)),
+                    onTap: ()=>sendClaireToSomeone(),
+                    leading: Icon(Icons.share, color: Pallet.colorWhite),
+                  ),
+                  SizedBox(height: 18,),
+                  ListTile(
+                    title: Text("Contact Us",
+                        style: TextStyle(color: Pallet.colorWhite)),
+                    onTap: () =>launchEmailApp(),
+                    leading: Icon(Icons.email, color: Pallet.colorWhite),
+                  ),
+                ],
+              ),
             ),
-          ),
-        )
+          )
+      ),
     );
   }
 

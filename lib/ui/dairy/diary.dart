@@ -5,11 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
-import 'package:flutter/cupertino.dart';
 
-import '../../utils/helper.dart';
 import '../routes/routes.dart';
-import '../splash_screen/custom_rotate_bacground.dart';
 
 
 class DiaryPage extends StatefulWidget {
@@ -30,7 +27,7 @@ class _DiaryPageState extends State<DiaryPage> {
 
         onWillPop: (){
           Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.home);
+              .pushReplacementNamed(AppRoutes.diaryRooms);
           return Future.value(false);
         },
         child: Scaffold(

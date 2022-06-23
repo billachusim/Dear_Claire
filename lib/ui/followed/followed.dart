@@ -28,7 +28,7 @@ class _FollowedPageState extends State<FollowedPage> {
 
         onWillPop: (){
           Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.home);
+              .pushReplacementNamed(AppRoutes.diaryRooms);
           return Future.value(false);
         },
         child: Scaffold(

@@ -7,6 +7,7 @@ import 'package:dear_claire/ui/alter_ego/alter_ego_registration.dart';
 import 'package:dear_claire/ui/alter_ego/new_diaries_page.dart';
 import 'package:dear_claire/ui/auth/auth_selection.dart';
 import 'package:dear_claire/ui/bottom_nav/stack_index_home.dart';
+import 'package:dear_claire/ui/chats/chatrooms.dart';
 import 'package:dear_claire/ui/create_session/create_session_page.dart';
 import 'package:dear_claire/ui/dairy/diary.dart';
 import 'package:dear_claire/ui/donate/donate.dart';
@@ -53,6 +54,7 @@ class AppRoutes {
   static const editClairevatar = '/editClairevatar';
   static const searchPage = '/searchPage';
   static const egoPage = '/egoPage';
+  static const diaryRooms = '/diaryRooms';
   static const visitedUserEgoPage = '/visitedUserEgoPage';
   static const customSplashPage = '/customSplash';
   static const categorySessions = '/categorySessions';
@@ -208,6 +210,13 @@ class AppRouter {
       case AppRoutes.egoPage:
         return MaterialPageRoute<dynamic>(
           builder: (_) => EgoProfilePage(),
+          settings: settings,
+          fullscreenDialog: false,
+        );
+
+      case AppRoutes.diaryRooms:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => ChatRoomsPage(),
           settings: settings,
           fullscreenDialog: false,
         );
