@@ -228,7 +228,8 @@ class SessionCard extends StatelessWidget {
                     MetooButton(
                         me2: element.meToos!.length,
                         onReactionChanged: (reaction, int){},
-                        color: Pallet.colorWhite),
+                        color: Pallet.colorWhite,
+                      session: element,),
                     StreamBuilder(
                         stream: firebaseServices.getFeaturedSessionsComments(
                             element.sessionId!),

@@ -222,27 +222,6 @@ class SessionDetailsWidget extends StatelessWidget {
               ),
             ),
           ),
-
-          Row(
-            children: [
-              MetooButton(
-                cheers: 0,
-                onReactionChanged: (reaction, int) {},
-                color: Pallet.colorWhite,
-              ),
-              new Spacer(),
-              FollowButton(
-                text: 'Follow',
-                onPressed: () {},
-                count: 0,
-              ),
-              new Spacer(),
-              ShareButton(
-                onPressed: () {},
-                color: Pallet.colorWhite,
-              ),
-            ],
-          )
         ],
       ),
     );

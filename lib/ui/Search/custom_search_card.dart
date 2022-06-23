@@ -278,7 +278,7 @@ class CustomSearchCard extends StatelessWidget {
                       firebaseServices.addUsersReactionToASession(
                           context, index,
                           session: element, sender: _userModel.nickname ?? '');
-                    }),
+                    }, session: element,),
                 new Spacer(),
                 StreamBuilder(
                     stream: firebaseServices

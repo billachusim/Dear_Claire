@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_reaction_button/flutter_reaction_button.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../ui/featured/model/session.dart';
+
 class MetooButton extends StatelessWidget {
   final Function(Reaction, int) onReactionChanged;
   final int? cheers;
@@ -10,6 +12,7 @@ class MetooButton extends StatelessWidget {
   final int? sorry;
   final int? me2;
   final Color color;
+  final Session session;
 
   const MetooButton({
     Key? key,
@@ -19,6 +22,7 @@ class MetooButton extends StatelessWidget {
     this.sorry,
     this.me2,
     required this.color,
+    required this.session,
   }) : super(key: key);
 
   @override
@@ -51,7 +55,161 @@ class MetooButton extends StatelessWidget {
                     color: Colors.pink,
                     fontWeight: FontWeight.w900))),
       ],
-      initialReaction: Reaction(
+      initialReaction:
+      session.moodId == -1
+          ? Reaction(
+          icon: Text('${me2 ?? 0} Me2🌺',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+      : session.moodId == 0
+          ? Reaction(
+          icon: Text('${me2 ?? 0} Me2🌺',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 1
+          ? Reaction(
+          icon: Text('${me2 ?? 0} Me2🌺',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 2
+          ? Reaction(
+          icon: Text('${sorry ?? 0} Sorry🖐',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 3
+          ? Reaction(
+          icon: Text('${cheers ?? 0} Cheers👍',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 4
+          ? Reaction(
+          icon: Text('${cheers ?? 0} Cheers👍',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 5
+          ? Reaction(
+          icon: Text('${sorry ?? 0} Sorry🖐',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 6
+          ? Reaction(
+          icon: Text('${sorry ?? 0} Sorry🖐',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 7
+          ? Reaction(
+          icon: Text('${cheers ?? 0} Cheers👍',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 8
+          ? Reaction(
+          icon: Text('${sorry ?? 0} Sorry🖐',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 9
+          ? Reaction(
+          icon: Text('${sorry ?? 0} Sorry🖐',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 10
+          ? Reaction(
+          icon: Text('${sorry ?? 0} Sorry🖐',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 11
+          ? Reaction(
+          icon: Text('${me2 ?? 0} Me2🌺',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 12
+          ? Reaction(
+          icon: Text('${sorry ?? 0} Sorry🖐',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 13
+          ? Reaction(
+          icon: Text('${sorry ?? 0} Sorry🖐',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 14
+          ? Reaction(
+          icon: Text('${sorry ?? 0} Sorry🖐',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 15
+          ? Reaction(
+          icon: Text('${me2 ?? 0} Me2🌺',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 16
+          ? Reaction(
+          icon: Text('${cheers ?? 0} Cheers👍',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+          : session.moodId == 17
+          ? Reaction(
+          icon: Text('${me2 ?? 0} Me2🌺',
+              style: GoogleFonts.lato (
+                  fontSize: 13.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900)))
+
+
+          : Reaction(
           icon: Text('${me2 ?? 0}  🌺Me2',
               style: GoogleFonts.lato (
                   fontSize: 13.0,

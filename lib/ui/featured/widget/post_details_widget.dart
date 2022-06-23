@@ -332,6 +332,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                 }
                               },
                               color: Pallet.colorWhite,
+                              session: _session,
                             ),
                             new SizedBox(
                               width: 10,
