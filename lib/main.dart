@@ -1,17 +1,12 @@
 // @dart=2.9
-import 'dart:math';
-
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/local_notification_service.dart';
 import 'package:dear_claire/services/notification.dart';
 import 'package:dear_claire/ui/create_session/create_session_controller.dart';
-import 'package:dear_claire/ui/create_session/create_session_page.dart';
 import 'package:dear_claire/ui/ego/ego.dart';
-import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/ui/splash_screen/splash.dart';
 import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -19,7 +14,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';

@@ -43,6 +43,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
   //initialize the image list stores user selected images.
   List<Asset> imageList = <Asset>[];
 
+
   Future<String> uploadCommentAudio(File file) async {
     firebase_storage.UploadTask uploadTask;
     DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
@@ -268,14 +269,6 @@ class _ChatEditFieldState extends State<ChatEditField> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    onPressed: () {},
-                    child: SvgPicture.asset(
-                      AppImages.appEmoji,
-                      color: Colors.pink,
-                      height: 24,
-                    )),
-                CupertinoButton(
                   padding: EdgeInsets.zero,
                   onPressed: loadAssets,
                   child: Icon(
@@ -284,6 +277,31 @@ class _ChatEditFieldState extends State<ChatEditField> {
                     color: Colors.pink,
                   ),
                 ),
+
+                FloatingActionButton(
+                  heroTag: "Record",
+                  onPressed: () async {
+                    if (!await firebaseServices.isUserSignIn(context)) return;
+
+                    var data = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => SoundRecorderWidget(
+                              onRecordComplete: (recordFile) {},
+                            )));
+                    if (data != null) {
+                      _recordFile = data;
+                      setState(() {});
+                    }
+                  },
+                  mini: true,
+                  backgroundColor: Pallet.colorPrimary,
+                  child: Icon(
+                    Icons.mic_rounded,
+                    size: 35,
+                  ),
+                ),
+
                 Flexible(
                   child: new ConstrainedBox(
                     constraints: new BoxConstraints(
@@ -331,12 +349,12 @@ class _ChatEditFieldState extends State<ChatEditField> {
                     ),
                   ),
                 ),
-                isTyping == true
-                    ? FloatingActionButton(
+                FloatingActionButton(
                   heroTag: "Write",
-                        onPressed: () {
-                          if (_controller.text.isNotEmpty)
-                            widget.onTap(_controller.text, _recordFile.toString());
+                        onPressed: () async {
+                          if (!await firebaseServices.isUserSignIn(context)) return;
+                          final String audioUrl = await uploadCommentAudio(_recordFile!);
+                          widget.onTap(_controller.text, audioUrl);
                           _controller.text = '';
                           setState(() {
                             _recordFile = null;
@@ -349,29 +367,6 @@ class _ChatEditFieldState extends State<ChatEditField> {
                           AppImages.appSend,
                           height: 25,
                         ))
-                    : FloatingActionButton(
-                  heroTag: "Record",
-                        onPressed: () async {
-                          if (!await firebaseServices.isUserSignIn(context)) return;
-
-                          var data = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => SoundRecorderWidget(
-                                        onRecordComplete: (recordFile) {},
-                                      )));
-                          if (data != null) {
-                            _recordFile = data;
-                            setState(() {});
-                          }
-                        },
-                        mini: true,
-                        backgroundColor: Pallet.colorPrimary,
-                        child: Icon(
-                          Icons.mic_rounded,
-                          size: 35,
-                        ),
-                      ),
               ],
             ),
           ],
