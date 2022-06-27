@@ -48,8 +48,8 @@ class ChatModel {
       required this.userId,
       this.members,
       this.userNickname,
-      this.image1 = '',
-      this.image2 = '',
+      this.image1,
+      this.image2,
       this.location,
       });
 
@@ -128,8 +128,8 @@ class ChatModel {
     data['userAvatarUrl'] = userAvatarUrl;
     data['userId'] = userId;
     data['userNickname'] = userNickname;
-    data["image1"] = this.image1;
-    data["image2"] = this.image2;
+    data["image1"] = image1;
+    data["image2"] = image2;
     data['repliesEnabled'] = repliesEnabled;
     data['title'] = title;
     data['archived'] = archived;

@@ -15,6 +15,7 @@ import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -190,6 +191,12 @@ class ChatWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6),
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+              AppImages.appChatBg,
+            ),
+            fit: BoxFit.fill,
+          ),
           borderRadius: BorderRadius.circular(25), color: Pallet.colorWhite),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,6 +343,73 @@ class ChatWidget extends StatelessWidget {
             ),
           ),
 
+
+
+          Container(
+            margin: EdgeInsets.only(bottom: 10),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Row(
+                children: [
+                  Visibility(
+                      visible: chatModel!.image1 != null,
+                      child: FullScreenWidget(
+                        child: CachedNetworkImage(
+                            height: 75,
+                            width: 75,
+                            imageUrl: chatModel!.image1.toString(),
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/brown_boy_mask.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
+                        ),
+                      )),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  Visibility(
+                      visible:
+                      chatModel!.image2 != null,
+                      child: FullScreenWidget(
+                        child: CachedNetworkImage(
+                            height: 75,
+                            width: 75,
+                            imageUrl: chatModel!.image2.toString(),
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/brown_boy_mask.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
+                        ),
+                      )),
+                ],
+              ),
+            ),
+          ),
+
           Row(
             children: [
 
@@ -431,7 +505,7 @@ class ChatWidget extends StatelessWidget {
                       if (!_isCompleted(chatModel, chatRoomPodo))
                         showToast('Welcome back. Positive vibes only.');
 
-                      Future.delayed(Duration(minutes: 5), () {
+                      Future.delayed(Duration(days: 2), () {
                         _showContChatInterstitialAd();
                       });
 

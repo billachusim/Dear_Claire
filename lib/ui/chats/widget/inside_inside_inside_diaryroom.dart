@@ -155,7 +155,7 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
           ),
 
           Visibility(
-            visible: chatModel?.audioUrl != null,
+            visible: chatModel?.audioUrl != '',
             child: Container(
               alignment: Alignment.topLeft,
               child: Align(
@@ -171,18 +171,18 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
 
 
           Container(
+            margin: EdgeInsets.only(bottom: 10),
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Row(
                 children: [
                   Visibility(
-                      visible:
-                      chatModel!.image1!.isNotEmpty,
+                      visible: chatModel!.image1 != '',
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
-                            imageUrl: chatModel!.image1!,
+                            imageUrl: chatModel!.image1.toString(),
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),
@@ -206,12 +206,12 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
                   ),
                   Visibility(
                       visible:
-                      chatModel!.image2!.isNotEmpty,
+                      chatModel!.image2 != '',
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
-                            imageUrl: chatModel!.image2!,
+                            imageUrl: chatModel!.image2.toString(),
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),

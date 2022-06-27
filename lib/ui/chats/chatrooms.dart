@@ -14,15 +14,22 @@ class ChatRoomsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Scaffold(
-        backgroundColor: Pallet.colorSecondaryDark,
-        body: Stack(
-          children: [
+      child: WillPopScope(
+        onWillPop: (){
+          Navigator.of(context)
+              .pushReplacementNamed(AppRoutes.home);
+          return Future.value(false);
+        },
+        child: Scaffold(
+          backgroundColor: Pallet.colorSecondaryDark,
+          body: Stack(
+            children: [
 
-            ListView(
-            children: RoomData.room().map((room) => ChatRoomWidget(element: room)).toList(),
+              ListView(
+              children: RoomData.room().map((room) => ChatRoomWidget(element: room)).toList(),
+            ),
+        ]
           ),
-      ]
         ),
       ),
     );

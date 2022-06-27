@@ -9,6 +9,7 @@ import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:flutter/material.dart';
+import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../widgets/play_advise_voice_note.dart';
@@ -159,6 +160,72 @@ class InsideInsideChatWidget extends StatelessWidget {
                     PlayAdviseVoiceNote(filePath: chatModel!.audioUrl)
                   ],
                 ),
+              ),
+            ),
+          ),
+
+
+          Container(
+            margin: EdgeInsets.only(bottom: 10),
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Row(
+                children: [
+                  Visibility(
+                      visible: chatModel!.image1 != null,
+                      child: FullScreenWidget(
+                        child: CachedNetworkImage(
+                            height: 75,
+                            width: 75,
+                            imageUrl: chatModel!.image1.toString(),
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/brown_boy_mask.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
+                        ),
+                      )),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  Visibility(
+                      visible:
+                      chatModel!.image2 != null,
+                      child: FullScreenWidget(
+                        child: CachedNetworkImage(
+                            height: 75,
+                            width: 75,
+                            imageUrl: chatModel!.image2.toString(),
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/brown_boy_mask.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
+                        ),
+                      )),
+                ],
               ),
             ),
           ),
