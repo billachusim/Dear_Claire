@@ -214,14 +214,14 @@ class _SubChatScreenState extends State<SubChatScreen> {
                 )
               ],
             ),
-            ChatEditField(onTap: (v, voiceNote) => _sendMessage(v, voiceNote))
+            ChatEditField(onTap: (v, voiceNote, image1, image2) => _sendMessage(v, voiceNote, image1, image2))
           ],
         ),
       ),
     );
   }
 
-  void _sendMessage(String v, String voiceNote) async {
+  void _sendMessage(String v, String voiceNote, String image1, String image2) async {
     final _user = await firebaseServices.getUserInfo();
     firebaseServices.addSubMessage(
         widget.documentID!,
@@ -230,6 +230,9 @@ class _SubChatScreenState extends State<SubChatScreen> {
             message: v,
             userId: _user.userId,
             timeCreated: Timestamp.now(),
+            audioUrl: voiceNote,
+            image1: image1,
+            image2: image2,
             members: [_user.userId]));
     updateDiaryroomTimeLastActivity(_user.userId.toString(), widget.chatRoomPodo!);
   }
@@ -261,18 +264,6 @@ class _SubChatScreenState extends State<SubChatScreen> {
     },
     );
     logger.d('Successfully updated time of last activity');
-  }
-
-  /// Get Visiting Ego User info
-  Future<UserModel> getVisitingUserInfo() async {
-    DocumentSnapshot response = await FirebaseFirestore.instance
-        .collection(AppString.users)
-        .doc(currentUser?.uid)
-        .get();
-
-    var visitingUser = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
-    logger.d('Successfully got the visiting user model');
-    return visitingUser;
   }
 
 

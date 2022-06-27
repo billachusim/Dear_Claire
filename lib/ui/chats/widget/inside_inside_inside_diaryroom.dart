@@ -8,8 +8,10 @@ import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:flutter/material.dart';
+import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../utils/strings.dart';
+import '../../../widgets/play_advise_voice_note.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 
 class InsideInsideInsideChatWidget extends StatelessWidget {
@@ -151,6 +153,92 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
+
+          Visibility(
+            visible: chatModel?.audioUrl != null,
+            child: Container(
+              alignment: Alignment.topLeft,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Row(
+                  children: [
+                    PlayAdviseVoiceNote(filePath: chatModel!.audioUrl)
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+
+          Container(
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: Row(
+                children: [
+                  Visibility(
+                      visible:
+                      chatModel!.imageUrls!.isNotEmpty,
+                      child: FullScreenWidget(
+                        child: CachedNetworkImage(
+                            height: 75,
+                            width: 75,
+                            imageUrl: chatModel!.imageUrls!.isNotEmpty
+                                ? chatModel!.imageUrls!.first
+                                : '',
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/brown_boy_mask.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
+                        ),
+                      )),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  Visibility(
+                      visible:
+                      chatModel!.imageUrls!.isNotEmpty,
+                      child: FullScreenWidget(
+                        child: CachedNetworkImage(
+                            height: 75,
+                            width: 75,
+                            imageUrl: chatModel!.imageUrls!.isNotEmpty
+                                ? chatModel!.imageUrls!.last
+                                : '',
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.fill,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/brown_boy_mask.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
+                        ),
+                      )),
+                ],
+              ),
+            ),
+          ),
+
         ],
       ),
     );

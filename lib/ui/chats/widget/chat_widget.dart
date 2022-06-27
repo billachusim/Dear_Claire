@@ -19,6 +19,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../utils/strings.dart';
+import '../../../widgets/play_advise_voice_note.dart';
 import '../../../widgets/toast.dart';
 
 class ChatWidget extends StatelessWidget {
@@ -320,7 +321,20 @@ class ChatWidget extends StatelessWidget {
                 fontWeight: FontWeight.normal),
           ),
 
-          SizedBox(height: 5,),
+          Visibility(
+            visible: chatModel?.audioUrl != null,
+            child: Container(
+              alignment: Alignment.topLeft,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Row(
+                  children: [
+                    PlayAdviseVoiceNote(filePath: chatModel!.audioUrl)
+                  ],
+                ),
+              ),
+            ),
+          ),
 
           Row(
             children: [

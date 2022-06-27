@@ -11,6 +11,7 @@ import 'package:dear_claire/utils/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../widgets/play_advise_voice_note.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 
 class InsideInsideChatWidget extends StatelessWidget {
@@ -147,8 +148,23 @@ class InsideInsideChatWidget extends StatelessWidget {
                 fontWeight: FontWeight.bold),
           ),
 
+          Visibility(
+            visible: chatModel?.audioUrl != null,
+            child: Container(
+              alignment: Alignment.topLeft,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Row(
+                  children: [
+                    PlayAdviseVoiceNote(filePath: chatModel!.audioUrl)
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           SizedBox(
-            height: 6,
+            height: 2,
           ),
 
           Row(

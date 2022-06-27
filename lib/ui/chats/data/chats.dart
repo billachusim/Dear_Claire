@@ -20,6 +20,8 @@ class ChatModel {
   String? userAvatarUrl;
   String? userId;
   String? userNickname;
+  String? image1;
+  String? image2;
   String? location;
   List<dynamic>? members;
   Map<String, dynamic>? subMessage;
@@ -46,6 +48,8 @@ class ChatModel {
       required this.userId,
       this.members,
       this.userNickname,
+      this.image1 = '',
+      this.image2 = '',
       this.location,
       });
 
@@ -75,6 +79,8 @@ class ChatModel {
     userAvatarUrl = json['userAvatarUrl'];
     userId = json['userId'];
     userNickname = json['userNickname'];
+    image1 = json["image1"];
+    image2 = json["image2"];
     if (json['repliesEnabled'] != null) {
       repliesEnabled = json['repliesEnabled'];
     }
@@ -122,6 +128,8 @@ class ChatModel {
     data['userAvatarUrl'] = userAvatarUrl;
     data['userId'] = userId;
     data['userNickname'] = userNickname;
+    data["image1"] = this.image1;
+    data["image2"] = this.image2;
     data['repliesEnabled'] = repliesEnabled;
     data['title'] = title;
     data['archived'] = archived;

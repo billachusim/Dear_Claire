@@ -340,9 +340,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
-          SizedBox(
-            height: 6,
-          ),
+
           Visibility(
             visible: widget.commentSessionModel!.audioUrl! != 'null',
             child: Container(
@@ -360,22 +358,20 @@ class _CommentWidgetState extends State<CommentWidget> {
               ),
             ),
           ),
+
           Container(
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Row(
                 children: [
                   Visibility(
-                      visible:
-                          widget.commentSessionModel!.imageUrls!.isNotEmpty,
+                      visible: widget.commentSessionModel!.image1!.isNotEmpty,
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
                             imageUrl: widget
-                                    .commentSessionModel!.imageUrls!.isNotEmpty
-                                ? widget.commentSessionModel!.imageUrls!.first
-                                : '',
+                                    .commentSessionModel!.image1!,
                             imageBuilder: (context, imageProvider) => Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(25),
@@ -398,16 +394,12 @@ class _CommentWidgetState extends State<CommentWidget> {
                     width: 5,
                   ),
                   Visibility(
-                      visible:
-                          widget.commentSessionModel!.imageUrls!.isNotEmpty,
+                      visible: widget.commentSessionModel!.image2!.isNotEmpty,
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
-                            imageUrl: widget
-                                    .commentSessionModel!.imageUrls!.isNotEmpty
-                                ? widget.commentSessionModel!.imageUrls!.last
-                                : '',
+                            imageUrl: widget.commentSessionModel!.image2!,
                             imageBuilder: (context, imageProvider) => Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(25),

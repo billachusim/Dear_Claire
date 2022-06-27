@@ -17,12 +17,11 @@ import 'package:multi_image_picker/multi_image_picker.dart';
 import '../services/firebase_services.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../ui/create_session/sound/sound_widget.dart';
-import '../ui/featured/model/comment_session_model.dart';
 import '../ui/featured/model/session.dart';
 import '../utils/constant.dart';
 
 class ChatEditField extends StatefulWidget {
-  final Function(String value, String voiceNote) onTap;
+  final Function(String value, String voiceNote, String image1, String image2) onTap;
 
   ChatEditField({Key? key, required this.onTap}) : super(key: key);
 
@@ -35,6 +34,8 @@ class _ChatEditFieldState extends State<ChatEditField> {
   final FirebaseServices _firebaseServices = FirebaseServices();
 
   bool isTyping = false;
+  bool isUploadingAudio = false;
+  bool isUploadingImages = false;
   User? currentUser = FirebaseAuth.instance.currentUser;
 
   //initialize the audio record file that stores user audio record. null by default
@@ -42,6 +43,10 @@ class _ChatEditFieldState extends State<ChatEditField> {
 
   //initialize the image list stores user selected images.
   List<Asset> imageList = <Asset>[];
+
+  late String _audioUrl;
+  String? _image1;
+  String? _image2;
 
 
   Future<String> uploadCommentAudio(File file) async {
@@ -62,9 +67,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
     return audioUrl;
   }
 
-  Future<void> loadAssets() async {
-    String error = 'No Error Detected';
-    try {
+  Future<List> loadAssets() async {
       imageList = await MultiImagePicker.pickImages(
         maxImages: 2,
         enableCamera: true,
@@ -78,14 +81,16 @@ class _ChatEditFieldState extends State<ChatEditField> {
           selectCircleStrokeColor: "#000000",
         ),
       );
-    } on Exception catch (e) {
-      error = e.toString();
-    }
-
-    if (!mounted) return;
-    setState(() {
-      imageList;
-    });
+        List<String> imageDownloadUrls = <String>[];
+        for (var image in imageList) {
+          imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
+        }
+        setState(() {
+          isUploadingImages = true;
+          _image1 = imageDownloadUrls.first;
+          _image2 = imageDownloadUrls.last;
+        });
+      return imageDownloadUrls;
   }
 
 
@@ -185,9 +190,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                             child: CachedNetworkImage(
                                 height: 75,
                                 width: 75,
-                                imageUrl: imageList.isNotEmpty
-                                    ? imageList.first.toString()
-                                    : '',
+                                imageUrl: _image1.toString(),
                                 imageBuilder: (context, imageProvider) => Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(25),
@@ -215,9 +218,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                             child: CachedNetworkImage(
                                 height: 75,
                                 width: 75,
-                                imageUrl: imageList.isNotEmpty
-                                    ? imageList.last.toString()
-                                    : '',
+                                imageUrl: _image2.toString(),
                                 imageBuilder: (context, imageProvider) => Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(25),
@@ -257,6 +258,35 @@ class _ChatEditFieldState extends State<ChatEditField> {
                 alignment: Alignment.topLeft,
                 child: Text(
                   "No form of abuse is allowed on this app. You will be banned.",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+
+            Visibility(
+              visible: isUploadingAudio,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  "Your Voice Advise is uploading...",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+
+
+            Visibility(
+              visible: isUploadingImages,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  "Selected images are uploading...",
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -354,7 +384,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                         onPressed: () async {
                           if (!await firebaseServices.isUserSignIn(context)) return;
                           final String audioUrl = await uploadCommentAudio(_recordFile!);
-                          widget.onTap(_controller.text, audioUrl);
+                          widget.onTap(_controller.text, audioUrl, _image1!, _image2!);
                           _controller.text = '';
                           setState(() {
                             _recordFile = null;

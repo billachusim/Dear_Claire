@@ -237,15 +237,15 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
             ],
           ),
           ChatEditField(
-            onTap: (String comment, voiceNote) =>
-                _sendComment(comment, voiceNote, widget.featuredSessionModel!),
+            onTap: (String comment, voiceNote, image1, image2) =>
+                _sendComment(comment, voiceNote, widget.featuredSessionModel!, image1, image2),
           )
         ],
       ),
     );
   }
 
-  void _sendComment(String comment, String voiceNote, Session session) async {
+  void _sendComment(String comment, String voiceNote, Session session, String image1, String image2) async {
     if (!await firebaseServices.isUserSignIn(context)) return;
 
 
@@ -264,6 +264,8 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         commentId: docId,
         flagged: session.flagged!,
         imageUrls: [],
+        image1: image1,
+        image2: image2,
         thanks: [],
         numberOfThanks: 0,
         isUserAdmin: true,

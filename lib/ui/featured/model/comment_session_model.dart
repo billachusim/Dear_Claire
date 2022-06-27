@@ -12,6 +12,8 @@ class CommentSessionModel {
   String? userAvatarUrl;
   String? userId;
   String? userNickname;
+  String? image1;
+  String? image2;
   List<dynamic>? imageUrls = [];
   int? numberOfThanks;
   List<dynamic>? thanks = [];
@@ -23,6 +25,8 @@ class CommentSessionModel {
       this.audioUrl = '',
       this.commentId = '',
       this.userNickname = '',
+      this.image1 = '',
+      this.image2 = '',
       this.timeCreated,
       this.userAvatarUrl = '',
       this.flagged = false,
@@ -40,6 +44,8 @@ class CommentSessionModel {
     data["audioUrl"] = this.audioUrl;
     data["commentId"] = this.commentId;
     data["userNickname"] = this.userNickname;
+    data["image1"] = this.image1;
+    data["image2"] = this.image2;
     data["timeCreated"] = this.timeCreated;
     data["userAvatarUrl"] = this.userAvatarUrl;
     data["flagged"] = this.flagged;
@@ -61,6 +67,8 @@ class CommentSessionModel {
         message: json['message'] ?? '',
         commentId: json['commentId'] ?? '',
         userNickname: json['userNickname'] ?? '',
+        image1: json['image1'] ?? '',
+        image2: json['image2'] ?? '',
         timeCreated: json['timeCreated'],
         userAvatarUrl: json['userAvatarUrl'] ?? '',
         imageUrls: json['imageUrls'] ?? [],

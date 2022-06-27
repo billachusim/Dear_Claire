@@ -201,7 +201,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ],
             ),
             ChatEditField(
-              onTap: (v, voiceNote) => _sendMessage(v, voiceNote),
+              onTap: (v, voiceNote, image1, image2) => _sendMessage(v, voiceNote, image1, image2),
             )
           ],
         ),
@@ -209,7 +209,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _sendMessage(String v, voiceNote) async {
+  void _sendMessage(String v, voiceNote, String image1, String image2) async {
     final _user = await firebaseServices.getUserInfo();
     firebaseServices.addMessage(
         chatRoomPodo!,
@@ -218,6 +218,9 @@ class _ChatScreenState extends State<ChatScreen> {
             colorHex: chatRoomPodo!.hex,
             userId: _user.userId,
             timeCreated: Timestamp.now(),
+            audioUrl: voiceNote,
+            image1: image1,
+            image2: image2,
             members: [_user.userId]));
     Future.delayed(Duration(seconds: 4), () {
       _showNewChatInterstitialAd();
