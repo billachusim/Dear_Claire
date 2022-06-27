@@ -360,6 +360,7 @@ class _CommentWidgetState extends State<CommentWidget> {
           ),
 
           Container(
+            margin: EdgeInsets.only(top: 10),
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Row(
@@ -446,7 +447,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                   );
                 }
 
-                return Text("getting edit buttons");
+                return Text("getting moderation buttons");
               },
             ),
 

@@ -171,7 +171,7 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
 
 
           Container(
-            margin: EdgeInsets.only(bottom: 10),
+            margin: EdgeInsets.only(bottom: 10, top: 10),
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Row(
