@@ -177,14 +177,12 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
                 children: [
                   Visibility(
                       visible:
-                      chatModel!.imageUrls!.isNotEmpty,
+                      chatModel!.image1!.isNotEmpty,
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
-                            imageUrl: chatModel!.imageUrls!.isNotEmpty
-                                ? chatModel!.imageUrls!.first
-                                : '',
+                            imageUrl: chatModel!.image1!,
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),
@@ -208,14 +206,12 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
                   ),
                   Visibility(
                       visible:
-                      chatModel!.imageUrls!.isNotEmpty,
+                      chatModel!.image2!.isNotEmpty,
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
-                            imageUrl: chatModel!.imageUrls!.isNotEmpty
-                                ? chatModel!.imageUrls!.last
-                                : '',
+                            imageUrl: chatModel!.image2!,
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),

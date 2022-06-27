@@ -36,6 +36,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
   bool isTyping = false;
   bool isUploadingAudio = false;
   bool isUploadingImages = false;
+  bool uploadedImages = false;
   User? currentUser = FirebaseAuth.instance.currentUser;
 
   //initialize the audio record file that stores user audio record. null by default
@@ -44,9 +45,9 @@ class _ChatEditFieldState extends State<ChatEditField> {
   //initialize the image list stores user selected images.
   List<Asset> imageList = <Asset>[];
 
-  late String _audioUrl;
-  String? _image1;
-  String? _image2;
+  String _audioUrl = '';
+  String _image1 = '';
+  String _image2 = '';
 
 
   Future<String> uploadCommentAudio(File file) async {
@@ -86,7 +87,6 @@ class _ChatEditFieldState extends State<ChatEditField> {
           imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
         }
         setState(() {
-          isUploadingImages = true;
           _image1 = imageDownloadUrls.first;
           _image2 = imageDownloadUrls.last;
         });
@@ -266,6 +266,37 @@ class _ChatEditFieldState extends State<ChatEditField> {
               ),
             ),
 
+
+            Visibility(
+              visible: isUploadingImages,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  "Wait for images to appear here...",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+
+
+
+            Visibility(
+              visible: uploadedImages,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  "Uploading images successful...",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+
             Visibility(
               visible: isUploadingAudio,
               child: Align(
@@ -274,33 +305,28 @@ class _ChatEditFieldState extends State<ChatEditField> {
                   "Your Voice Advise is uploading...",
                   style: TextStyle(
                     color: Colors.white70,
-                    fontSize: 12,
+                    fontSize: 15,
                   ),
                 ),
               ),
             ),
 
-
-            Visibility(
-              visible: isUploadingImages,
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Text(
-                  "Selected images are uploading...",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 CupertinoButton(
                   padding: EdgeInsets.zero,
-                  onPressed: loadAssets,
+                  onPressed: () {
+                    isUploadingImages = true;
+                    loadAssets();
+                    setState(() {
+                      if (imageList.isNotEmpty) {
+                        isUploadingImages = false;
+                        uploadedImages = true;
+                      }
+                    });
+                  },
                   child: Icon(
                     Icons.linked_camera_rounded,
                     size: 30,
@@ -381,16 +407,56 @@ class _ChatEditFieldState extends State<ChatEditField> {
                 ),
                 FloatingActionButton(
                   heroTag: "Write",
-                        onPressed: () async {
-                          if (!await firebaseServices.isUserSignIn(context)) return;
-                          final String audioUrl = await uploadCommentAudio(_recordFile!);
-                          widget.onTap(_controller.text, audioUrl, _image1!, _image2!);
-                          _controller.text = '';
-                          setState(() {
-                            _recordFile = null;
-                            imageList = [];
-                          });
-                        },
+                    onPressed: () async {
+                      if (!await firebaseServices.isUserSignIn(context)) return;
+                      isUploadingImages = false;
+                      isTyping = false;
+
+                      if (_recordFile != null) {
+                        setState(() {
+                          isUploadingAudio = true;
+                        });
+                        _audioUrl = await uploadCommentAudio(_recordFile!);
+                        widget.onTap(_controller.text, _audioUrl, _image1, _image2);
+
+                        isUploadingAudio = false;
+                        _recordFile = null;
+                        _controller.text = "";
+                        imageList.clear();
+                        setState(() {});
+                      }
+
+                      if (imageList.isNotEmpty) {
+                        isUploadingImages = false;
+                        uploadedImages = true;
+                        setState(() {});
+                        widget.onTap(_controller.text, _audioUrl, _image1, _image2);
+
+                        isUploadingImages = false;
+                        isUploadingAudio = false;
+                        imageList.clear();
+                        _recordFile = null;
+                        _controller.text = '';
+                        setState(() {});
+                      }
+
+                      if (_controller.text.isNotEmpty) {
+                        widget.onTap(_controller.text, _audioUrl, _image1, _image2);
+
+                        isTyping = false;
+                        _controller.text = '';
+                        isUploadingImages = false;
+                        isUploadingAudio = false;
+                        imageList.clear();
+                        _recordFile = null;
+                        setState(() {});
+                      }
+
+                      imageList.clear();
+                      _recordFile = null;
+                      uploadedImages = false;
+
+                    },
                         mini: true,
                         backgroundColor: Pallet.colorSplashScreen,
                         child: SvgPicture.asset(
