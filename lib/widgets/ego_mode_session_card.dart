@@ -371,21 +371,8 @@ class EgoModeSessionCard extends StatelessWidget {
                           child: GestureDetector(
                             onTap: () {
                               if (element.featured == false)
-                                showCustomDialog(context,
-                                    message: element.featured == true
-                                        ? AppString.unfeature_alert_note
-                                        : AppString.feature_alert_note,
-                                    onPressed: () {
-                                      Navigator.pushReplacementNamed(context, AppRoutes.requestFeatureForm);
-                                    });
-                              else
-                                showCustomDialog(context,
-                                    message: element.featured == false
-                                        ? AppString.feature_alert_note
-                                        : AppString.unfeature_alert_note,
-                                    onPressed: () {
-                                      onDonateClicked();
-                                    });
+                                featureAlertDialog(context);
+                              else unfeatureAlertDialog(context);
                             },
                             child: Container(
                               child: Visibility(
@@ -414,7 +401,7 @@ class EgoModeSessionCard extends StatelessWidget {
                                 : AppString.archive_alert_note,
                             onPressed: () {
                               sendToArchive();
-                              Navigator.pushReplacementNamed(context, AppRoutes.egoPage);
+                              Navigator.pushReplacementNamed(context, AppRoutes.diarySessions);
                             });
                       else
                         showCustomDialog(context,
@@ -422,7 +409,7 @@ class EgoModeSessionCard extends StatelessWidget {
                                 ? AppString.archive_alert_note
                                 : AppString.unarchive_alert_note,
                             onPressed: () {
-                              Navigator.pushReplacementNamed(context, AppRoutes.egoPage);
+                              Navigator.pushReplacementNamed(context, AppRoutes.diarySessions);
                               removeFromArchive();
                             });
                     },
@@ -540,6 +527,81 @@ class EgoModeSessionCard extends StatelessWidget {
   }
 
 
+
+
+  featureAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("TopUp Love"),
+      onPressed:  () {
+        onDonateClicked();
+      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Request Feature\n"
+          "Cost: 1,000+ Loves"),
+      onPressed:  () {
+       // setToFeatured();
+        Navigator.pushReplacementNamed(context, AppRoutes.requestFeatureForm);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Feature This Session?"),
+      content: Text(AppString.ego_mode_feature_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
+  unfeatureAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context).pop();      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Unfeature"),
+      onPressed:  () {
+        removeFromFeatured();
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Unfeature This Session?"),
+      content: Text(AppString.unfeature_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 
 
   /// Save user reaction activity
