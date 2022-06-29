@@ -16,6 +16,8 @@ import '../ui/featured/model/session.dart';
 import '../ui/routes/page_router_animation.dart';
 import '../ui/visited_user_ego_page/visited_user_ego_page.dart';
 import '../utils/strings.dart';
+import 'package:timeago/timeago.dart' as timeago;
+
 
 class CommentWidget extends StatefulWidget {
   CommentWidget(
@@ -43,6 +45,14 @@ class _CommentWidgetState extends State<CommentWidget> {
 
   User? currentUser = FirebaseAuth.instance.currentUser;
   bool? isFlagged;
+  String? _commentTime;
+
+  String timeAgo() {
+    final commentTime = widget.commentSessionModel?.timeCreated?.toDate();
+    final _time = timeago.format(commentTime!);
+    _commentTime = _time;
+    return _commentTime.toString();
+  }
 
 
 
@@ -306,8 +316,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                       height: 2,
                     ),
                     Text(
-                        timeConverter(widget.commentSessionModel!.timeCreated!,
-                            time: TimeConverterEnum.Comment),
+                        timeAgo(),
                         textAlign: TextAlign.start,
                         maxLines: 1,
                         style: GoogleFonts.lato(

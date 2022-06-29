@@ -174,7 +174,6 @@ class _EgoModeSessionDetailState
       ),
       body: Stack(
         children: [
-          //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
           ListView(
             children: [
               PostDetailsWidget(

@@ -1450,9 +1450,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         recordFile != null
                             ? _recordFileWidget()
                             : SizedBox.shrink(),
+
                         Align(
                             alignment: Alignment.center,
-                            child: _imagesGridView()),
+                            child: _imagesGridView()
+                        ),
 
                       ],
                     ),

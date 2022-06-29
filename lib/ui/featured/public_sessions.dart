@@ -86,7 +86,8 @@ class FeaturedSessionNotice extends StatelessWidget {
       child: Container(
         child: Text(
           "Featured Sessions are selected from public diary sessions.\n"
-              "Your diary session can NOT appear here if you made it private.",
+              "Your diary session can NOT appear here if you made it private.\n"
+              "Tap the spinning icon to start a new diary session.",
           style: TextStyle(
             color: Colors.white70,
             fontSize: 10,

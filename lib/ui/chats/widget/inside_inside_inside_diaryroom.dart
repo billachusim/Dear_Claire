@@ -13,6 +13,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../utils/strings.dart';
 import '../../../widgets/play_advise_voice_note.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class InsideInsideInsideChatWidget extends StatelessWidget {
   String? documentID;
@@ -24,6 +25,15 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
 
   late String visitedUsersID;
   late String visitedEgoName;
+
+  String? _commentTime;
+
+  String timeAgo() {
+    final commentTime = chatModel?.timeCreated?.toDate();
+    final _time = timeago.format(commentTime!);
+    _commentTime = _time;
+    return _commentTime.toString();
+  }
 
   InsideInsideInsideChatWidget(
       {Key? key,
@@ -128,8 +138,7 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
                             height: 2,
                           ),
                           Text(
-                              timeConverter(chatModel!.timeCreated!,
-                                  time: TimeConverterEnum.Comment),
+                              timeAgo(),
                               textAlign: TextAlign.start,
                               maxLines: 1,
                               style: GoogleFonts.lato(
