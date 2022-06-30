@@ -61,18 +61,18 @@ class AppString{
 
   static const String flag_alert_note = "💡 Does this session contain something bad?\nReport it so Claire can check for violations?";
   static const String unflag_alert_note = "💡 This session is flagged!\n"
-      "An Alter Ego will moderate or delete it asap.\n"
+      "An Alter Ego will moderate or delete it asap.\n\n"
       "Would you like to unflag it?";
 
   static const String flag_advise_alert_note = "💡 Does this advise contain something bad?"
-      "\nReport it so Claire can check for violations?\n"
-      "If you are session owner, use the delete button that will appear on the advise after flagging it";
-  static const String unflag_advise_alert_note = "💡 This advise is flagged!\n"
-      "An Alter Ego will remove or moderate it asap.\n"
-      "If you are session owner, hit the delete button to remove it now.";
+      "\nReport it so Claire can check for violations?\n\n"
+      "If you are session owner or Alter Ego, use the delete button that will appear on the advise after flagging it.";
 
-  static const String delete_advise_alert_note = "💡 Do you want to delete this advise permanently?\n"
-      "If you wait a little, an Alter Ego will moderate it.";
+  static const String unflag_advise_alert_note = "💡 This advise is flagged!\n"
+      "An Alter Ego will remove or moderate it soon.\n\n"
+      "Do you want to unflag it?";
+
+  static const String delete_advise_alert_note = "💡 Do you want to delete this advise permanently?";
 
   static const String flag_ego_alert_note = "💡 Did this user do something bad?\n"
       "\nFlag it so Claire can check for violations and block this user?";
@@ -205,8 +205,8 @@ class AppString{
   static const String im_new_here = "I'm new here, ";
   static const String create_ego = "Create Ego";
 
-  static const String create_ego_welcome ="Welcome, Human,\nIt's Claire To the world!";
-  static const String create_ego_note = "\nYou used to write stuffs on your cute diary, journal, notepads and online without expecting a reply. It's even soothing sometimes to just write down your thoughts.\n\nWell, Claire took that, spun it up with the power of Alter Egos and now you can get positive and critical replies to your diaries according to what you had written or recorded.\n\nYou can also earn convertible coins called Claire Love and grow your ego while at it.\nBut first, let's create that ego 🌺";
+  static const String create_ego_welcome ="Welcome, Human,\nIt's Claire To The World!";
+  static const String create_ego_note = "\nYou used to write stuffs in a diary without expecting a reply. It's actually soothing many times to just write down your thoughts.\n\nWell, Claire took that, spun it up with the power of Alter Egos and you can get positive and critical replies to your diaries according to what you had written or recorded.\n\nYou can also earn convertible coins called Claire Love and grow your ego while at it.\nBut first, let's create that ego 🌺";
   static const String create_ego_sub_note = "You remain completely anonymous.\nClaire only needs an email in case you forget your ego code.";
   static const String i_already_have_ego = "I already have Ego,";
 

@@ -865,7 +865,8 @@ class FirebaseServices extends ChangeNotifier {
   }
 
   /// send users message
-  void addMessage(ChatRoomPodo? chatRoomPodo, ChatModel chatModel) {
+  void addMessage(ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
+    final _user = await getUserInfo();
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
             to: '/topics/${chatRoomPodo!.id.toString()}',
@@ -878,7 +879,7 @@ class FirebaseServices extends ChangeNotifier {
         .collection(AppString.appChats)
         .doc(chatRoomPodo.id.toString())
         .collection(chatRoomPodo.title!)
-        .doc(currentUser!.uid.toString())
+        .doc(_user.userId)
         .set(chatModel.toJson())
         .whenComplete(() {
       /// automatically subscribe user to this topic
@@ -904,7 +905,8 @@ class FirebaseServices extends ChangeNotifier {
 
   /// send sub-message
   void addSubMessage(
-      String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) {
+      String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
+    final _user = await getUserInfo();
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
             to: '/topics/${chatModel.userId!}',
@@ -919,7 +921,7 @@ class FirebaseServices extends ChangeNotifier {
         .collection(chatRoomPodo.title!)
         .doc(key.toString())
         .collection(key.toString())
-        .doc(currentUser!.uid.toString())
+        .doc(_user.userId)
         .set(chatModel.toJson())
         .whenComplete(() {
       _subscribeToChatRoom(key);

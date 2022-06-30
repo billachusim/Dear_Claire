@@ -451,7 +451,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                         maxLines: 1,
                         style: GoogleFonts.lato(
                             fontSize: 12.0,
-                            color: Pallet.colorBlack,
+                            color: Pallet.colorSecondaryDark,
                             fontWeight: FontWeight.w800)),
                   );
                 }
@@ -461,25 +461,24 @@ class _CommentWidgetState extends State<CommentWidget> {
             ),
 
             if (widget.commentSessionModel!.isUserAdmin)
-              CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.share_rounded,
-                        size: 15,
-                        color: Pallet.colorSecondary,
-                      ),
-                      Text(
-                        'Share',
-                        style: GoogleFonts.lato(
-                            fontSize: 13.0,
-                            color: Pallet.colorSecondary,
-                            fontWeight: FontWeight.w800),
-                      ),
-                    ],
-                  ),
-                  onPressed: widget.onShare
+              GestureDetector(
+                onTap: widget.onShare,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.share_rounded,
+                      size: 15,
+                      color: Pallet.colorSecondary,
+                    ),
+                    Text(
+                      'Share',
+                      style: GoogleFonts.lato(
+                          fontSize: 13.0,
+                          color: Pallet.colorSecondary,
+                          fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
               ),
 
 
@@ -496,30 +495,21 @@ class _CommentWidgetState extends State<CommentWidget> {
                           });                  },
                   child: Visibility(
                     visible: widget.userId == currentUser?.uid,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 0, horizontal: 5),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Pallet.colorPrimaryDark,
-                          )),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.delete_forever_rounded,
-                            color: Pallet.colorPrimaryDark,
-                            size: 15,
-                          ),
-                          SizedBox(width: 2,),
-                          Text(
-                            'Delete',
-                            style: GoogleFonts.lato(
-                                fontSize: 11.0,
-                                color: Pallet.colorPrimaryDark,
-                                fontWeight: FontWeight.w800),
-                          ),
-                        ],
-                      ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete_forever_rounded,
+                          color: Pallet.colorPrimaryDark,
+                          size: 15,
+                        ),
+                        Text(
+                          'Delete',
+                          style: GoogleFonts.lato(
+                              fontSize: 11.0,
+                              color: Pallet.colorPrimaryDark,
+                              fontWeight: FontWeight.w800),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -561,7 +551,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                     Text(
                       'Flag',
                       style: GoogleFonts.lato(
-                          fontSize: 11.0,
+                          fontSize: 12.0,
                           color: Pallet.colorPrimaryDark,
                           fontWeight: FontWeight.w800),
                     ),
@@ -577,13 +567,13 @@ class _CommentWidgetState extends State<CommentWidget> {
                     Icon(
                       Icons.edit,
                       size: 15,
-                      color: Pallet.colorSecondary,
+                      color: Pallet.colorPrimaryDark,
                     ),
                     Text(
                       'Edit',
                       style: GoogleFonts.lato(
                           fontSize: 12.0,
-                          color: Pallet.colorSecondary,
+                          color: Pallet.colorPrimaryDark,
                           fontWeight: FontWeight.w800),
                     ),
                   ],
@@ -606,25 +596,55 @@ class _CommentWidgetState extends State<CommentWidget> {
                   return
                     Visibility(
                       visible: userType != "REGULAR",
-                      child: CupertinoButton(
-                          padding: EdgeInsets.zero,
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.edit,
-                                size: 15,
-                                color: Pallet.colorSecondary,
-                              ),
-                              Text(
-                                'Moderate',
-                                style: GoogleFonts.lato(
-                                    fontSize: 13.0,
-                                    color: Pallet.colorSecondary,
-                                    fontWeight: FontWeight.w800),
-                              ),
-                            ],
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: _showCardDialog,
+                            child: Row(
+                              children: [
+
+                                Icon(
+                                  Icons.edit,
+                                  size: 15,
+                                  color: Pallet.colorSecondary,
+                                ),
+
+                                Text(
+                                  'Mod',
+                                  style: GoogleFonts.lato(
+                                      fontSize: 12.0,
+                                      color: Pallet.colorSecondary,
+                                      fontWeight: FontWeight.w800),
+                                ),
+                              ],
+                            ),
                           ),
-                          onPressed: _showCardDialog
+
+                          SizedBox(width: 4,),
+
+                          Visibility(
+                            visible: widget.commentSessionModel?.flagged == true,
+                            child: GestureDetector(
+                              onTap: () {
+                                if (userType != "REGULAR")
+                                  showCustomDialog(context,
+                                      message: AppString.delete_advise_alert_note,
+                                      onPressed: () {
+                                        PageRouter.goBack(context);
+                                        deleteAdvise();
+                                      });                  },
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete_forever_rounded,
+                                    color: Pallet.colorPrimaryDark,
+                                    size: 15,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     );
                 }
@@ -636,6 +656,8 @@ class _CommentWidgetState extends State<CommentWidget> {
 
           ]
           ),
+
+          SizedBox(height: 6,),
         ],
       ),
     );

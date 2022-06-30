@@ -329,7 +329,7 @@ class ChatWidget extends StatelessWidget {
           ),
 
           Visibility(
-            visible: chatModel?.audioUrl != null,
+            visible: chatModel?.audioUrl != '',
             child: Container(
               alignment: Alignment.topLeft,
               child: Align(
@@ -352,7 +352,7 @@ class ChatWidget extends StatelessWidget {
               child: Row(
                 children: [
                   Visibility(
-                      visible: chatModel!.image1 != null,
+                      visible: chatModel!.image1 != '',
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
@@ -381,7 +381,7 @@ class ChatWidget extends StatelessWidget {
                   ),
                   Visibility(
                       visible:
-                      chatModel!.image2 != null,
+                      chatModel!.image2 != '',
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
@@ -419,7 +419,7 @@ class ChatWidget extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () {
                     if (chatModel!.userId == currentUser?.uid)
-                      deletedAdviseAlertDialog(context);
+                      deletedRoomAlertDialog(context);
                   },
                   child: Visibility(
                     visible: chatModel!.userId == currentUser?.uid,
@@ -462,8 +462,8 @@ class ChatWidget extends StatelessWidget {
                   },
                   child: Container(
                       padding: EdgeInsets.all(5),
-                      width: 80,
-                      height: 25,
+                      width: 65,
+                      height: 22,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20.0),
                         gradient: LinearGradient(
@@ -482,6 +482,8 @@ class ChatWidget extends StatelessWidget {
                         child: Text(
                           '${chatModel!.members!.length} LEAVE',
                           style: TextStyle(
+                            fontSize: 12,
+                              fontWeight: FontWeight.w800,
                               color: _isCompleted(chatModel, chatRoomPodo)
                                   ? Pallet.colorPrimaryDark
                                   : Pallet.colorSplashScreen),
@@ -489,6 +491,62 @@ class ChatWidget extends StatelessWidget {
                       )),
                 ),
               ),
+
+              SizedBox(width: 6,),
+
+
+              FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                future: FirebaseFirestore.instance
+                    .collection("users")
+                    .doc(currentUser?.uid)
+                    .get(),
+                builder: (_, snapshot) {
+                  if (snapshot.hasData) {
+                    var data = snapshot.data!.data();
+                    var userType = data?["userType"] ?? "0";
+                    debugPrint(
+                        " This is the actual userType of this user ${userType.toString()}");
+                    return
+                      Visibility(
+                        visible: userType != "REGULAR",
+                        child: GestureDetector(
+                          onTap: () {
+                              deletedRoomAlertDialog(context);
+                          },
+                          child: Row(
+                            children: [
+                              Row(
+                                children: [
+
+                                  Text(
+                                    'Mod',
+                                    style: GoogleFonts.lato(
+                                        fontSize: 13.0,
+                                        color: Pallet.colorSecondary,
+                                        fontWeight: FontWeight.w800),
+                                  ),
+
+
+                                  Visibility(
+                                    visible: userType != "REGULAR",
+                                    child: Icon(
+                                      Icons.delete_forever_rounded,
+                                      color: Pallet.colorPrimaryDark,
+                                      size: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                  }
+
+                  return Center(child: CircularProgressIndicator());
+                },
+              ),
+
 
               Spacer(flex: 1,),
 
@@ -540,8 +598,10 @@ class ChatWidget extends StatelessWidget {
                           child: Text(
                             'Continue',
                             style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
                                 color: Pallet.colorPrimaryDark,
-                            fontWeight: FontWeight.w600),
+                            ),
                           ),
                         )),
                   ),
@@ -579,7 +639,7 @@ class ChatWidget extends StatelessWidget {
                     },
                     child: Container(
                         padding: EdgeInsets.all(5),
-                        width: 80,
+                        width: 70,
                         height: 25,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.0),
@@ -599,10 +659,12 @@ class ChatWidget extends StatelessWidget {
                           child: Text(
                             '${chatModel!.members!.length} JOIN',
                             style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
                                 color: _isCompleted(chatModel, chatRoomPodo)
                                     ? Pallet.blueGreyBgColor
                                     : Pallet.colorSplashScreen,
-                            fontWeight: FontWeight.w600),
+                            ),
                           ),
                         )),
                   ),
@@ -680,7 +742,7 @@ class ChatWidget extends StatelessWidget {
   }
 
 
-  deletedAdviseAlertDialog(BuildContext context) {
+  deletedRoomAlertDialog(BuildContext context) {
 
     // set up the buttons
     Widget cancelButton = TextButton(
@@ -692,9 +754,10 @@ class ChatWidget extends StatelessWidget {
 
     Widget continueButton = TextButton(
       child: Text("Delete Now"),
-      onPressed:  () {
+      onPressed:  () async {
         deleteChat();
-        showToast("You have deleted the chat. Keep your aura clean!");
+        deleteSubChat();
+        showToast("You have deleted the chat. Keep the aura clean!");
         firebaseServices.unsubscribeToChatRoom(chatRoomPodo!.id.toString());
         Navigator.of(context).pop();
       },
@@ -726,7 +789,7 @@ class ChatWidget extends StatelessWidget {
         .collection(AppString.appChats)
         .doc(chatRoomPodo!.id.toString())
         .collection(chatRoomPodo!.title!);
-    await collection.doc(currentUser!.uid.toString()).delete();
+    await collection.doc(chatModel!.userId.toString()).delete();
     firebaseServices.unsubscribeToChatRoom(chatModel!.userId.toString());
     logger.d('Successfully deleted an chat session');
   }
@@ -739,7 +802,7 @@ class ChatWidget extends StatelessWidget {
         .collection(chatRoomPodo!.title!)
         .doc(chatModel!.userId.toString())
         .collection(chatModel!.userId.toString());
-    await collection.doc(currentUser!.uid.toString()).delete();
+    await collection.doc(chatModel!.userId.toString()).delete();
     firebaseServices.unsubscribeToChatRoom(chatModel!.userId.toString());
     logger.d('Successfully deleted an chat session');
   }

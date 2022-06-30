@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/user_model.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/data/chats.dart';
@@ -7,33 +8,24 @@ import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../services/firebase_services.dart';
 import '../../../utils/strings.dart';
 import '../../../widgets/play_advise_voice_note.dart';
+import '../../../widgets/toast.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-class InsideInsideInsideChatWidget extends StatelessWidget {
+class InsideInsideInsideChatWidget extends StatefulWidget {
   String? documentID;
   ChatModel? chatModel;
   ChatRoomPodo? chatRoomPodo;
 
   /// use this bool value to determine when a chat is sub chat or not
   bool? isSubChat;
-
-  late String visitedUsersID;
-  late String visitedEgoName;
-
-  String? _commentTime;
-
-  String timeAgo() {
-    final commentTime = chatModel?.timeCreated?.toDate();
-    final _time = timeago.format(commentTime!);
-    _commentTime = _time;
-    return _commentTime.toString();
-  }
 
   InsideInsideInsideChatWidget(
       {Key? key,
@@ -42,6 +34,26 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
         required this.chatRoomPodo,
         this.isSubChat = false})
       : super(key: key);
+
+  @override
+  State<InsideInsideInsideChatWidget> createState() => _InsideInsideInsideChatWidgetState();
+}
+
+class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWidget> {
+  TextEditingController editChatController = TextEditingController();
+
+  late String visitedUsersID;
+
+  late String visitedEgoName;
+
+  String? _commentTime;
+
+  String timeAgo() {
+    final commentTime = widget.chatModel?.timeCreated?.toDate();
+    final _time = timeago.format(commentTime!);
+    _commentTime = _time;
+    return _commentTime.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +73,7 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           FutureBuilder(
-              future: firebaseServices.getUserWithId(id: chatModel!.userId),
+              future: firebaseServices.getUserWithId(id: widget.chatModel!.userId),
               builder: (_, AsyncSnapshot<UserModel> snap) {
                 if (!snap.hasData) {
                   return Container();
@@ -155,7 +167,7 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
             height: 6,
           ),
           Text(
-            chatModel!.message!,
+            widget.chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
                 fontSize: 14.0,
@@ -164,14 +176,14 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
           ),
 
           Visibility(
-            visible: chatModel?.audioUrl != '',
+            visible: widget.chatModel?.audioUrl != '',
             child: Container(
               alignment: Alignment.topLeft,
               child: Align(
                 alignment: Alignment.topLeft,
                 child: Row(
                   children: [
-                    PlayAdviseVoiceNote(filePath: chatModel!.audioUrl)
+                    PlayAdviseVoiceNote(filePath: widget.chatModel!.audioUrl)
                   ],
                 ),
               ),
@@ -180,18 +192,18 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
 
 
           Container(
-            margin: EdgeInsets.only(bottom: 10, top: 10),
+            margin: EdgeInsets.only(bottom: 1, top: 8),
             child: Align(
               alignment: Alignment.bottomLeft,
               child: Row(
                 children: [
                   Visibility(
-                      visible: chatModel!.image1 != '',
+                      visible: widget.chatModel!.image1 != '',
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
-                            imageUrl: chatModel!.image1.toString(),
+                            imageUrl: widget.chatModel!.image1.toString(),
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),
@@ -215,12 +227,12 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
                   ),
                   Visibility(
                       visible:
-                      chatModel!.image2 != '',
+                      widget.chatModel!.image2 != '',
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
-                            imageUrl: chatModel!.image2.toString(),
+                            imageUrl: widget.chatModel!.image2.toString(),
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),
@@ -244,8 +256,94 @@ class InsideInsideInsideChatWidget extends StatelessWidget {
             ),
           ),
 
+
+
+          FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+            future: FirebaseFirestore.instance
+                .collection("users")
+                .doc(currentUser?.uid)
+                .get(),
+            builder: (_, snapshot) {
+              if (snapshot.hasData) {
+                var data = snapshot.data!.data();
+                var userType = data?["userType"] ?? "0";
+                debugPrint(
+                    " This is the actual userType of this user ${userType.toString()}");
+                return
+                  Visibility(
+                    visible: userType != "REGULAR",
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            if (userType != "REGULAR")
+                              showCustomDialog(context,
+                                  message: AppString.delete_advise_alert_note,
+                                  onPressed: () {
+                                    PageRouter.goBack(context);
+                                    deleteSubChat();
+                                  });
+                          },
+                          child: Row(
+                            children: [
+
+                              Text(
+                                'Mod',
+                                style: GoogleFonts.lato(
+                                    fontSize: 13.0,
+                                    color: Pallet.colorSecondary,
+                                    fontWeight: FontWeight.w800),
+                              ),
+
+
+                              Visibility(
+                                visible: userType != "REGULAR",
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (userType != "REGULAR")
+                                      showCustomDialog(context,
+                                          message: AppString.delete_advise_alert_note,
+                                          onPressed: () {
+                                            PageRouter.goBack(context);
+                                            deleteSubChat();
+                                          });
+                                  },
+                                  child: Icon(
+                                    Icons.delete_forever_rounded,
+                                    color: Pallet.colorPrimaryDark,
+                                    size: 15,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+              }
+
+              return Center(child: CircularProgressIndicator());
+            },
+          ),
+
         ],
       ),
     );
+  }
+
+
+  /// Delete a chat
+
+  Future<void> deleteSubChat() async {
+    final collection = FirebaseFirestore.instance
+        .collection(AppString.appChats)
+        .doc(widget.chatRoomPodo!.id.toString())
+        .collection(widget.chatRoomPodo!.title!)
+        .doc(widget.chatModel!.userId.toString())
+        .collection(widget.chatModel!.userId.toString());
+    await collection.doc(currentUser!.uid.toString()).delete();
+    firebaseServices.unsubscribeToChatRoom(widget.chatModel!.userId.toString());
+    logger.d('Successfully deleted an chat session');
   }
 }

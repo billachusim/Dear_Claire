@@ -1,12 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
+import 'package:dear_claire/ui/followed/empty_followed_screen_widget.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:dear_claire/widgets/ego_mode_session_card.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../routes/routes.dart';
 
 class FollowedPage extends StatefulWidget {
@@ -35,7 +34,6 @@ class _FollowedPageState extends State<FollowedPage> {
           backgroundColor: Pallet.colorSecondaryDark,
           body: Stack(
             children: [
-              //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
               StreamBuilder(
               stream: firebaseServices.getFollowingSessions(),
@@ -43,19 +41,10 @@ class _FollowedPageState extends State<FollowedPage> {
                 if (session.connectionState == ConnectionState.waiting) {
                   return RotateImage(50, 50);
                 }
-                if (!session.hasData) {
-                  return Center(
-                    child: Text("No Session data",
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.lato(
-                            fontSize: 15.0,
-                            color: Pallet.colorBlack,
-                            //fontStyle: FontStyle.normal,
-                            fontWeight: FontWeight.w600)),
-                  );
+                if (session.data?.docs.length == 0) {
+                  return EmptyFollowedSessionWidget();
                 }
+
                 if (session.hasData) {
                   // clear list
                   _sessionList!.clear();

@@ -150,7 +150,7 @@ class InsideInsideChatWidget extends StatelessWidget {
           ),
 
           Visibility(
-            visible: chatModel?.audioUrl != null,
+            visible: chatModel?.audioUrl != '',
             child: Container(
               alignment: Alignment.topLeft,
               child: Align(
@@ -172,7 +172,7 @@ class InsideInsideChatWidget extends StatelessWidget {
               child: Row(
                 children: [
                   Visibility(
-                      visible: chatModel!.image1 != null,
+                      visible: chatModel!.image1 != '',
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
@@ -201,7 +201,7 @@ class InsideInsideChatWidget extends StatelessWidget {
                   ),
                   Visibility(
                       visible:
-                      chatModel!.image2 != null,
+                      chatModel!.image2 != '',
                       child: FullScreenWidget(
                         child: CachedNetworkImage(
                             height: 75,
@@ -237,7 +237,9 @@ class InsideInsideChatWidget extends StatelessWidget {
           Row(
             children: [
 
-              OnlineRoomVisitorsStream(roomData: chatRoomPodo!, roomModel: chatModel!, docId: documentID!,),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                  child: OnlineRoomVisitorsStream(roomData: chatRoomPodo!, roomModel: chatModel!, docId: documentID!,)),
 
               Spacer(flex: 1,),
 

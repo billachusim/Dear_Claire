@@ -1,8 +1,8 @@
+import 'package:dear_claire/ui/ego-profile/empty_session_widget.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/widgets/ego_mode_session_card.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 
@@ -34,7 +34,6 @@ class _DiaryPageState extends State<DiaryPage> {
           backgroundColor: Pallet.colorSecondaryDark,
           body: Stack(
             children: [
-              //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
               FutureBuilder(
                 future: firebaseServices.getDiarySessions(),
@@ -42,18 +41,8 @@ class _DiaryPageState extends State<DiaryPage> {
                   if (session.connectionState == ConnectionState.waiting) {
                     return RotateImage(50, 50);
                   }
-                  if (!session.hasData) {
-                    return Center(
-                      child: Text("No Session data",
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.lato(
-                              fontSize: 15.0,
-                              color: Pallet.colorBlack,
-                              //fontStyle: FontStyle.normal,
-                              fontWeight: FontWeight.w600)),
-                    );
+                  if (session.data?.length == 0) {
+                    return EmptySessionWidget();
                   }
 
                   if (session.hasError) {

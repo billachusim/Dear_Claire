@@ -1,16 +1,14 @@
-import 'dart:io';
-
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
+import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
-import 'package:dear_claire/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../splash_screen/rotate_logo.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -18,6 +16,9 @@ class LoginPage extends StatefulWidget {
 }
 
 const int maxFailedLoadAttempts = 3;
+
+bool isSigningIn = false;
+
 
 
 class _LoginPage extends State<LoginPage> {
@@ -32,7 +33,6 @@ class _LoginPage extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _createInterstitialAd();
   }
 
 
@@ -61,58 +61,11 @@ class _LoginPage extends State<LoginPage> {
   }
 
 
-  InterstitialAd? _interstitialAd;
-  int _interstitialLoadAttempts = 0;
-
-  // Create interstitial ad.
-
-  void _createInterstitialAd() {
-    InterstitialAd.load(
-      adUnitId: Platform.isAndroid
-          ? "ca-app-pub-2404156870680632/7375897682"
-          : Platform.isIOS
-          ? "ca-app-pub-2404156870680632/9223046415"
-          : '',
-      request: AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          _interstitialAd = ad;
-          _interstitialLoadAttempts = 0;
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          print('Failed to load an interstitial ad: ${error.message}');
-          _interstitialLoadAttempts += 1;
-          _interstitialAd = null;
-          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
-            _createInterstitialAd();
-          }
-        },
-      ),
-    );
-  }
-
-  void _showInterstitialAd() {
-    if (_interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          _createInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          _createInterstitialAd();
-        },
-      );
-      _interstitialAd!.show();
-    }
-  }
-
-
 
   /// Shows up when user clicks on forgot ego code.
   Future<void> _showForgotEgoCodeDialog() async {
     TextEditingController _emailController = TextEditingController();
-    final _formKey = GlobalKey<FormState>();  return showDialog<void>(
+return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
@@ -196,12 +149,20 @@ class _LoginPage extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: Pallet.colorWhite,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
+              height: getDeviceHeight(context),
+              width: getDeviceWidth(context),
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage(
+                    AppImages.appChatBg,
+                  ),
+                  fit: BoxFit.fill,
+                ),
+              ),
               padding: EdgeInsets.all(16.0),
-              color: Pallet.colorWhite,
               child: Form(
                 key: _formKey,
                 child: Stack(
@@ -250,7 +211,7 @@ class _LoginPage extends State<LoginPage> {
                               textAlign: TextAlign.center,
                               style: GoogleFonts.lato(
                                   fontSize: 12.0,
-                                  color: Pallet.colorTextGray,
+                                  color: Colors.black87,
                                   fontWeight: FontWeight.w400)),
                         ),
                         SizedBox(
@@ -342,19 +303,34 @@ class _LoginPage extends State<LoginPage> {
                         ),
 
                         SizedBox(
-                          height: 41,
+                          height: 35,
                         ),
+
+                          Visibility(
+                            visible: isSigningIn,
+                            child: Center(
+                                child: Column(
+                                  children: [
+                                    RotateImage(45, 45),
+                                    Text('Opening up...')
+                                  ],
+                                ),
+                            ),
+                          ),
+
+                        SizedBox(height: 6,),
 
                         GestureDetector(
                           onTap: () async {
                             var validate = _formKey.currentState!.validate();
                             if (validate) {
+                              isSigningIn = true;
+                              setState(() {});
                               await _firebaseServices.signIn(
                                   context,
                                   _emailController.text,
                                   _secretCodeController.text);
                             }
-                            _showInterstitialAd();
                           },
                           child: Container(
                             width: MediaQuery.of(context).size.width,
@@ -398,7 +374,7 @@ class _LoginPage extends State<LoginPage> {
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.lato(
                                           fontSize: 12.0,
-                                          color: Pallet.colorTextGray,
+                                          color: Colors.black87,
                                           fontWeight: FontWeight.w500)),
                                   SizedBox(
                                     width: 2,
@@ -407,7 +383,7 @@ class _LoginPage extends State<LoginPage> {
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.lato(
                                           fontSize: 13.0,
-                                          color: Pallet.colorPrimary,
+                                          color: Pallet.colorPrimaryDark,
                                           fontWeight: FontWeight.w600)),
                                 ],
                               ),
@@ -428,7 +404,7 @@ class _LoginPage extends State<LoginPage> {
   void dispose() {
     _emailController.dispose();
     _secretCodeController.dispose();
-    _interstitialAd?.dispose();
+    isSigningIn = false;
     super.dispose();
   }
 }
@@ -465,7 +441,7 @@ class _BuildSecretCodeField extends State<BuildSecretCodeField> {
         controller: widget._secretCodeController,
         decoration: InputDecoration(
           hintText: widget.hintText,
-          labelText: "Enter a secret code, up to 6 digits.",
+          labelText: "Enter the secret code, up to 6 digits.",
           labelStyle: TextStyle(color: Pallet.colorTextGray),
           focusedBorder: new OutlineInputBorder(
               borderSide: new BorderSide(color: Pallet.colorPrimary)),
