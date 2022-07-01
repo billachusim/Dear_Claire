@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/widgets/play_advise_voice_note.dart';
 import 'package:dear_claire/widgets/thanks_button.dart';
@@ -41,7 +40,6 @@ class CommentWidget extends StatefulWidget {
 
 class _CommentWidgetState extends State<CommentWidget> {
   TextEditingController editAdviseController = TextEditingController();
-  final FirebaseServices _firebaseServices = FirebaseServices();
 
   User? currentUser = FirebaseAuth.instance.currentUser;
   bool? isFlagged;
@@ -332,7 +330,36 @@ class _CommentWidgetState extends State<CommentWidget> {
                   ThanksButton(
                     count: widget.commentSessionModel!.thanks!.length,
                     onPressed: widget.onPressed,
-                    color: 1 == 2 ? Pallet.colorPink : Pallet.colorTextGray,
+                    color: 1 == 2 ? Pallet.colorPrimaryDark : Pallet.colorTextGray,
+                  ),
+
+                  SizedBox(width: 3,),
+
+                  FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                    future: FirebaseFirestore.instance
+                        .collection("users")
+                        .doc(currentUser?.uid)
+                        .get(),
+                    builder: (_, snapshot) {
+                      if (snapshot.hasData) {
+                        var data = snapshot.data!.data();
+                        var userType = data?["userType"] ?? "0";
+                        debugPrint(
+                            " This is the actual userType of this user ${userType.toString()}");
+                        return Visibility(
+                          visible: userType == "SUPER_ADMIN",
+                          child: Text(widget.commentSessionModel!.alterEgoId!,
+                              textAlign: TextAlign.start,
+                              maxLines: 1,
+                              style: GoogleFonts.lato(
+                                  fontSize: 12.0,
+                                  color: Pallet.colorSecondaryDark,
+                                  fontWeight: FontWeight.w800)),
+                        );
+                      }
+
+                      return CircularProgressIndicator();
+                    },
                   ),
                 ],
               ),
@@ -432,229 +459,220 @@ class _CommentWidgetState extends State<CommentWidget> {
               ),
             ),
           ),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              future: FirebaseFirestore.instance
-                  .collection("users")
-                  .doc(currentUser?.uid)
-                  .get(),
-              builder: (_, snapshot) {
-                if (snapshot.hasData) {
-                  var data = snapshot.data!.data();
-                  var userType = data?["userType"] ?? "0";
-                  debugPrint(
-                      " This is the actual userType of this user ${userType.toString()}");
-                  return Visibility(
-                    visible: userType == "SUPER_ADMIN",
-                    child: Text(widget.commentSessionModel!.alterEgoId!,
-                        textAlign: TextAlign.start,
-                        maxLines: 1,
-                        style: GoogleFonts.lato(
-                            fontSize: 12.0,
-                            color: Pallet.colorSecondaryDark,
-                            fontWeight: FontWeight.w800)),
-                  );
-                }
 
-                return Text("getting moderation buttons");
-              },
-            ),
 
-            if (widget.commentSessionModel!.isUserAdmin)
-              GestureDetector(
-                onTap: widget.onShare,
-                child: Row(
+          Row(
+
+            children: [
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.share_rounded,
-                      size: 15,
-                      color: Pallet.colorSecondary,
-                    ),
-                    Text(
-                      'Share',
-                      style: GoogleFonts.lato(
-                          fontSize: 13.0,
-                          color: Pallet.colorSecondary,
-                          fontWeight: FontWeight.w800),
-                    ),
-                  ],
-                ),
-              ),
 
-
-              Visibility(
-                visible: widget.commentSessionModel?.flagged == true,
-                child: GestureDetector(
-                  onTap: () {
-                    if (widget.userId == currentUser?.uid)
-                      showCustomDialog(context,
-                          message: AppString.delete_advise_alert_note,
-                          onPressed: () {
-                            PageRouter.goBack(context);
-                            deleteAdvise();
-                          });                  },
-                  child: Visibility(
-                    visible: widget.userId == currentUser?.uid,
+                if (widget.commentSessionModel!.isUserAdmin)
+                  GestureDetector(
+                    onTap: widget.onShare,
                     child: Row(
                       children: [
                         Icon(
-                          Icons.delete_forever_rounded,
-                          color: Pallet.colorPrimaryDark,
+                          Icons.share_rounded,
                           size: 15,
+                          color: Pallet.colorSecondary,
                         ),
                         Text(
-                          'Delete',
+                          'Share',
                           style: GoogleFonts.lato(
-                              fontSize: 11.0,
-                              color: Pallet.colorPrimaryDark,
+                              fontSize: 13.0,
+                              color: Pallet.colorSecondary,
                               fontWeight: FontWeight.w800),
                         ),
                       ],
                     ),
                   ),
-                ),
+
+
+                  Visibility(
+                    visible: widget.commentSessionModel?.flagged == true,
+                    child: GestureDetector(
+                      onTap: () {
+                        if (widget.userId == currentUser?.uid)
+                          showCustomDialog(context,
+                              message: AppString.delete_advise_alert_note,
+                              onPressed: () {
+                                PageRouter.goBack(context);
+                                deleteAdvise();
+                              });                  },
+                      child: Visibility(
+                        visible: widget.userId == currentUser?.uid,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.delete_forever_rounded,
+                              color: Pallet.colorPrimaryDark,
+                              size: 15,
+                            ),
+                            Text(
+                              'Delete',
+                              style: GoogleFonts.lato(
+                                  fontSize: 11.0,
+                                  color: Pallet.colorPrimaryDark,
+                                  fontWeight: FontWeight.w800),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                    SizedBox(width: 5,),
+
+                    if (widget.commentSessionModel!.userId == currentUser?.uid)
+                      GestureDetector(
+                        onTap: _showCardDialog,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.edit,
+                              size: 15,
+                              color: Pallet.colorPrimaryDark,
+                            ),
+                            Text(
+                              'Edit',
+                              style: GoogleFonts.lato(
+                                  fontSize: 12.0,
+                                  color: Pallet.colorPrimaryDark,
+                                  fontWeight: FontWeight.w800),
+                            ),
+                          ],
+                        ),
+                      ),
+              ]
               ),
 
+              Spacer(flex: 1,),
 
 
-            if (widget.commentSessionModel!.isUserAdmin != true)
-              GestureDetector(
-                onTap: () {
-                  if (widget.commentSessionModel?.flagged == false)
-                    showCustomDialog(context,
-                        message: widget.commentSessionModel!.flagged == true
-                            ? AppString.unflag_advise_alert_note
-                            : AppString.flag_advise_alert_note,
-                        onPressed: () {
-                          PageRouter.goBack(context);
-                          sendToFlagged();
-                        });
-                  else
-                    showCustomDialog(context,
-                        message: widget.commentSessionModel!.flagged == false
-                            ? AppString.flag_advise_alert_note
-                            : AppString.unflag_advise_alert_note,
-                        onPressed: () {
-                          PageRouter.goBack(context);
-                          removeFromFlagged();
-                        });
-                },
-                child: Row(
-                  children: [
-                    Icon(
-                      widget.commentSessionModel!.flagged == true
-                          ? Icons.flag
-                          : Icons.flag_outlined,
-                      color: Pallet.colorPrimaryDark,
-                      size: 15,
-                    ),
-                    Text(
-                      'Flag',
-                      style: GoogleFonts.lato(
-                          fontSize: 12.0,
-                          color: Pallet.colorPrimaryDark,
-                          fontWeight: FontWeight.w800),
-                    ),
-                  ],
-                ),
-              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
 
-            if (widget.commentSessionModel!.userId == currentUser?.uid)
-            CupertinoButton(
-                padding: EdgeInsets.zero,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.edit,
-                      size: 15,
-                      color: Pallet.colorPrimaryDark,
-                    ),
-                    Text(
-                      'Edit',
-                      style: GoogleFonts.lato(
-                          fontSize: 12.0,
-                          color: Pallet.colorPrimaryDark,
-                          fontWeight: FontWeight.w800),
-                    ),
-                  ],
-                ),
-                onPressed: _showCardDialog
-            ),
-
-
-            FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              future: FirebaseFirestore.instance
-                  .collection("users")
-                  .doc(currentUser?.uid)
-                  .get(),
-              builder: (_, snapshot) {
-                if (snapshot.hasData) {
-                  var data = snapshot.data!.data();
-                  var userType = data?["userType"] ?? "0";
-                  debugPrint(
-                      " This is the actual userType of this user ${userType.toString()}");
-                  return
-                    Visibility(
-                      visible: userType != "REGULAR",
+                  if (widget.commentSessionModel!.isUserAdmin != true)
+                    GestureDetector(
+                      onTap: () {
+                        if (widget.commentSessionModel?.flagged == false)
+                          showCustomDialog(context,
+                              message: widget.commentSessionModel!.flagged == true
+                                  ? AppString.unflag_advise_alert_note
+                                  : AppString.flag_advise_alert_note,
+                              onPressed: () {
+                                PageRouter.goBack(context);
+                                sendToFlagged();
+                              });
+                        else
+                          showCustomDialog(context,
+                              message: widget.commentSessionModel!.flagged == false
+                                  ? AppString.flag_advise_alert_note
+                                  : AppString.unflag_advise_alert_note,
+                              onPressed: () {
+                                PageRouter.goBack(context);
+                                removeFromFlagged();
+                              });
+                      },
                       child: Row(
                         children: [
-                          GestureDetector(
-                            onTap: _showCardDialog,
-                            child: Row(
-                              children: [
-
-                                Icon(
-                                  Icons.edit,
-                                  size: 15,
-                                  color: Pallet.colorSecondary,
-                                ),
-
-                                Text(
-                                  'Mod',
-                                  style: GoogleFonts.lato(
-                                      fontSize: 12.0,
-                                      color: Pallet.colorSecondary,
-                                      fontWeight: FontWeight.w800),
-                                ),
-                              ],
-                            ),
+                          Icon(
+                            widget.commentSessionModel!.flagged == true
+                                ? Icons.flag
+                                : Icons.flag_outlined,
+                            color: Pallet.colorPrimary,
+                            size: 15,
                           ),
-
-                          SizedBox(width: 4,),
-
-                          Visibility(
-                            visible: widget.commentSessionModel?.flagged == true,
-                            child: GestureDetector(
-                              onTap: () {
-                                if (userType != "REGULAR")
-                                  showCustomDialog(context,
-                                      message: AppString.delete_advise_alert_note,
-                                      onPressed: () {
-                                        PageRouter.goBack(context);
-                                        deleteAdvise();
-                                      });                  },
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.delete_forever_rounded,
-                                    color: Pallet.colorPrimaryDark,
-                                    size: 15,
-                                  ),
-                                ],
-                              ),
-                            ),
+                          Text(
+                            'Flag',
+                            style: GoogleFonts.lato(
+                                fontSize: 12.0,
+                                color: Pallet.colorPrimary,
+                                fontWeight: FontWeight.w800),
                           ),
                         ],
                       ),
-                    );
-                }
+                    ),
 
-                return Center(child: CircularProgressIndicator());
-              },
-            ),
+                  SizedBox(width: 5,),
 
+                  FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                    future: FirebaseFirestore.instance
+                        .collection("users")
+                        .doc(currentUser?.uid)
+                        .get(),
+                    builder: (_, snapshot) {
+                      if (snapshot.hasData) {
+                        var data = snapshot.data!.data();
+                        var userType = data?["userType"] ?? "0";
+                        debugPrint(
+                            " This is the actual userType of this user ${userType.toString()}");
+                        return
+                          Visibility(
+                            visible: userType != "REGULAR",
+                            child: Row(
+                              children: [
+                                GestureDetector(
+                                  onTap: _showCardDialog,
+                                  child: Row(
+                                    children: [
 
-          ]
+                                      Icon(
+                                        Icons.edit,
+                                        size: 15,
+                                        color: Pallet.colorSecondary,
+                                      ),
+
+                                      Text(
+                                        'Mod',
+                                        style: GoogleFonts.lato(
+                                            fontSize: 12.0,
+                                            color: Pallet.colorSecondary,
+                                            fontWeight: FontWeight.w800),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                SizedBox(width: 4,),
+
+                                Visibility(
+                                  visible: widget.commentSessionModel?.flagged == true,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (userType != "REGULAR")
+                                        showCustomDialog(context,
+                                            message: AppString.delete_advise_alert_note,
+                                            onPressed: () {
+                                              PageRouter.goBack(context);
+                                              deleteAdvise();
+                                            });                  },
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.delete_forever_rounded,
+                                          color: Pallet.colorSecondary,
+                                          size: 15,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                      }
+
+                      return Center(child: CircularProgressIndicator());
+                    },
+                  ),
+                ],
+              ),
+
+            ],
           ),
 
           SizedBox(height: 6,),

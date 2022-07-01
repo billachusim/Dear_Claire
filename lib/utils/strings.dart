@@ -192,6 +192,9 @@ class AppString{
   static const String shareHeader =
       "See this anonymous diary session from Dear Claire - Secret Diary Chat:";
 
+  static const String shareAdviseHeader =
+      "There's this anonymous diary session in Dear Claire app titled - ";
+
   static const String userActivity = "user_activity";
   static const String ravePublicKay = "FLWPUBK-5fa3a7ddf156ce6fbeb2ccb8d4320aec-X";
   static const String raveSecretKay = "FLWSECK-0c846bf9a69d9caab9ee147623229a6b-X";

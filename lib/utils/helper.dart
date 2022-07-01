@@ -141,7 +141,7 @@ bool isValidEmail(String email) {
   return regex.hasMatch(email);
 }
 
-/// share content
+/// share session
 void shareMessage(String message) {
   Share.share(
       '${AppString.shareHeader}\n\n$message\n${AppString.shareLink}');

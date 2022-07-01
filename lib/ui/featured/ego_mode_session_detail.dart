@@ -14,8 +14,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../utils/color.dart';
+import '../../utils/strings.dart';
 import '../../widgets/comment_widget.dart';
 import '../Categories/similar_category_sessions.dart';
 import 'model/comment_session_model.dart';
@@ -519,6 +521,13 @@ class _EgoModeSessionDetailState
     
      $message  
     ''';
-    shareMessage(_message);
+    shareAdvise(_message);
   }
+
+  /// share advise
+  void shareAdvise(String message) {
+    Share.share(
+        '${AppString.shareAdviseHeader}${featuredSessionModel?.title}\n\n$message\n${AppString.shareLink}');
+  }
+
 }
