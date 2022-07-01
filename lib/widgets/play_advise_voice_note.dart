@@ -2,11 +2,7 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_audio_recorder2/flutter_audio_recorder2.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:wave/config.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:wave/wave.dart';
 import 'package:dear_claire/utils/color.dart';
 
 class PlayAdviseVoiceNote extends StatefulWidget {

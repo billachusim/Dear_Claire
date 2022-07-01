@@ -1,31 +1,19 @@
-import 'dart:io';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/ui/featured/widget/post_details_widget.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
-import 'package:dear_claire/utils/mood.dart';
-import 'package:dear_claire/widgets/follow_button.dart';
-import 'package:dear_claire/widgets/metoo_button.dart';
-import 'package:dear_claire/widgets/share_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Admob/ad_state.dart';
 import '../../../services/firebase_services.dart';
-import '../../../widgets/chat_edit_field.dart';
 import '../../../widgets/comment_widget.dart';
 import '../../../widgets/toast.dart';
-import '../../create_session/sound/play_sound_widget.dart';
-import '../../routes/page_router_animation.dart';
-import '../../visited_user_ego_page/visited_user_ego_page.dart';
 import '../model/comment_session_model.dart';
 
 class CustomPostDetailsWidget extends StatefulWidget {
