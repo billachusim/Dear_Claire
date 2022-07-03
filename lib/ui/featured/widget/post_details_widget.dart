@@ -12,8 +12,6 @@ import 'package:dear_claire/widgets/metoo_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
@@ -24,6 +22,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../services/firebase_services.dart';
 import '../../../services/user_model.dart';
 import '../../../utils/strings.dart';
+import '../../../widgets/custom_image_widget.dart';
 import '../../create_session/sound/custom_play_sound_widget.dart';
 import '../../routes/page_router_animation.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
@@ -236,10 +235,13 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                               children: [
                                 Visibility(
                                     visible: _session.imageUrls!.isNotEmpty,
-                                    child: FullScreenWidget(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        PageRouter.gotoWidget(CustomImageWidget(imageUrl: _session.imageUrls!.first.toString()), context);
+                                      },
                                       child: CachedNetworkImage(
-                                          height: 120,
-                                          width: 120,
+                                          height: 150,
+                                          width: 150,
                                           imageUrl:
                                               _session.imageUrls!.isNotEmpty
                                                   ? _session.imageUrls!.first
@@ -252,7 +254,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                                       BorderRadius.circular(25),
                                                   image: DecorationImage(
                                                     image: imageProvider,
-                                                    fit: BoxFit.fill,
                                                   ),
                                                 ),
                                               ),
@@ -272,7 +273,10 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                 ),
                                 Visibility(
                                     visible: _session.imageUrls!.isNotEmpty,
-                                    child: FullScreenWidget(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        PageRouter.gotoWidget(CustomImageWidget(imageUrl: _session.imageUrls!.last.toString()), context);
+                                      },
                                       child: CachedNetworkImage(
                                           height: 120,
                                           width: 120,
@@ -288,7 +292,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                                       BorderRadius.circular(25),
                                                   image: DecorationImage(
                                                     image: imageProvider,
-                                                    fit: BoxFit.fill,
                                                   ),
                                                 ),
                                               ),

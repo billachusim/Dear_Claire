@@ -4,12 +4,11 @@ import 'package:dear_claire/ui/create_session/sound/custom_play_sound_widget.dar
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/mood.dart';
-import 'package:dear_claire/widgets/follow_button.dart';
-import 'package:dear_claire/widgets/metoo_button.dart';
-import 'package:dear_claire/widgets/share_button.dart';
 import 'package:flutter/material.dart';
-import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import '../../widgets/custom_image_widget.dart';
+import '../routes/page_router_animation.dart';
 
 class SessionDetailsWidget extends StatelessWidget {
   CreateSessionModel? singleSessionModel;
@@ -161,10 +160,13 @@ class SessionDetailsWidget extends StatelessWidget {
                 children: [
                   Visibility(
                       visible: singleSessionModel!.imageUrls!.isNotEmpty,
-                      child: FullScreenWidget(
+                      child: GestureDetector(
+                        onTap: () {
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: singleSessionModel!.imageUrls!.first.toString()), context);
+                        },
                         child: CachedNetworkImage(
                             height: 120,
-                            width: 120,
+                            width: 100,
                             imageUrl: singleSessionModel!.imageUrls!.isNotEmpty
                                 ? singleSessionModel!.imageUrls!.first
                                 : '',
@@ -174,7 +176,6 @@ class SessionDetailsWidget extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(25),
                                     image: DecorationImage(
                                       image: imageProvider,
-                                      fit: BoxFit.fill,
                                     ),
                                   ),
                                 ),
@@ -191,10 +192,13 @@ class SessionDetailsWidget extends StatelessWidget {
                   SizedBox(width: 5,),
                   Visibility(
                       visible: singleSessionModel!.imageUrls!.isNotEmpty,
-                      child: FullScreenWidget(
+                      child: GestureDetector(
+                        onTap: () {
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: singleSessionModel!.imageUrls!.last.toString()), context);
+                        },
                         child: CachedNetworkImage(
                             height: 120,
-                            width: 120,
+                            width: 100,
                             imageUrl: singleSessionModel!.imageUrls!.isNotEmpty
                                 ? singleSessionModel!.imageUrls!.last
                                 : '',
@@ -204,7 +208,6 @@ class SessionDetailsWidget extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(25),
                                     image: DecorationImage(
                                       image: imageProvider,
-                                      fit: BoxFit.fill,
                                     ),
                                   ),
                                 ),

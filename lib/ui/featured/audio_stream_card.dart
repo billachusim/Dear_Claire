@@ -1,22 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
-import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
 import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/mood.dart';
-import 'package:dear_claire/widgets/comments_button.dart';
-import 'package:dear_claire/widgets/metoo_button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../utils/strings.dart';
-import '../../widgets/toast.dart';
 import '../create_session/sound/custom_play_sound_widget.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 

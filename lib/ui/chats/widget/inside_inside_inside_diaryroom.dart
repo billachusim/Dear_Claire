@@ -6,16 +6,13 @@ import 'package:dear_claire/ui/chats/data/chats.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../services/firebase_services.dart';
 import '../../../utils/strings.dart';
+import '../../../widgets/custom_image_widget.dart';
 import '../../../widgets/play_advise_voice_note.dart';
-import '../../../widgets/toast.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -199,17 +196,19 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                 children: [
                   Visibility(
                       visible: widget.chatModel!.image1 != '',
-                      child: FullScreenWidget(
+                      child: GestureDetector(
+                        onTap: () {
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image1.toString()), context);
+                        },
                         child: CachedNetworkImage(
-                            height: 75,
-                            width: 75,
+                            height: 85,
+                            width: 70,
                             imageUrl: widget.chatModel!.image1.toString(),
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),
                                 image: DecorationImage(
                                   image: imageProvider,
-                                  fit: BoxFit.fill,
                                 ),
                               ),
                             ),
@@ -228,17 +227,19 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                   Visibility(
                       visible:
                       widget.chatModel!.image2 != '',
-                      child: FullScreenWidget(
+                      child: GestureDetector(
+                        onTap: () {
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image2.toString()), context);
+                        },
                         child: CachedNetworkImage(
-                            height: 75,
-                            width: 75,
+                            height: 85,
+                            width: 70,
                             imageUrl: widget.chatModel!.image2.toString(),
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),
                                 image: DecorationImage(
                                   image: imageProvider,
-                                  fit: BoxFit.fill,
                                 ),
                               ),
                             ),

@@ -15,11 +15,11 @@ import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../utils/strings.dart';
+import '../../../widgets/custom_image_widget.dart';
 import '../../../widgets/play_advise_voice_note.dart';
 import '../../../widgets/toast.dart';
 
@@ -353,9 +353,12 @@ class ChatWidget extends StatelessWidget {
                 children: [
                   Visibility(
                       visible: chatModel!.image1 != '',
-                      child: FullScreenWidget(
+                      child: GestureDetector(
+                        onTap: () {
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: chatModel!.image1.toString()), context);
+                        },
                         child: CachedNetworkImage(
-                            height: 75,
+                            height: 85,
                             width: 75,
                             imageUrl: chatModel!.image1.toString(),
                             imageBuilder: (context, imageProvider) => Container(
@@ -363,7 +366,6 @@ class ChatWidget extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(25),
                                 image: DecorationImage(
                                   image: imageProvider,
-                                  fit: BoxFit.fill,
                                 ),
                               ),
                             ),
@@ -382,7 +384,10 @@ class ChatWidget extends StatelessWidget {
                   Visibility(
                       visible:
                       chatModel!.image2 != '',
-                      child: FullScreenWidget(
+                      child: GestureDetector(
+                        onTap: () {
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: chatModel!.image2.toString()), context);
+                        },
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
@@ -392,7 +397,6 @@ class ChatWidget extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(25),
                                 image: DecorationImage(
                                   image: imageProvider,
-                                  fit: BoxFit.fill,
                                 ),
                               ),
                             ),

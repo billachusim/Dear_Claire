@@ -38,7 +38,7 @@ class EmptyFollowedSessionWidget extends StatelessWidget {
             SizedBox(height: 10.h,),
             Text("So, you are currently not following any diary session.", textAlign: TextAlign.left,),
             SizedBox(height: 10.h,),
-            Text("Browse the Featured Sessions Tab and follow diary sessions of your choice to give real support to strangers and earn Love Points that you can cash out monthly.", textAlign: TextAlign.left,),
+            Text("Browse the Featured Sessions Tab and follow diary sessions of your choice to give realtime support to strangers and earn Love Points that you can cash out monthly.", textAlign: TextAlign.left,),
             SizedBox(height: 10.h,),
 
           ],

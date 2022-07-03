@@ -10,11 +10,11 @@ import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/mood.dart';
 import 'package:dear_claire/widgets/comments_button.dart';
+import 'package:dear_claire/widgets/custom_image_widget.dart';
 import 'package:dear_claire/widgets/metoo_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -277,10 +277,13 @@ class EgoModeSessionCard extends StatelessWidget {
                       children: [
                         Visibility(
                             visible: element.imageUrls!.isNotEmpty,
-                            child: FullScreenWidget(
+                            child: GestureDetector(
+                              onTap: () {
+                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: element.imageUrls!.first.toString()), context);
+                              },
                               child: CachedNetworkImage(
-                                  height: 75,
-                                  width: 75,
+                                  height: 100,
+                                  width: 100,
                                   imageUrl: element.imageUrls!.isNotEmpty
                                       ? element.imageUrls!.first
                                       : '',
@@ -289,7 +292,6 @@ class EgoModeSessionCard extends StatelessWidget {
                                           borderRadius: BorderRadius.circular(25),
                                           image: DecorationImage(
                                             image: imageProvider,
-                                            fit: BoxFit.fill,
                                           ),
                                         ),
                                       ),
@@ -307,10 +309,13 @@ class EgoModeSessionCard extends StatelessWidget {
 
                         Visibility(
                             visible: element.imageUrls!.isNotEmpty,
-                            child: FullScreenWidget(
+                            child: GestureDetector(
+                              onTap: () {
+                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: element.imageUrls!.last.toString()), context);
+                              },
                               child: CachedNetworkImage(
-                                  height: 75,
-                                  width: 75,
+                                  height: 100,
+                                  width: 100,
                                   imageUrl: element.imageUrls!.isNotEmpty
                                       ? element.imageUrls!.last
                                       : '',
@@ -319,7 +324,6 @@ class EgoModeSessionCard extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(25),
                                       image: DecorationImage(
                                         image: imageProvider,
-                                        fit: BoxFit.fill,
                                       ),
                                     ),
                                   ),

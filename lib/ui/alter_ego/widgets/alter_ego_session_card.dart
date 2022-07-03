@@ -18,6 +18,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../../../services/firebase_services.dart';
 import '../../../services/user_model.dart';
+import '../../../widgets/custom_image_widget.dart';
 import '../../create_session/sound/custom_play_sound_widget.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 
@@ -236,56 +237,64 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                       children: [
                         Visibility(
                             visible: element.imageUrls!.isNotEmpty,
-                            child: CachedNetworkImage(
-                                height: 75,
-                                width: 75,
-                                imageUrl: element.imageUrls!.isNotEmpty
-                                    ? element.imageUrls!.first
-                                    : '',
-                                imageBuilder: (context, imageProvider) => Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                      fit: BoxFit.fill,
+                            child: GestureDetector(
+                              onTap: () {
+                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: element.imageUrls!.first.toString()), context);
+                              },
+                              child: CachedNetworkImage(
+                                  height: 100,
+                                  width: 100,
+                                  imageUrl: element.imageUrls!.isNotEmpty
+                                      ? element.imageUrls!.first
+                                      : '',
+                                  imageBuilder: (context, imageProvider) => Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(25),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                placeholder: (context, url) =>
-                                    Center(child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/brown_boy_mask.png",
-                                  width: 48,
-                                  height: 48,
-                                ) //Icon(Icons.error),
+                                  placeholder: (context, url) =>
+                                      Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => Image.asset(
+                                    "assets/images/brown_boy_mask.png",
+                                    width: 48,
+                                    height: 48,
+                                  ) //Icon(Icons.error),
+                              ),
                             )),
 
                         SizedBox(width: 5,),
 
                         Visibility(
                             visible: element.imageUrls!.isNotEmpty,
-                            child: CachedNetworkImage(
-                                height: 75,
-                                width: 75,
-                                imageUrl: element.imageUrls!.isNotEmpty
-                                    ? element.imageUrls!.last
-                                    : '',
-                                imageBuilder: (context, imageProvider) => Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                      fit: BoxFit.fill,
+                            child: GestureDetector(
+                              onTap: () {
+                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: element.imageUrls!.last.toString()), context);
+                              },
+                              child: CachedNetworkImage(
+                                  height: 100,
+                                  width: 100,
+                                  imageUrl: element.imageUrls!.isNotEmpty
+                                      ? element.imageUrls!.last
+                                      : '',
+                                  imageBuilder: (context, imageProvider) => Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(25),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                placeholder: (context, url) =>
-                                    Center(child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/brown_boy_mask.png",
-                                  width: 48,
-                                  height: 48,
-                                ) //Icon(Icons.error),
+                                  placeholder: (context, url) =>
+                                      Center(child: CircularProgressIndicator()),
+                                  errorWidget: (context, url, error) => Image.asset(
+                                    "assets/images/brown_boy_mask.png",
+                                    width: 48,
+                                    height: 48,
+                                  ) //Icon(Icons.error),
+                              ),
                             )),
                       ],
                     ),

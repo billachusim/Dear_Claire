@@ -12,11 +12,9 @@ import 'package:dear_claire/widgets/comments_button.dart';
 import 'package:dear_claire/widgets/metoo_button.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../utils/strings.dart';
-import '../../widgets/toast.dart';
+import '../../widgets/custom_image_widget.dart';
 import '../create_session/sound/custom_play_sound_widget.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 
@@ -203,7 +201,10 @@ class CustomSearchCard extends StatelessWidget {
                       children: [
                         Visibility(
                             visible: element.imageUrls!.isNotEmpty,
-                            child: FullScreenWidget(
+                            child: GestureDetector(
+                              onTap: () {
+                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: element.imageUrls!.first.toString()), context);
+                              },
                               child: CachedNetworkImage(
                                   height: 45,
                                   width: 45,
@@ -215,7 +216,6 @@ class CustomSearchCard extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(25),
                                       image: DecorationImage(
                                         image: imageProvider,
-                                        fit: BoxFit.fill,
                                       ),
                                     ),
                                   ),
@@ -233,7 +233,10 @@ class CustomSearchCard extends StatelessWidget {
 
                         Visibility(
                             visible: element.imageUrls!.isNotEmpty,
-                            child: FullScreenWidget(
+                            child: GestureDetector(
+                              onTap: () {
+                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: element.imageUrls!.last.toString()), context);
+                              },
                               child: CachedNetworkImage(
                                   height: 45,
                                   width: 45,
@@ -245,7 +248,6 @@ class CustomSearchCard extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(25),
                                       image: DecorationImage(
                                         image: imageProvider,
-                                        fit: BoxFit.fill,
                                       ),
                                     ),
                                   ),

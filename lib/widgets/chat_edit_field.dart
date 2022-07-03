@@ -11,14 +11,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-import 'package:full_screen_image/full_screen_image.dart';
 import 'package:intl/intl.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import '../services/firebase_services.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../ui/create_session/sound/sound_widget.dart';
 import '../ui/featured/model/session.dart';
+import '../ui/routes/page_router_animation.dart';
 import '../utils/constant.dart';
+import 'custom_image_widget.dart';
 
 class ChatEditField extends StatefulWidget {
   final Function(String value, String voiceNote, String image1, String image2) onTap;
@@ -186,7 +187,10 @@ class _ChatEditFieldState extends State<ChatEditField> {
                     children: [
                       Visibility(
                           visible: imageList.isNotEmpty,
-                          child: FullScreenWidget(
+                          child: GestureDetector(
+                            onTap: () {
+                              PageRouter.gotoWidget(CustomImageWidget(imageUrl: _image1.toString()), context);
+                            },
                             child: CachedNetworkImage(
                                 height: 75,
                                 width: 75,
@@ -196,7 +200,6 @@ class _ChatEditFieldState extends State<ChatEditField> {
                                     borderRadius: BorderRadius.circular(25),
                                     image: DecorationImage(
                                       image: imageProvider,
-                                      fit: BoxFit.fill,
                                     ),
                                   ),
                                 ),
@@ -214,7 +217,10 @@ class _ChatEditFieldState extends State<ChatEditField> {
 
                       Visibility(
                           visible: imageList.isNotEmpty,
-                          child: FullScreenWidget(
+                          child: GestureDetector(
+                            onTap: () {
+                              PageRouter.gotoWidget(CustomImageWidget(imageUrl: _image2.toString()), context);
+                            },
                             child: CachedNetworkImage(
                                 height: 75,
                                 width: 75,
@@ -224,7 +230,6 @@ class _ChatEditFieldState extends State<ChatEditField> {
                                     borderRadius: BorderRadius.circular(25),
                                     image: DecorationImage(
                                       image: imageProvider,
-                                      fit: BoxFit.fill,
                                     ),
                                   ),
                                 ),

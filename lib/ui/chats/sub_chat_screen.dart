@@ -10,13 +10,11 @@ import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
 import '../../services/firebase_services.dart';
-import '../../services/user_model.dart';
 
 class Temp {
   String id;
@@ -93,21 +91,6 @@ class _SubChatScreenState extends State<SubChatScreen> {
     );
   }
 
-  void _showSubChatInterstitialAd() {
-    if (_interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          _createSubChatInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          _createSubChatInterstitialAd();
-        },
-      );
-      _interstitialAd!.show();
-    }
-  }
 
 
   // Admob Ad Units.

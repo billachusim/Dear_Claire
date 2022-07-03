@@ -9,13 +9,14 @@ import 'package:dear_claire/widgets/thanks_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../ui/featured/model/session.dart';
 import '../ui/routes/page_router_animation.dart';
 import '../ui/visited_user_ego_page/visited_user_ego_page.dart';
 import '../utils/strings.dart';
 import 'package:timeago/timeago.dart' as timeago;
+
+import 'custom_image_widget.dart';
 
 
 class CommentWidget extends StatefulWidget {
@@ -403,10 +404,14 @@ class _CommentWidgetState extends State<CommentWidget> {
                 children: [
                   Visibility(
                       visible: widget.commentSessionModel!.image1!.isNotEmpty,
-                      child: FullScreenWidget(
+                      child: GestureDetector(
+                        onTap: () {
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget
+                              .commentSessionModel!.image1!), context);
+                        },
                         child: CachedNetworkImage(
-                            height: 75,
-                            width: 75,
+                            height: 85,
+                            width: 70,
                             imageUrl: widget
                                     .commentSessionModel!.image1!,
                             imageBuilder: (context, imageProvider) => Container(
@@ -414,7 +419,6 @@ class _CommentWidgetState extends State<CommentWidget> {
                                     borderRadius: BorderRadius.circular(25),
                                     image: DecorationImage(
                                       image: imageProvider,
-                                      fit: BoxFit.fill,
                                     ),
                                   ),
                                 ),
@@ -432,17 +436,20 @@ class _CommentWidgetState extends State<CommentWidget> {
                   ),
                   Visibility(
                       visible: widget.commentSessionModel!.image2!.isNotEmpty,
-                      child: FullScreenWidget(
+                      child: GestureDetector(
+                        onTap: () {
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget
+                              .commentSessionModel!.image2!), context);
+                        },
                         child: CachedNetworkImage(
-                            height: 75,
-                            width: 75,
+                            height: 85,
+                            width: 70,
                             imageUrl: widget.commentSessionModel!.image2!,
                             imageBuilder: (context, imageProvider) => Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(25),
                                     image: DecorationImage(
                                       image: imageProvider,
-                                      fit: BoxFit.fill,
                                     ),
                                   ),
                                 ),
