@@ -21,8 +21,6 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../services/firebase_services.dart';
 import '../../../services/user_model.dart';
 import '../../../utils/color.dart';
-import '../../Categories/category_streams.dart';
-import '../../Categories/similar_category_sessions.dart';
 
 class AlterEgoModeSessionDetail extends StatefulWidget {
   var featuredSessionModel;
@@ -293,14 +291,21 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     saveAlterEgoCommentActivity();
   }
 
+
+  String timeAgo() {
+    final commentTime = featuredSessionModel!.timeCreated?.toDate();
+    final _time = timeago.format(commentTime!);
+    return _time;
+  }
+
+
   /// checks if advise meets original advise rules...
   /// if it does, then increment necessary counts.
   Future<bool> isOriginalAdvise(BuildContext context, String adviseText, Session session) async {
-    final sessionTime = session.timeCreated?.toDate();
-    final _time = timeago.format(sessionTime!);
-
+    final _timeAgo = timeAgo();
     final _advise = adviseText.toString();
     final _length = _advise.length;
+    if(!_timeAgo.contains('day'))
     if (_advise.contains("arling"))
       if (_length >= 20)
 

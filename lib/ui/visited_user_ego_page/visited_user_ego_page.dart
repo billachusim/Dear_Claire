@@ -581,6 +581,14 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   {
     return Material(
       child: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+              AppImages.appChatBg,
+            ),
+            fit: BoxFit.fill,
+          ),
+        ),
         margin: EdgeInsets.only(bottom: 3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1562,7 +1570,13 @@ class VisitedUserActivityCard extends StatelessWidget {
               context),
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
+              image: DecorationImage(
+                image: AssetImage(
+                  AppImages.appChatBg,
+                ),
+                fit: BoxFit.fill,
+              ),
+              borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
             padding: EdgeInsets.all(8),
             child: Row(

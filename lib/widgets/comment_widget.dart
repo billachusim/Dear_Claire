@@ -158,6 +158,37 @@ class _CommentWidgetState extends State<CommentWidget> {
   }
 
 
+  /// Increase advise counter when user creates new comment.
+
+  Future<void> decrementAdviseCount() async {
+    final userId = widget.commentSessionModel!.userId.toString();
+    FirebaseFirestore.instance
+        .collection("users")
+        .doc(userId)
+        .set({
+      "adviseCount": FieldValue.increment(-1),
+    },
+      SetOptions(merge: true),
+    );
+    logger.d('Decreased advise count');
+  }
+
+  /// Increase total love count when user creates new session or comment.
+
+  Future<void> decrementTotalLoveCount() async {
+    final userId = widget.commentSessionModel!.userId.toString();
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .set({
+        'totalLoveCount': FieldValue.increment(-10),
+      },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully decreased total love count');
+  }
+
+
 
 
   /// Flag an Advise
@@ -507,7 +538,10 @@ class _CommentWidgetState extends State<CommentWidget> {
                               onPressed: () {
                                 PageRouter.goBack(context);
                                 deleteAdvise();
-                              });                  },
+                                decrementAdviseCount();
+                                decrementTotalLoveCount();
+                              });
+                        },
                       child: Visibility(
                         visible: widget.userId == currentUser?.uid,
                         child: Row(
@@ -656,7 +690,10 @@ class _CommentWidgetState extends State<CommentWidget> {
                                             onPressed: () {
                                               PageRouter.goBack(context);
                                               deleteAdvise();
-                                            });                  },
+                                              decrementAdviseCount();
+                                              decrementTotalLoveCount();
+                                            });
+                                      },
                                     child: Row(
                                       children: [
                                         Icon(

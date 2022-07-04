@@ -10,6 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../utils/strings.dart';
 import '../featured/widget/custom_post_details_screen.dart';
 
 class ActivityWidget extends StatelessWidget {
@@ -93,7 +94,13 @@ class UserActivityCard extends StatelessWidget {
               context),
           child: Container(
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(8)),
+              image: DecorationImage(
+                image: AssetImage(
+                  AppImages.appChatBg,
+                ),
+                fit: BoxFit.fill,
+              ),
+                borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
             padding: EdgeInsets.all(8),
             child: Row(

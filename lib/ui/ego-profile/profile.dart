@@ -23,7 +23,6 @@ import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import '../create_session/create_session_page.dart';
 import '../routes/page_router_animation.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'clairevatar.dart';
@@ -274,6 +273,14 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   {
     return Material(
       child: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+              AppImages.appChatBg,
+            ),
+            fit: BoxFit.fill,
+          ),
+        ),
         width: getDeviceWidth(context),
         margin: EdgeInsets.only(bottom: 3),
         child: Column(
@@ -1040,7 +1047,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             ),
 
 
-                            /// Second tab is Archive Tab
+
+                            /// Second tab is Claire Love Tab
 
                             Expanded(
                               child: GestureDetector(
@@ -1057,9 +1065,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                   decoration: BoxDecoration(
                                       border: currentTabIndex != 1
                                           ? Border.all(
-                                          color: Pallet.deepGreen, width: 3)
+                                          color: Pallet.colorSecondary, width: 3)
                                           : Border.all(
-                                          color: Pallet.deepGreen, width: 6),
+                                          color: Pallet.colorSecondary, width: 6),
                                       borderRadius: BorderRadius.circular(25),
                                       color: currentTabIndex != 1
                                           ? Pallet.colorWhite
@@ -1070,11 +1078,11 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
-                                          "Archive",
+                                          "Loves",
                                           style: TextStyle(
                                             color: currentTabIndex != 1
-                                                ? Pallet.deepGreen
-                                                : Pallet.deepGreen,
+                                                ? Pallet.colorSecondary
+                                                : Pallet.colorSecondary,
                                             fontWeight: currentTabIndex != 1
                                                 ? FontWeight.w500
                                                 : FontWeight.w700,
@@ -1084,8 +1092,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                         SizedBox(width: 14),
                                         currentTabIndex != 1
                                             ? SizedBox.shrink()
-                                            : Icon(Icons.archive_rounded,
-                                            color: Pallet.deepGreen)
+                                            : Icon(Icons.monetization_on_rounded,
+                                            color: Pallet.colorSecondary)
                                       ],
                                     ),
                                   ),
@@ -1093,7 +1101,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                               ),
                             ),
 
-                            /// Third tab is Claire Love Tab
+
+                            /// Third tab is Archive Tab
 
                             Expanded(
                               child: GestureDetector(
@@ -1110,9 +1119,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                   decoration: BoxDecoration(
                                       border: currentTabIndex != 2
                                           ? Border.all(
-                                          color: Pallet.colorSecondary, width: 3)
+                                          color: Pallet.deepGreen, width: 3)
                                           : Border.all(
-                                          color: Pallet.colorSecondary, width: 6),
+                                          color: Pallet.deepGreen, width: 6),
                                       borderRadius: BorderRadius.circular(25),
                                       color: currentTabIndex != 2
                                           ? Pallet.colorWhite
@@ -1123,11 +1132,11 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
-                                          "Loves",
+                                          "Archive",
                                           style: TextStyle(
                                             color: currentTabIndex != 2
-                                                ? Pallet.colorSecondary
-                                                : Pallet.colorSecondary,
+                                                ? Pallet.deepGreen
+                                                : Pallet.deepGreen,
                                             fontWeight: currentTabIndex != 2
                                                 ? FontWeight.w500
                                                 : FontWeight.w700,
@@ -1137,14 +1146,15 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                         SizedBox(width: 14),
                                         currentTabIndex != 2
                                             ? SizedBox.shrink()
-                                            : Icon(Icons.monetization_on_rounded,
-                                            color: Pallet.colorSecondary)
+                                            : Icon(Icons.archive_rounded,
+                                            color: Pallet.deepGreen)
                                       ],
                                     ),
                                   ),
                                 ),
                               ),
                             ),
+
                           ]
                       ),
                     ),
@@ -1154,8 +1164,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                         controller: _tabController,
                         children: [
                           ActivityWidget(),
-                          ArchiveWidget(),
                           ClaireLoves(),
+                          ArchiveWidget(),
                         ],
                       ),
                     )
