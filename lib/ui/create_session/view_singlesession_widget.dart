@@ -1,7 +1,6 @@
 
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/data/models/session_model.dart';
 import 'package:dear_claire/ui/create_session/session_details_widget.dart';
 import 'package:dear_claire/ui/create_session/session_model.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';

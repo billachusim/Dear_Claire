@@ -1,10 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/Search/custom_search_card.dart';
 import 'package:dear_claire/ui/splash_screen/custom_rotate_bacground.dart';
-import 'package:dear_claire/ui/splash_screen/splash.dart';
 import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,8 +12,6 @@ import '../../utils/helper.dart';
 import '../../utils/strings.dart';
 import '../Categories/category_sessions.dart';
 import '../featured/model/session.dart';
-import '../model/session.dart';
-import '../../../widgets/ego_mode_session_card.dart';
 import '../routes/page_router_animation.dart';
 
 class SearchPage extends StatefulWidget {

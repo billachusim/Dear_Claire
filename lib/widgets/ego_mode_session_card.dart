@@ -16,6 +16,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/firebase_services.dart';
@@ -270,74 +271,47 @@ class EgoModeSessionCard extends StatelessWidget {
                   ),
                 ),
 
-                Container(
-                  child: Align(
-                      alignment: Alignment.bottomLeft,
-                    child: Row(
-                      children: [
-                        Visibility(
-                            visible: element.imageUrls!.isNotEmpty,
-                            child: GestureDetector(
-                              onTap: () {
-                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: element.imageUrls!.first.toString()), context);
-                              },
-                              child: CachedNetworkImage(
-                                  height: 100,
-                                  width: 100,
-                                  imageUrl: element.imageUrls!.isNotEmpty
-                                      ? element.imageUrls!.first
-                                      : '',
-                                  imageBuilder: (context, imageProvider) => Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(25),
-                                          image: DecorationImage(
-                                            image: imageProvider,
-                                          ),
-                                        ),
-                                      ),
-                                  placeholder: (context, url) =>
-                                      Center(child: CircularProgressIndicator()),
-                                  errorWidget: (context, url, error) => Image.asset(
-                                        "assets/images/brown_boy_mask.png",
-                                        width: 48,
-                                        height: 48,
-                                      ) //Icon(Icons.error),
-                                  ),
-                            )),
-
-                        SizedBox(width: 5,),
-
-                        Visibility(
-                            visible: element.imageUrls!.isNotEmpty,
-                            child: GestureDetector(
-                              onTap: () {
-                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: element.imageUrls!.last.toString()), context);
-                              },
-                              child: CachedNetworkImage(
-                                  height: 100,
-                                  width: 100,
-                                  imageUrl: element.imageUrls!.isNotEmpty
-                                      ? element.imageUrls!.last
-                                      : '',
-                                  imageBuilder: (context, imageProvider) => Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(25),
-                                      image: DecorationImage(
-                                        image: imageProvider,
-                                      ),
+                Visibility(
+                  visible: element.imageUrls!.isNotEmpty,
+                  child: GridView.count(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    crossAxisCount: 5,
+                    children: List.generate(element.imageUrls!.length, (index) {
+                      String image = element.imageUrls![index].toString();
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: <Widget>[
+                          GestureDetector(
+                            onTap: () {
+                              PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
+                            },
+                            child: CachedNetworkImage(
+                                height: 100,
+                                width: 100,
+                                imageUrl: image,
+                                imageBuilder: (context, imageProvider) => Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(25),
+                                    image: DecorationImage(
+                                      image: imageProvider,
+                                      fit: BoxFit.cover
                                     ),
                                   ),
-                                  placeholder: (context, url) =>
-                                      Center(child: CircularProgressIndicator()),
-                                  errorWidget: (context, url, error) => Image.asset(
-                                    "assets/images/brown_boy_mask.png",
-                                    width: 48,
-                                    height: 48,
-                                  ) //Icon(Icons.error),
-                              ),
-                            )),
-                      ],
-                    ),
+                                  margin: EdgeInsets.all(3),
+                                ),
+                                placeholder: (context, url) =>
+                                    Center(child: CircularProgressIndicator()),
+                                errorWidget: (context, url, error) => Image.asset(
+                                  "assets/images/brown_boy_mask.png",
+                                  width: 48,
+                                  height: 48,
+                                ) //Icon(Icons.error),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
                   ),
                 ),
               ],

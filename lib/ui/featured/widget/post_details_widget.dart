@@ -228,88 +228,53 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             ),
                           ),
                         ),
-                        Container(
-                          child: Align(
-                            alignment: Alignment.topLeft,
-                            child: Row(
-                              children: [
-                                Visibility(
-                                    visible: _session.imageUrls!.isNotEmpty,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        PageRouter.gotoWidget(CustomImageWidget(imageUrl: _session.imageUrls!.first.toString()), context);
-                                      },
+
+                        Visibility(
+                          visible: _session.imageUrls!.isNotEmpty,
+                          child: GridView.count(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            crossAxisCount: 5,
+                            children: List.generate(_session.imageUrls!.length, (index) {
+                              String image = _session.imageUrls![index].toString();
+                              return Stack(
+                                fit: StackFit.expand,
+                                children: <Widget>[
+                                  GestureDetector(
+                                    onTap: () {
+                                      PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
+                                    },
+                                    child: Container(
                                       child: CachedNetworkImage(
-                                          height: 150,
-                                          width: 150,
-                                          imageUrl:
-                                              _session.imageUrls!.isNotEmpty
-                                                  ? _session.imageUrls!.first
-                                                  : '',
-                                          imageBuilder: (context,
-                                                  imageProvider) =>
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(25),
-                                                  image: DecorationImage(
-                                                    image: imageProvider,
-                                                  ),
-                                                ),
+                                          height: 100,
+                                          width: 100,
+                                          imageUrl: image,
+                                          imageBuilder: (context, imageProvider) => Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(25),
+                                              image: DecorationImage(
+                                                  image: imageProvider,
+                                                  fit: BoxFit.cover
                                               ),
-                                          placeholder: (context, url) => Center(
-                                              child:
-                                                  CircularProgressIndicator()),
-                                          errorWidget: (context, url, error) =>
-                                              Image.asset(
-                                                "assets/images/brown_boy_mask.png",
-                                                width: 48,
-                                                height: 48,
-                                              ) //Icon(Icons.error),
+                                            ),
                                           ),
-                                    )),
-                                SizedBox(
-                                  width: 5,
-                                ),
-                                Visibility(
-                                    visible: _session.imageUrls!.isNotEmpty,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        PageRouter.gotoWidget(CustomImageWidget(imageUrl: _session.imageUrls!.last.toString()), context);
-                                      },
-                                      child: CachedNetworkImage(
-                                          height: 120,
-                                          width: 120,
-                                          imageUrl:
-                                              _session.imageUrls!.isNotEmpty
-                                                  ? _session.imageUrls!.last
-                                                  : '',
-                                          imageBuilder: (context,
-                                                  imageProvider) =>
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(25),
-                                                  image: DecorationImage(
-                                                    image: imageProvider,
-                                                  ),
-                                                ),
-                                              ),
-                                          placeholder: (context, url) => Center(
-                                              child:
-                                                  CircularProgressIndicator()),
-                                          errorWidget: (context, url, error) =>
-                                              Image.asset(
-                                                "assets/images/brown_boy_mask.png",
-                                                width: 48,
-                                                height: 48,
-                                              ) //Icon(Icons.error),
-                                          ),
-                                    )),
-                              ],
-                            ),
+                                          placeholder: (context, url) =>
+                                              Center(child: CircularProgressIndicator()),
+                                          errorWidget: (context, url, error) => Image.asset(
+                                            "assets/images/brown_boy_mask.png",
+                                            width: 48,
+                                            height: 48,
+                                          ) //Icon(Icons.error),
+                                      ),
+                                      margin: EdgeInsets.all(3),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }),
                           ),
                         ),
+
                         SizedBox(
                           height: 10,
                         ),

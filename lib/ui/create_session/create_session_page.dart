@@ -1612,7 +1612,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     String error = 'No Error Detected';
     try {
       imageList = await MultiImagePicker.pickImages(
-        maxImages: 2,
+        maxImages: 10,
         enableCamera: true,
         selectedAssets: c.images,
         cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
@@ -1653,13 +1653,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   Widget _imagesGridView() {
     return Container(
-      width: 500,
+      width: 400,
       alignment: Alignment.center,
       padding: EdgeInsets.all(20),
       child: GridView.count(
         shrinkWrap: true,
         physics: NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
+        crossAxisCount: 5,
         children: List.generate(c.images.length, (index) {
           Asset asset = c.images[index];
           return Stack(
@@ -1667,8 +1667,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
             children: <Widget>[
               AssetThumb(
                 asset: asset,
-                width: 300,
-                height: 400,
+                width: 200,
+                height: 300,
               ),
               Positioned(
                   right: -2,
