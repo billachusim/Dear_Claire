@@ -7,15 +7,15 @@ import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/widgets/play_advise_voice_note.dart';
 import 'package:dear_claire/widgets/thanks_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/data/notification_model.dart' as pushNotification;
+import '../services/notification_service.dart';
 import '../ui/featured/model/session.dart';
 import '../ui/routes/page_router_animation.dart';
 import '../ui/visited_user_ego_page/visited_user_ego_page.dart';
 import '../utils/strings.dart';
 import 'package:timeago/timeago.dart' as timeago;
-
 import 'custom_image_widget.dart';
 
 
@@ -186,6 +186,23 @@ class _CommentWidgetState extends State<CommentWidget> {
       SetOptions(merge: true),
     );
     logger.d('Successfully decreased total love count');
+  }
+
+  /// subscribe user to a topic
+  Future<void> notifyForDeletedAdvise() async {
+    final userId = widget.commentSessionModel!.userId.toString();
+    final sessionTitle = widget.featuredSessionModel!.title ?? '';
+    final sessionId = widget.featuredSessionModel!.sessionId.toString();
+    final pushNotification.NotificationModel _notificationModel =
+    pushNotification.NotificationModel(
+      to: '/topics/$sessionId',
+      collapseKey: 'type_a',
+      data: pushNotification.Data(id: userId),
+      notification: pushNotification.Notification(
+          title: 'Please, Be Careful.', body: 'Your advise on the session: $sessionTitle was deleted. You lost 10 Loves.'),
+    );
+    notificationService.sendNotification(_notificationModel.toJson());
+    logger.d('Deleted an advise from this session: $sessionTitle');
   }
 
 
@@ -540,6 +557,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                                 deleteAdvise();
                                 decrementAdviseCount();
                                 decrementTotalLoveCount();
+                                notifyForDeletedAdvise();
                               });
                         },
                       child: Visibility(
@@ -692,6 +710,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                                               deleteAdvise();
                                               decrementAdviseCount();
                                               decrementTotalLoveCount();
+                                              notifyForDeletedAdvise();
                                             });
                                       },
                                     child: Row(

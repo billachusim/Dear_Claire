@@ -66,22 +66,6 @@ class FirebaseServices extends ChangeNotifier {
   }
 
 
-  /// subscribe user to a topic
-  Future<void> _subscribeToYourSession(String sender, CreateSessionModel session) async {
-    _usersID = currentUser?.uid.toString();
-
-    await _firebaseMessaging.subscribeToTopic(session.sessionId!);
-    final pushNotification.NotificationModel _notificationModel =
-    pushNotification.NotificationModel(
-      to: '/topics/${session.sessionId}',
-      collapseKey: 'type_a',
-      data: pushNotification.Data(id: _usersID),
-      notification: pushNotification.Notification(
-          title: session.title ?? '', body: '$sender followed the session'),
-    );
-    notificationService.sendNotification(_notificationModel.toJson());
-    logger.d('Following this session: ${session.title!}');
-  }
 
   /// subscribe user to chat room
   Future<void> _subscribeToChatRoom(String id) async {
@@ -609,7 +593,7 @@ class FirebaseServices extends ChangeNotifier {
 
 
 
-  /// follow a featured session
+  /// follow your session immediately upon creation
   Future<void> followYourSessionImmediately(BuildContext context,
       {CreateSessionModel? session}) async {
     _firebaseFirestore
@@ -618,9 +602,61 @@ class FirebaseServices extends ChangeNotifier {
         .update({
       'followers': FieldValue.arrayUnion([_usersID]),
       'timeLastActivity': FieldValue.serverTimestamp(),
-      //"featured": false,
     });
     _subscribeToYourSession(session.userNickname.toString(), session);
+  }
+
+
+
+  /// subscribe user to his session topic.
+  Future<void> _subscribeToYourSession(String sender, CreateSessionModel session) async {
+    _usersID = currentUser?.uid.toString();
+
+    await _firebaseMessaging.subscribeToTopic(session.sessionId!);
+    final pushNotification.NotificationModel _notificationModel =
+    pushNotification.NotificationModel(
+      to: '/topics/${session.sessionId}',
+      collapseKey: 'type_a',
+      data: pushNotification.Data(id: _usersID),
+      notification: pushNotification.Notification(
+          title: session.title ?? '', body: 'You will be notified of new advises.'),
+    );
+    notificationService.sendNotification(_notificationModel.toJson());
+    logger.d('Following this session: ${session.title!}');
+  }
+
+
+  /// follow a session immediately upon advise.
+  Future<void> followAdvisedSessionImmediately(BuildContext context,
+      {Session? session}) async {
+    _usersID = currentUser?.uid.toString();
+    if(!session!.followers!.contains(_usersID)) {
+      _firebaseFirestore
+          .collection(AppString.appFeaturedSessions)
+          .doc(session.sessionId)
+          .update({
+        'followers': FieldValue.arrayUnion([_usersID]),
+      });
+      _subscribeToAdvisedSession(session);
+    }
+  }
+
+
+  /// subscribe user to this session topic.
+  Future<void> _subscribeToAdvisedSession(Session session) async {
+    _usersID = currentUser?.uid.toString();
+
+    await _firebaseMessaging.subscribeToTopic(session.sessionId!);
+    final pushNotification.NotificationModel _notificationModel =
+    pushNotification.NotificationModel(
+      to: '/topics/${session.sessionId}',
+      collapseKey: 'type_a',
+      data: pushNotification.Data(id: _usersID),
+      notification: pushNotification.Notification(
+          title: session.title ?? '', body: 'You are now following this session. Will get notifications.'),
+    );
+    notificationService.sendNotification(_notificationModel.toJson());
+    logger.d('Following this session: ${session.title!}');
   }
 
 
