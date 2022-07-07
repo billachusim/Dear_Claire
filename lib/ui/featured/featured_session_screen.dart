@@ -1,4 +1,3 @@
-import 'package:dear_claire/ui/Categories/category_streams.dart';
 import 'package:dear_claire/ui/Categories/users_sessions_by_moods.dart';
 import 'package:dear_claire/ui/featured/public_sessions.dart';
 import 'package:dear_claire/utils/color.dart';

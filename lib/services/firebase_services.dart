@@ -247,7 +247,7 @@ class FirebaseServices extends ChangeNotifier {
         .where("archived", isEqualTo: false)
         .where('followers', arrayContains: _usersID)
         .limit(AppString.appSessionLength)
-        //.orderBy('timeLastActivity', descending: true)
+        .orderBy('timeLastActivity', descending: true)
         .snapshots();
   }
 
@@ -271,9 +271,9 @@ class FirebaseServices extends ChangeNotifier {
       final _value = await _firebaseFirestore
           .collection(AppString.appFeaturedSessions)
           .where("userId", isEqualTo: _usersID)
-          .where("flagged", isEqualTo: false)
+          //.where("flagged", isEqualTo: false)
           .where("archived", isEqualTo: false)
-          .orderBy('timeCreated', descending: true)
+          .orderBy('timeLastActivity', descending: true)
           .limit(AppString.appSessionLength)
           .get();
 
@@ -295,10 +295,8 @@ class FirebaseServices extends ChangeNotifier {
       final _value = await _firebaseFirestore
           .collection(AppString.appFeaturedSessions)
           .where("archived", isEqualTo: false)
-          .where("featured", isEqualTo: false)
           .where("repliesEnabled", isEqualTo: true)
-          .where("respondentUserId", isNotEqualTo: currentUser?.uid)
-          .orderBy('respondentUserId', descending: true)
+          .where("respondentUserId", isEqualTo: '')
           .orderBy('timeCreated', descending: true)
           .limit(AppString.appSessionLength)
           .get();
@@ -647,15 +645,17 @@ class FirebaseServices extends ChangeNotifier {
     _usersID = currentUser?.uid.toString();
 
     await _firebaseMessaging.subscribeToTopic(session.sessionId!);
-    final pushNotification.NotificationModel _notificationModel =
-    pushNotification.NotificationModel(
-      to: '/topics/${session.sessionId}',
-      collapseKey: 'type_a',
-      data: pushNotification.Data(id: _usersID),
-      notification: pushNotification.Notification(
-          title: session.title ?? '', body: 'You are now following this session. Will get notifications.'),
-    );
-    notificationService.sendNotification(_notificationModel.toJson());
+    if(!session.followers!.contains(_usersID)) {
+      final pushNotification.NotificationModel _notificationModel =
+      pushNotification.NotificationModel(
+        to: '/topics/${session.sessionId}',
+        collapseKey: 'type_a',
+        data: pushNotification.Data(id: _usersID),
+        notification: pushNotification.Notification(
+            title: session.title ?? '', body: 'You are now following this session. Will get notifications.'),
+      );
+      notificationService.sendNotification(_notificationModel.toJson());
+    }
     logger.d('Following this session: ${session.title!}');
   }
 

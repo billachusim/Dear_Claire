@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/widgets.dart';
 
 class HowClaireWorks extends StatefulWidget {
   const HowClaireWorks({Key? key}) : super(key: key);
@@ -20,7 +19,6 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     return Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: true,
@@ -278,7 +276,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                     )
                 ),
                 Text("\nFor a diary session to be counted, it must contain the phrase Dear Claire and must be more than 50 characters.\n\n"
-                    "For an advise to be counted, it must contain the word Darling, must be up to 20 characters and must be sent within 2 days of the diary session.\n\n"
+                    "For an advise to be counted, it must contain the word Darling, must be up to 20 characters and must be sent within 24 hours of the diary session.\n\n"
                     "Claire reserves the right to increase or decrease session and advise counts during the course of cash out verifications.",
                     style: GoogleFonts.lato(
                         fontSize: 15.0,

@@ -254,7 +254,7 @@ class AppString{
       "Your Top Up will actually be converted and sent to your Claireloves Wallet and can still be cashed out by you anytime in the future.\n\n"
       "After a Successful Top Up, please tap the Request Access button and you'll be taken through Clairentation (assessment/interview/orientation) where you'll be provided with the secret details to access the Alter-Ego Mode.";
   static const String how_does_it_work = "\n\n\n 🌺 How Does it Work?";
-  static const String how_does_it_work_paragraph = " \n To Switch to Alter-Ego Mode, simply open the Claire menu and tap the spinning Claire icon 🌺 at the top left of the app menu. Wait a second...\n At the (one time only) login screen, type in the Claire Id and Access Code given to you by Claire and Switch In. Alter-Egos Mode is completely anonymous just like the Diary mode.";
+  static const String how_does_it_work_paragraph = " \n To Switch to Alter-Ego Mode, simply open the app menu and tap the Claire icon 🌺 at the top right of the app menu. Wait a second...\n At the (one time only) login screen, type in the Claire Id and Access Code given to you by Claire and Switch In. Alter-Egos Mode is completely anonymous just like the Diary mode.";
   static const String creators_quote = "\n\n\n Creator's Quote";
   static const String creators_quote_paragraph = "\n Asides the graciousness of being such an integral and intimate part of people's lives; the best thing about Alter Ego Mode is the proven psychological soothing effect it has on its users. \n By comforting other people and by trying to explain some of their worst confusions, you are subconsciously getting answers to your own life bothering questions. You'll get humbled and grateful in the solace of knowing you are not alone in these struggles of life.\n- B.A. Nov, 2017.";
   static const String request_access = "Request Access  🌺";
@@ -263,9 +263,9 @@ class AppString{
   static const String alter_ego_orientation_first_header = "Hello Darling🌺\n\nWelcome to the first stage of your Clairentation.\n\nNone of the details discussed here will be made public. The personal details you are about to provide are needed to confirm your gender and qualification for access to Alter-Ego or Super-Ego Mode.\n\nAlso as an Alter-Ego, you automatically become an elite member of our little secret group of Claires Of The World 🌺 therefore, for the many benefits that will come to you in the future for being a Claire, we hope to reach you via the details you will provide.";
   static const String switchText1 = "Are you truly interested in becoming an Alter-Ego not just to read random people\'s Diary Sessions but to reply them with happy vibes and good advises?";
   static const String switchText2 = "Do you believe that the world will be a better place if people treat other people like themselves wish to be treated?";
-  static const String switchText3 = "Are you following @socialfaculty on Instagram?";
-  static const String switchText4 = "Did you first learn about Claire on Instagram?";
-  static const String switchText5 = "Have you rated Claire Diary five stars with a short sweet review on Playstore?";
+  static const String switchText3 = "Do you believe that humility and selfless leadership are good practises for life?";
+  static const String switchText4 = "Did you first learn about Claire on social media?";
+  static const String switchText5 = "Have you rated Claire Diary five stars with a short review on Playstore?";
   static const String switchText6 = "Do you truly believe in the Claire Project? That everyone deserves a true friend in need and indeed?";
   static const String switchText7 = "Are you ready to become Claire now?";
   static const String switchHeaderTwo = "Please Answer The Following Questions By Switching Yes Or No";

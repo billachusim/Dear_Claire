@@ -1,7 +1,6 @@
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/strings.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -26,6 +25,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
   TextEditingController _emailController = TextEditingController();
   TextEditingController _facebookNameController = TextEditingController();
   TextEditingController _instagramUserNameController = TextEditingController();
+  TextEditingController _twitterUserNameController = TextEditingController();
   TextEditingController _shortBioController = TextEditingController();
   TextEditingController _value1Controller = TextEditingController();
   TextEditingController _value2Controller = TextEditingController();
@@ -53,20 +53,35 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
             child: ListView(
               children: [
 
-                Align(
-                  alignment:Alignment.topLeft,
-                  child: Container(
-                    padding:EdgeInsets.only(left: 16, bottom: 8),
-                    child: GestureDetector(
-                        onTap: (){
-                          print("Clicking on X");
-                          Navigator.pop(context);
-                        },
-                        child: SvgPicture.asset("assets/images/ic_close.svg",
-                          width: 17.0,
-                          height: 17.0,)
+                Row(
+                  children: [
+                    Align(
+                      alignment:Alignment.topLeft,
+                      child: Container(
+                        padding:EdgeInsets.all(14),
+                        child: GestureDetector(
+                            onTap: (){
+                              print("Clicking on X");
+                              Navigator.pop(context);
+                            },
+                            child: SvgPicture.asset("assets/images/ic_close.svg",
+                              width: 17.0,
+                              height: 17.0,)
+                        ),
+                      ),
                     ),
-                  ),
+
+                    SizedBox(width: 10,),
+
+                    Text("Alter Ego Reg Form",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w600,
+                        color: Pallet.colorSecondary
+                      ),
+                    )
+                  ],
                 ),
 
                 Container(
@@ -96,6 +111,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               if (value!.isEmpty) {
                                 return "Enter full name";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _fullNameController,
@@ -130,6 +146,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               if (value!.isEmpty) {
                                 return "Enter full address";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _fullAddressController,
@@ -164,6 +181,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               if (value!.isEmpty) {
                                 return "Enter a valid phone number";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _phoneController,
@@ -198,6 +216,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               if (value!.isEmpty) {
                                 return "Enter your age";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _ageController,
@@ -232,6 +251,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               if (value!.isEmpty) {
                                 return "Enter name of your school or occupation";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _nameOfSchoolController,
@@ -266,6 +286,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               if (value!.isEmpty) {
                                 return "Enter your best friends or relative name";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _nameOfBestFriendController,
@@ -300,6 +321,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               if (value!.isEmpty) {
                                 return "Enter your best friends or relative phone number";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _bestFriendNumController,
@@ -334,6 +356,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               if (value!.isEmpty) {
                                 return "Enter an amount you donated";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _amountDonatedController,
@@ -368,6 +391,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               if (value!.isEmpty) {
                                 return "Enter a valid email";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _emailController,
@@ -402,6 +426,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               if (value!.isEmpty) {
                                 return "Enter your Facebook Name";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _facebookNameController,
@@ -436,6 +461,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               if (value!.isEmpty) {
                                 return "Enter your Instagram Username";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _instagramUserNameController,
@@ -468,13 +494,49 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             onChanged: (value) {},
                             validator: (value) {
                               if (value!.isEmpty) {
-                                return "Enter a short bio of yourself";
+                                return "Enter your Instagram Username";
                               }
+                              return null;
+                            },
+                            textInputAction: TextInputAction.next,
+                            controller: _twitterUserNameController,
+                            decoration: new InputDecoration(
+                              hintText: "@socialfaculty",
+                              labelText: "Twitter Username",
+                              labelStyle:
+                              TextStyle(color: Pallet.colorTextGray),
+                              focusedBorder: new OutlineInputBorder(
+                                  borderSide: new BorderSide(
+                                      color: Pallet.colorPrimary)),
+                              enabledBorder: new OutlineInputBorder(
+                                  borderSide: new BorderSide(
+                                      color: Pallet.colorTextGray)),
+                              contentPadding:
+                              EdgeInsets.only(right: 15, left: 15),
+                            ),
+                            keyboardType: TextInputType.text,
+                            style: GoogleFonts.lato(
+                                fontSize: 12.0,
+                                color: Pallet.colorBlack,
+                                fontWeight: FontWeight.w400)),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Container(
+                        color: Pallet.colorWhite,
+                        child: TextFormField(
+                            onChanged: (value) {},
+                            validator: (value) {
+                              if (value!.isEmpty) {
+                                return "Enter a short bio about yourself";
+                              }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _shortBioController,
                             decoration: new InputDecoration(
-                              hintText: "I am this and that",
+                              hintText: "I am this and that and that makes me this and that.",
                               labelText: "Write a Short Bio About Inner Self",
                               labelStyle:
                               TextStyle(color: Pallet.colorTextGray),
@@ -580,10 +642,36 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
 
                         children: [
                           Image.asset('assets/images/ic_whatsapp_white.png',
-                          height: 25, width: 25,),
+                          height: 30, width: 30,),
                           Padding(
                             padding: const EdgeInsets.only(right: 75.0),
-                            child: Text("CONTINUE TO WHATSAPP",
+                            child: Text("CONTINUE VIA WHATSAPP",
+                                //textAlign: TextAlign.center,
+                                style: GoogleFonts.lato(
+                                    fontSize: 16.0,
+                                    color: Pallet.colorWhite,
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 8,),
+                GestureDetector(
+                  onTap: launchEmailApp,
+                  child: Container(
+                    color: Colors.red,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                        children: [
+                          Icon(Icons.email, color:Colors.white, size:30),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 75.0),
+                            child: Text("CONTINUE VIA EMAIL",
                                 //textAlign: TextAlign.center,
                                 style: GoogleFonts.lato(
                                     fontSize: 16.0,
@@ -718,6 +806,28 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
     launch(whatsAppUrl!);
   }
 
+  launchEmailApp() {
+    String? encodeQueryParameters(Map<String, String> params) {
+      return params.entries
+          .map((e) =>
+      '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+    }
+
+    final String payload = getPayload().toString();
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'dearclaireapp@gmail.com',
+      query: encodeQueryParameters(
+          <String, String>{
+            'subject': 'Requesting Alter Ego Mode',
+            'body': payload,
+          }),
+    );
+
+    launch(emailLaunchUri.toString());
+  }
+
   String? getPayload(){
     var userUid = firebaseServices.currentUser!.uid.isEmpty ? "null" : firebaseServices.currentUser!.uid;
     var fullName = _fullNameController.text.isEmpty ? "null" : _fullNameController.text;
@@ -731,6 +841,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
     var emailAddress = _emailController.text.isEmpty ? "null" : _emailController.text;
     var facebookName = _facebookNameController.text.isEmpty ? "null" : _facebookNameController.text;
     var instagramUsername = _instagramUserNameController.text.isEmpty ? "null" : _instagramUserNameController.text;
+    var twitterUsername = _twitterUserNameController.text.isEmpty ? "null" : _twitterUserNameController.text;
     var shortBio = _shortBioController.text.isEmpty ? "null" : _shortBioController.text;
     var interestedInBecoming = _value1Controller.text.isEmpty ? "No" : _value1Controller.text;
     var makeWorldBetter = _value2Controller.text.isEmpty ? "No" : _value2Controller.text;
@@ -770,6 +881,8 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
       *Facebook Name*: $facebookName
 
       *Instagram Username*: $instagramUsername
+      
+      *Twitter Username*: $twitterUsername
 
       *Write a Short Bio About Inner Self*: $shortBio
 
@@ -779,9 +892,9 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
 
       *Do you believe that humility and selfless leadership are good practises for life?*: $humbleAndSelfless
 
-      *Did you first learn about Claire on social media Like IG or Whatsapp?*: $learnedOnSocialMedia
+      *Did you first learn about Claire on social media?*: $learnedOnSocialMedia
 
-      *Have you rated Claire Diary five stars with a short sweet review on Playstore?*: $ratedOnPlaystore
+      *Have you rated Claire Diary five stars with a short review on Playstore?*: $ratedOnPlaystore
 
       *Do you truly believe in the Claire Project? That everyone deserves a true friend in need and indeed?*: $believeInClaire
 

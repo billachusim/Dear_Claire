@@ -32,6 +32,7 @@ class _HomeDashboardPageState extends State<HomePage>
   var currentUser = FirebaseAuth.instance.currentUser;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
+  late String _title;
   String userName = "";
   String userType = "";
 
@@ -64,16 +65,6 @@ class _HomeDashboardPageState extends State<HomePage>
   }
 
 
-  void _launchInstagram() async =>
-      await canLaunch("https://instgram.com/socialfaculty")
-          ? await launch("https://instgram.com/socialfaculty")
-          : throw 'Could not launch Instagram';
-
-  void _launchShareClaire() async =>
-      await canLaunch(shareClaireUrl)
-          ? await launch(shareClaireUrl)
-          : throw 'Could not launch PlayStore';
-
 
   String? getWhatsAppUrl(){
     return AppString.WHATSAPP_URL;
@@ -84,19 +75,30 @@ class _HomeDashboardPageState extends State<HomePage>
     launch(whatsAppUrl!);
   }
 
-  static const String phoneNumber = "+2348188578955";
-  static const String claireEmailAddress = "thesocialfaculty@gmail.com";
-  static const String shareClaireUrl = "https://play.google.com/store/apps/details?id=com.mobymagic.clairediary";
 
 
   void setTabIndex(index) async {
     if (await firebaseServices.isUserSignIn(context))
       // setState(() => _currentIndex = index);
       _pageController.animateToPage(index, duration: Duration(milliseconds: 200), curve: Curves.bounceIn);
+    switch(index) {
+      case 0: { _title = 'Featured Sessions'; }
+      break;
+      case 1: { _title = 'Followed Sessions'; }
+      break;
+      case 2: { _title = 'Diary Sessions'; }
+      break;
+      case 3: { _title = 'Diary Rooms'; }
+      break;
+      case 4: { _title = 'Ego Profile'; }
+      break;
+
+    }
   }
 
   @override
   void initState() {
+    _title = "Dear Claire";
     super.initState();
   }
 
@@ -107,7 +109,7 @@ class _HomeDashboardPageState extends State<HomePage>
         appBar: AppBar(
           backgroundColor: Pallet.colorPrimary,
           centerTitle: false,
-          title: Text(AppString.appTitle,
+          title: Text(_title,
               textAlign: TextAlign.start,
               maxLines: 1,
               style: GoogleFonts.lato(
@@ -314,11 +316,19 @@ class _HomeDashboardPageState extends State<HomePage>
                   title: Text("How Claire Works",
                       style: TextStyle(color: Pallet.colorWhite)),
                   onTap: () {
-                    Navigator. pop(context);
                     Navigator.of(context).pushNamed(AppRoutes.howClaireWorks);
                   },
                   leading: Icon(Icons.info_rounded,
                       color: Pallet.colorWhite),
+                ),
+                SizedBox(height: 18,),
+                ListTile(
+                  title: Text("Request Alter Ego Mode     🔥",
+                      style: TextStyle(color: Pallet.colorWhite)),
+                  onTap: () {
+                    Navigator.of(context).pushNamed(AppRoutes.howAlterEgoWorks);
+                  },
+                  leading: Icon(Icons.star, color: Pallet.colorWhite),
                 ),
                 SizedBox(height: 18,),
                 ListTile(
@@ -334,7 +344,15 @@ class _HomeDashboardPageState extends State<HomePage>
                   onTap: () =>launchEmailApp(),
                   leading: Icon(Icons.email, color: Pallet.colorWhite),
                 ),
-              ],
+                SizedBox(height: 18,),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Image.asset(
+                    'assets/images/diary_icon.png',
+                    height: 150.h,
+                    width: 150.w,
+                  ),
+                ),              ],
             ),
           ),
         )
