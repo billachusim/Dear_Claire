@@ -1,6 +1,4 @@
-import 'package:dear_claire/data/models/profile_page_model.dart';
 import 'package:dear_claire/ui/Categories/category_sessions.dart';
-import 'package:dear_claire/ui/alter_ego/advised_page.dart';
 import 'package:dear_claire/ui/alter_ego/alter_ego_homepage.dart';
 import 'package:dear_claire/ui/alter_ego/alter_ego_login.dart';
 import 'package:dear_claire/ui/alter_ego/alter_ego_registration.dart';
@@ -14,6 +12,10 @@ import 'package:dear_claire/ui/donate/donate.dart';
 import 'package:dear_claire/ui/ego-profile/clairevatar.dart';
 import 'package:dear_claire/ui/ego-profile/profile.dart';
 import 'package:dear_claire/ui/ego-profile/request_claire_love_form.dart';
+import 'package:dear_claire/ui/games/games_home.dart';
+import 'package:dear_claire/ui/games/space_shooter.dart';
+import 'package:dear_claire/ui/games/tic_tac_toe.dart';
+import 'package:dear_claire/ui/games/whot.dart';
 import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
 import 'package:dear_claire/ui/featured/request_feature_form.dart';
 import 'package:dear_claire/ui/login/login_screen.dart';
@@ -55,9 +57,13 @@ class AppRoutes {
   static const searchPage = '/searchPage';
   static const egoPage = '/egoPage';
   static const diaryRooms = '/diaryRooms';
+  static const spaceShooter = '/spaceShooter';
+  static const ticTacToe = '/ticTacToe';
+  static const whot = '/whot';
   static const visitedUserEgoPage = '/visitedUserEgoPage';
   static const customSplashPage = '/customSplash';
   static const categorySessions = '/categorySessions';
+  static const games = '/games';
 
 
 }
@@ -214,6 +220,27 @@ class AppRouter {
           fullscreenDialog: false,
         );
 
+      case AppRoutes.spaceShooter:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => SpaceShooter(),
+          settings: settings,
+          fullscreenDialog: false,
+        );
+
+      case AppRoutes.ticTacToe:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => TicTacToe(),
+          settings: settings,
+          fullscreenDialog: false,
+        );
+
+      case AppRoutes.whot:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => Whot(),
+          settings: settings,
+          fullscreenDialog: false,
+        );
+
       case AppRoutes.diaryRooms:
         return MaterialPageRoute<dynamic>(
           builder: (_) => ChatRoomsPage(),
@@ -227,6 +254,14 @@ class AppRouter {
           settings: settings,
           fullscreenDialog: false,
         );
+
+      case AppRoutes.games:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => GamesHome(),
+          settings: settings,
+          fullscreenDialog: true,
+        );
+
 
       default:
         return MaterialPageRoute<dynamic>(

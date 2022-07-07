@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Tic Tac Toe in htmlcanvas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" type="text/javascript"
+    ></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@700&family=Potta+One&display=swap");
+
+      body {
+        position: relative;
+        bottom: -250px;
+        padding: 0;
+        margin: 0;
+      }
+      html {
+        font-family: "Balsamiq Sans", cursive;
+        font-weight: 800;
+      }
+
+      h1,
+      h2 {
+        text-transform: uppercase;
+        background: -webkit-linear-gradient(#e60000, #ff0000, #ff6600);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      h1 {
+        line-height: 40px;
+        font-size: 40px;
+      }
+      h2 {
+        line-height: 25px;
+        font-size: 25px;
+      }
+
+      .width-medium {
+        max-width: 250px;
+      }
+      .align-center {
+        text-align: center;
+      }
+      .flex-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .flex-space-around {
+        justify-content: space-around !important;
+      }
+
+      .flex-column {
+        flex-direction: column;
+      }
+
+      .margin {
+        margin: 20px;
+      }
+      .margin-small {
+        margin: 12px;
+      }
+      .margin-left-small {
+        margin-left: 2px;
+      }
+      .no-margin-bottom {
+        margin-bottom: 0px !important;
+      }
+      .no-margin-horizontal {
+        margin-left: 0px !important;
+        margin-right: 0px !important;
+      }
+      .margin-auto {
+        margin: auto;
+      }
+      button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: inherit;
+        box-shadow: 1px 2px #919191;
+        background-image: linear-gradient(
+          to right,
+          #a6a6a6,
+          #c7c3c3,
+          #e0dcdc,
+          #ebe8e8
+        );
+        font-weight: 800;
+        border: 0px;
+        height: 40px;
+        width: 115px;
+        padding: 5px;
+        border-radius: 20px;
+        letter-spacing: 1.5px;
+        font-size: 18px;
+        text-align: center;
+        cursor: pointer;
+        outline: none;
+        text-transform: uppercase;
+      }
+      #internet{
+        display: none;
+      }
+      button:hover {
+        background-image: linear-gradient(
+          to right,
+          #a6a6a6,
+          #c7c3c3,
+          #e0dcdc,
+          #cccccc
+        );
+      }
+      button:hover > svg circle {
+        stroke: blue;
+      }
+      button:hover > svg path {
+        fill: red;
+      }
+      button svg {
+        margin-right: 5px;
+      }
+      .symbol {
+        cursor: pointer;
+      }
+      .symbol:hover {
+        background-color: #f0f0f0;
+        border-radius: 6px;
+      }
+      .symbol.active {
+        background-color: #cccccc;
+        border-radius: 6px;
+      }
+
+      .checkbox {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        display: inline-block;
+        height: 16px;
+        width: 16px;
+        margin-bottom: -1px;
+        background: white;
+        border: 2px solid red;
+        border-radius: 4px;
+        cursor: pointer;
+        outline: 0;
+      }
+      .checkbox:checked {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='15' width='15'%3E%3Cpath d='M2 5 L5 10 L10 3' stroke='blue' stroke-width='2' stroke-linecap='round' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E%0A");
+      }
+    </style>
+</head>
+<body>
+<div id="divUserInputs" class="align-center">
+    <div class="align-center width-medium margin-auto">
+        <h1>Choose</h1>
+        <div class="flex-center flex-space-around">
+            <svg id="1" height="70" width="70" class="symbol active">
+                <circle
+                        cx="35"
+                        cy="35"
+                        r="24"
+                        stroke="blue"
+                        stroke-width="10"
+                        fill="none"
+                />
+            </svg>
+            <h2>OR</h2>
+            <svg id="2" height="70" width="70" class="symbol">
+                <line
+                        x1="13"
+                        y1="13"
+                        x2="57"
+                        y2="57"
+                        stroke="blue"
+                        stroke-width="10"
+                        stroke-linecap="round"
+                />
+                <line
+                        x1="57"
+                        y1="13"
+                        x2="13"
+                        y2="57"
+                        stroke="blue"
+                        stroke-width="10"
+                        stroke-linecap="round"
+                />
+            </svg>
+        </div>
+        <div class="flex-center flex-column">
+            <div class="margin no-margin-horizontal no-margin-bottom">
+                <input
+                        id="checkFirstMove"
+                        type="checkbox"
+                        class="checkbox"
+                        checked
+                /><span class="margin-left-small"
+            >Check to make the first move</span
+            >
+            </div>
+            <button id="btnPlay" class="margin-small">
+                <svg height="24" width="24">
+                    <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke-width="3"
+                            fill="none"
+                            stroke="red"
+                    />
+                    <path d="M8 6 L19 12 L8 18 Z" fill="blue" />
+                </svg>
+                Play
+            </button>
+        </div>
+    </div>
+</div>
+<div id="tic-tac-toe-board" class="align-center"></div>
+<div
+        id="win"
+        class="align-center"
+        style="position: relative; display: none"
+>
+    <canvas id="burst" height="300" width="300"></canvas>
+    <div
+            style="
+          background-color: rgba(255, 255, 255, 0.7);
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          padding: 5px;
+        "
+    >
+        <h1>You won..</h1>
+    </div>
+</div>
+<div
+        id="loss"
+        class="align-center"
+        style="position: relative; display: none"
+>
+    <div style="background-color: rgba(255, 255, 255, 0.7)">
+        <h1>Better luck next time..</h1>
+    </div>
+</div>
+<div
+        id="draw"
+        class="align-center"
+        style="position: relative; display: none"
+>
+    <div style="background-color: rgba(255, 255, 255, 0.7)">
+        <h1>Well tried! It's a draw..</h1>
+    </div>
+</div>
+<script>
+
+      const SYMBOL = {
+        CIRCLE: 1,
+        CROSS: 2,
+      };
+
+      var Symbol = (function () {
+        var _default = {
+          size: 24,
+          color: "blue",
+          strokeWidth: 4,
+        };
+
+        var _symbol = function (type, options) {
+          if (!type) throw new Error("type of Symbol must be defined.");
+          this.type = type;
+          this.options = $.extend({}, _default, options);
+        };
+
+        _symbol.prototype.getSize = function () {
+          return this.options.size;
+        };
+
+        _symbol.prototype.create = function () {
+          var canvas = document.createElement("canvas");
+          var ctx = canvas.getContext("2d");
+          var size = this.options.size,
+            color = this.options.color,
+            lineWidth = this.options.strokeWidth;
+          // Set actual size in memory (scaled to account for extra pixel density).
+          var scale = window.devicePixelRatio; // <--- Change to 1 on retina screens to see blurry canvas.
+          canvas.width = size * scale;
+          canvas.height = size * scale;
+          canvas.height = canvas.width = size;
+          ctx.strokeStyle = color;
+          ctx.lineWidth = lineWidth;
+          switch (this.type) {
+            case SYMBOL.CIRCLE:
+              var offset = 4;
+              (center = [size / 2, size / 2]),
+                (radius = size / 2 - lineWidth / 2 - offset);
+              console.log(center + "," + radius);
+              ctx.beginPath();
+              ctx.arc(center[0], center[1], radius, 0, 2 * Math.PI);
+              ctx.stroke();
+              ctx.closePath();
+              break;
+            case SYMBOL.CROSS:
+              var offset = 12;
+              ctx.lineCap = "round";
+              ctx.beginPath();
+              ctx.moveTo(offset, offset);
+              ctx.lineTo(size - offset, size - offset);
+              ctx.stroke();
+              ctx.closePath();
+              ctx.beginPath();
+              ctx.moveTo(size - offset, offset);
+              ctx.lineTo(offset, size - offset);
+              ctx.stroke();
+              ctx.closePath();
+              break;
+          }
+          return canvas;
+        };
+
+        return _symbol;
+      })();
+
+      var Evented = {
+        on: function (eventName, callback, domElement) {
+          $(domElement || this).on(eventName, callback);
+        },
+
+        off: function (eventName, callback, domElement) {
+          $(domElement || this).off(eventName, callback);
+        },
+
+        trigger: function (eventName, params, domElement) {
+          $(domElement || this).trigger(eventName, params);
+        },
+      };
+
+      var Cell = (function () {
+        var id = 0;
+        var _cell = function (options, playBoard) {
+          if (!(playBoard instanceof PlayBoard)) {
+            throw new Error("PlayBoard must be initialized.");
+          }
+
+          var startPos = (this.startPos = options.startPos); // top-left corner
+          var size = (this.size = options.size);
+          var strokeWidth = (this.strokeWidth = options.strokeWidth);
+          var endPos = [startPos[0] + size[0], startPos[1] + size[1]]; // bottom-right corner
+          this.id = ++id;
+          this.playBoard = playBoard;
+          this.isEmpty = true;
+          var playBoardSize = playBoard.getSize();
+          this._bounds = {
+            topLeft: startPos,
+            bottomRight: endPos,
+          };
+          var drawBounds = (this._drawBounds = {
+            topLeft: [
+              startPos[0] !== 0 ? startPos[0] + strokeWidth / 2 : startPos[0],
+              startPos[1] !== 0 ? startPos[1] + strokeWidth / 2 : startPos[1],
+            ],
+            bottomRight: [
+              Math.floor(playBoardSize[0] - endPos[0]) !== 0
+                ? endPos[0] - strokeWidth / 2
+                : endPos[0],
+              Math.floor(playBoardSize[1] - endPos[1]) !== 0
+                ? endPos[1] - strokeWidth / 2
+                : endPos[1],
+            ],
+          });
+          this.center = [
+            (drawBounds.topLeft[0] + drawBounds.bottomRight[0]) / 2,
+            (drawBounds.topLeft[1] + drawBounds.bottomRight[1]) / 2,
+          ];
+        };
+
+        $.extend(_cell.prototype, Evented);
+
+        var _onMouseOver = function () {
+          var canvas = this.playBoard.getContainer();
+          var ctx = this.playBoard.getCtx();
+          canvas.style.cursor = "pointer";
+          var startPos = this._drawBounds.topLeft;
+          var width = this._drawBounds.bottomRight[0] - startPos[0];
+          var height = this._drawBounds.bottomRight[1] - startPos[1];
+          ctx.fillStyle = "#F0F0F0";
+          ctx.fillRect(startPos[0], startPos[1], width, height);
+        };
+
+        var _onMouseOut = function () {
+          var canvas = this.playBoard.getContainer();
+          var ctx = this.playBoard.getCtx();
+          canvas.style.cursor = "default";
+          var startPos = this._drawBounds.topLeft;
+          var width = this._drawBounds.bottomRight[0] - startPos[0];
+          var height = this._drawBounds.bottomRight[1] - startPos[1];
+          ctx.clearRect(startPos[0], startPos[1], width, height);
+        };
+
+        _cell.prototype.contains = function (point) {
+          var topLeft = this._drawBounds.topLeft;
+          var bottomRight = this._drawBounds.bottomRight;
+          var containsAlongX =
+            point[0] >= topLeft[0] && point[0] <= bottomRight[0];
+          var containsAlongY =
+            point[1] >= topLeft[1] && point[1] <= bottomRight[1];
+          return containsAlongX && containsAlongY;
+        };
+
+        _cell.prototype.attachListeners = function () {
+          this.on("mouseover", _onMouseOver.bind(this));
+          this.on("mouseout", _onMouseOut.bind(this));
+        };
+
+        _cell.prototype.removeListeners = function () {
+          this.off("mouseover");
+          this.off("mouseout");
+        };
+
+        _cell.prototype.drawSymbol = function (type) {
+          if (!this.isEmpty) return;
+          var bounds = this._drawBounds;
+          var symbol = new Symbol(type, {
+            size: Math.min(
+              bounds.bottomRight[0] - bounds.topLeft[0],
+              bounds.bottomRight[1] - bounds.topLeft[1]
+            ),
+            strokeWidth: 8,
+          });
+          var image = symbol.create();
+          var ctx = this.playBoard.getCtx();
+          ctx.clearRect(
+            bounds.topLeft[0],
+            bounds.topLeft[1],
+            bounds.bottomRight[0] - bounds.topLeft[0],
+            bounds.bottomRight[1] - bounds.topLeft[1]
+          );
+          ctx.drawImage(
+            image,
+            bounds.topLeft[0],
+            bounds.topLeft[1],
+            image.width,
+            image.height
+          );
+          this.isEmpty = false;
+          this.symbol = symbol;
+          if (this.playBoard.lastHoveredCell === this)
+            this.playBoard.lastHoveredCell = null;
+        };
+
+        return _cell;
+      })();
+
+      var PlayBoard = (function () {
+        var _defaultOptions = {
+          width: 300,
+          height: 300,
+          style: {
+            color: "red",
+            strokeWidth: 8,
+          },
+        };
+
+        var _playBoard = function (options) {
+          this._cells = [];
+          this.options = $.extend({}, _defaultOptions, options);
+          this._container = document.createElement("canvas");
+          this._container.height = this.options.height;
+          this._container.width = this.options.width;
+          this._ctx = this._container.getContext("2d");
+          this.style = this.options.style;
+          this._interactiveLayer = this._container;
+
+          _buildReferences.call(this);
+          this.attachListeners();
+        };
+
+        $.extend(_playBoard.prototype, Evented);
+
+        var _buildReferences = function () {
+          var rows = (this.rows = []);
+          var columns = (this.columns = []);
+          var diagonals = (this.diagonals = [[], []]);
+          var cellWidth = this.options.width / 3;
+          var cellHeight = this.options.height / 3;
+
+          for (
+            var i = 0, i1 = 0;
+            i < this._container.height;
+            i += cellHeight, i1++
+          ) {
+            row = rows[rows.length] = [];
+            for (
+              var j = 0, j1 = 0;
+              j < this._container.width;
+              j += cellWidth, j1++
+            ) {
+              if (i1 === 0) {
+                columns[j1] = [];
+              }
+              var options = {
+                startPos: [j, i],
+                size: [cellWidth, cellHeight],
+                strokeWidth: this.style.strokeWidth,
+              };
+              cell = new Cell(options, this);
+              this._cells.push(cell);
+              row.push(cell);
+              columns[j1].push(cell);
+              if (i1 === j1) {
+                diagonals[0].push(cell);
+              }
+              if (i1 + j1 == 2) diagonals[1].push(cell);
+            }
+          }
+        };
+
+        var _onMouseMove = function (event) {
+          var dimension = this._container.getBoundingClientRect();
+          var pos = [
+            event.clientX - dimension.left,
+            event.clientY - dimension.top,
+          ];
+          var cell = null;
+          for (var i = 0, iL = this._cells.length; i < iL; i++) {
+            if (this._cells[i].contains(pos)) {
+              cell = this._cells[i];
+              break;
+            }
+          }
+
+          if (cell) {
+            if (!cell.isEmpty) {
+              this.lastHoveredCell = null;
+              return;
+            }
+            if (this.lastHoveredCell == cell) return;
+            else {
+              if (this.lastHoveredCell)
+                this.lastHoveredCell.trigger("mouseout");
+              this.lastHoveredCell = cell;
+              cell.trigger("mouseover");
+            }
+          } else {
+            if (this.lastHoveredCell) this.lastHoveredCell.trigger("mouseout");
+            this.lastHoveredCell = null;
+          }
+
+          return cell;
+        };
+
+        var _onClick = function (event) {
+          var dimension = this._container.getBoundingClientRect();
+          var pos = [
+            event.clientX - dimension.left,
+            event.clientY - dimension.top,
+          ];
+          var cell = null;
+          for (var i = 0, iL = this._cells.length; i < iL; i++) {
+            if (this._cells[i].contains(pos)) {
+              cell = this._cells[i];
+              break;
+            }
+          }
+          if (cell) {
+            if (!cell.isEmpty) return;
+            else this.trigger("click", [cell]);
+          }
+        };
+
+        _playBoard.prototype.draw = function (container) {
+          var d = $.Deferred();
+          var _draw = function () {
+            var canvas = this._container;
+            var ctx = this._ctx;
+            var cellWidth = this.options.width / 3;
+            var cellHeight = this.options.height / 3;
+            var h = canvas.height,
+              w = canvas.width;
+            // draw squared blocks
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = this.style.color;
+            ctx.lineWidth = this.style.strokeWidth;
+            ctx.lineCap = "round";
+            for (
+              var i = cellWidth, j = cellHeight;
+              i < canvas.width && j < canvas.height;
+              i += cellWidth, j += cellHeight
+            ) {
+              // draw vertical line
+              ctx.beginPath();
+              ctx.moveTo(i, 0);
+              ctx.lineTo(i, h);
+              ctx.stroke();
+              ctx.closePath();
+
+              // draw horizontal line
+              ctx.beginPath();
+              ctx.moveTo(0, j);
+              ctx.lineTo(w, j);
+              ctx.stroke();
+              ctx.closePath();
+            }
+            $(container).append(canvas);
+            d.resolve();
+          }.bind(this);
+          setTimeout(_draw, 0);
+          return d.promise();
+        };
+
+        _playBoard.prototype.getSize = function () {
+          return [this.options.width, this.options.height];
+        };
+
+        _playBoard.prototype.getContainer = function () {
+          return this._container;
+        };
+
+        _playBoard.prototype.getCtx = function () {
+          return this._ctx;
+        };
+
+        _playBoard.prototype.attachListeners = function () {
+          this._cells.forEach(function (cell) {
+            cell.attachListeners();
+          });
+
+          this.on("mousemove", _onMouseMove.bind(this), this._interactiveLayer);
+          this.on("click", _onClick.bind(this), this._interactiveLayer);
+        };
+
+        _playBoard.prototype.removeListeners = function () {
+          this._cells.forEach(function (cell) {
+            cell.removeListeners();
+          });
+
+          this.off("mousemove");
+          this.off("click");
+        };
+
+        _playBoard.prototype.getEmptyCells = function () {
+          return this._cells.filter(function (cell) {
+            return cell.isEmpty;
+          });
+        };
+
+        return _playBoard;
+      })();
+
+      var User = (function () {
+        var _user = function (chosenSymbolType, playboard, userName, autoPlay) {
+          if (!chosenSymbolType) throw new Error("User must have a symbol.");
+          if (!playboard) throw new Error("User needs a playboard.");
+          this.chosenSymbolType = chosenSymbolType;
+          this.playBoard = playboard;
+          this.autoPlay = !!autoPlay;
+          this.userName = userName || "User";
+          this.cellsVisited = [];
+        };
+
+        var _getRandomInt = function (min, max) {
+          return min + Math.floor((max - min) * Math.random());
+        };
+
+        var _animate = function (cells) {
+          var d = $.Deferred();
+          var x1 = cells[0].center[0],
+            y1 = cells[0].center[1],
+            x0 = x1,
+            y0 = y1,
+            x2 = cells[cells.length - 1].center[0],
+            y2 = cells[cells.length - 1].center[1];
+          var ctx = this.playBoard.getCtx();
+          var gradient = ctx.createLinearGradient(0, 0, 300, 0);
+          var _self = this;
+          // Add three color stops
+          gradient.addColorStop(0, "red");
+          gradient.addColorStop(0.5, "orange");
+          gradient.addColorStop(1, "blue");
+          var fragmentSizeX = (x2 - x1) / 100;
+          var fragmentSizeY = (y2 - y1) / 100;
+          x2 = fragmentSizeX * 100 + x1;
+          y2 = fragmentSizeY * 100 + y1;
+
+          ctx.lineWidth = 10;
+          ctx.strokeStyle = gradient;
+          ctx.lineCap = "round";
+          ctx.globalAlpha = 0.5;
+          var _draw = function () {
+            var x3 = x1 + fragmentSizeX;
+            var y3 = y1 + fragmentSizeY;
+            ctx.moveTo(x1, y1);
+            ctx.beginPath();
+            ctx.lineTo(x3, y3);
+            ctx.stroke();
+            x1 = x3;
+            y1 = y3;
+            if (
+              Math.abs(x1 - x2) > Math.abs(fragmentSizeX) ||
+              Math.abs(y1 - y2) > Math.abs(fragmentSizeY)
+            )
+              requestAnimationFrame(_draw);
+            else {
+              d.resolve();
+            }
+          };
+          requestAnimationFrame(_draw);
+          return d.promise();
+        };
+
+        _user.prototype.getSuggestion = function () {
+          var rows = this.playBoard.rows,
+            columns = this.playBoard.columns,
+            diagonals = this.playBoard.diagonals,
+            symbol = this.chosenSymbolType,
+            matched = [],
+            attentionRequired = [];
+          alternateSuggestions = [];
+
+          // Check for row match
+          for (var i = 0, iL = rows.length, row, opponentSymbols; i < iL; i++) {
+            row = rows[i];
+            matched = [];
+            emptyCells = [];
+            opponentSymbols = [];
+            for (var c = 0, cL = row.length; c < cL; c++) {
+              if (row[c].symbol) {
+                if (row[c].symbol.type == symbol) matched.push(row[c]);
+                else opponentSymbols.push(row[c]);
+              }
+              if (row[c].isEmpty) emptyCells.push(row[c]);
+            }
+            if (matched.length === 2 && emptyCells.length == 1) {
+              return row.find(function (cell) {
+                return cell.isEmpty;
+              });
+            }
+            if (matched.length == 1 && emptyCells.length == 2) {
+              emptyCells.forEach(function (cell) {
+                alternateSuggestions.push(cell);
+              });
+            }
+
+            if (opponentSymbols.length == 2 && emptyCells.length == 1) {
+              attentionRequired.push(emptyCells[0]);
+            }
+          }
+
+          // Check for column match
+          for (
+            var j = 0, jL = columns.length, column, opponentSymbols;
+            j < jL;
+            j++
+          ) {
+            column = columns[j];
+            matched = [];
+            emptyCells = [];
+            opponentSymbols = [];
+            for (var c = 0, cL = column.length; c < cL; c++) {
+              if (column[c].symbol) {
+                if (column[c].symbol.type == symbol) matched.push(column[c]);
+                else opponentSymbols.push(column[c]);
+              }
+
+              if (column[c].isEmpty) emptyCells.push(column[c]);
+            }
+            if (matched.length === 2 && emptyCells.length == 1) {
+              return column.find(function (cell) {
+                return cell.isEmpty;
+              });
+            }
+            if (matched.length == 1 && emptyCells.length == 2) {
+              emptyCells.forEach(function (cell) {
+                alternateSuggestions.push(cell);
+              });
+            }
+            if (opponentSymbols.length == 2 && emptyCells.length == 1) {
+              attentionRequired.push(emptyCells[0]);
+            }
+          }
+
+          // Check for diagonal match
+          for (
+            var k = 0, kL = diagonals.length, diagonal, opponentSymbols;
+            k < kL;
+            k++
+          ) {
+            diagonal = diagonals[k];
+            matched = [];
+            emptyCells = [];
+            opponentSymbols = [];
+            for (var c = 0, cL = diagonal.length; c < cL; c++) {
+              if (diagonal[c].symbol) {
+                if (diagonal[c].symbol.type == symbol)
+                  matched.push(diagonal[c]);
+                else opponentSymbols.push(diagonal[c]);
+              }
+
+              if (diagonal[c].isEmpty) emptyCells.push(diagonal[c]);
+            }
+            if (matched.length === 2 && emptyCells.length == 1)
+              return diagonal.find(function (cell) {
+                return cell.isEmpty;
+              });
+            if (matched.length == 1 && emptyCells.length == 2) {
+              emptyCells.forEach(function (cell) {
+                alternateSuggestions.push(cell);
+              });
+            }
+            if (opponentSymbols.length == 2 && emptyCells.length == 1) {
+              attentionRequired.push(emptyCells[0]);
+            }
+          }
+
+          var hardLevel = 0.96;
+          if (attentionRequired.length == 2) {
+            return attentionRequired[
+              _getRandomInt(0, attentionRequired.length - 1)
+            ];
+          }
+          var random = Math.random();
+
+          if (attentionRequired.length && random < hardLevel) {
+            return attentionRequired[
+              _getRandomInt(0, attentionRequired.length - 1)
+            ];
+          }
+
+          if (alternateSuggestions.length)
+            return alternateSuggestions[
+              _getRandomInt(0, alternateSuggestions.length - 1)
+            ];
+          return null;
+        };
+
+        _user.prototype.playMove = function (event, cell) {
+          if (this.autoPlay) {
+            var emptyCells = this.playBoard.getEmptyCells();
+            if (emptyCells.length) {
+              if (this.cellsVisited.length >= 1) cell = this.getSuggestion();
+              if (!cell) {
+                var nextMove = _getRandomInt(0, emptyCells.length - 1);
+                cell = emptyCells[nextMove];
+              }
+            }
+          }
+
+          if (cell) {
+            this.playBoard.off("click");
+            this.playBoard.removeListeners();
+            cell.drawSymbol(this.chosenSymbolType);
+            this.cellsVisited.push(cell);
+            var _rs = this.getResult();
+            if (_rs) {
+              var _reset = function () {
+                $("#tic-tac-toe-board").empty();
+                $("#loss,#win,#draw").hide();
+                $("#divUserInputs").show();
+              };
+              if (_rs.result === "win") {
+                _animate.call(this, _rs.pattern).done(
+                  function () {
+                    var _self = this;
+                    if (_self.userName == "You") {
+                      $("#tic-tac-toe-board").empty();
+                      $("#win").show();
+                      setTimeout(_reset, 3000);
+                    } else {
+                      $("#loss").show();
+                      setTimeout(_reset, 1000);
+                    }
+                  }.bind(this)
+                );
+              } else {
+                $("#draw").show();
+                setTimeout(_reset, 1000);
+              }
+              return;
+            }
+            var opponent = this.opponent;
+            if (opponent) {
+              if (opponent.autoPlay) {
+                setTimeout(function () {
+                  opponent.playMove();
+                }, 300);
+              } else {
+                this.playBoard.attachListeners();
+                this.playBoard.on("click", opponent.playMove.bind(opponent));
+              }
+            }
+          }
+        };
+
+        _user.prototype.getResult = function () {
+          var rows = this.playBoard.rows,
+            columns = this.playBoard.columns,
+            diagonals = this.playBoard.diagonals,
+            symbol = this.chosenSymbolType,
+            matched = false;
+          var emptyCells = this.playBoard.getEmptyCells();
+          if (emptyCells.length === 0) {
+            return {
+              result: "draw",
+            };
+          }
+
+          // Check for row match
+          for (var i = 0, iL = rows.length, row; i < iL; i++) {
+            row = rows[i];
+            matched = true;
+            for (var c = 0, cL = row.length; c < cL; c++) {
+              if (!row[c].symbol || row[c].symbol.type !== symbol) {
+                matched = false;
+                break;
+              }
+            }
+            if (matched === true) {
+              return {
+                result: "win",
+                pattern: row,
+              };
+            }
+          }
+
+          // Check for column match
+          for (var j = 0, jL = columns.length, column; j < jL; j++) {
+            column = columns[j];
+            matched = true;
+            for (var c = 0, cL = column.length; c < cL; c++) {
+              if (!column[c].symbol || column[c].symbol.type !== symbol) {
+                matched = false;
+                break;
+              }
+            }
+            if (matched === true) {
+              return {
+                result: "win",
+                pattern: column,
+              };
+            }
+          }
+
+          // Check for diagonal match
+          for (var k = 0, kL = diagonals.length, diagonal; k < kL; k++) {
+            diagonal = diagonals[k];
+            matched = true;
+            for (var c = 0, cL = diagonal.length; c < cL; c++) {
+              if (!diagonal[c].symbol || diagonal[c].symbol.type !== symbol) {
+                matched = false;
+                break;
+              }
+            }
+            if (matched === true) {
+              return {
+                result: "win",
+                pattern: diagonal,
+              };
+            }
+          }
+
+          return null;
+        };
+
+        _user.prototype.setOpponent = function (opponent) {
+          if (!(opponent instanceof User)) {
+            throw new Error("Opponent must be a instance of User Class");
+          }
+          this.opponent = opponent;
+        };
+
+        return _user;
+      })();
+
+      $(function () {
+        var $divUserInputs = $("#divUserInputs");
+        var symbols = $(".symbol");
+        symbols.click(function () {
+          if (!$(this).hasClass("active")) {
+            symbols.removeClass("active");
+            $(this).addClass("active");
+          }
+        });
+
+        var playButton = $("#btnPlay");
+        var $playboardContainer = $("#tic-tac-toe-board");
+        var $checkFirstMove = $("#checkFirstMove");
+
+        playButton.click(function () {
+          var chosenSymbol = symbols
+            .filter(function () {
+              return $(this).hasClass("active");
+            })
+            .attr("id");
+          var hasCheckedFirstMove = $checkFirstMove.is(":checked");
+          $divUserInputs.hide();
+          var playBoard = new PlayBoard();
+          var user = new User(+chosenSymbol, playBoard, "You");
+          var computer = new User(
+            (chosenSymbol % 2) + 1,
+            playBoard,
+            "computer",
+            true
+          );
+          user.setOpponent(computer);
+          computer.setOpponent(user);
+          playBoard.draw($playboardContainer).done(function () {
+            if (!hasCheckedFirstMove)
+              setTimeout(computer.playMove.bind(computer), 500);
+            else playBoard.on("click", user.playMove.bind(user));
+          });
+        });
+
+        function getColor() {
+          var colors = [
+            "red",
+            "green",
+            "blue",
+            "yellow",
+            "chartreuse",
+            "CornflowerBlue",
+            "Crimson",
+            "DarkMagenta",
+            "ForestGreen",
+            "Gold",
+            "LawnGreen",
+            "OrangeRed",
+            "Turquoise",
+            "Violet",
+          ];
+          var idx = Math.random() * (colors.length - 1);
+          return colors[Math.floor(idx)];
+        }
+
+        var canvas = document.getElementById("burst");
+        var ctx = canvas.getContext("2d");
+        var Circle = function (cx, cy, r, color, life) {
+          this.cx = cx;
+          this.cy = cy;
+          this.radius = r;
+          this.color = color || getColor();
+          this.life = life || 100;
+          this.update = function () {
+            if (this.life > 0) {
+              this.life -= 10;
+            } else {
+              this.cx = Math.random() * canvas.width;
+              this.cy = Math.random() * canvas.height;
+              this.life = 100;
+              this.color = getColor();
+            }
+          };
+          this.draw = function () {
+            ctx.fillStyle = this.color;
+            ctx.globalAlpha = this.life / 100;
+            ctx.beginPath();
+            ctx.arc(this.cx, this.cy, this.radius, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+          };
+        };
+
+        var circles = [];
+        for (var i = 0; i < 500; i++) {
+          var posX = Math.random() * canvas.width;
+          var posY = Math.random() * canvas.height;
+          var radius = Math.random() * 5;
+          var color = getColor();
+          var life = Math.random() * 100;
+          circles.push(new Circle(posX, posY, radius, color, life));
+        }
+
+        var _burst = function () {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          for (var i = 0, iL = circles.length; i < iL; i++) {
+            circles[i].draw();
+            circles[i].update();
+          }
+
+          requestAnimationFrame(_burst);
+        };
+        requestAnimationFrame(_burst);
+      });
+    </script>
+</body>
+</html>
