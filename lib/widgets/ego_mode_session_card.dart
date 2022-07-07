@@ -16,7 +16,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/firebase_services.dart';

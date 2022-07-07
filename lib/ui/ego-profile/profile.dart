@@ -803,9 +803,10 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                       }
                                       showToast(AppString.change_ego_mantra);
 
-                                      Future.delayed(Duration(seconds: 3), () {
+                                      Future.delayed(Duration(seconds: 4), () {
                                         _showEgoMantraInterstitialAd();
-                                      });                                      },
+                                      });
+                                      },
                                     mini: true,
                                     backgroundColor: Pallet.colorWhite,
                                     child: SvgPicture.asset(

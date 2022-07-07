@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/featured/widget/custom_post_details_screen.dart';
@@ -43,6 +45,8 @@ class VisitedUserEgoProfilePage extends StatefulWidget {
   _VisitedUserEgoProfilePageState createState() => _VisitedUserEgoProfilePageState();
 }
 
+const int maxFailedLoadAttempts = 3;
+
 
 
 class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
@@ -62,6 +66,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     super.initState();
     getVisitedUser();
     getVisitingUser();
+    _createEgoMantraInterstitialAd();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       print(_tabController.index);
@@ -72,6 +77,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+    _interstitialAd2?.dispose();
   }
 
   int currentTabIndex = 0;
@@ -275,7 +281,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     return _userActivityList;
   }
 
-  //show up when user clicks on the FAB to edit an advise
+  //show up when user clicks on the FAB to send a mantra.
   Future<void> _showCardDialog() async {
     return showDialog<void>(
       context: context,
@@ -329,10 +335,17 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                   style: TextStyle(color: Colors.red),
                 ),
                 onPressed: () {
-                  saveEgoMessage();
+                  if (userModel.nickname != null)
+                    if (_visitorMantraController.text.isNotEmpty)
+                      saveEgoMessage();
                   Navigator.of(context).pop();
                   setState(() {
                     _visitorMantraController.text = "";
+                  });
+                  showToast(AppString.sent_ego_message);
+
+                  Future.delayed(Duration(seconds: 4), () {
+                    _showEgoMantraInterstitialAd();
                   });
                 },
               ),
@@ -341,6 +354,52 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
         );
       },
     );
+  }
+
+
+  InterstitialAd? _interstitialAd2;
+  int _interstitialLoadAttempts = 0;
+
+
+  void _createEgoMantraInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/2338869057" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/5936716173" :
+      '',
+      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd2 = ad;
+          _interstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd2 = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createEgoMantraInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+
+
+  void _showEgoMantraInterstitialAd() {
+    if (_interstitialAd2 != null) {
+      _interstitialAd2!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createEgoMantraInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createEgoMantraInterstitialAd();
+        },
+      );
+      _interstitialAd2!.show();
+    }
   }
 
 
