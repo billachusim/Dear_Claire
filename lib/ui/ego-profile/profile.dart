@@ -1162,6 +1162,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
                     Expanded(
                       child: TabBarView(
+                        physics: NeverScrollableScrollPhysics(),
                         controller: _tabController,
                         children: [
                           ActivityWidget(),

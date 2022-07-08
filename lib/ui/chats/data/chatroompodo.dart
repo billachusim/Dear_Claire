@@ -1,4 +1,5 @@
 class ChatRoomPodo {
+  final String? image;
   final String? title;
   final String? font;
   final String? hex;
@@ -8,7 +9,8 @@ class ChatRoomPodo {
   final int? id;
 
   ChatRoomPodo(
-      {required this.id,
+      {required this.image,
+      required this.id,
       this.title,
       this.font,
       this.hex,

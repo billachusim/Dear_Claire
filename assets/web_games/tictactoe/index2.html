@@ -1,10 +1,13 @@
+
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tic Tac Toe in htmlcanvas</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" type="text/javascript"
+    <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+            type="text/javascript"
     ></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@700&family=Potta+One&display=swap");
@@ -13,6 +16,7 @@
         position: relative;
         padding: 0;
         margin: 0;
+        background-color: #36023DFF;
       }
       html {
         font-family: "Balsamiq Sans", cursive;
@@ -99,9 +103,6 @@
         cursor: pointer;
         outline: none;
         text-transform: uppercase;
-      }
-      #internet{
-        display: none;
       }
       button:hover {
         background-image: linear-gradient(
@@ -225,7 +226,6 @@
     <canvas id="burst" height="300" width="300"></canvas>
     <div
             style="
-          background-color: rgba(255, 255, 255, 0.7);
           position: absolute;
           top: 50%;
           left: 50%;
@@ -239,23 +239,34 @@
 <div
         id="loss"
         class="align-center"
-        style="position: relative; display: none"
+        style="
+        position: relative;
+        display: none;
+        margin-top: -200px;
+        z-index: 999;
+        color: #000;
+      "
 >
-    <div style="background-color: rgba(255, 255, 255, 0.7)">
+    <div>
         <h1>Better luck next time..</h1>
     </div>
 </div>
 <div
         id="draw"
         class="align-center"
-        style="position: relative; display: none"
+        style="
+        position: relative;
+        display: none;
+        margin-top: -200px;
+        z-index: 999;
+        color: #000;
+      "
 >
-    <div style="background-color: rgba(255, 255, 255, 0.7)">
+    <div>
         <h1>Well tried! It's a draw..</h1>
     </div>
 </div>
 <script>
-
       const SYMBOL = {
         CIRCLE: 1,
         CROSS: 2,
@@ -264,7 +275,7 @@
       var Symbol = (function () {
         var _default = {
           size: 24,
-          color: "blue",
+          color: "white",
           strokeWidth: 4,
         };
 
@@ -458,7 +469,7 @@
           width: 300,
           height: 300,
           style: {
-            color: "red",
+            color: "#AD0E4BFF",
             strokeWidth: 8,
           },
         };
@@ -814,7 +825,7 @@
             }
           }
 
-          var hardLevel = 0.96;
+          var hardLevel = 1;
           if (attentionRequired.length == 2) {
             return attentionRequired[
               _getRandomInt(0, attentionRequired.length - 1)
@@ -855,9 +866,7 @@
             var _rs = this.getResult();
             if (_rs) {
               var _reset = function () {
-                $("#tic-tac-toe-board").empty();
-                $("#loss,#win,#draw").hide();
-                $("#divUserInputs").show();
+                window.location.reload();
               };
               if (_rs.result === "win") {
                 _animate.call(this, _rs.pattern).done(
@@ -866,16 +875,16 @@
                     if (_self.userName == "You") {
                       $("#tic-tac-toe-board").empty();
                       $("#win").show();
-                      setTimeout(_reset, 3000);
+                      setTimeout(_reset, 5000);
                     } else {
                       $("#loss").show();
-                      setTimeout(_reset, 1000);
+                      setTimeout(_reset, 3000);
                     }
                   }.bind(this)
                 );
               } else {
                 $("#draw").show();
-                setTimeout(_reset, 1000);
+                setTimeout(_reset, 3000);
               }
               return;
             }
@@ -975,25 +984,28 @@
 
       $(function () {
         var $divUserInputs = $("#divUserInputs");
+        var userChose = ["active", ""];
+        var chooseed = Math.random() * 1;
         var symbols = $(".symbol");
         symbols.click(function () {
-          if (!$(this).hasClass("active")) {
-            symbols.removeClass("active");
-            $(this).addClass("active");
-          }
+          symbols.removeClass(userChose[chooseed]);
+          chooseed = (chooseed + 1) % 2;
+          symbols.addClass(userChose[chooseed]);
         });
 
         var playButton = $("#btnPlay");
         var $playboardContainer = $("#tic-tac-toe-board");
         var $checkFirstMove = $("#checkFirstMove");
 
-        playButton.click(function () {
+        window.onload = function () {
           var chosenSymbol = symbols
             .filter(function () {
               return $(this).hasClass("active");
             })
             .attr("id");
-          var hasCheckedFirstMove = $checkFirstMove.is(":checked");
+          var userMove = [true, false];
+          var move = userMove[(Math.random() * userMove.length) | 0];
+          var hasCheckedFirstMove = move;
           $divUserInputs.hide();
           var playBoard = new PlayBoard();
           var user = new User(+chosenSymbol, playBoard, "You");
@@ -1010,7 +1022,7 @@
               setTimeout(computer.playMove.bind(computer), 500);
             else playBoard.on("click", user.playMove.bind(user));
           });
-        });
+        };
 
         function getColor() {
           var colors = [

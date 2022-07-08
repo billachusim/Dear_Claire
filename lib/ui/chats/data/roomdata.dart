@@ -5,6 +5,7 @@ class RoomData {
     List<ChatRoomPodo> chatRoomPojoList = [];
 
     var chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/loveGif.gif",
         id: 0,
         title: "Love and Relationship Garden",
         font: "Default",
@@ -14,6 +15,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/entertainedCat.gif",
         id: 1,
         title: "Entertainment and Comedy Hall",
         font: "Default",
@@ -23,6 +25,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/greenGuyFashion.gif",
         id: 2,
         title: "The Fashion Walkway",
         font: "Default",
@@ -32,6 +35,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/youngPolitics.gif",
         id: 3,
         title: "Political and Social Issues",
         font: "Default",
@@ -41,6 +45,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/sports.gif",
         id: 4,
         title: "Sports Analysis Centre",
         font: "Default",
@@ -50,6 +55,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/bookOrPhone.gif",
         id: 5,
         title: "Education Classroom",
         font: "Default",
@@ -59,6 +65,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/bikeGirl.gif",
         id: 6,
         title: "Health Care Ward",
         font: "Default",
@@ -68,6 +75,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/makeMoreArt.gif",
         id: 7,
         title: "Arts and Creativity Studio",
         font: "Default",
@@ -77,6 +85,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/tooShy.gif",
         id: 8,
         numberOfParticipants: 2,
         isOpen: false,
@@ -88,6 +97,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/hiFive.gif",
         numberOfParticipants: 5,
         id: 9,
         isOpen: false,
@@ -99,6 +109,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/elevenAside.png",
         id: 10,
         isOpen: false,
         numberOfParticipants: 11,

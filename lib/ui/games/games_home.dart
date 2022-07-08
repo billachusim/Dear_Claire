@@ -51,7 +51,7 @@ class GamesHome extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 25,
                               fontWeight: FontWeight.w700,
-                              color: Colors.red,
+                              color: Colors.white,
                             ),),
                           onPressed: () {
                             Navigator.of(context).pushNamed(AppRoutes.spaceShooter);
@@ -81,7 +81,7 @@ class GamesHome extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 25,
                               fontWeight: FontWeight.w700,
-                              color: Colors.red,
+                              color: Colors.white,
                             ),),
                           onPressed: () {
                             Navigator.of(context).pushNamed(AppRoutes.ticTacToe);
@@ -111,7 +111,7 @@ class GamesHome extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 25,
                               fontWeight: FontWeight.w700,
-                              color: Colors.red,
+                              color: Colors.white,
                             ),),
                           onPressed: () {
                             Navigator.of(context).pushNamed(AppRoutes.whot);

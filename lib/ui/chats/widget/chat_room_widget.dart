@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/widget/diaryroom_online_users_stream.dart';
-import 'package:dear_claire/ui/featured/public_sessions.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
@@ -31,7 +29,7 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
       padding: EdgeInsets.zero,
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 1),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             color: HexColor.fromHex(widget.element.hex!)),
@@ -39,6 +37,19 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
+
+            Container(
+              height: 70,
+              width: 400,
+              margin: EdgeInsets.only(top: 6, bottom: 4),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  image: DecorationImage(image: AssetImage(widget.element.image.toString()),
+                      fit: BoxFit.fill)
+              ),
+              child: Container(),
+            ),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,

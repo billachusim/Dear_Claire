@@ -21,14 +21,16 @@ class _SpaceShooterState extends State<SpaceShooter> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: WebView(
-        initialUrl: '',
-        javascriptMode: JavascriptMode.unrestricted,
-        onWebViewCreated: (WebViewController webViewController) {
-          _webViewController = webViewController;
-          _loadHtmlFromAssets();
-        },
+    return SafeArea(
+      child: Scaffold(
+        body: WebView(
+          initialUrl: '',
+          javascriptMode: JavascriptMode.unrestricted,
+          onWebViewCreated: (WebViewController webViewController) {
+            _webViewController = webViewController;
+            _loadHtmlFromAssets();
+          },
+        ),
       ),
     );
   }

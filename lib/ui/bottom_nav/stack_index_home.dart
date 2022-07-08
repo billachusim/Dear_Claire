@@ -5,8 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/chats/chatrooms.dart';
 import 'package:dear_claire/ui/dairy/diary.dart';
 import 'package:dear_claire/ui/ego-profile/profile.dart';
+import 'package:dear_claire/ui/featured/all_featured.dart';
 import 'package:dear_claire/ui/followed/followed.dart';
-import 'package:dear_claire/ui/featured/featured_session_screen.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/strings.dart';
@@ -45,7 +45,7 @@ class _HomeDashboardPageState extends State<HomePage>
   PageController _pageController = PageController(initialPage: 0);
 
   List<Widget> _body = [
-    FeaturedPage(title: 'Dear Claire'),
+    AllFeaturedPage(title: 'Dear Claire'),
     FollowedPage(title: 'Dear Claire'),
     DiaryPage(title: 'Dear Claire'),
     ChatRoomsPage(),
@@ -88,12 +88,6 @@ class _HomeDashboardPageState extends State<HomePage>
         .toString());
   }
 
-  _loadTweetFromAssets() async {
-    String fileHtmlContents = await rootBundle.loadString(tweets);
-    _webViewController.loadUrl(Uri.dataFromString(fileHtmlContents,
-        mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
-        .toString());
-  }
 
   void setTabIndex(index) async {
     if (await firebaseServices.isUserSignIn(context))
@@ -158,6 +152,7 @@ class _HomeDashboardPageState extends State<HomePage>
         body: Stack(
           children: [
             PageView(
+            physics: NeverScrollableScrollPhysics(),
             controller: _pageController,
             onPageChanged: (index){
               setState(() {
@@ -352,7 +347,7 @@ class _HomeDashboardPageState extends State<HomePage>
                   ),
                   SizedBox(height: 18,),
                   ListTile(
-                    title: Text("Send Claire to Someone",
+                    title: Text("Send Claire To Someone",
                         style: TextStyle(color: Pallet.colorWhite)),
                     onTap: ()=>sendClaireToSomeone(),
                     leading: Icon(Icons.share, color: Pallet.colorWhite),
@@ -374,12 +369,7 @@ class _HomeDashboardPageState extends State<HomePage>
                     leading: Icon(Icons.email, color: Pallet.colorWhite),
                   ),
                   SizedBox(height: 10,),
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Text("Play TicTacToe With Claire",
-                        style: TextStyle(color: Pallet.colorWhite)),
-                  ),
-                  SizedBox(height: 4,),
+                  
                   Container(
                     height: 290,
                     child: WebView(
@@ -392,15 +382,11 @@ class _HomeDashboardPageState extends State<HomePage>
                     ),
                   ),
                   SizedBox(height: 18,),
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Text("Latest Tweets: @DearClaireApp",
-                        style: TextStyle(color: Pallet.colorWhite)),
-                  ),
+
                   Container(
-                    height: 250,
+                    height: 570,
                     child: WebView(
-                      initialUrl: 'https://www.twitter.com/dearclaireapp',
+                      initialUrl: 'https://clairetweets.netlify.app',
                       javascriptMode: JavascriptMode.unrestricted,
                       onWebViewCreated: (WebViewController webViewController) {
                         _webViewController = webViewController;

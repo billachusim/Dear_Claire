@@ -1,11 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/data/repository/post_repository_impl.dart';
 import 'package:dear_claire/ui/alter_ego/advised_page.dart';
 import 'package:dear_claire/ui/alter_ego/all_page.dart';
-import 'package:dear_claire/ui/alter_ego/flagged_sessions_page.dart';
 import 'package:dear_claire/ui/alter_ego/new_diaries_page.dart';
 import 'package:dear_claire/ui/alter_ego/widgets/all_activities_tab.dart';
+import 'package:dear_claire/ui/alter_ego/widgets/flagged_page.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
@@ -16,7 +15,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../utils/constant.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
-import 'chatrooms.dart';
 
 class AlterEgoHomePage extends StatefulWidget {
   const AlterEgoHomePage({Key? key}) : super(key: key);
@@ -90,6 +88,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
             body: Stack(
               children: [
                 PageView(
+                physics: NeverScrollableScrollPhysics(),
                 controller: _pageController,
                 onPageChanged: (index) {
                   setState(() {
@@ -100,7 +99,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                   AdvisedPage(),
                   NewDiariesPage(),
                   AllDiariesPage(),
-                  FlaggedDiariesPage(),
+                  FlaggedPage(),
                   AllActivitiesTab(),
                 ],
               ),
