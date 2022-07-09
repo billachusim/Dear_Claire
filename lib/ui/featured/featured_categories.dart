@@ -34,7 +34,7 @@ class FeaturedCategories extends StatelessWidget {
                     margin: EdgeInsets.only(top: 6),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/loveGif.gif'),
+                        image: DecorationImage(image: AssetImage('assets/images/feelingHappy.gif'),
                             fit: BoxFit.fill)
                     ),
                     child: Container(),

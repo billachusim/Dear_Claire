@@ -22,6 +22,10 @@ class _FeaturedPageState extends State<FeaturedPage> {
   }
 
 
+  dispose() {
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(

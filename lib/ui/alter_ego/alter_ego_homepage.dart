@@ -12,6 +12,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shake/shake.dart';
+import 'package:flutter_vibrate/flutter_vibrate.dart';
 import '../../utils/constant.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
@@ -32,15 +35,38 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   String avatarUrl = "";
   var currentUser = FirebaseAuth.instance.currentUser;
 
+  late ShakeDetector detector;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(keepPage: true);
+    shakeDevice();
+  }
+
+  shakeDevice() async {
+    detector = ShakeDetector.waitForStart(
+      onPhoneShake: () async {
+        var _type = FeedbackType.error;
+        Vibrate.feedback(_type);
+        Fluttertoast.showToast(
+          toastLength: Toast.LENGTH_LONG,
+          msg: "Switching Ego",
+          textColor: Colors.white,
+          backgroundColor: Pallet.colorSplashScreen,
+        );
+       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+      },
+      minimumShakeCount: 1,
+    );
+    await Future.delayed(Duration(seconds: 1), () {
+      detector.startListening();
+    });
   }
 
   dispose() {
     _pageController!.dispose();
+    detector.stopListening();
     super.dispose();
   }
 

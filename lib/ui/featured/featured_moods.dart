@@ -29,16 +29,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/feelingHappy.gif'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '🤣',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("Feeling Happy",
@@ -72,16 +67,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/sadAndDepressed.gif'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '😔',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("Ugh. So Sad",
@@ -116,16 +106,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/newExcited.gif'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '🤗',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("Excited!",
@@ -159,16 +144,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/fallingInLove.gif'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '😍',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("Falling In Love",
@@ -202,16 +182,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/fallinOutOfLove.png'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '🥵',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("Falling Out Of Love",
@@ -245,16 +220,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/feelingDepressed.gif'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '🥵',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("Depressed",
@@ -288,16 +258,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/feelingMotivated.png'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '🤓',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("I'm Motivated",
@@ -331,16 +296,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/upsideDown.gif'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '🤒',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("So Anxious Right Now",
@@ -375,16 +335,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/sick.png'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '🤢',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("Feeling Sick",
@@ -409,7 +364,6 @@ class FeaturedMoods extends StatelessWidget {
 
 
 
-
             GestureDetector(
               onTap: (){
                 int? featuredSessionMood = 10;
@@ -420,16 +374,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/afraid.png'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '😱',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("I'm Afraid",
@@ -464,16 +413,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/surprise.gif'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '😮',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("Surprise!",
@@ -508,16 +452,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/jealous.gif'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '😈',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("I'm Getting Jealous",
@@ -551,16 +490,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/upsideDown.gif'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '🙃',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("I'm Upside Down",
@@ -595,16 +529,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/embarrased.gif'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '😓',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("So Embarrassed",
@@ -639,16 +568,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/feelingGingered.png'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '🤩',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("I'm Feeling Gingered",
@@ -683,16 +607,11 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/feelingFly.png'),
-                            fit: BoxFit.fill)
+                  Text(
+                    '😇',
+                    style: TextStyle(
+                      fontSize: 90,
                     ),
-                    child: Container(),
                   ),
                   TextButton(
                     child: const Text("I'm Feeling Fly",
@@ -727,17 +646,7 @@ class FeaturedMoods extends StatelessWidget {
               },
               child: Column(
                 children: [
-                  Container(
-                    height: 100,
-                    width: 150,
-                    margin: EdgeInsets.only(top: 6),
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        image: DecorationImage(image: AssetImage('assets/images/icon.jpeg'),
-                            fit: BoxFit.fill)
-                    ),
-                    child: RotateImage(40, 40),
-                  ),
+                  RotateImage(80, 80),
                   TextButton(
                     child: const Text("I'm Feeling Claire",
                       style: TextStyle(

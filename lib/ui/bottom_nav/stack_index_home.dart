@@ -17,7 +17,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_vibrate/flutter_vibrate.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shake/shake.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/helper.dart';
 import '../routes/page_router_animation.dart';
@@ -35,6 +38,7 @@ class _HomeDashboardPageState extends State<HomePage>
   var currentUser = FirebaseAuth.instance.currentUser;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late WebViewController _webViewController;
+  late ShakeDetector detector;
   String filePath = 'assets/web_games/tictactoe/index2.html';
   String tweets = 'assets/tweet/index.html';
   int _currentIndex = 0;
@@ -111,7 +115,38 @@ class _HomeDashboardPageState extends State<HomePage>
   @override
   void initState() {
     _title = "Dear Claire";
+    shakeDevice();
     super.initState();
+  }
+
+  shakeDevice() async {
+    detector = ShakeDetector.waitForStart(
+      onPhoneShake: () async {
+        var _type = FeedbackType.error;
+        Vibrate.feedback(_type);
+        Fluttertoast.showToast(
+          toastLength: Toast.LENGTH_LONG,
+          msg: "Switching Ego",
+          textColor: Colors.white,
+          backgroundColor: Pallet.colorSplashScreen,
+        );
+        String id = await sharedPreference.getAlterEgoId();
+        String accessCode = await sharedPreference.getAlterEgoAccessCode();
+        print("Show Alter details:: $id || $accessCode");
+        id.isNotEmpty && accessCode.isNotEmpty
+            ? await firebaseServices.getUserAlterEgo(context, id, accessCode)
+            : Navigator.of(context).pushReplacementNamed(AppRoutes.alterEgoLogin);
+      },
+      minimumShakeCount: 1,
+    );
+    await Future.delayed(Duration(seconds: 1), () {
+      detector.startListening();
+    });
+  }
+
+  dispose() {
+    super.dispose();
+    detector.stopListening();
   }
 
   @override
@@ -384,7 +419,7 @@ class _HomeDashboardPageState extends State<HomePage>
                   SizedBox(height: 18,),
 
                   Container(
-                    height: 570,
+                    height: 650,
                     child: WebView(
                       initialUrl: 'https://clairetweets.netlify.app',
                       javascriptMode: JavascriptMode.unrestricted,

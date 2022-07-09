@@ -153,70 +153,6 @@
     </style>
 </head>
 <body>
-<div id="divUserInputs" class="align-center">
-    <div class="align-center width-medium margin-auto">
-        <h1>Choose</h1>
-        <div class="flex-center flex-space-around">
-            <svg id="1" height="70" width="70" class="symbol active">
-                <circle
-                        cx="35"
-                        cy="35"
-                        r="24"
-                        stroke="blue"
-                        stroke-width="10"
-                        fill="none"
-                />
-            </svg>
-            <h2>OR</h2>
-            <svg id="2" height="70" width="70" class="symbol">
-                <line
-                        x1="13"
-                        y1="13"
-                        x2="57"
-                        y2="57"
-                        stroke="blue"
-                        stroke-width="10"
-                        stroke-linecap="round"
-                />
-                <line
-                        x1="57"
-                        y1="13"
-                        x2="13"
-                        y2="57"
-                        stroke="blue"
-                        stroke-width="10"
-                        stroke-linecap="round"
-                />
-            </svg>
-        </div>
-        <div class="flex-center flex-column">
-            <div class="margin no-margin-horizontal no-margin-bottom">
-                <input
-                        id="checkFirstMove"
-                        type="checkbox"
-                        class="checkbox"
-                        checked
-                /><span class="margin-left-small"
-            >Check to make the first move</span
-            >
-            </div>
-            <button id="btnPlay" class="margin-small">
-                <svg height="24" width="24">
-                    <circle
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke-width="3"
-                            fill="none"
-                            stroke="red"
-                    />
-                    <path d="M8 6 L19 12 L8 18 Z" fill="blue" />
-                </svg>
-                Play
-            </button>
-        </div>
-    </div>
-</div>
 <div id="tic-tac-toe-board" class="align-center"></div>
 <div
         id="win"
@@ -866,8 +802,8 @@
             var _rs = this.getResult();
             if (_rs) {
               var _reset = function () {
-                window.location.reload();
-              };
+                location.reload(true);
+                };
               if (_rs.result === "win") {
                 _animate.call(this, _rs.pattern).done(
                   function () {
@@ -983,30 +919,15 @@
       })();
 
       $(function () {
-        var $divUserInputs = $("#divUserInputs");
-        var userChose = ["active", ""];
-        var chooseed = Math.random() * 1;
-        var symbols = $(".symbol");
-        symbols.click(function () {
-          symbols.removeClass(userChose[chooseed]);
-          chooseed = (chooseed + 1) % 2;
-          symbols.addClass(userChose[chooseed]);
-        });
-
-        var playButton = $("#btnPlay");
         var $playboardContainer = $("#tic-tac-toe-board");
-        var $checkFirstMove = $("#checkFirstMove");
 
-        window.onload = function () {
-          var chosenSymbol = symbols
-            .filter(function () {
-              return $(this).hasClass("active");
-            })
-            .attr("id");
+        $(document).ready(function () {
+          var symbolValue = [1, 2];
+          var randomSymbol = Math.round(Math.random()*1);
+          var chosenSymbol = symbolValue[randomSymbol];
           var userMove = [true, false];
           var move = userMove[(Math.random() * userMove.length) | 0];
           var hasCheckedFirstMove = move;
-          $divUserInputs.hide();
           var playBoard = new PlayBoard();
           var user = new User(+chosenSymbol, playBoard, "You");
           var computer = new User(
@@ -1022,7 +943,8 @@
               setTimeout(computer.playMove.bind(computer), 500);
             else playBoard.on("click", user.playMove.bind(user));
           });
-        };
+        }
+        );
 
         function getColor() {
           var colors = [
