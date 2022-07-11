@@ -99,6 +99,28 @@ class AdState {
     }
   }
 
+  // Create Category Sessions top banner ad unit.
+  String get categorySessionTopBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/7327058503";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/9379610422";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+  // Create Mood Sessions top banner ad unit.
+  String get moodSessionTopBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/6013976836";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/7874957062";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
   // Create Ego Mode top of comments banner ad unit.
   String get egoModeTopCommentBannerAdUnitId {
     if (Platform.isAndroid) {

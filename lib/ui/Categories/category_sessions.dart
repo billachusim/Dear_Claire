@@ -4,15 +4,23 @@ import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:provider/provider.dart';
+import '../../Admob/ad_state.dart';
 import '../../utils/strings.dart';
 import '../featured/model/session.dart';
 import '../../widgets/ego_mode_session_card.dart';
 
-class CategorySessions extends StatelessWidget {
+class CategorySessions extends StatefulWidget {
   final String visitedCategory;
 
   CategorySessions({Key? key, required this.visitedCategory}) : super(key: key);
 
+  @override
+  State<CategorySessions> createState() => _CategorySessionsState();
+}
+
+class _CategorySessionsState extends State<CategorySessions> {
   List<Session>? _sessionList = [];
 
   /// Get sessions from the category and have been marked to receive public replies.
@@ -21,7 +29,7 @@ class CategorySessions extends StatelessWidget {
   Stream<QuerySnapshot<Map<String, dynamic>>> getCategorySessions() {
     return FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: visitedCategory.toString())
+        .where("category1", isEqualTo: widget.visitedCategory.toString())
         .where("repliesEnabled", isEqualTo: true)
         .limit(100)
         .snapshots();
@@ -29,14 +37,54 @@ class CategorySessions extends StatelessWidget {
 
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+
+  // Admob Ad Units.
+  late BannerAd categorySessionsTopBanner;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final adState = Provider.of<AdState>(context);
+
+    // Implement a top location banner ad unit.
+    adState.initialization.then((status) {
+      setState(() {
+        categorySessionsTopBanner = BannerAd(
+            size: AdSize.banner,
+            adUnitId: adState.categorySessionTopBannerAdUnitId,
+            request: AdRequest(),
+            listener: BannerAdListener(
+              onAdFailedToLoad: (ad, error) {
+                ad.dispose();
+              },
+            )
+        )
+          ..load();
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Material(
       child: Scaffold(
+        backgroundColor: Pallet.colorSecondaryDark,
         appBar: AppBar(
           backgroundColor: Pallet.colorPrimaryDark,
           title: Row(
             children: [
-              Text(visitedCategory,
+              Text(widget.visitedCategory,
                 style: TextStyle(
                   fontSize: 19,
                   fontWeight: FontWeight.w600,
@@ -98,6 +146,16 @@ class CategorySessions extends StatelessWidget {
               return Scrollbar(
                 child: ListView(
                   children: [
+
+                    // Top ad unit is here
+                    if(categorySessionsTopBanner == null)
+                      SizedBox(height: 70)
+                    else
+                      Container(
+                        height: 60,
+                        child: AdWidget(ad: categorySessionsTopBanner),
+                      ),
+
                     ..._sessionList!
                         .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                         .toList(),
@@ -111,5 +169,4 @@ class CategorySessions extends StatelessWidget {
       ),
     );
   }
-
 }
