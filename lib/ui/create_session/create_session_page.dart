@@ -1902,6 +1902,31 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category2 = 'business and entrepreneur';
     }
 
+    if (sessionTextEditingController.text.contains('office'))
+    {
+      sessionObject.category1 = 'work and career';
+      sessionObject.category2 = 'business and entrepreneur';
+    }
+
+    if (sessionTextEditingController.text.contains('job'))
+    {
+      sessionObject.category1 = 'work and career';
+      sessionObject.category2 = 'business and entrepreneur';
+    }
+
+    if (sessionTextEditingController.text.contains('boss'))
+    {
+      sessionObject.category1 = 'work and career';
+      sessionObject.category2 = 'business and entrepreneur';
+    }
+
+    if (sessionTextEditingController.text.contains('madam'))
+    {
+      sessionObject.category1 = 'work and career';
+      sessionObject.category2 = 'business and entrepreneur';
+    }
+
+
     if (sessionTextEditingController.text.contains('hate'))
     {
       sessionObject.category1 = 'hate and abuse';
@@ -1910,6 +1935,34 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     }
 
     if (sessionTextEditingController.text.contains('abuse'))
+    {
+      sessionObject.category1 = 'hate and abuse';
+      sessionObject.category2 = 'depression and anxiety';
+      sessionObject.category3 = 'sad and depressed';
+    }
+
+    if (sessionTextEditingController.text.contains('pain'))
+    {
+      sessionObject.category1 = 'hate and abuse';
+      sessionObject.category2 = 'depression and anxiety';
+      sessionObject.category3 = 'sad and depressed';
+    }
+
+    if (sessionTextEditingController.text.contains('trauma'))
+    {
+      sessionObject.category1 = 'hate and abuse';
+      sessionObject.category2 = 'depression and anxiety';
+      sessionObject.category3 = 'sad and depressed';
+    }
+
+    if (sessionTextEditingController.text.contains('slap'))
+    {
+      sessionObject.category1 = 'hate and abuse';
+      sessionObject.category2 = 'depression and anxiety';
+      sessionObject.category3 = 'sad and depressed';
+    }
+
+    if (sessionTextEditingController.text.contains('punch'))
     {
       sessionObject.category1 = 'hate and abuse';
       sessionObject.category2 = 'depression and anxiety';
