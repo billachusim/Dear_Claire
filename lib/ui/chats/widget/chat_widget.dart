@@ -512,7 +512,7 @@ class ChatWidget extends StatelessWidget {
                         " This is the actual userType of this user ${userType.toString()}");
                     return
                       Visibility(
-                        visible: userType != "REGULAR",
+                        visible: userType == "SUPER_ADMIN",
                         child: GestureDetector(
                           onTap: () {
                               deletedRoomAlertDialog(context);
@@ -532,7 +532,7 @@ class ChatWidget extends StatelessWidget {
 
 
                                   Visibility(
-                                    visible: userType != "REGULAR",
+                                    visible: userType == "SUPER_ADMIN",
                                     child: Icon(
                                       Icons.delete_forever_rounded,
                                       color: Pallet.colorPrimaryDark,

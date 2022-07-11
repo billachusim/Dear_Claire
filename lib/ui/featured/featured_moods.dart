@@ -221,7 +221,7 @@ class FeaturedMoods extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    '🥵',
+                    '🥴',
                     style: TextStyle(
                       fontSize: 90,
                     ),

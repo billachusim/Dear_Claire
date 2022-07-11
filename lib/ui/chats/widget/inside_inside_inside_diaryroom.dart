@@ -272,12 +272,12 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                     " This is the actual userType of this user ${userType.toString()}");
                 return
                   Visibility(
-                    visible: userType != "REGULAR",
+                    visible: userType == "SUPER_ADMIN",
                     child: Row(
                       children: [
                         GestureDetector(
                           onTap: () {
-                            if (userType != "REGULAR")
+                            if (userType == "SUPER_ADMIN")
                               showCustomDialog(context,
                                   message: AppString.delete_advise_alert_note,
                                   onPressed: () {
@@ -298,10 +298,10 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
 
 
                               Visibility(
-                                visible: userType != "REGULAR",
+                                visible: userType == "SUPER_ADMIN",
                                 child: GestureDetector(
                                   onTap: () {
-                                    if (userType != "REGULAR")
+                                    if (userType == "SUPER_ADMIN")
                                       showCustomDialog(context,
                                           message: AppString.delete_advise_alert_note,
                                           onPressed: () {

@@ -49,66 +49,6 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
               ),
               child: Container(),
             ),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Image.asset(
-                  "assets/images/claire_icon.png",
-                  height: 50,
-                  width: 50,
-                ),
-                SizedBox(
-                  width: 10,
-                ),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Anonymous  Diaryroom',
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 16.0,
-                              color: Pallet.colorWhite,
-                              fontWeight: FontWeight.w700)),
-                      SizedBox(
-                        height: 3,
-                      ),
-                      Text('By Claire 🌺',
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 14.0,
-                              color: Pallet.colorWhite,
-                              fontWeight: FontWeight.normal)),
-                    ],
-                  ),
-                ),
-
-                StreamBuilder(
-                    stream: firebaseServices
-                        .getChats(widget.element),
-                    builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
-                      if (snapShot.hasError) {
-                        return Container();
-                      }
-                      if (snapShot.hasData) {
-                        return Text(
-                          snapShot.data!.docs.length.toString() + " Live Rooms 🔥",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600
-                          ),
-                        );
-                      }
-                      return Container();
-                    }),
-              ],
-            ),
             SizedBox(
                 height: 6,
             ),
@@ -146,33 +86,59 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
 
                 Spacer(flex: 1,),
 
-                GestureDetector(
-                  child: Container(
-                    padding: EdgeInsets.all(5),
-                    width: 120,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.0),
-                      gradient: LinearGradient(
-                        begin: Alignment(-0.37857140550652835, -1.9473685559777252),
-                        end: Alignment(1.2428571464417884, 2.526316110739735),
-                        stops: [0.0, 0.856177031993866, 1.0],
-                        colors: [
-                          Colors.white70,
-                          Pallet.colorPrimary,
-                          Pallet.colorSecondaryDark,
-                        ],
+                Column(
+                  children: [
+                    StreamBuilder(
+                        stream: firebaseServices
+                            .getChats(widget.element),
+                        builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                          if (snapShot.hasError) {
+                            return Container();
+                          }
+                          if (snapShot.hasData) {
+                            return Text(
+                              snapShot.data!.docs.length.toString() + " Live Rooms 🔥",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600
+                              ),
+                            );
+                          }
+                          return Container();
+                        }),
+
+                    SizedBox(height: 4,),
+
+                    GestureDetector(
+                      child: Container(
+                        padding: EdgeInsets.all(5),
+                        width: 120,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.0),
+                          gradient: LinearGradient(
+                            begin: Alignment(-0.37857140550652835, -1.9473685559777252),
+                            end: Alignment(1.2428571464417884, 2.526316110739735),
+                            stops: [0.0, 0.856177031993866, 1.0],
+                            colors: [
+                              Colors.white70,
+                              Pallet.colorPrimary,
+                              Pallet.colorSecondaryDark,
+                            ],
+                          ),
+                        ),
+                        child: Center(
+                          child: Text('O P E N',
+                            style: GoogleFonts.lato(
+                                fontSize: 15.0,
+                                color: Pallet.colorSecondaryDark,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ),
                       ),
                     ),
-                    child: Center(
-                      child: Text('O P E N',
-                        style: GoogleFonts.lato(
-                            fontSize: 15.0,
-                            color: Pallet.colorSecondaryDark,
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
               ],
             ),

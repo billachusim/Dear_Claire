@@ -1,8 +1,5 @@
 import 'dart:collection';
 import 'package:dear_claire/ui/Categories/archive_mood_stream.dart';
-import 'package:dear_claire/ui/Categories/category_streams.dart';
-import 'package:dear_claire/ui/Categories/users_diary_categories.dart';
-import 'package:dear_claire/ui/Categories/users_sessions_by_moods.dart';
 import 'package:dear_claire/ui/ego-profile/archived_sessions.dart';
 import 'package:dear_claire/ui/ego-profile/utils.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
@@ -29,7 +26,6 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
 
   DateTime? _focusedDay = DateTime.now();
 
-  DateTime? _selectedDay;
 
   // Using a `LinkedHashSet` is recommended due to equality comparison override
   final Set<DateTime> _selectedDays = LinkedHashSet<DateTime>(
