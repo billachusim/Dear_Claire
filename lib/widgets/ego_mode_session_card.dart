@@ -551,13 +551,14 @@ class EgoModeSessionCard extends StatelessWidget {
     Widget cancelButton = TextButton(
       child: Text("Cancel"),
       onPressed:  () {
-        Navigator.of(context).pop();      },
+        Navigator.of(context).pop();
+        },
     );
     Widget continueButton = TextButton(
       child: Text("Unfeature"),
       onPressed:  () {
         removeFromFeatured();
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        Navigator.of(context).pop();
       },
     );
 

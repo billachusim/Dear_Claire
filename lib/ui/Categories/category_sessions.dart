@@ -30,7 +30,9 @@ class _CategorySessionsState extends State<CategorySessions> {
     return FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
         .where("category1", isEqualTo: widget.visitedCategory.toString())
+        .where("archived", isEqualTo: false)
         .where("repliesEnabled", isEqualTo: true)
+        .orderBy("timeCreated", descending: true)
         .limit(100)
         .snapshots();
   }

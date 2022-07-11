@@ -34,7 +34,9 @@ class _MoodSessionsState extends State<MoodSessions> {
     return FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
         .where("moodId", isEqualTo: widget.sessionMood)
+        .where("archived", isEqualTo: false)
         .where("repliesEnabled", isEqualTo: true)
+        .orderBy("timeCreated", descending: true)
         .limit(100)
         .snapshots();
   }

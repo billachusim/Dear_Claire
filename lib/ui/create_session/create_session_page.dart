@@ -1791,13 +1791,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     Hive.box("draft").clear();
 
-    categorize(sessionObject);
+    //categorize(sessionObject);
 
     ascertainCurrentLoveCount();
 
     _showQuickInterstitialAd();
 
-    _firebaseServices.followYourSessionImmediately(context, session: sessionObject);
+    _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
 
     isOriginalSession(context, sessionTextEditingController.text);
 
@@ -2553,7 +2553,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     _showInterstitialAd();
 
-    _firebaseServices.followYourSessionImmediately(context, session: sessionObject);
+    _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
 
     navigateToNewSession(await _firebaseServices.getSingleSession(
         sessionId: sessionObject.sessionId));

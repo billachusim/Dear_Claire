@@ -243,7 +243,6 @@ class FirebaseServices extends ChangeNotifier {
     return _firebaseFirestore
         .collection(AppString.appFeaturedSessions)
         .where("repliesEnabled", isEqualTo: true)
-       // .where("flagged", isEqualTo: false)
         .where("archived", isEqualTo: false)
         .where('followers', arrayContains: _usersID)
         .limit(AppString.appSessionLength)
@@ -601,13 +600,13 @@ class FirebaseServices extends ChangeNotifier {
       'followers': FieldValue.arrayUnion([_usersID]),
       'timeLastActivity': FieldValue.serverTimestamp(),
     });
-    _subscribeToYourSession(session.userNickname.toString(), session);
+    subscribeToYourSession(session.userNickname.toString(), session);
   }
 
 
 
   /// subscribe user to his session topic.
-  Future<void> _subscribeToYourSession(String sender, CreateSessionModel session) async {
+  Future<void> subscribeToYourSession(String sender, CreateSessionModel session) async {
     _usersID = currentUser?.uid.toString();
 
     await _firebaseMessaging.subscribeToTopic(session.sessionId!);

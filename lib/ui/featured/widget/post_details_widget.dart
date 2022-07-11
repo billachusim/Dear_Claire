@@ -41,6 +41,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
   User? currentUser = FirebaseAuth.instance.currentUser;
 
+  bool? isFeatured;
+
   late String visitedUsersID;
   late String visitedEgoName;
 
@@ -348,7 +350,50 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                     },
                                     count: _session.followers!.length,
                                   ),
+
                             new Spacer(),
+
+                            FutureBuilder<
+                                DocumentSnapshot<Map<String, dynamic>>>(
+                              future: FirebaseFirestore.instance
+                                  .collection("users")
+                                  .doc(currentUser?.uid)
+                                  .get(),
+                              builder: (_, snapshot) {
+                                if (snapshot.hasData) {
+                                  var data = snapshot.data!.data();
+                                  var userType = data?["userType"] ?? "0";
+                                  debugPrint(
+                                      " This is the actual userType of this user ${userType.toString()}");
+                                  return
+                                    Visibility(
+                                      visible: userType == "SUPER_ADMIN",
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          if (_session.featured == false)
+                                            modFeatureAlertDialog(context);
+                                          else unfeatureAlertDialog(context);
+                                        },
+                                        child: Container(
+                                          child: Visibility(
+                                            visible: _session.repliesEnabled == true,
+                                            child: Icon(
+                                              _session.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
+                                              color: Pallet.colorSecondary,
+                                              size: 24,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                }
+
+                                return Container();
+                              },
+                            ),
+
+                            new Spacer(),
+
                             if (_session.userId == currentUser?.uid)
                               CupertinoButton(
                                   padding: EdgeInsets.zero,
@@ -468,6 +513,113 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
       ),
     );
   }
+
+  /// Edit feature
+
+  Future<bool?> setToFeatured() async {
+    final value = true;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(widget.sessionId)
+        .update({
+      "featured": value,
+    },
+    );
+    logger.d('Successfully changed feature');
+    print('Is Featured?: $value');
+    isFeatured = value;
+    return value;
+  }
+
+
+  modFeatureAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context).pop();
+      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Feature!"),
+      onPressed:  () {
+        setToFeatured();
+        Navigator.of(context).pop();
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Feature This Session?"),
+      content: Text(AppString.feature_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  Future<bool?> removeFromFeatured() async {
+    final value = false;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(widget.sessionId)
+        .update({
+      "featured": value,
+    },
+    );
+    logger.d('Successfully changed feature');
+    print('Is Featured?: $value');
+    isFeatured = value;
+    return value;
+  }
+
+
+  unfeatureAlertDialog(BuildContext context) {
+
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context).pop();      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Unfeature"),
+      onPressed:  () {
+        removeFromFeatured();
+        Navigator.of(context).pop();
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Unfeature This Session?"),
+      content: Text(AppString.unfeature_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
 
 // Edit session function
   Future<void> editSession() async {

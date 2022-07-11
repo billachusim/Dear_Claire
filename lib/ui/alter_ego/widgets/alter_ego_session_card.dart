@@ -435,7 +435,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
       child: Text("Feature!"),
       onPressed:  () {
         setToFeatured();
-        Navigator.pushReplacementNamed(context, AppRoutes.alterEgoHomepage);
+        Navigator.of(context).pop();
       },
     );
 
@@ -472,7 +472,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
       child: Text("Unfeature"),
       onPressed:  () {
         removeFromFeatured();
-        Navigator.pushReplacementNamed(context, AppRoutes.alterEgoHomepage);
+        Navigator.of(context).pop();
       },
     );
 
