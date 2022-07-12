@@ -23,6 +23,7 @@ import '../Categories/similar_category_sessions.dart';
 import 'model/comment_session_model.dart';
 import 'model/session.dart';
 import 'widget/post_details_widget.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class Temp {
   String id;
@@ -181,72 +182,102 @@ class _EgoModeSessionDetailState
               PostDetailsWidget(
                 sessionId: featuredSessionModel!.sessionId,
               ),
-              StreamBuilder(
-                  stream: firebaseServices.getFeaturedSessionsComments(
-                      widget.featuredSessionModel!.sessionId.toString()),
-                  builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
-                    if (snapShot.hasError) {
-                      return Container();
-                    }
 
-                    if (snapShot.hasData) {
-                      _commentList.clear();
+              AnimationLimiter(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  //padding: EdgeInsets.all(15),
+                  physics:
+                  BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
+                  itemCount: 1,
+                  itemBuilder: (BuildContext c, int i) {
+                    return AnimationConfiguration.staggeredList(
+                      position: i,
+                      delay: Duration(milliseconds: 500),
+                      child: SlideAnimation(
+                        duration: Duration(milliseconds: 2500),
+                        curve: Curves.fastLinearToSlowEaseIn,
+                        horizontalOffset: 30,
+                        verticalOffset: 300.0,
+                        child: FlipAnimation(
+                          duration: Duration(milliseconds: 3000),
+                          curve: Curves.fastLinearToSlowEaseIn,
+                          flipAxis: FlipAxis.y,
 
-                      /// clear list
-                      snapShot.data!.docs
-                          .map((e) => _commentList
-                              .add(CommentSessionModel.fromJson(e.data())))
-                          .toList();
-                      return Column(
+                          child: StreamBuilder(
+                              stream: firebaseServices.getFeaturedSessionsComments(
+                                  widget.featuredSessionModel!.sessionId.toString()),
+                              builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                                if (snapShot.hasError) {
+                                  return Container();
+                                }
 
-                        children: [
+                                if (snapShot.hasData) {
+                                  _commentList.clear();
 
-                          // Top ad unit is here
-                          if(egoModeSessionDetailTopBanner == null)
-                            SizedBox(height: 70)
-                          else
-                            Container(
-                              height: 60,
-                              child: AdWidget(ad: egoModeSessionDetailTopBanner),
-                            ),
+                                  /// clear list
+                                  snapShot.data!.docs
+                                      .map((e) => _commentList
+                                      .add(CommentSessionModel.fromJson(e.data())))
+                                      .toList();
+                                  return Column(
 
-                          ..._commentList
-                              .map((element) => CommentWidget(
-                                    commentSessionModel: element,
-                                    onPressed: () => _updateReaction(
-                                        element, widget.featuredSessionModel!),
-                                    onShare: () => _share(element.message),
-                                    featuredSessionModel: widget.featuredSessionModel!,
-                                    userId: widget.featuredSessionModel!.userId.toString(),
+                                    children: [
 
-                          ))
-                              .toList(),
+                                      // Top ad unit is here
+                                      if(egoModeSessionDetailTopBanner == null)
+                                        SizedBox(height: 70)
+                                      else
+                                        Container(
+                                          height: 60,
+                                          child: AdWidget(ad: egoModeSessionDetailTopBanner),
+                                        ),
 
-                          SizedBox(height: 4,),
-                          Text(
-                            "Check the next sessions from same category - " + featuredSessionModel!.category1.toString(),
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
+                                      ..._commentList
+                                          .map((element) => CommentWidget(
+                                        commentSessionModel: element,
+                                        onPressed: () => _updateReaction(
+                                            element, widget.featuredSessionModel!),
+                                        onShare: () => _share(element.message),
+                                        featuredSessionModel: widget.featuredSessionModel!,
+                                        userId: widget.featuredSessionModel!.userId.toString(),
+
+                                      ))
+                                          .toList(),
+
+                                      SizedBox(height: 4,),
+                                      Text(
+                                        "Check the next sessions from same category - " + featuredSessionModel!.category1.toString(),
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+
+                                      SimilarCategorySessions(element: featuredSessionModel!,),
+
+                                      // Bottom ad unit is here
+                                      if(egoModeSessionDetailBottomBanner == null)
+                                        SizedBox(height: 70)
+                                      else
+                                        Container(
+                                          height: 60,
+                                          child: AdWidget(ad: egoModeSessionDetailBottomBanner),
+                                        ),
+                                    ],
+                                  );
+                                }
+                                return Container();
+                              }
                           ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
 
-                          SimilarCategorySessions(element: featuredSessionModel!,),
 
-                          // Bottom ad unit is here
-                          if(egoModeSessionDetailBottomBanner == null)
-                            SizedBox(height: 70)
-                          else
-                            Container(
-                              height: 60,
-                              child: AdWidget(ad: egoModeSessionDetailBottomBanner),
-                            ),
-                        ],
-                      );
-                    }
-                    return Container();
-                  }
-                  ),
               SizedBox(
                 height: 70,
               )

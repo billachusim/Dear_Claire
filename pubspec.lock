@@ -8,6 +8,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.4"
+  animated_text_kit:
+    dependency: "direct main"
+    description:
+      name: animated_text_kit
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "4.2.1"
   archive:
     dependency: transitive
     description:
@@ -442,6 +449,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "8.4.2"
+  flutter_staggered_animations:
+    dependency: "direct main"
+    description:
+      name: flutter_staggered_animations
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.0"
   flutter_staggered_grid_view:
     dependency: "direct main"
     description:

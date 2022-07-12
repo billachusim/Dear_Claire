@@ -1,3 +1,4 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
@@ -187,20 +188,26 @@ return showDialog<void>(
                           ),
                         ),
 
-                        Text(AppString.ego_login_welcome,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.lato(
-                                fontSize: 24.0,
+                        AnimatedTextKit(
+                          animatedTexts: [
+                            TypewriterAnimatedText(
+                              AppString.ego_login_welcome,
+                              speed: Duration(milliseconds: 250),
+                              textStyle: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
                                 color: Pallet.colorPrimaryDark,
-                                //fontStyle: FontStyle.normal,
-                                fontWeight: FontWeight.w700)),
-                        SizedBox(
-                          height: 2,
+                              ),
+                            ),
+                          ],
+                          isRepeatingAnimation: false,
+                          stopPauseOnTap: true,
                         ),
+
                         Text(AppString.ego_login_note,
                             textAlign: TextAlign.left,
                             style: GoogleFonts.lato(
-                                fontSize: 14.0,
+                                fontSize: 15.0,
                                 color: Pallet.colorSecondaryDark,
                                 fontWeight: FontWeight.w600)),
                         SizedBox(

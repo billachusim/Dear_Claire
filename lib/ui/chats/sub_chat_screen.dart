@@ -11,6 +11,7 @@ import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
@@ -144,54 +145,85 @@ class _SubChatScreenState extends State<SubChatScreen> {
           children: [
             ListView(
               children: [
-                StreamBuilder(
-                    stream: firebaseServices.getSubMessages(
-                        widget.documentID!, widget.chatRoomPodo, widget.chatModel!),
-                    builder: (context,
-                        AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
-                            snapShot) {
-                      if (snapShot.hasData) {
-                        if (_chatList.isNotEmpty) _chatList.clear();
-                      snapShot.data!.docs
-                          .map((e) => _chatList
-                          .add(Temp(e.id, ChatModel.fromJson(e.data()))))
-                          .toList();
-                        return Column(
-                          children: [
-                            InsideInsideChatWidget(documentID: widget.documentID, chatModel: widget.chatModel, chatRoomPodo: widget.chatRoomPodo),
-
-                            // Top ad unit is here
-                            if(insideInsideChatroomTopBanner == null)
-                              SizedBox(height: 70)
-                            else
-                              Container(
-                                height: 60,
-                                child: AdWidget(ad: insideInsideChatroomTopBanner),
-                              ),
 
 
-                            ..._chatList
-                                .map((element) => InsideInsideInsideChatWidget(
-                                      isSubChat: true,
-                                      documentID: element.id,
-                                      chatModel: element.chatModel,
-                                      chatRoomPodo: widget.chatRoomPodo,
-                                    ))
-                                .toList(),
+                AnimationLimiter(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    //padding: EdgeInsets.all(15),
+                    physics:
+                    BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
+                    itemCount: 1,
+                    itemBuilder: (BuildContext c, int i) {
+                      return AnimationConfiguration.staggeredList(
+                        position: i,
+                        delay: Duration(milliseconds: 500),
+                        child: SlideAnimation(
+                          duration: Duration(milliseconds: 2500),
+                          curve: Curves.fastLinearToSlowEaseIn,
+                          horizontalOffset: 30,
+                          verticalOffset: 300.0,
+                          child: FlipAnimation(
+                            duration: Duration(milliseconds: 3000),
+                            curve: Curves.fastLinearToSlowEaseIn,
+                            flipAxis: FlipAxis.y,
 
-                            // Bottom ad unit is here
-                            if(insideInsideChatroomBottomBanner == null)
-                              SizedBox(height: 70)
-                            else
-                              Container(
-                                height: 60,
-                                child: AdWidget(ad: insideInsideChatroomBottomBanner),
-                              ),
-                          ],
-                        );
-                      }
-                      return Container();
-                    }),
+                            child: StreamBuilder(
+                                stream: firebaseServices.getSubMessages(
+                                    widget.documentID!, widget.chatRoomPodo, widget.chatModel!),
+                                builder: (context,
+                                    AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
+                                    snapShot) {
+                                  if (snapShot.hasData) {
+                                    if (_chatList.isNotEmpty) _chatList.clear();
+                                    snapShot.data!.docs
+                                        .map((e) => _chatList
+                                        .add(Temp(e.id, ChatModel.fromJson(e.data()))))
+                                        .toList();
+                                    return Column(
+                                      children: [
+                                        InsideInsideChatWidget(documentID: widget.documentID, chatModel: widget.chatModel, chatRoomPodo: widget.chatRoomPodo),
+
+                                        // Top ad unit is here
+                                        if(insideInsideChatroomTopBanner == null)
+                                          SizedBox(height: 70)
+                                        else
+                                          Container(
+                                            height: 60,
+                                            child: AdWidget(ad: insideInsideChatroomTopBanner),
+                                          ),
+
+
+                                        ..._chatList
+                                            .map((element) => InsideInsideInsideChatWidget(
+                                          isSubChat: true,
+                                          documentID: element.id,
+                                          chatModel: element.chatModel,
+                                          chatRoomPodo: widget.chatRoomPodo,
+                                        ))
+                                            .toList(),
+
+                                        // Bottom ad unit is here
+                                        if(insideInsideChatroomBottomBanner == null)
+                                          SizedBox(height: 70)
+                                        else
+                                          Container(
+                                            height: 60,
+                                            child: AdWidget(ad: insideInsideChatroomBottomBanner),
+                                          ),
+                                      ],
+                                    );
+                                  }
+                                  return Container();
+                                }),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+
                 SizedBox(
                   height: 70,
                 )

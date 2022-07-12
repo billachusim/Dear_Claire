@@ -9,6 +9,7 @@ import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../utils/color.dart';
@@ -148,53 +149,81 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             ListView(
               children: [
-                StreamBuilder(
-                    stream: firebaseServices.getChats(chatRoomPodo),
-                    builder: (context,
-                        AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
-                            snapShot) {
-                      if (snapShot.hasData) {
-                        if (_chatList.isNotEmpty) _chatList.clear();
-                        snapShot.data!.docs
-                            .map((e) => _chatList
-                                .add(Temp(e.id, ChatModel.fromJson(e.data()))))
-                            .toList();
-                        return Column(
-                          children: [
-                            SubDiaryRoomWidget(element: widget.chatRoomPodo),
 
-                            // Top ad unit is here
-                            if(insideChatroomTopBanner == null)
-                              SizedBox(height: 70)
-                            else
-                              Container(
-                                height: 60,
-                                child: AdWidget(ad: insideChatroomTopBanner),
-                              ),
+                AnimationLimiter(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    //padding: EdgeInsets.all(15),
+                    physics:
+                    BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
+                    itemCount: 1,
+                    itemBuilder: (BuildContext c, int i) {
+                      return AnimationConfiguration.staggeredList(
+                        position: i,
+                        delay: Duration(milliseconds: 500),
+                        child: SlideAnimation(
+                          duration: Duration(milliseconds: 2500),
+                          curve: Curves.fastLinearToSlowEaseIn,
+                          horizontalOffset: 30,
+                          verticalOffset: 300.0,
+                          child: FlipAnimation(
+                            duration: Duration(milliseconds: 3000),
+                            curve: Curves.fastLinearToSlowEaseIn,
+                            flipAxis: FlipAxis.y,
+
+                            child: StreamBuilder(
+                                stream: firebaseServices.getChats(chatRoomPodo),
+                                builder: (context,
+                                    AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
+                                    snapShot) {
+                                  if (snapShot.hasData) {
+                                    if (_chatList.isNotEmpty) _chatList.clear();
+                                    snapShot.data!.docs
+                                        .map((e) => _chatList
+                                        .add(Temp(e.id, ChatModel.fromJson(e.data()))))
+                                        .toList();
+                                    return Column(
+                                      children: [
+                                        SubDiaryRoomWidget(element: widget.chatRoomPodo),
+
+                                        // Top ad unit is here
+                                        if(insideChatroomTopBanner == null)
+                                          SizedBox(height: 70)
+                                        else
+                                          Container(
+                                            height: 60,
+                                            child: AdWidget(ad: insideChatroomTopBanner),
+                                          ),
 
 
-                            ..._chatList
-                                .map((element) => ChatWidget(
-                                      documentID: element.id,
-                                      chatModel: element.chatModel,
-                                      chatRoomPodo: chatRoomPodo,
-                                    ))
-                                .toList(),
+                                        ..._chatList
+                                            .map((element) => ChatWidget(
+                                          documentID: element.id,
+                                          chatModel: element.chatModel,
+                                          chatRoomPodo: chatRoomPodo,
+                                        ))
+                                            .toList(),
 
 
-                            // Bottom ad unit is here
-                            if(insideChatroomBottomBanner == null)
-                              SizedBox(height: 70)
-                            else
-                              Container(
-                                height: 60,
-                                child: AdWidget(ad: insideChatroomBottomBanner),
-                              ),
-                          ],
-                        );
-                      }
-                      return Container();
-                    }),
+                                        // Bottom ad unit is here
+                                        if(insideChatroomBottomBanner == null)
+                                          SizedBox(height: 70)
+                                        else
+                                          Container(
+                                            height: 60,
+                                            child: AdWidget(ad: insideChatroomBottomBanner),
+                                          ),
+                                      ],
+                                    );
+                                  }
+                                  return Container();
+                                }),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
                 SizedBox(
                   height: 70,
                 )

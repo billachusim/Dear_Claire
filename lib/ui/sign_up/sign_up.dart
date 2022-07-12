@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/helper.dart';
 import '../splash_screen/rotate_logo.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -85,20 +86,29 @@ class _SignUpPage extends State<SignUpPage> {
                         ),
                       ),
 
-                      Text(AppString.create_ego_welcome,
-                          textAlign: TextAlign.left,
-                          style: GoogleFonts.lato(
-                              fontSize: 24.0,
+                      AnimatedTextKit(
+                        animatedTexts: [
+                          TypewriterAnimatedText(
+                            AppString.create_ego_welcome,
+                            speed: Duration(milliseconds: 250),
+                            textStyle: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
                               color: Pallet.colorPrimaryDark,
-                              //fontStyle: FontStyle.normal,
-                              fontWeight: FontWeight.w700)),
+                            ),
+                          ),
+                        ],
+                        isRepeatingAnimation: false,
+                        stopPauseOnTap: true,
+                      ),
+
                       SizedBox(
                         height: 2,
                       ),
                       Text(AppString.create_ego_note,
                           textAlign: TextAlign.left,
                           style: GoogleFonts.lato(
-                              fontSize: 14.0,
+                              fontSize: 15.0,
                               color: Pallet.colorSecondaryDark,
                               fontWeight: FontWeight.w700)),
                       SizedBox(

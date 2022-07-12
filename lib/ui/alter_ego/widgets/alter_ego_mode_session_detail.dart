@@ -15,6 +15,7 @@ import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -170,65 +171,94 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
               PostDetailsWidget(
                 sessionId: featuredSessionModel!.sessionId,
               ),
-              StreamBuilder(
-                  stream: firebaseServices.getFeaturedSessionsComments(
-                      featuredSessionModel!.sessionId!),
-                  builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
-                    if (snapShot.hasError) {
-                      return Container();
-                    }
 
-                    if (snapShot.hasData) {
-                      /// clear list before adding now items
-                      _commentSessionList.clear();
-                      snapShot.data!.docs
-                          .map((e) => _commentSessionList
-                              .add(CommentSessionModel.fromJson(e.data())))
-                          .toList();
-                      return Column(
+              AnimationLimiter(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  //padding: EdgeInsets.all(15),
+                  physics:
+                  BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
+                  itemCount: 1,
+                  itemBuilder: (BuildContext c, int i) {
+                    return AnimationConfiguration.staggeredList(
+                      position: i,
+                      delay: Duration(milliseconds: 500),
+                      child: SlideAnimation(
+                        duration: Duration(milliseconds: 2500),
+                        curve: Curves.fastLinearToSlowEaseIn,
+                        horizontalOffset: 30,
+                        verticalOffset: 300.0,
+                        child: FlipAnimation(
+                          duration: Duration(milliseconds: 3000),
+                          curve: Curves.fastLinearToSlowEaseIn,
+                          flipAxis: FlipAxis.y,
 
-                        children: [
+                          child: StreamBuilder(
+                              stream: firebaseServices.getFeaturedSessionsComments(
+                                  featuredSessionModel!.sessionId!),
+                              builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                                if (snapShot.hasError) {
+                                  return Container();
+                                }
 
-                          // Top ad unit is here
-                          if(alterEgoModeSessionDetailTopBanner == null)
-                            SizedBox(height: 70)
-                          else
-                            Container(
-                              height: 60,
-                              child: AdWidget(ad: alterEgoModeSessionDetailTopBanner),
-                            ),
-                          ..._commentSessionList
-                              .map((element) => CommentWidget(
-                                    commentSessionModel: element,
-                            onPressed: () => _updateReaction(
-                                element, featuredSessionModel!),
-                            onShare: () => _share(element.message), featuredSessionModel: featuredSessionModel!, userId: '',
-                                  ))
-                              .toList(),
+                                if (snapShot.hasData) {
+                                  /// clear list before adding now items
+                                  _commentSessionList.clear();
+                                  snapShot.data!.docs
+                                      .map((e) => _commentSessionList
+                                      .add(CommentSessionModel.fromJson(e.data())))
+                                      .toList();
+                                  return Column(
 
-                          SizedBox(height: 4,),
-                          Text(
-                            "Earn more> Respond to more sessions from category - " + featuredSessionModel!.category1.toString(),
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
-                          ),
+                                    children: [
 
-                          NextUnrepliedSession(element: featuredSessionModel!,),
-                          // Bottom ad unit is here
-                          if(alterEgoModeSessionDetailBottomBanner == null)
-                            SizedBox(height: 70)
-                          else
-                            Container(
-                              height: 60,
-                              child: AdWidget(ad: alterEgoModeSessionDetailBottomBanner),
-                            ),
-                        ],
-                      );
-                    }
-                    return Container();
-                  }),
+                                      // Top ad unit is here
+                                      if(alterEgoModeSessionDetailTopBanner == null)
+                                        SizedBox(height: 70)
+                                      else
+                                        Container(
+                                          height: 60,
+                                          child: AdWidget(ad: alterEgoModeSessionDetailTopBanner),
+                                        ),
+                                      ..._commentSessionList
+                                          .map((element) => CommentWidget(
+                                        commentSessionModel: element,
+                                        onPressed: () => _updateReaction(
+                                            element, featuredSessionModel!),
+                                        onShare: () => _share(element.message), featuredSessionModel: featuredSessionModel!, userId: '',
+                                      ))
+                                          .toList(),
+
+                                      SizedBox(height: 4,),
+                                      Text(
+                                        "Earn more> Respond to more sessions from category - " + featuredSessionModel!.category1.toString(),
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+
+                                      NextUnrepliedSession(element: featuredSessionModel!,),
+                                      // Bottom ad unit is here
+                                      if(alterEgoModeSessionDetailBottomBanner == null)
+                                        SizedBox(height: 70)
+                                      else
+                                        Container(
+                                          height: 60,
+                                          child: AdWidget(ad: alterEgoModeSessionDetailBottomBanner),
+                                        ),
+                                    ],
+                                  );
+                                }
+                                return Container();
+                              }),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
               SizedBox(
                 height: 70,
               )
