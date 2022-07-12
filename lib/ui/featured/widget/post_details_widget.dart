@@ -216,6 +216,9 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             ),
                           ],
                         ),
+
+                        SizedBox(height: 5,),
+
                         Container(
                           alignment: Alignment.centerLeft,
                           child: Align(

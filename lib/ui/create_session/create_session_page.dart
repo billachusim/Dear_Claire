@@ -201,14 +201,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     sessionTextEditingController.dispose();
     sessionTitleController.dispose();
     super.dispose();
-    _interstitialAd?.dispose();
-    _quickInterstitialAd?.dispose();
   }
 
 
   /// checks if advise meets original advise rules...
   /// if it does, then increment necessary counts.
-  Future<bool> isOriginalSession(BuildContext context, String sessionText) async {
+  Future<bool> isOriginalSession(String sessionText) async {
     final _session = sessionText.toString();
     final _length = _session.length;
 
@@ -223,10 +221,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
         flutterLocalNotificationsPlugin.show(0, 'Clairelove Wallet',
             "You started and shared an original diary session. You just earned 10 Loves.", _notificationDetails());
-
-        Future.delayed(Duration(seconds: 4), () {
-          _showInterstitialAd();
-        });
 
         return true;
       }
@@ -646,15 +640,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -695,15 +683,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -742,15 +724,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -791,15 +767,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -849,15 +819,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -895,15 +859,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -943,15 +901,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
-                                              Navigator.of(context).pop();
+                                            Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -990,15 +942,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -1052,15 +998,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -1102,15 +1042,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -1149,15 +1083,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -1197,15 +1125,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -1254,15 +1176,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -1302,15 +1218,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -1351,15 +1261,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -1402,15 +1306,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                             sessionTitleController.text = quickSessionTitle;
                                             sessionTextEditingController.text = quickSessionMessage;
 
-                                            if (sessionTitleController.text.isNotEmpty) {
                                               Navigator.of(context).pop();
                                               createQuickSession();
                                               showToast(AppString.started_new_session);
-                                              _showQuickInterstitialAd();
-                                            } else {
-                                              _interstitialAd?.dispose();
-                                              showToast(AppString.new_session_error);
-                                            }
                                           },
 
                                           child: Container(
@@ -1696,12 +1594,10 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
 
   createQuickSession() async {
-    setState(() {
-      isLoading = true;
-    });
-
     userModel = await _firebaseServices.getUserInfo();
+
     CreateSessionModel sessionObject = CreateSessionModel();
+
     if (recordFile != null) {
       sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile!);
     }
@@ -1789,20 +1685,16 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     bool isSuccessfull =
     await _firebaseServices.createSession(session: sessionObject);
 
-    Hive.box("draft").clear();
-
-    //categorize(sessionObject);
-
     ascertainCurrentLoveCount();
 
-    _showQuickInterstitialAd();
+    Future.delayed(Duration(seconds: 4), () {
+      _showQuickInterstitialAd();
+    });
 
     _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
 
-    isOriginalSession(context, sessionTextEditingController.text);
+    isOriginalSession(sessionTextEditingController.text);
 
-    navigateToNewSession(await _firebaseServices.getSingleSession(
-        sessionId: sessionObject.sessionId));
   }
 
 
@@ -2600,11 +2492,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     categorize(sessionObject);
 
-    isOriginalSession(context, sessionTextEditingController.text);
+    isOriginalSession(sessionTextEditingController.text);
 
     ascertainCurrentLoveCount();
 
-    _showInterstitialAd();
+    Future.delayed(Duration(seconds: 4), () {
+      _showInterstitialAd();
+    });
 
     _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
 
