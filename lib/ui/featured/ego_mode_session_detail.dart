@@ -186,7 +186,6 @@ class _EgoModeSessionDetailState
               AnimationLimiter(
                 child: ListView.builder(
                   shrinkWrap: true,
-                  //padding: EdgeInsets.all(15),
                   physics:
                   BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
                   itemCount: 1,
@@ -195,13 +194,13 @@ class _EgoModeSessionDetailState
                       position: i,
                       delay: Duration(milliseconds: 500),
                       child: SlideAnimation(
-                        duration: Duration(milliseconds: 2500),
-                        curve: Curves.fastLinearToSlowEaseIn,
-                        horizontalOffset: 30,
-                        verticalOffset: 300.0,
+                        duration: Duration(milliseconds: 1000),
+                        curve: Curves.linearToEaseOut,
+                        horizontalOffset: 100,
+                        verticalOffset: 350.0,
                         child: FlipAnimation(
-                          duration: Duration(milliseconds: 3000),
-                          curve: Curves.fastLinearToSlowEaseIn,
+                          duration: Duration(milliseconds: 1000),
+                          curve: Curves.easeInCubic,
                           flipAxis: FlipAxis.y,
 
                           child: StreamBuilder(

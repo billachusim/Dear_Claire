@@ -95,8 +95,9 @@ class _HomeDashboardPageState extends State<HomePage>
 
   void setTabIndex(index) async {
     if (await firebaseServices.isUserSignIn(context))
-      // setState(() => _currentIndex = index);
-      _pageController.animateToPage(index, duration: Duration(milliseconds: 200), curve: Curves.bounceIn);
+      _pageController.animateToPage(
+          index, duration: Duration(milliseconds: 1500),
+          curve: Curves.elasticOut);
     switch(index) {
       case 0: { _title = 'Featured Sessions'; }
       break;
