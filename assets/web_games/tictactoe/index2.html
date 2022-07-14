@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -927,7 +928,7 @@
           var chosenSymbol = symbolValue[randomSymbol];
           var userMove = [true, false];
           var move = userMove[(Math.random() * userMove.length) | 0];
-          var hasCheckedFirstMove = move;
+          var hasCheckedFirstMove = false;
           var playBoard = new PlayBoard();
           var user = new User(+chosenSymbol, playBoard, "You");
           var computer = new User(
