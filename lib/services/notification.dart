@@ -29,7 +29,6 @@ class ClairNotification {
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
       'socialFaculty', // id
       'Social Faculty Channel', // title
-      'This is our channel.', // description
       importance: Importance.max,
       playSound: true);
 
@@ -110,7 +109,7 @@ class ClairNotification {
   NotificationDetails? _notificationDetails() {
     return NotificationDetails(
         android: AndroidNotificationDetails(
-            channel.id, channel.name, channel.description,
+            channel.id, channel.name,
             color: Pallet.colorPrimary,
             playSound: true,
             icon: '@drawable/claire_icon',

@@ -5,7 +5,6 @@ import 'package:dear_claire/ui/Categories/next_unreplied_sessions.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/ui/featured/widget/post_details_widget.dart';
-import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/ui/splash_screen/custom_rotate_bacground.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
@@ -313,7 +312,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         sender: _userModel.userType == 'ADMIN'? 'Claire' :
         _userModel.userType == 'SUPER_ADMIN'? 'Claire' :
         _userModel.nickname.toString(),
-        route: AppRoutes.egoModeSessionDetail,
+        route: session.sessionId.toString(),
     );
 
     updateSessionTimeLastActivity(session);
@@ -358,14 +357,13 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
       'high_importance_channel', // id
       'High Importance Notifications', // title
-      'This channel is used for important notifications.', // description
       importance: Importance.high,
       playSound: true);
 
   NotificationDetails? _notificationDetails() {
     return NotificationDetails(
         android: AndroidNotificationDetails(
-            channel.id, channel.name, channel.description,
+            channel.id, channel.name,
             color: Pallet.colorPrimary,
             playSound: true,
             icon: '@drawable/claire_icon',

@@ -231,14 +231,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
       'high_importance_channel', // id
       'High Importance Notifications', // title
-      'This channel is used for important notifications.', // description
       importance: Importance.high,
       playSound: true);
 
   NotificationDetails? _notificationDetails() {
     return NotificationDetails(
         android: AndroidNotificationDetails(
-            channel.id, channel.name, channel.description,
+            channel.id, channel.name,
             color: Pallet.colorPrimary,
             playSound: true,
             icon: '@drawable/claire_icon',

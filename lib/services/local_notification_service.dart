@@ -2,6 +2,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../ui/routes/routes.dart';
+
 class LocalNotificationService{
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
   FlutterLocalNotificationsPlugin();
@@ -9,11 +11,19 @@ class LocalNotificationService{
   static void initialize(BuildContext context){
 
     final InitializationSettings initializationSettings =
-    InitializationSettings(android: AndroidInitializationSettings("@drawable/claire_icon"));
+    InitializationSettings(
+        android: AndroidInitializationSettings("@drawable/claire_icon"),
+        iOS: IOSInitializationSettings(
+          requestSoundPermission: false,
+          requestBadgePermission: false,
+          requestAlertPermission: false,
+        ),
+    );
 
-    _notificationsPlugin.initialize(initializationSettings, onSelectNotification: (String? route) async {
-      if(route != null){
-        Navigator.of(context).pushNamed(route);
+
+    _notificationsPlugin.initialize(initializationSettings, onSelectNotification: (String? payload) async {
+      if(payload != null){
+        navService.pushNamed('/postDetailsWidget', args: payload);
       }
     });
   }
@@ -26,7 +36,6 @@ class LocalNotificationService{
       android: AndroidNotificationDetails(
         "socialFaculty",
         "Social Faculty Channel",
-        "This is our channel",
         importance: Importance.max,
         priority: Priority.high,
       )

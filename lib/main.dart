@@ -3,7 +3,9 @@ import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/local_notification_service.dart';
 import 'package:dear_claire/services/notification.dart';
 import 'package:dear_claire/ui/create_session/create_session_controller.dart';
+import 'package:dear_claire/ui/create_session/create_session_page.dart';
 import 'package:dear_claire/ui/ego/ego.dart';
+import 'package:dear_claire/ui/featured/widget/post_details_widget.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/ui/splash_screen/splash.dart';
 import 'package:dear_claire/utils/color.dart';
@@ -18,7 +20,6 @@ import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-
 import 'Admob/ad_state.dart';
 import 'data/core/config.dart';
 
@@ -69,16 +70,33 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
       'socialfaculty', // id
       'Social Faculty Channel', // title
-      'This is our channel.', // description
       importance: Importance.max,
       playSound: true);
+
+
+  NotificationDetails _notificationDetails() {
+    return NotificationDetails(
+        android: AndroidNotificationDetails(
+            channel.id, channel.name,
+            color: Pallet.colorPrimary,
+            playSound: true,
+            icon: '@drawable/claire_icon',
+            enableLights: true,
+            enableVibration: true,
+            showWhen: true,
+            channelShowBadge: true),
+        iOS: IOSNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true));
+  }
 
 
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
-    LocalNotificationService.initialize(context);
+    //LocalNotificationService.initialize(context);
     triggerAndroidNotifications();
     triggerIosNotifications();
     clairNotification.randomizeNewAppSessionToast();
@@ -98,10 +116,26 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   void triggerAndroidNotifications() async {
 
+   // final FlutterLocalNotificationsPlugin _notificationsPlugin =FlutterLocalNotificationsPlugin();
+
+
+    final InitializationSettings initializationSettings =
+    InitializationSettings(
+      android: AndroidInitializationSettings("@drawable/claire_icon"),
+    );
+
+    flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (String payload) async {
+      print(payload);
+      if(payload != null){
+        navService.pushNamed('/postDetailsWidget', args: payload);
+      }
+    });
+
     ///Get the message user is going to tap when app is closed
     FirebaseMessaging.instance.getInitialMessage().then((message) {
+      String route = message.data["route"];
       if (message != null) {
-        navigatorKey.currentState.pushNamed(AppRoutes.egoPage);
+        navService.pushNamed('/postDetailsWidget', args: route);
       }
     });
 
@@ -109,10 +143,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       RemoteNotification notification = message.notification;
       AndroidNotification android = message.notification.android;
+      String route = message.data["route"];
       if (android != null)
       {
         flutterLocalNotificationsPlugin.show(notification.hashCode,
-            notification.title, notification.body, _notificationDetails());
+            notification.title, notification.body, _notificationDetails(), payload: route);
       }
     });
 
@@ -127,7 +162,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         logger.d(notification.toString());
         print(routeForMessage);
 
-        navigatorKey.currentState.pushNamed(AppRoutes.egoPage);
+        navService.pushNamed('/postDetailsWidget', args: routeForMessage);
 
       }
     });
@@ -196,25 +231,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
 
 
-  NotificationDetails _notificationDetails() {
-    return NotificationDetails(
-        android: AndroidNotificationDetails(
-            channel.id, channel.name, channel.description,
-            color: Pallet.colorPrimary,
-            playSound: true,
-            icon: '@drawable/claire_icon',
-            enableLights: true,
-            enableVibration: true,
-            showWhen: true,
-            channelShowBadge: true),
-        iOS: IOSNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true));
-  }
-
-
-
 
 
   @override
@@ -223,18 +239,27 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       providers: [Provider(create: (_) => FirebaseServices())],
       child: ScreenUtilInit(
         designSize: Size(360, 640),
-        builder: () => MaterialApp(
+        builder: (BuildContext context, child) => MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Dear Claire',
+          navigatorKey: NavigationService.navigationKey,
           theme: ThemeData(
             primarySwatch: Colors.pink,
           ),
           home: SplashPage(),
           routes: {
-            "egoPage": (_) => EgoPage(),
+            "createSession": (_) => CreateSessionPage(),
           },
-          navigatorKey: navigatorKey,
-          onGenerateRoute: AppRouter.generateRoute,
+          //navigatorKey: navigatorKey,
+          onGenerateRoute: (RouteSettings settings) {
+            switch (settings.name) {
+              case '/postDetailsWidget':
+                return MaterialPageRoute(builder: (_) => PostDetailsWidget(sessionId: settings.arguments,));
+              case '/egoPage':
+                return MaterialPageRoute(builder: (_) => EgoPage());
+            }
+            return AppRouter.generateRoute(settings);
+          },
         ),
       ),
     );

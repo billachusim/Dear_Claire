@@ -29,6 +29,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../Search/search_page.dart';
+import '../featured/widget/custom_post_details_screen.dart';
+import '../featured/widget/post_details_widget.dart';
 import '../splash_screen/custom_splash.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 
@@ -47,6 +49,8 @@ class AppRoutes {
   static const alterEgoHomepage = '/alterEgoHomepage';
   static const createSessionPage = '/create_session';
   static const egoModeSessionDetail = '/egoModeSessionDetail';
+  static const postDetailsWidget = '/postDetailsWidget';
+  static const customPostDetailsWidget = '/postDetailsWidget';
   static const donate = '/donate';
   static const howClaireWorks = '/how_claire_works';
   static const howAlterEgoWorks = '/how_alter_ego_works';
@@ -70,7 +74,6 @@ class AppRoutes {
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    // E.g Navigator.of(context).pushNamed(AppRoutes.featured);
     switch (settings.name) {
       case AppRoutes.home:
         return MaterialPageRoute<dynamic>(
@@ -143,6 +146,20 @@ class AppRouter {
       case AppRoutes.egoModeSessionDetail:
         return MaterialPageRoute<dynamic>(
           builder: (_) => EgoModeSessionDetail(featuredSessionModel: ''),
+          settings: settings,
+          fullscreenDialog: true,
+        );
+
+      case AppRoutes.postDetailsWidget:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => PostDetailsWidget(sessionId: settings.arguments.toString(),),
+          settings: settings,
+          fullscreenDialog: true,
+        );
+
+      case AppRoutes.customPostDetailsWidget:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => CustomPostDetailsWidget(sessionId: ""),
           settings: settings,
           fullscreenDialog: true,
         );
@@ -271,4 +288,54 @@ class AppRouter {
         );
     }
   }
+}
+
+
+
+final NavigationService navService = NavigationService();
+
+class NavigationService<T, U> {
+  static GlobalKey<NavigatorState> navigationKey = GlobalKey<NavigatorState>();
+
+  Future<Future<T?>> pushNamed(String routeName, {required Object args}) async =>
+      navigationKey.currentState!.pushNamed<T>(
+        routeName,
+        arguments: args,
+      );
+
+  Future<Future<T?>> push(Route<T> route) async =>
+      navigationKey.currentState!.push<T>(route);
+
+  Future<Future<T?>> pushReplacementNamed(String routeName, {required Object args}) async =>
+      navigationKey.currentState!.pushReplacementNamed<T, U>(
+        routeName,
+        arguments: args,
+      );
+
+  Future<Future<T?>> pushNamedAndRemoveUntil(
+      String routeName, {
+        required Object args,
+        bool keepPreviousPages = false,
+      }) async =>
+      navigationKey.currentState!.pushNamedAndRemoveUntil<T>(
+        routeName,
+            (Route<dynamic> route) => keepPreviousPages,
+        arguments: args,
+      );
+
+  Future<Future<T?>> pushAndRemoveUntil(
+      Route<T> route, {
+        bool keepPreviousPages = false,
+      }) async =>
+      navigationKey.currentState!.pushAndRemoveUntil<T>(
+        route,
+            (Route<dynamic> route) => keepPreviousPages,
+      );
+
+  Future<bool> maybePop([Object? args]) async =>
+      navigationKey.currentState!.maybePop<bool>();
+
+  bool canPop() => navigationKey.currentState!.canPop();
+
+  void goBack({required T result}) => navigationKey.currentState!.pop<T>(result);
 }

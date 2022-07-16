@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/Admob/ad_state.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/user_model.dart';
-import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
@@ -330,7 +329,7 @@ class _EgoModeSessionDetailState
         title: session.title ?? '',
         docId: session.sessionId!,
         sender: _userModel.nickname.toString(),
-        route: AppRoutes.egoModeSessionDetail,
+        route: session.sessionId.toString(),
     );
 
     updateSessionTimeLastActivity(session);
@@ -378,14 +377,13 @@ class _EgoModeSessionDetailState
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
       'high_importance_channel', // id
       'High Importance Notifications', // title
-      'This channel is used for important notifications.', // description
       importance: Importance.high,
       playSound: true);
 
   NotificationDetails? _notificationDetails() {
     return NotificationDetails(
         android: AndroidNotificationDetails(
-            channel.id, channel.name, channel.description,
+            channel.id, channel.name,
             color: Pallet.colorPrimary,
             playSound: true,
             icon: '@drawable/claire_icon',

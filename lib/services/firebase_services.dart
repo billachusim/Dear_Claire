@@ -385,12 +385,12 @@ class FirebaseServices extends ChangeNotifier {
       {required String title,
       required String docId,
       required String sender,
-      required route}) {
+      required String route}) {
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
       to: '/topics/$docId',
       collapseKey: 'type_a',
-      data: pushNotification.Data(id: sender, route: route),
+      data: pushNotification.Data(id: sender, route: docId.toString()),
       notification: pushNotification.Notification(
           title: title, body: '$sender added comment to the session'),
     );
