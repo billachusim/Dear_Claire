@@ -1,7 +1,7 @@
 // @dart=2.9
 import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/services/local_notification_service.dart';
 import 'package:dear_claire/services/notification.dart';
+import 'package:dear_claire/ui/chats/chatrooms.dart';
 import 'package:dear_claire/ui/create_session/create_session_controller.dart';
 import 'package:dear_claire/ui/create_session/create_session_page.dart';
 import 'package:dear_claire/ui/ego/ego.dart';
@@ -96,7 +96,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     WidgetsBinding.instance.addObserver(this);
     super.initState();
-    //LocalNotificationService.initialize(context);
     triggerAndroidNotifications();
     triggerIosNotifications();
     clairNotification.randomizeNewAppSessionToast();
@@ -249,6 +248,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           home: SplashPage(),
           routes: {
             "createSession": (_) => CreateSessionPage(),
+            "egoPage": (_) => EgoPage(),
           },
           //navigatorKey: navigatorKey,
           onGenerateRoute: (RouteSettings settings) {
@@ -257,6 +257,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 return MaterialPageRoute(builder: (_) => PostDetailsWidget(sessionId: settings.arguments,));
               case '/egoPage':
                 return MaterialPageRoute(builder: (_) => EgoPage());
+              case '/diaryRooms':
+                return MaterialPageRoute(builder: (_) => ChatRoomsPage());
             }
             return AppRouter.generateRoute(settings);
           },

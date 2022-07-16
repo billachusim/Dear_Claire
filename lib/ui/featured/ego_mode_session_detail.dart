@@ -329,7 +329,6 @@ class _EgoModeSessionDetailState
         title: session.title ?? '',
         docId: session.sessionId!,
         sender: _userModel.nickname.toString(),
-        route: session.sessionId.toString(),
     );
 
     updateSessionTimeLastActivity(session);
@@ -536,9 +535,12 @@ class _EgoModeSessionDetailState
     }
     final String commentId = commentSessionModel!.commentId.toString();
     final String docId = session.sessionId.toString();
+    final String sender = commentSessionModel.userNickname.toString();
     firebaseServices.addThanksReaction(
+        session: session,
         commentID: commentId,
         docId: docId,
+        sender: sender,
         map: commentSessionModel!.thanks!.contains(currentUser?.uid)
             ? {
                 'thanks': FieldValue.arrayRemove([currentUser?.uid])

@@ -251,6 +251,10 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
 
     final _userModel = await firebaseServices.getUserInfo();
     firebaseServices.addThanksReaction(
+        session: session,
+        sender: _userModel.userType == 'ADMIN'? 'Claire' :
+        _userModel.userType == 'SUPER_ADMIN'? 'Claire' :
+        _userModel.nickname.toString(),
         commentID: commentSessionModel.commentId!,
         docId: session.sessionId!,
         map: commentSessionModel.thanks!.contains(_userModel.userId)

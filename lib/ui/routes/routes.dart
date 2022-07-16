@@ -154,7 +154,7 @@ class AppRouter {
         return MaterialPageRoute<dynamic>(
           builder: (_) => PostDetailsWidget(sessionId: settings.arguments.toString(),),
           settings: settings,
-          fullscreenDialog: true,
+          fullscreenDialog: false,
         );
 
       case AppRoutes.customPostDetailsWidget:

@@ -312,7 +312,6 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         sender: _userModel.userType == 'ADMIN'? 'Claire' :
         _userModel.userType == 'SUPER_ADMIN'? 'Claire' :
         _userModel.nickname.toString(),
-        route: session.sessionId.toString(),
     );
 
     updateSessionTimeLastActivity(session);
@@ -479,6 +478,10 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     firebaseServices.addThanksReaction(
         commentID: commentSessionModel.commentId!,
         docId: session.sessionId!,
+        session: session,
+        sender: _userModel.userType == 'ADMIN'? 'Claire' :
+        _userModel.userType == 'SUPER_ADMIN'? 'Claire' :
+        _userModel.nickname.toString(),
         map: commentSessionModel.thanks!.contains(_userModel.userId)
             ? {
           'thanks': FieldValue.arrayRemove([_userModel.userId])

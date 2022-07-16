@@ -42,7 +42,7 @@ dependencies:
   flutter_sound_lite: ^8.3.12
   audioplayers: ^0.19.1
   wave: ^0.2.0
-  page_transition: ^2.0.9
+  page_transition: ^1.1.7+6
   logger: ^1.0.0
   firebase_storage: ^10.0.1
   uuid: ^3.0.4
