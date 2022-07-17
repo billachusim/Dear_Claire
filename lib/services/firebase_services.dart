@@ -901,16 +901,16 @@ class FirebaseServices extends ChangeNotifier {
   /// send users message
   void addMessage(ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
     final _user = await getUserInfo();
-    final sender = chatModel.userNickname.toString();
+    final sender = _user.nickname;
     final roomTitle = chatRoomPodo!.title.toString();
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
             to: '/topics/${chatRoomPodo.id.toString()}',
             collapseKey: 'type_a',
-            data: pushNotification.Data(id: chatModel.userNickname, route: chatRoomPodo.id.toString()),
+            data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
             notification: pushNotification.Notification(
                 title: chatRoomPodo.title!,
-                body: '$sender started a new corner inside the $roomTitle room'));
+                body: '$sender started a new corner inside $roomTitle.'));
 
     _firebaseFirestore
         .collection(AppString.appChats)
@@ -944,16 +944,15 @@ class FirebaseServices extends ChangeNotifier {
   void addSubMessage(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
     final _user = await getUserInfo();
-    final sender = chatModel.userNickname.toString();
-    final roomTitle = chatModel.message.toString();
+    final sender = _user.nickname;
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
             to: '/topics/${chatModel.userId!}',
             collapseKey: 'type_a',
-            data: pushNotification.Data(id: chatModel.userNickname, route: chatModel.userId.toString()),
+            data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
             notification: pushNotification.Notification(
               title: chatRoomPodo!.title!,
-              body: '$sender sent something to the room: $roomTitle',
+              body: '$sender sent something to your corner inside the room',
             ));
     _firebaseFirestore
         .collection(AppString.appChats)
@@ -1000,14 +999,13 @@ class FirebaseServices extends ChangeNotifier {
   Future<void>? addUsersReactionToASession(BuildContext context, int index,
       {required Session session, required String sender}) async {
     _usersID = await getUsersId();
-    final title = session.title.toString();
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
       to: '/topics/${session.sessionId}',
       collapseKey: 'type_a',
       data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
       notification: pushNotification.Notification(
-          title: session.title ?? '', body: '$sender reacted to the session: $title'),
+          title: session.title ?? '', body: '$sender reacted to the session.'),
     );
 
     ReactionHandler.reactionType(session, index).contains(_usersID)
@@ -1033,14 +1031,13 @@ class FirebaseServices extends ChangeNotifier {
       required Session session,
       required String sender,
       required Map<String, dynamic> map}) {
-    final title = session.title.toString();
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
       to: '/topics/$docId',
       collapseKey: 'type_a',
       data: pushNotification.Data(id: sender, route: docId.toString()),
       notification: pushNotification.Notification(
-          title: session.title, body: '$sender thanked your response on the session: $title'),
+          title: session.title, body: '$sender thanked a response on the session.'),
     );
     notificationService.sendNotification(_notificationModel.toJson());
 

@@ -5,7 +5,7 @@ import 'package:dear_claire/ui/chats/chatrooms.dart';
 import 'package:dear_claire/ui/create_session/create_session_controller.dart';
 import 'package:dear_claire/ui/create_session/create_session_page.dart';
 import 'package:dear_claire/ui/ego/ego.dart';
-import 'package:dear_claire/ui/featured/widget/post_details_widget.dart';
+import 'package:dear_claire/ui/featured/notified_session_details.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/ui/splash_screen/splash.dart';
 import 'package:dear_claire/utils/color.dart';
@@ -125,17 +125,23 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (String payload) async {
       print(payload);
-      if(payload != null){
-        navService.pushNamed('/postDetailsWidget', args: payload);
+      if(payload == 'room'){
+        navService.pushNamed('/diaryRooms', args: payload);
       }
+      else
+        navService.pushNamed('/notifiedSessionDetails', args: payload);
+
+
     });
 
     ///Get the message user is going to tap when app is closed
     FirebaseMessaging.instance.getInitialMessage().then((message) {
       String route = message.data["route"];
-      if (message != null) {
-        navService.pushNamed('/postDetailsWidget', args: route);
+      if (route == 'room') {
+        navService.pushNamed('/diaryRooms', args: route);
       }
+      else
+        navService.pushNamed('/notifiedSessionDetails', args: route);
     });
 
     /// Foreground work for android
@@ -161,8 +167,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         logger.d(notification.toString());
         print(routeForMessage);
 
-        navService.pushNamed('/postDetailsWidget', args: routeForMessage);
-
+        if (routeForMessage == 'room') {
+          navService.pushNamed('/diaryRooms', args: routeForMessage);
+        }
+        else
+          navService.pushNamed('/notifiedSessionDetails', args: routeForMessage);
       }
     });
   }
@@ -248,13 +257,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           home: SplashPage(),
           routes: {
             "createSession": (_) => CreateSessionPage(),
-            "egoPage": (_) => EgoPage(),
+            "diaryRooms": (_) => ChatRoomsPage(),
           },
           //navigatorKey: navigatorKey,
           onGenerateRoute: (RouteSettings settings) {
             switch (settings.name) {
-              case '/postDetailsWidget':
-                return MaterialPageRoute(builder: (_) => PostDetailsWidget(sessionId: settings.arguments,));
+              case '/notifiedSessionDetails':
+                return MaterialPageRoute(builder: (_) => NotifiedSessionDetails(sessionId: settings.arguments,));
               case '/egoPage':
                 return MaterialPageRoute(builder: (_) => EgoPage());
               case '/diaryRooms':
