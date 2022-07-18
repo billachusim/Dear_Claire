@@ -1609,76 +1609,18 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.imageUrls = imageDownloadUrls;
     }
 
-    /// Adding a category tag to every session created.
-
-    if (sessionTextEditingController.text.contains('alive'))
-    {
-      sessionObject.category1 = 'life and living';
-      sessionObject.category2 = 'happy and blessed';
-    }
-
-    if (sessionTextEditingController.text.contains('love'))
-    {
-      sessionObject.category1 = 'love and relationship';
-      sessionObject.category2 = 'sex and dating';
-      sessionObject.category3 = 'boyfriend and girlfriend';
-      sessionObject.category4 = 'birthdays and anniversary';
-    }
-
-    if (sessionTextEditingController.text.contains('sad'))
-    {
-      sessionObject.category1 = 'sad and depressed';
-      sessionObject.category2 = 'hate and abuse';
-    }
-
-    if (sessionTextEditingController.text.contains('ginger'))
-    {
-      sessionObject.category1 = 'life and living';
-      sessionObject.category2 = 'work and career';
-    }
-
-    if (sessionTextEditingController.text.contains('sick'))
-    {
-      sessionObject.category1 = 'health and fitness';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('depressed'))
-    {
-      sessionObject.category1 = 'sad and depressed';
-      sessionObject.category2 = 'health and fitness';
-    }
-
-    if (sessionTextEditingController.text.contains('fly'))
-    {
-      sessionObject.category1 = 'happy and blessed';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('jealous'))
-    {
-      sessionObject.category1 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('anxious'))
-    {
-      sessionObject.category1 = 'friends and fun';
-      sessionObject.category2 = 'life and living';
-    }
-
-
     sessionObject.userAvatarUrl = userModel.avatarUrl;
     sessionObject.userNickname = userModel.nickname;
     sessionObject.title = sessionTitleController.text;
     sessionObject.private = c.acceptReplies.value;
-    sessionObject.repliesEnabled = true;
+    sessionObject.repliesEnabled = false;
     sessionObject.message = sessionTextEditingController.text;
     sessionObject.colorHex =
     Constant.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
     sessionObject.sessionId = uuid.v1();
     sessionObject.userId = userModel.userId;
     sessionObject.moodId = mood;
-    sessionObject.location = 'in Claire World';
+    sessionObject.location = '#QuickSessions';
     sessionObject.timeLastActivity = Timestamp.now();
 
     bool isSuccessfull =
