@@ -182,6 +182,27 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 
+    final InitializationSettings initializationSettings =
+    InitializationSettings(
+      iOS: IOSInitializationSettings(
+        requestSoundPermission: false,
+        requestBadgePermission: false,
+        requestAlertPermission: false,
+      ),
+    );
+
+
+    flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (String payload) async {
+      print(payload);
+      if(payload == 'room'){
+        navService.pushNamed('/diaryRooms', args: payload);
+      }
+      else
+        navService.pushNamed('/notifiedSessionDetails', args: payload);
+
+
+    });
+
     NotificationSettings settings = await messaging.requestPermission(
       alert: true,
       announcement: false,
@@ -204,35 +225,44 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     ///Get the message user is going to tap when app is closed
     FirebaseMessaging.instance.getInitialMessage().then((message) {
-      final routeForMessage = message.data["route"];
-      if (message != null) {
-        navigatorKey.currentState.pushNamed(routeForMessage);
+      String route = message.data["route"];
+      if (route == 'room') {
+        navService.pushNamed('/diaryRooms', args: route);
       }
+      else
+        navService.pushNamed('/notifiedSessionDetails', args: route);
     });
+
 
     /// Foreground work for iOS
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       RemoteNotification notification = message.notification;
       AppleNotification apple = message.notification.apple;
+      String route = message.data["route"];
       if (apple != null)
       {
         flutterLocalNotificationsPlugin.show(notification.hashCode,
-            notification.title, notification.body, _notificationDetails());
+            notification.title, notification.body, _notificationDetails(), payload: route);
       }
     });
+
 
     /// When iOS app is open in background and user taps on it.
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       logger.d('You tapped on a new notification!');
       RemoteNotification notification = message.notification;
       AppleNotification apple = message.notification?.apple;
-
       final routeForMessage = message.data["route"];
       if (notification != null && apple != null) {
+
         logger.d(notification.toString());
+        print(routeForMessage);
 
-        navigatorKey.currentState?.pushNamed(routeForMessage);
-
+        if (routeForMessage == 'room') {
+          navService.pushNamed('/diaryRooms', args: routeForMessage);
+        }
+        else
+          navService.pushNamed('/notifiedSessionDetails', args: routeForMessage);
       }
     });
   }
