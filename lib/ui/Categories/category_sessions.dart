@@ -10,6 +10,7 @@ import '../../Admob/ad_state.dart';
 import '../../utils/strings.dart';
 import '../featured/model/session.dart';
 import '../../widgets/ego_mode_session_card.dart';
+import '../routes/routes.dart';
 
 class CategorySessions extends StatefulWidget {
   final String visitedCategory;
@@ -168,6 +169,22 @@ class _CategorySessionsState extends State<CategorySessions> {
             return Container();
           },
         ),
+
+        floatingActionButton: FloatingActionButton(
+          heroTag: "category_sessions_fab",
+          backgroundColor: Pallet.colorSplashScreen,
+          onPressed: () {
+            if (currentUser == null) {
+              Navigator.of(context)
+                  .pushReplacementNamed(AppRoutes.authSelection);
+            } else {
+              Navigator.of(context).pushNamed(AppRoutes.createSessionPage);
+            }
+          },
+          tooltip: 'Send or Save',
+          child: RotateImage(45, 45),
+        ),
+
       ),
     );
   }

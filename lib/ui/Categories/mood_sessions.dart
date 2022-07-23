@@ -12,6 +12,7 @@ import '../../utils/strings.dart';
 import '../featured/model/session.dart';
 import '../../widgets/ego_mode_session_card.dart';
 import '../../utils/mood.dart';
+import '../routes/routes.dart';
 
 
 class MoodSessions extends StatefulWidget {
@@ -170,6 +171,21 @@ class _MoodSessionsState extends State<MoodSessions> {
             }
             return Container();
           },
+        ),
+
+        floatingActionButton: FloatingActionButton(
+          heroTag: "moodSession",
+          backgroundColor: Pallet.colorSplashScreen,
+          onPressed: () {
+            if (currentUser == null) {
+              Navigator.of(context)
+                  .pushReplacementNamed(AppRoutes.authSelection);
+            } else {
+              Navigator.of(context).pushNamed(AppRoutes.createSessionPage);
+            }
+          },
+          tooltip: 'Send or Save',
+          child: RotateImage(45, 45),
         ),
       ),
     );

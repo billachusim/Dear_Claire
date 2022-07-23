@@ -1,14 +1,10 @@
-import 'package:dear_claire/ui/alter_ego/alter_ego_login.dart';
-import 'package:dear_claire/ui/menu_items/how_claire_works.dart';
 import 'package:dear_claire/ui/menu_items/view_model.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter/widgets.dart';
 import 'package:swipedetector/swipedetector.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';

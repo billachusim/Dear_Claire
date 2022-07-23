@@ -92,7 +92,7 @@ flutter_icons:
   android: "launcher_icon"
   ios: true
   remove_alpha_ios: true
-  image_path: "assets/images/icon.jpeg"
+  image_path: "assets/images/iconWhitePetal.jpeg"
 
 #flutter_icons:
 #  android: "launcher_icon"

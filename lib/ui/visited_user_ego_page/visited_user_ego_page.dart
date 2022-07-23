@@ -53,6 +53,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _visitorMantraController = TextEditingController();
+  late FocusNode _visitorMantraFocusNode = FocusNode();
   GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
   GlobalKey<FlipCardState> cardKey2 = GlobalKey<FlipCardState>();
   late String mantraUserId;
@@ -283,6 +284,10 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
   //show up when user clicks on the FAB to send a mantra.
   Future<void> _showCardDialog() async {
+    Future.delayed(Duration(seconds: 2), () {
+      _visitorMantraFocusNode.requestFocus();
+    }
+    );
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
@@ -297,25 +302,41 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
             ),
             content: SingleChildScrollView(
               child: Container(
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextField(
-                        controller: _visitorMantraController,
-                        minLines: 3,
-                        maxLines: 10,
-                        decoration: InputDecoration(
-                          //border: InputBorder,
-                        ),
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                    ],
+                width: getDeviceWidth(context),
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(
+                      "assets/images/bottle_message.jpeg",
+                    ),
+                    fit: BoxFit.fill,
                   ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      style: TextStyle(
+                          fontSize: 20.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                      focusNode: _visitorMantraFocusNode,
+                      controller: _visitorMantraController,
+                      minLines: 3,
+                      maxLines: 5,
+                      decoration: InputDecoration(
+                        iconColor: Colors.white,
+                        icon: Icon(
+                          Icons.message,
+                          color: Colors.white,
+                        ),
+                        //border: InputBorder,
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -332,7 +353,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
               TextButton(
                 child: Text(
                   'Send',
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(color: Colors.green),
                 ),
                 onPressed: () {
                   if (userModel.nickname != null)
