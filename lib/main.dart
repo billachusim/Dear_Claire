@@ -115,9 +115,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   void triggerAndroidNotifications() async {
 
-   // final FlutterLocalNotificationsPlugin _notificationsPlugin =FlutterLocalNotificationsPlugin();
-
-
     final InitializationSettings initializationSettings =
     InitializationSettings(
       android: AndroidInitializationSettings("@drawable/claire_icon"),
@@ -189,6 +186,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         requestBadgePermission: false,
         requestAlertPermission: false,
       ),
+      android: AndroidInitializationSettings("@drawable/claire_icon"),
     );
 
 

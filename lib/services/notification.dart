@@ -1,10 +1,7 @@
 import 'dart:math';
 
-import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -13,11 +10,6 @@ import '../utils/color.dart';
 
 final ClairNotification clairNotification = ClairNotification();
 
-Future<void> _firebaseMessagingBackgroundHandler(
-    RemoteMessage message) async {
-  await Firebase.initializeApp();
-  logger.d('A bg message just showed up :  ${message.messageId}');
-}
 
 
 class ClairNotification {
@@ -62,7 +54,7 @@ class ClairNotification {
     randomNumber == 19 ? "If you don't tell me, I won't know." :
 
     "Go on, Darling, talk to me...";
-    await  Future.delayed(Duration(days: 2), () {
+    await  Future.delayed(Duration(hours: 23), () {
       flutterLocalNotificationsPlugin.show(0, 'Claireminder',
           message.toString(), _notificationDetails());
     }
@@ -77,12 +69,12 @@ class ClairNotification {
     randomNumber == 2 ? "I'm glad you are here" :
     randomNumber == 3 ? "You have come to a safe place." :
     randomNumber == 4 ? "Grow your ego." :
-    randomNumber == 5 ? "Positive vibes only." :
+    randomNumber == 5 ? "Shake your phone to switch ego.." :
     randomNumber == 5 ? "Let's have a heart to heart." :
     randomNumber == 6 ? "Go ahead, advise anonymously." :
     randomNumber == 7 ? "Welcome to Featured Sessions" :
     randomNumber == 8 ? "Different people, different situations." :
-    randomNumber == 9 ? "You'll never be not truly loved." :
+    randomNumber == 9 ? "Shake device to switch ego." :
     randomNumber == 10 ? "A problem shared is..." :
     randomNumber == 11 ? "You are completely anonymous." :
     randomNumber == 12 ? "Advise people positively." :
@@ -92,10 +84,10 @@ class ClairNotification {
     randomNumber == 16 ? "Browse Love and other categories." :
     randomNumber == 17 ? "Be ready to be nice." :
     randomNumber == 18 ? "Ask Claire anything." :
-    randomNumber == 19 ? "Don't forget to show love." :
+    randomNumber == 0 ? "Don't forget to show love." :
 
     "It's Claire O'Clock!";
-    await  Future.delayed(Duration(seconds: 6), () {
+    await  Future.delayed(Duration(seconds: 7), () {
       Fluttertoast.showToast(
         toastLength: Toast.LENGTH_LONG,
         msg: message.toString(),

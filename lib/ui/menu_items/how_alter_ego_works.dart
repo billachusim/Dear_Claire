@@ -40,7 +40,6 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Pallet.colorSecondary,
@@ -235,13 +234,13 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
             ));
   }
 
-  String? getDonateUrl(){
+  String getDonateUrl(){
     return AppString.donate_url;
   }
 
   onDonateClicked() {
-    var donateUrl = getDonateUrl();
-    launch(donateUrl!);
+    Uri donateUrl = Uri.parse(getDonateUrl());
+    launchUrl(donateUrl);
   }
 
 }

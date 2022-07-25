@@ -1,5 +1,4 @@
 import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -245,7 +244,34 @@ class _SendClaireLoveFormState extends State<SendClaireLoveForm> {
                             height: 25, width: 25,),
                           Padding(
                             padding: const EdgeInsets.only(right: 75.0),
-                            child: Text("CONTINUE TO WHATSAPP",
+                            child: Text("CONTINUE VIA WHATSAPP",
+                                //textAlign: TextAlign.center,
+                                style: GoogleFonts.lato(
+                                    fontSize: 16.0,
+                                    color: Pallet.colorWhite,
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 8,),
+                GestureDetector(
+                  onTap: launchEmailApp,
+                  child: Container(
+                    color: Colors.red,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                        children: [
+                          Icon(Icons.email, color:Colors.white, size:30),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 75.0),
+                            child: Text("CONTINUE VIA EMAIL",
                                 //textAlign: TextAlign.center,
                                 style: GoogleFonts.lato(
                                     fontSize: 16.0,
@@ -345,6 +371,28 @@ class _SendClaireLoveFormState extends State<SendClaireLoveForm> {
   onContinueToWhatsAppClicked() {
     var whatsAppUrl = getWhatsAppUrl(getPayload() ?? "");
     launch(whatsAppUrl!);
+  }
+
+  launchEmailApp() {
+    String? encodeQueryParameters(Map<String, String> params) {
+      return params.entries
+          .map((e) =>
+      '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+    }
+
+    final String payload = getPayload().toString();
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'dearclaireapp@gmail.com',
+      query: encodeQueryParameters(
+          <String, String>{
+            'subject': 'Requesting Alter Ego Mode',
+            'body': payload,
+          }),
+    );
+
+    launchUrl(emailLaunchUri);
   }
 
   String? getPayload(){

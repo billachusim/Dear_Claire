@@ -3,7 +3,6 @@ import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -43,43 +42,23 @@ class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Pallet.colorSecondary,
+        centerTitle: true,
+        title: Text('Request Claire Love',
+            textAlign: TextAlign.start,
+            maxLines: 1,
+            style: GoogleFonts.lato(
+                fontSize: 26.0,
+                color: Pallet.colorWhite,
+                fontWeight: FontWeight.w600)),
+      ),
       body: SafeArea(
         child: Container(
           child: Form(
             key: _formKey,
             child: ListView(
               children: [
-
-                Align(
-                  alignment:Alignment.topLeft,
-                  child: Row(
-                    children: [
-                      Container(
-                        padding:EdgeInsets.only(left: 20, top:4, bottom: 4),
-                        child: GestureDetector(
-                            onTap: (){
-                              print("Clicking on X");
-                              Navigator.pop(context);
-                            },
-                            child: SvgPicture.asset("assets/images/ic_close.svg",
-                              width: 17.0,
-                              height: 17.0,)
-                        ),
-                      ),
-
-                      SizedBox( width: 12,),
-
-                      Text(
-                        "Request Clairelove Form",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 24,
-                          color: Pallet.colorSecondaryDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
 
                 Container(
                   color: Pallet.colorGrey.withOpacity(0.3),
@@ -314,7 +293,34 @@ class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
                             height: 25, width: 25,),
                           Padding(
                             padding: const EdgeInsets.only(right: 75.0),
-                            child: Text("CONTINUE TO WHATSAPP",
+                            child: Text("CONTINUE VIA WHATSAPP",
+                                //textAlign: TextAlign.center,
+                                style: GoogleFonts.lato(
+                                    fontSize: 16.0,
+                                    color: Pallet.colorWhite,
+                                    fontWeight: FontWeight.w700)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 8,),
+                GestureDetector(
+                  onTap: launchEmailApp,
+                  child: Container(
+                    color: Colors.red,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                        children: [
+                          Icon(Icons.email, color:Colors.white, size:30),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 75.0),
+                            child: Text("CONTINUE VIA EMAIL",
                                 //textAlign: TextAlign.center,
                                 style: GoogleFonts.lato(
                                     fontSize: 16.0,
@@ -414,6 +420,28 @@ class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
   onContinueToWhatsAppClicked() {
     var whatsAppUrl = getWhatsAppUrl(getPayload() ?? "");
     launch(whatsAppUrl!);
+  }
+
+  launchEmailApp() {
+    String? encodeQueryParameters(Map<String, String> params) {
+      return params.entries
+          .map((e) =>
+      '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+    }
+
+    final String payload = getPayload().toString();
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'dearclaireapp@gmail.com',
+      query: encodeQueryParameters(
+          <String, String>{
+            'subject': 'Requesting Alter Ego Mode',
+            'body': payload,
+          }),
+    );
+
+    launchUrl(emailLaunchUri);
   }
 
   String? getPayload(){

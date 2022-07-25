@@ -5,7 +5,6 @@ import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/helper.dart';
@@ -37,11 +36,12 @@ class _SignUpPage extends State<SignUpPage> {
   }
 
 
-  void _launchClairePolicySite() async =>
-      await canLaunch("https://sites.google.com/view/claire-diary/claire-privacy-policy")
-          ? await launch("https://sites.google.com/view/claire-diary/claire-privacy-policy")
-          : throw 'Could not launch Instagram';
-
+  void _launchClairePolicySite() async {
+    final Uri url = Uri.parse("https://sites.google.com/view/claire-diary/claire-privacy-policy");
+    await canLaunchUrl(url)
+        ? await launchUrl(url)
+        : throw 'Could not launch site';
+  }
 
 
 
@@ -49,6 +49,17 @@ class _SignUpPage extends State<SignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        backgroundColor: Pallet.colorPrimary,
+        centerTitle: true,
+        title: Text('Create Ego',
+            textAlign: TextAlign.start,
+            maxLines: 1,
+            style: GoogleFonts.lato(
+                fontSize: 26.0,
+                color: Pallet.colorWhite,
+                fontWeight: FontWeight.w600)),
+      ),
       body: SafeArea(
         child: Stack(children: [
           SingleChildScrollView(
@@ -70,21 +81,6 @@ class _SignUpPage extends State<SignUpPage> {
                     //mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Align(
-                        alignment:Alignment.topLeft,
-                        child: Container(
-                          padding:EdgeInsets.only(top:8, bottom: 8),
-                          child: GestureDetector(
-                              onTap: (){
-                                print("Clicking on X");
-                                Navigator.pop(context);
-                              },
-                              child: SvgPicture.asset("assets/images/ic_close.svg",
-                                width: 17.0,
-                                height: 17.0,)
-                          ),
-                        ),
-                      ),
 
                       AnimatedTextKit(
                         animatedTexts: [

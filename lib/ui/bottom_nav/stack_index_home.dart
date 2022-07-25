@@ -22,6 +22,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shake/shake.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../services/firebase_services.dart';
+import '../../services/user_model.dart';
 import '../../utils/helper.dart';
 import '../routes/page_router_animation.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
@@ -45,6 +47,7 @@ class _HomeDashboardPageState extends State<HomePage>
   late String _title;
   String userName = "";
   String userType = "";
+  String avatarUrl = "";
 
   PageController _pageController = PageController(initialPage: 0);
 
@@ -55,6 +58,21 @@ class _HomeDashboardPageState extends State<HomePage>
     ChatRoomsPage(),
     EgoProfilePage(),
   ];
+
+  /// Get the Ego User info
+  Future<UserModel> getEgoInfo() async {
+    DocumentSnapshot response = await FirebaseFirestore.instance
+        .collection(AppString.users)
+        .doc(currentUser?.uid)
+        .get();
+
+    var egoInfo = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
+    userName = egoInfo.nickname.toString();
+    userType = egoInfo.userType.toString();
+    avatarUrl = egoInfo.avatarUrl.toString();
+    logger.d('Successfully got an Ego user model');
+    return egoInfo;
+  }
 
   launchEmailApp() {
     String? encodeQueryParameters(Map<String, String> params) {
@@ -71,19 +89,9 @@ class _HomeDashboardPageState extends State<HomePage>
           <String, String>{'subject': 'Questions About Dear Claire'}),
     );
 
-    launch(emailLaunchUri.toString());
+    launchUrl(emailLaunchUri);
   }
 
-
-
-  String? getWhatsAppUrl(){
-    return AppString.WHATSAPP_URL;
-  }
-
-  onContinueToWhatsAppClicked() {
-    var whatsAppUrl = getWhatsAppUrl();
-    launch(whatsAppUrl!);
-  }
 
   _loadHtmlFromAssets() async {
     String fileHtmlContents = await rootBundle.loadString(filePath);
@@ -115,9 +123,10 @@ class _HomeDashboardPageState extends State<HomePage>
 
   @override
   void initState() {
+    super.initState();
+    getEgoInfo();
     _title = "Dear Claire";
     shakeDevice();
-    super.initState();
   }
 
   shakeDevice() async {
@@ -151,7 +160,7 @@ class _HomeDashboardPageState extends State<HomePage>
   }
 
   @override
-  Widget build(BuildContext context, {String? avatarUrl}) {
+  Widget build(BuildContext context) {
     return Scaffold(
         resizeToAvoidBottomInset: true,
         key: _scaffoldKey,
@@ -243,9 +252,11 @@ class _HomeDashboardPageState extends State<HomePage>
             child: SingleChildScrollView(
               child: Column(
                 children: [
+
                   UserAccountsDrawerHeader(
                     decoration: BoxDecoration(color: Pallet.colorPrimary,
                     ),
+
                     accountEmail: Text(
                     "You'll never be not truly loved.",
                       style: TextStyle(
@@ -255,23 +266,12 @@ class _HomeDashboardPageState extends State<HomePage>
                         fontStyle: FontStyle.italic,
                       ),
                     ),
+
                     accountName: Text(userName,
                         style: TextStyle(color: Pallet.colorWhite,
                             fontSize: 19.0, fontWeight: FontWeight.w700,)),
-                    currentAccountPicture: FutureBuilder<
-                        DocumentSnapshot<Map<String, dynamic>>>(
-                      future: FirebaseFirestore.instance
-                          .collection("users")
-                          .doc(currentUser?.uid)
-                          .get(),
-                      builder: (_, snapshot) {
-                        if (snapshot.hasData) {
-                          var data = snapshot.data!.data();
-                          userName = data?["nickname"] ?? " ";
-                          userType = data?["userType"] ?? " ";
-                          avatarUrl = data?["avatarUrl"] ?? " ";
-                          return
-                            GestureDetector(
+
+                    currentAccountPicture: GestureDetector(
                               onTap: () {
                                 lockAlertDialog(context);
                               },
@@ -291,7 +291,7 @@ class _HomeDashboardPageState extends State<HomePage>
                                   child: CachedNetworkImage(
                                       width: 60,
                                       height: 60,
-                                      imageUrl: avatarUrl ??"",
+                                      imageUrl: avatarUrl,
                                       imageBuilder: (context, imageProvider) => Container(
                                         decoration: BoxDecoration(
                                           color: Colors.white,
@@ -312,12 +312,7 @@ class _HomeDashboardPageState extends State<HomePage>
                                   ),
                                 ),
                               ),
-                            );
-                        }
-
-                        return CircularProgressIndicator();
-                      },
-                    ),
+                            ),
 
                     otherAccountsPictures: [
                       InkWell(
@@ -352,8 +347,8 @@ class _HomeDashboardPageState extends State<HomePage>
                           'Ego',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
                             color: Pallet.colorSecondaryDark,
                           ),
                         ),
@@ -390,15 +385,6 @@ class _HomeDashboardPageState extends State<HomePage>
                   ),
                   SizedBox(height: 18,),
                   ListTile(
-                    title: Text("Play Games With Claire",
-                        style: TextStyle(color: Pallet.colorWhite)),
-                    onTap: (){Navigator. pop(context);
-                    Navigator.of(context).pushNamed(AppRoutes.games);
-                    },
-                    leading: Icon(Icons.gamepad_rounded, color: Pallet.colorWhite),
-                  ),
-                  SizedBox(height: 18,),
-                  ListTile(
                     title: Text("Contact Us",
                         style: TextStyle(color: Pallet.colorWhite)),
                     onTap: () =>launchEmailApp(),
@@ -407,7 +393,7 @@ class _HomeDashboardPageState extends State<HomePage>
                   SizedBox(height: 10,),
                   
                   Container(
-                    height: 290,
+                    height: 300,
                     child: WebView(
                       initialUrl: '',
                       javascriptMode: JavascriptMode.unrestricted,
@@ -417,19 +403,28 @@ class _HomeDashboardPageState extends State<HomePage>
                       },
                     ),
                   ),
-                  SizedBox(height: 18,),
 
-                  Container(
-                    height: 650,
-                    child: WebView(
-                      initialUrl: 'https://clairetweets.netlify.app',
-                      javascriptMode: JavascriptMode.unrestricted,
-                      onWebViewCreated: (WebViewController webViewController) {
-                        _webViewController = webViewController;
-                        //_loadTweetFromAssets();
-                      },
-                    ),
+                  SizedBox(height: 18,),
+                  ListTile(
+                    title: Text("More Games With Claire",
+                        style: TextStyle(color: Pallet.colorWhite)),
+                    onTap: (){Navigator. pop(context);
+                    Navigator.of(context).pushNamed(AppRoutes.games);
+                    },
+                    leading: Icon(Icons.gamepad_rounded, color: Pallet.colorWhite),
                   ),
+
+                  SizedBox(height: 18,),
+                  ListTile(
+                    title: Text("Updates And Announcements",
+                        style: TextStyle(color: Pallet.colorWhite)),
+                    onTap: (){Navigator. pop(context);
+                    Navigator.of(context).pushNamed(AppRoutes.updatesAndAnnouncements);
+                    },
+                    leading: Icon(Icons.announcement_rounded, color: Pallet.colorWhite),
+                  ),
+
+                  SizedBox(height: 18,),
                 ],
               ),
             ),

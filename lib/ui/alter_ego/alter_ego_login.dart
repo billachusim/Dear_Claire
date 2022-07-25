@@ -1,15 +1,11 @@
 import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/ui/bottom_nav/stack_index_home.dart';
-import 'package:dear_claire/ui/ego-profile/profile.dart';
 import 'package:dear_claire/ui/login/login_screen.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 
 class AlterEgoLoginPage extends StatefulWidget {
@@ -27,20 +23,23 @@ class _AlterEgoLoginPageState extends State<AlterEgoLoginPage> {
 
   final _formKey = GlobalKey<FormState>();
 
-  bool _obscureText = true;
-
-  void _toggleLogin() {
-    setState(() {
-      _obscureText = !_obscureText;
-    });
-  }
-
 
   @override
   Widget build(BuildContext context) {
 
     //sharedPreference.getAlterEgoAccessCode();
     return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Pallet.colorSecondary,
+          centerTitle: true,
+          title: Text('Alter Ego Mode',
+              textAlign: TextAlign.start,
+              maxLines: 1,
+              style: GoogleFonts.lato(
+                  fontSize: 26.0,
+                  color: Pallet.colorWhite,
+                  fontWeight: FontWeight.w600)),
+        ),
         body: SafeArea(
           child: SingleChildScrollView(
             child: Container(
@@ -52,21 +51,6 @@ class _AlterEgoLoginPageState extends State<AlterEgoLoginPage> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Align(
-                        alignment:Alignment.topLeft,
-                        child: Container(
-                          padding:EdgeInsets.only(top:8, bottom: 8),
-                          child: GestureDetector(
-                              onTap: (){
-                                print("Clicking on X");
-                                Navigator.pop(context);
-                              },
-                              child: SvgPicture.asset("assets/images/ic_close.svg",
-                                width: 17.0,
-                                height: 17.0,)
-                          ),
-                        ),
-                      ),
                       SizedBox(height: 8,),
                       Align(
                         alignment:Alignment.topLeft,

@@ -2,7 +2,6 @@ import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -46,43 +45,23 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Pallet.colorSecondary,
+        centerTitle: true,
+        title: Text('Alter Ego Reg',
+            textAlign: TextAlign.start,
+            maxLines: 1,
+            style: GoogleFonts.lato(
+                fontSize: 26.0,
+                color: Pallet.colorWhite,
+                fontWeight: FontWeight.w600)),
+      ),
       body: SafeArea(
         child: Container(
           child: Form(
             key: _formKey,
             child: ListView(
               children: [
-
-                Row(
-                  children: [
-                    Align(
-                      alignment:Alignment.topLeft,
-                      child: Container(
-                        padding:EdgeInsets.all(14),
-                        child: GestureDetector(
-                            onTap: (){
-                              print("Clicking on X");
-                              Navigator.pop(context);
-                            },
-                            child: SvgPicture.asset("assets/images/ic_close.svg",
-                              width: 17.0,
-                              height: 17.0,)
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(width: 10,),
-
-                    Text("Alter Ego Reg Form",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontStyle: FontStyle.italic,
-                        fontWeight: FontWeight.w600,
-                        color: Pallet.colorSecondary
-                      ),
-                    )
-                  ],
-                ),
 
                 Container(
                   color: Pallet.colorGrey.withOpacity(0.3),
@@ -825,7 +804,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
           }),
     );
 
-    launch(emailLaunchUri.toString());
+    launchUrl(emailLaunchUri);
   }
 
   String? getPayload(){

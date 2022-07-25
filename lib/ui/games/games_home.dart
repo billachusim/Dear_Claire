@@ -14,7 +14,6 @@ class GamesHome extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: Pallet.colorPrimary,
           centerTitle: false,
-          automaticallyImplyLeading: true,
           title: Text('Claire Games',
               textAlign: TextAlign.start,
               maxLines: 1,

@@ -202,7 +202,7 @@ class AppString{
 // Onboarding Processes
   static const String open_up = "Open Up";
   static const String ego_login_welcome ="Welcome, Dear Ego,";
-  static const String ego_login_note = "\nOpen Up.\nStart a diary session to receive support and advises.\nOr,\nFollow a diary session to give support and advises.\nYou will earn convertible coins called Claire Love and grow your ego while at it.\n\nNow, enter your Ego Code to continue 🌺";
+  static const String ego_login_note = "\nOpen Up.\nStart a diary session to receive support and advises.\nOr,\nFollow a diary session to give support and advises.\nYou will earn convertible coins called Claire Love and grow your ego while at it.";
   static const String ego_login_sub_note = "You are completely anonymous.";
 
   static const String im_new_here = "I'm new here, ";

@@ -21,7 +21,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: true,
+          backgroundColor: Pallet.colorPrimary,
           title: Text('How Claire Works',
               textAlign: TextAlign.start,
               maxLines: 1,
@@ -377,16 +377,16 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
           <String, String>{'subject': 'Questions About Dear Claire'}),
     );
 
-    launch(emailLaunchUri.toString());
+    launchUrl(emailLaunchUri);
   }
 
-  String? getDonateUrl(){
+  String getDonateUrl(){
     return AppString.donate_url;
   }
 
   onDonateClicked() {
-    var donateUrl = getDonateUrl();
-    launch(donateUrl!);
+    Uri donateUrl = Uri.parse(getDonateUrl());
+    launchUrl(donateUrl);
   }
 
 }

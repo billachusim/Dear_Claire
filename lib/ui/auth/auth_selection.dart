@@ -3,7 +3,6 @@ import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AuthSelectionPage extends StatelessWidget {
@@ -16,6 +15,17 @@ class AuthSelectionPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Pallet.colorSplashScreen,
+      appBar: AppBar(
+        backgroundColor: Pallet.colorSecondary,
+        centerTitle: true,
+        title: Text('Open Up',
+            textAlign: TextAlign.start,
+            maxLines: 1,
+            style: GoogleFonts.lato(
+                fontSize: 26.0,
+                color: Pallet.colorWhite,
+                fontWeight: FontWeight.w600)),
+      ),
       body: SafeArea(
         child: Container(
             height: MediaQuery.of(context).size.height,
@@ -29,30 +39,6 @@ class AuthSelectionPage extends StatelessWidget {
                     child: Image.asset(
                       "assets/images/ic_signup_bck.png",
                       fit: BoxFit.fill,
-                    ),
-                  ),
-
-                  Align(
-                    alignment:Alignment.topLeft,
-                    child: Row(
-                      children: [
-                        Container(
-                          padding:EdgeInsets.only(left: 20, top:20, bottom: 4),
-                          child: GestureDetector(
-                              onTap: (){
-                                print("Clicking on X");
-                                Navigator.pop(context);
-                              },
-                              child: SvgPicture.asset("assets/images/ic_close.svg",
-                                width: 17.0,
-                                height: 17.0,
-                                color: Colors.white,)
-                          ),
-                        ),
-
-                        SizedBox( width: 12,),
-
-                      ],
                     ),
                   ),
 

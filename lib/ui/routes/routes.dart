@@ -28,6 +28,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../widgets/updates/announcements_widget.dart';
 import '../Search/search_page.dart';
 import '../featured/widget/custom_post_details_screen.dart';
 import '../featured/widget/post_details_widget.dart';
@@ -68,6 +69,7 @@ class AppRoutes {
   static const customSplashPage = '/customSplash';
   static const categorySessions = '/categorySessions';
   static const games = '/games';
+  static const updatesAndAnnouncements = '/updatesAndAnnouncements';
 
 
 }
@@ -275,6 +277,13 @@ class AppRouter {
       case AppRoutes.games:
         return MaterialPageRoute<dynamic>(
           builder: (_) => GamesHome(),
+          settings: settings,
+          fullscreenDialog: true,
+        );
+
+      case AppRoutes.updatesAndAnnouncements:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => UpdatesAndAnnouncements(),
           settings: settings,
           fullscreenDialog: true,
         );

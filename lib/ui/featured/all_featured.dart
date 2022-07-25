@@ -114,7 +114,7 @@ class _AllFeaturedPage extends State<AllFeaturedPage>
                               fontSize: currentTabIndex != 0 ? 14 : 14,
                             ),
                           ),
-                          SizedBox(width: 14),
+                          SizedBox(width: 10),
                           currentTabIndex != 0
                               ? SizedBox.shrink()
                               : Icon(Icons.lightbulb,
@@ -167,7 +167,7 @@ class _AllFeaturedPage extends State<AllFeaturedPage>
                               fontSize: currentTabIndex != 1 ? 14 : 14,
                             ),
                           ),
-                          SizedBox(width: 14),
+                          SizedBox(width: 10),
                           currentTabIndex != 1
                               ? SizedBox.shrink()
                               : Icon(Icons.category_rounded,
@@ -220,7 +220,7 @@ class _AllFeaturedPage extends State<AllFeaturedPage>
                               fontSize: currentTabIndex != 2 ? 14 : 14,
                             ),
                           ),
-                          SizedBox(width: 14),
+                          SizedBox(width: 10),
                           currentTabIndex != 2
                               ? SizedBox.shrink()
                               : Icon(Icons.emoji_emotions,
