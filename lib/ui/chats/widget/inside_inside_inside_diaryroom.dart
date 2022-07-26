@@ -267,7 +267,7 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
             builder: (_, snapshot) {
               if (snapshot.hasData) {
                 var data = snapshot.data!.data();
-                var userType = data?["userType"] ?? "0";
+                var userType = data?["userType"];
                 debugPrint(
                     " This is the actual userType of this user ${userType.toString()}");
                 return
@@ -324,7 +324,7 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                   );
               }
 
-              return Center(child: CircularProgressIndicator());
+              return Container();
             },
           ),
 

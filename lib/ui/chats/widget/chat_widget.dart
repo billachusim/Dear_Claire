@@ -302,7 +302,7 @@ class ChatWidget extends StatelessWidget {
                           }
                           if (snapShot.hasData) {
                             return Text(
-                              snapShot.data!.docs.length.toString() + " Joined 🟢",
+                              snapShot.data!.docs.length.toString() + " Online 🟢",
                               style: TextStyle(
                                   color: Colors.black,
                                   fontSize: 10,
@@ -417,7 +417,6 @@ class ChatWidget extends StatelessWidget {
           Row(
             children: [
 
-
               Visibility(
                 visible: chatModel!.userId == currentUser!.uid,
                 child: GestureDetector(
@@ -507,7 +506,7 @@ class ChatWidget extends StatelessWidget {
                 builder: (_, snapshot) {
                   if (snapshot.hasData) {
                     var data = snapshot.data!.data();
-                    var userType = data?["userType"] ?? "0";
+                    var userType = data?["userType"];
                     debugPrint(
                         " This is the actual userType of this user ${userType.toString()}");
                     return
@@ -530,12 +529,11 @@ class ChatWidget extends StatelessWidget {
                                         fontWeight: FontWeight.w800),
                                   ),
 
-
                                   Visibility(
                                     visible: userType == "SUPER_ADMIN",
                                     child: Icon(
                                       Icons.delete_forever_rounded,
-                                      color: Pallet.colorPrimaryDark,
+                                      color: Pallet.colorSecondary,
                                       size: 15,
                                     ),
                                   ),
@@ -547,7 +545,7 @@ class ChatWidget extends StatelessWidget {
                       );
                   }
 
-                  return Center(child: CircularProgressIndicator());
+                  return Container();
                 },
               ),
 

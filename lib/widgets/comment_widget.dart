@@ -666,16 +666,23 @@ class _CommentWidgetState extends State<CommentWidget> {
                     builder: (_, snapshot) {
                       if (snapshot.hasData) {
                         var data = snapshot.data!.data();
-                        var userType = data?["userType"] ?? "0";
+                        var userType = data?["userType"];
                         debugPrint(
                             " This is the actual userType of this user ${userType.toString()}");
                         return
                           Visibility(
-                            visible: userType != "REGULAR",
+                            visible: userType == "SUPER_ADMIN",
                             child: Row(
                               children: [
                                 GestureDetector(
-                                  onTap: _showCardDialog,
+                                  onTap: () {
+                                    if (currentUser == null) {
+                                      Navigator.of(context)
+                                          .pushReplacementNamed(AppRoutes.authSelection);
+                                    } else {
+                                      _showCardDialog();
+                                    }
+                                  },
                                   child: Row(
                                     children: [
 
@@ -702,7 +709,10 @@ class _CommentWidgetState extends State<CommentWidget> {
                                   visible: widget.commentSessionModel?.flagged == true,
                                   child: GestureDetector(
                                     onTap: () {
-                                      if (userType != "REGULAR")
+                                      if (currentUser == null) {
+                                        Navigator.of(context)
+                                            .pushReplacementNamed(AppRoutes.authSelection);
+                                      } else {
                                         showCustomDialog(context,
                                             message: AppString.delete_advise_alert_note,
                                             onPressed: () {
@@ -712,6 +722,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                                               decrementTotalLoveCount();
                                               notifyForDeletedAdvise();
                                             });
+                                      }
                                       },
                                     child: Row(
                                       children: [
@@ -729,7 +740,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                           );
                       }
 
-                      return Center(child: CircularProgressIndicator());
+                      return Container();
                     },
                   ),
                 ],
