@@ -28,8 +28,6 @@ class _SimilarSessionsStream extends State<SimilarSessionsStream> {
 
             GestureDetector(onTap: (){
               setState(() {
-                String featuredCategory1 = widget.element.category1.toString();
-                String thisCategory = featuredCategory1;
                 PageRouter.gotoWidget(
                     EgoModeSessionDetail(featuredSessionModel: widget.element),
                     context);
@@ -44,12 +42,14 @@ class _SimilarSessionsStream extends State<SimilarSessionsStream> {
                 child: Column(
                   children: [
                     SizedBox(height: 3,),
-                    Text(widget.element.title.toString(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontStyle: FontStyle.italic,
-                        fontSize: 17,
+                    Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Text(widget.element.title.toString(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 17,
+                        ),
                       ),
                     ),
                   ],

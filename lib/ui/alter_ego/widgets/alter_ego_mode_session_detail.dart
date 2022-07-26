@@ -238,6 +238,8 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                                       ),
 
                                       NextUnrepliedSession(element: featuredSessionModel!,),
+                                      SizedBox(height: 4),
+
                                       // Bottom ad unit is here
                                       if(alterEgoModeSessionDetailBottomBanner == null)
                                         SizedBox(height: 70)

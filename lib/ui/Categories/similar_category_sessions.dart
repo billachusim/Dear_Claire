@@ -69,7 +69,8 @@ class SimilarCategorySessions extends StatelessWidget {
                   }).toList();
 
                   return Scrollbar(
-                    child: SizedBox(height: 33,
+                    child: SizedBox(
+                      height: 48,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [

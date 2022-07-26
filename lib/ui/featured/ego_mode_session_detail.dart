@@ -253,6 +253,7 @@ class _EgoModeSessionDetailState
                                       ),
 
                                       SimilarCategorySessions(element: featuredSessionModel!,),
+                                      SizedBox(height: 4),
 
                                       // Bottom ad unit is here
                                       if(egoModeSessionDetailBottomBanner == null)

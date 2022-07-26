@@ -22,6 +22,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'Admob/ad_state.dart';
 import 'data/core/config.dart';
+import 'firebase_options.dart';
 
 /// Receive message when the app is closed and in background.
 Future<void> backgroundHandler(RemoteMessage message) async{
@@ -34,7 +35,9 @@ Future<void> main() async {
   final initFuture = MobileAds.instance.initialize();
   final adState = AdState(initFuture);
 
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   Config.appFlavor = Flavor.DEVELOPMENT;
@@ -118,6 +121,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final InitializationSettings initializationSettings =
     InitializationSettings(
       android: AndroidInitializationSettings("@drawable/claire_icon"),
+      iOS: IOSInitializationSettings(
+        requestSoundPermission: false,
+        requestBadgePermission: false,
+        requestAlertPermission: false,
+      ),
     );
 
     flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (String payload) async {

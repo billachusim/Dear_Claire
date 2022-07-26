@@ -28,8 +28,6 @@ class _UnrepliedSessionsStream extends State<UnrepliedSessionsStream> {
 
             GestureDetector(onTap: (){
               setState(() {
-                String featuredCategory1 = widget.element.category1.toString();
-                String thisCategory = featuredCategory1;
                 PageRouter.gotoWidget(
                     AlterEgoModeSessionDetail(featuredSessionModel: widget.element),
                     context);
@@ -44,12 +42,14 @@ class _UnrepliedSessionsStream extends State<UnrepliedSessionsStream> {
                 child: Column(
                   children: [
                     SizedBox(height: 3,),
-                    Text(widget.element.title.toString(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontStyle: FontStyle.italic,
-                        fontSize: 17,
+                    Padding(
+                      padding: const EdgeInsets.all(5.0),
+                      child: Text(widget.element.title.toString(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 17,
+                        ),
                       ),
                     ),
                   ],

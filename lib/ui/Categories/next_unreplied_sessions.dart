@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/Categories/similar_sessions_stream.dart';
 import 'package:dear_claire/ui/Categories/unreplied_sessions_stream.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -71,7 +70,8 @@ class NextUnrepliedSession extends StatelessWidget {
                   }).toList();
 
                   return Scrollbar(
-                    child: SizedBox(height: 33,
+                    child: SizedBox(
+                      height: 48,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [

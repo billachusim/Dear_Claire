@@ -228,8 +228,8 @@ class ChatWidget extends StatelessWidget {
                         print("Visited User ID::: $visitedUsersID");
                       },
                       child: CachedNetworkImage(
-                          width: 35,
-                          height: 35,
+                          width: 40,
+                          height: 40,
                           imageUrl: _user!.avatarUrl ?? '',
                           imageBuilder: (context, imageProvider) => Container(
                                 decoration: BoxDecoration(
@@ -273,7 +273,7 @@ class ChatWidget extends StatelessWidget {
                                 textAlign: TextAlign.start,
                                 maxLines: 1,
                                 style: GoogleFonts.lato(
-                                    fontSize: 13.0,
+                                    fontSize: 15.0,
                                     color: Pallet.colorBlack,
                                     fontWeight: FontWeight.w800)),
                             SizedBox(
@@ -323,7 +323,7 @@ class ChatWidget extends StatelessWidget {
             chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
-                fontSize: 14.0,
+                fontSize: 16.0,
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
