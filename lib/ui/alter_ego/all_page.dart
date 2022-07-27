@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../utils/helper.dart';
+import '../Categories/category_streams.dart';
 import '../routes/routes.dart';
 import '../splash_screen/custom_rotate_bacground.dart';
 
@@ -70,7 +71,9 @@ class _AllDiariesPageState extends State<AllDiariesPage> {
 
                   if (session.hasData) {
                     return ListView(
+                      shrinkWrap: true,
                       children: [
+                        CategoryStreams(),
                         ...session.data!
                             .map((element) => AlterEgoModeSessionCard(element: element, visitedEgoName: '', visitedUsersID: '',))
                             .toList(),

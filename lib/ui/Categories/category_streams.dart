@@ -17,7 +17,7 @@ class _CategoryStreamsState extends State<CategoryStreams> {
     return
       Container(
         margin: const EdgeInsets.only(top: 4),
-        height: 30,
+        height: 40,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: ListView(

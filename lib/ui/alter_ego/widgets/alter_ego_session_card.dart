@@ -302,8 +302,6 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                     if (snapshot.hasData) {
                       var data = snapshot.data!.data();
                       var userType = data?["userType"] ?? "0";
-                      debugPrint(
-                          " This is the actual userType of this user ${userType.toString()}");
                       return
                         Visibility(
                           visible: userType == "SUPER_ADMIN",

@@ -1,22 +1,22 @@
+import 'package:dear_claire/ui/alter_ego/all_page.dart';
+import 'package:dear_claire/ui/alter_ego/empty_advising_screen_widget.dart';
+import 'package:dear_claire/ui/alter_ego/widgets/all_activities_tab.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/color.dart';
 import '../../../utils/helper.dart';
-import '../../ego-profile/archive.dart';
-import '../../routes/routes.dart';
-import '../../splash_screen/custom_rotate_bacground.dart';
-import '../flagged_sessions_page.dart';
-import 'flagged_advises_tab.dart';
+import '../routes/routes.dart';
+import '../splash_screen/custom_rotate_bacground.dart';
 
-class FlaggedPage extends StatefulWidget {
-  const FlaggedPage({Key? key}) : super(key: key);
+class TheAllPage extends StatefulWidget {
+  const TheAllPage({Key? key}) : super(key: key);
 
   @override
-  _FlaggedPageState createState() => _FlaggedPageState();
+  _TheAllPageState createState() => _TheAllPageState();
 }
 
 
 
-class _FlaggedPageState extends State<FlaggedPage>
+class _TheAllPageState extends State<TheAllPage>
     with SingleTickerProviderStateMixin {
 
   late TabController _tabController;
@@ -57,7 +57,7 @@ class _FlaggedPageState extends State<FlaggedPage>
               children: [
                 CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
-                /// The three Flagged page tabs are here
+                /// The three All page tabs are here
                 /// First tab is Sessions Tab
 
                 DefaultTabController(
@@ -123,7 +123,7 @@ class _FlaggedPageState extends State<FlaggedPage>
 
 
 
-                          /// Second tab is flagged chats Tab
+                          /// Second tab is the all Advises chats Tab
 
                           Expanded(
                             child: GestureDetector(
@@ -177,7 +177,7 @@ class _FlaggedPageState extends State<FlaggedPage>
                           ),
 
 
-                          /// Third tab is the flagged chats Tab
+                          /// Third tab is the all activities Tab
 
                           Expanded(
                             child: GestureDetector(
@@ -207,7 +207,7 @@ class _FlaggedPageState extends State<FlaggedPage>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        "Chats",
+                                        "Activities",
                                         style: TextStyle(
                                           color: currentTabIndex != 2
                                               ? Pallet.deepGreen
@@ -221,7 +221,7 @@ class _FlaggedPageState extends State<FlaggedPage>
                                       SizedBox(width: 10),
                                       currentTabIndex != 2
                                           ? SizedBox.shrink()
-                                          : Icon(Icons.wechat_sharp,
+                                          : Icon(Icons.local_activity_rounded,
                                           color: Pallet.deepGreen)
                                     ],
                                   ),
@@ -239,9 +239,9 @@ class _FlaggedPageState extends State<FlaggedPage>
                       physics: NeverScrollableScrollPhysics(),
                       controller: _tabController,
                       children: [
-                        FlaggedDiariesPage(),
-                        FlaggedAdvisesTab(),
-                        ArchiveWidget(),
+                        AllDiariesPage(),
+                        EmptyAdvisingSessionWidget(),
+                        AllActivitiesTab(),
                       ],
                     ),
                   )

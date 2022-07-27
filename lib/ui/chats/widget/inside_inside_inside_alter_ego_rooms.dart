@@ -13,10 +13,9 @@ import '../../../services/firebase_services.dart';
 import '../../../utils/strings.dart';
 import '../../../widgets/custom_image_widget.dart';
 import '../../../widgets/play_advise_voice_note.dart';
-import '../../visited_user_ego_page/visited_user_ego_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-class InsideInsideInsideChatWidget extends StatefulWidget {
+class InsideInsideInsideAlterEgoChatWidget extends StatefulWidget {
   String? documentID;
   ChatModel? chatModel;
   ChatRoomPodo? chatRoomPodo;
@@ -24,7 +23,7 @@ class InsideInsideInsideChatWidget extends StatefulWidget {
   /// use this bool value to determine when a chat is sub chat or not
   bool? isSubChat;
 
-  InsideInsideInsideChatWidget(
+  InsideInsideInsideAlterEgoChatWidget(
       {Key? key,
         required this.documentID,
         required this.chatModel,
@@ -33,10 +32,10 @@ class InsideInsideInsideChatWidget extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<InsideInsideInsideChatWidget> createState() => _InsideInsideInsideChatWidgetState();
+  State<InsideInsideInsideAlterEgoChatWidget> createState() => _InsideInsideInsideAlterEgoChatWidgetState();
 }
 
-class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWidget> {
+class _InsideInsideInsideAlterEgoChatWidgetState extends State<InsideInsideInsideAlterEgoChatWidget> {
   TextEditingController editChatController = TextEditingController();
 
   late String visitedUsersID;
@@ -80,39 +79,25 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        visitedUsersID = _user?.userId ?? '';
-                        visitedEgoName = _user?.nickname ?? 'Chatter';
-                        String thisEgoName = visitedEgoName;
-                        String thisUser = visitedUsersID;
-                        PageRouter.gotoWidget(
-                            VisitedUserEgoProfilePage(
-                                visitedUsersID: thisUser,
-                                visitedEgoName: thisEgoName),
-                            context);
-                        print("Visited User ID::: $visitedUsersID");
-                      },
-                      child: CachedNetworkImage(
-                          width: 35,
-                          height: 35,
-                          imageUrl: _user!.avatarUrl ?? '',
-                          imageBuilder: (context, imageProvider) => Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.fill,
-                              ),
+                    CachedNetworkImage(
+                        width: 35,
+                        height: 35,
+                        imageUrl: _user!.avatarUrl ?? '',
+                        imageBuilder: (context, imageProvider) => Container(
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: imageProvider,
+                              fit: BoxFit.fill,
                             ),
                           ),
-                          placeholder: (context, url) =>
-                              Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) => Image.asset(
-                            "assets/images/brown_boy_mask.png",
-                            width: 35,
-                            height: 35,
-                          ) //Icon(Icons.error),
-                      ),
+                        ),
+                        placeholder: (context, url) =>
+                            Center(child: CircularProgressIndicator()),
+                        errorWidget: (context, url, error) => Image.asset(
+                          "assets/images/brown_boy_mask.png",
+                          width: 35,
+                          height: 35,
+                        ) //Icon(Icons.error),
                     ),
                     SizedBox(
                       width: 4,
@@ -122,27 +107,13 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          GestureDetector(
-                            onTap: () {
-                              visitedUsersID = _user.userId ?? '';
-                              visitedEgoName = _user.nickname ?? 'Chatter';
-                              String thisEgoName = visitedEgoName;
-                              String thisUser = visitedUsersID;
-                              PageRouter.gotoWidget(
-                                  VisitedUserEgoProfilePage(
-                                      visitedUsersID: thisUser,
-                                      visitedEgoName: thisEgoName),
-                                  context);
-                              print("Visited User ID::: $visitedUsersID");
-                            },
-                            child: Text(_user.nickname ?? '',
-                                textAlign: TextAlign.start,
-                                maxLines: 1,
-                                style: GoogleFonts.lato(
-                                    fontSize: 13.0,
-                                    color: Pallet.colorBlack,
-                                    fontWeight: FontWeight.w800)),
-                          ),
+                          Text(_user.alterEgoId ?? '',
+                              textAlign: TextAlign.start,
+                              maxLines: 1,
+                              style: GoogleFonts.lato(
+                                  fontSize: 13.0,
+                                  color: Pallet.colorBlack,
+                                  fontWeight: FontWeight.w800)),
                           SizedBox(
                             height: 2,
                           ),
@@ -281,7 +252,7 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                                   message: AppString.delete_advise_alert_note,
                                   onPressed: () {
                                     PageRouter.goBack(context);
-                                    deleteSubChat();
+                                    deleteAlterEgoSubChat();
                                   });
                           },
                           child: Row(
@@ -305,7 +276,7 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                                           message: AppString.delete_advise_alert_note,
                                           onPressed: () {
                                             PageRouter.goBack(context);
-                                            deleteSubChat();
+                                            deleteAlterEgoSubChat();
                                           });
                                   },
                                   child: Icon(
@@ -335,9 +306,9 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
 
   /// Delete a chat
 
-  Future<void> deleteSubChat() async {
+  Future<void> deleteAlterEgoSubChat() async {
     final collection = FirebaseFirestore.instance
-        .collection(AppString.appChats)
+        .collection("alterEgoChats")
         .doc(widget.chatRoomPodo!.id.toString())
         .collection(widget.chatRoomPodo!.title!)
         .doc(widget.chatModel!.userId.toString())

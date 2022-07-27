@@ -884,6 +884,102 @@ class FirebaseServices extends ChangeNotifier {
     return _userActivityList;
   }
 
+  /// get alter ego chats
+  Stream<QuerySnapshot<Map<String, dynamic>>> getAlterEgoChats(
+      ChatRoomPodo? chatRoomPodo) {
+    return _firebaseFirestore
+        .collection("alterEgoChats")
+        .doc(chatRoomPodo!.id.toString())
+        .collection(chatRoomPodo.title!)
+        .orderBy('timeCreated', descending: true)
+        .limit(AppString.allSessionLength)
+        .snapshots();
+  }
+
+
+  /// send alter ego message
+  void addAlterEgoMessage(ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
+    final _user = await getUserInfo();
+    final sender = _user.nickname;
+    final roomTitle = chatRoomPodo!.title.toString();
+    final pushNotification.NotificationModel _notificationModel =
+    pushNotification.NotificationModel(
+        to: '/topics/${chatRoomPodo.id.toString()}',
+        collapseKey: 'type_a',
+        data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
+        notification: pushNotification.Notification(
+            title: chatRoomPodo.title!,
+            body: '$sender started a new corner inside $roomTitle.'));
+
+    _firebaseFirestore
+        .collection("alterEgoChats")
+        .doc(chatRoomPodo.id.toString())
+        .collection(chatRoomPodo.title!)
+        .doc(_user.userId)
+        .set(chatModel.toJson())
+        .whenComplete(() {
+      /// automatically subscribe user to this topic
+      _subscribeToChatRoom(chatRoomPodo.id.toString());
+      notificationService.sendNotification(_notificationModel.toJson());
+      logger.d('Message sent ${chatModel.toJson()}');
+    });
+  }
+
+  /// get alter ego chats
+  Stream<QuerySnapshot<Map<String, dynamic>>> getAlterEgoSubMessages(
+      String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) {
+    return _firebaseFirestore
+        .collection("alterEgoChats")
+        .doc(chatRoomPodo!.id.toString())
+        .collection(chatRoomPodo.title!)
+        .doc(key.toString())
+        .collection(chatModel.userId!)
+        .orderBy('timeCreated', descending: true)
+        .limit(AppString.appSessionLength)
+        .snapshots();
+  }
+
+  /// send alter ego sub-message
+  void addAlterEgoSubMessage(
+      String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
+    final _user = await getUserInfo();
+    final sender = _user.nickname;
+    final pushNotification.NotificationModel _notificationModel =
+    pushNotification.NotificationModel(
+        to: '/topics/${chatModel.userId!}',
+        collapseKey: 'type_a',
+        data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
+        notification: pushNotification.Notification(
+          title: chatRoomPodo!.title!,
+          body: '$sender sent something to your corner inside the room',
+        ));
+    _firebaseFirestore
+        .collection("alterEgoChats")
+        .doc(chatRoomPodo.id.toString())
+        .collection(chatRoomPodo.title!)
+        .doc(key.toString())
+        .collection(key.toString())
+        .doc(_user.userId)
+        .set(chatModel.toJson())
+        .whenComplete(() {
+      _subscribeToChatRoom(key);
+      notificationService.sendNotification(_notificationModel.toJson());
+      logger.d('SubMessage sent ${chatModel.toJson()}');
+    });
+  }
+
+  void updateAlterEgoMembers(
+      String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
+    _firebaseFirestore
+        .collection("alterEgoChats")
+        .doc(chatRoomPodo!.id.toString())
+        .collection(chatRoomPodo.title!)
+        .doc(key)
+        .update(chatModel.toJson());
+  }
+
+
+
 
 
   /// get chats

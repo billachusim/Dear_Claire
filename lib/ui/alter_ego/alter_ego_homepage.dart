@@ -1,10 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/alter_ego/advised_page.dart';
-import 'package:dear_claire/ui/alter_ego/all_page.dart';
-import 'package:dear_claire/ui/alter_ego/new_diaries_page.dart';
-import 'package:dear_claire/ui/alter_ego/widgets/all_activities_tab.dart';
-import 'package:dear_claire/ui/alter_ego/widgets/flagged_page.dart';
+import 'package:dear_claire/ui/alter_ego/alter_ego_all_page.dart';
+import 'package:dear_claire/ui/alter_ego/chatrooms.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
@@ -18,6 +16,8 @@ import 'package:flutter_vibrate/flutter_vibrate.dart';
 import '../../utils/constant.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
+import '../ego-profile/claire_loves.dart';
+import 'flagged_sessions_page.dart';
 
 class AlterEgoHomePage extends StatefulWidget {
   const AlterEgoHomePage({Key? key}) : super(key: key);
@@ -30,6 +30,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   PageController? _pageController;
   int currentIndex = 0;
+  late String _title;
   String userName = "";
   String userType = "";
   String avatarUrl = "";
@@ -40,8 +41,30 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   @override
   void initState() {
     super.initState();
+    _title = "Alter Ego Mode";
     _pageController = PageController(keepPage: true);
     shakeDevice();
+  }
+
+
+  void setTabIndex(index) async {
+    if (await firebaseServices.isUserSignIn(context))
+      _pageController?.animateToPage(
+          index, duration: Duration(milliseconds: 1500),
+          curve: Curves.elasticOut);
+    switch(index) {
+      case 0: { _title = 'Advising'; }
+      break;
+      case 1: { _title = 'All'; }
+      break;
+      case 2: { _title = 'Flagged'; }
+      break;
+      case 3: { _title = 'Rooms'; }
+      break;
+      case 4: { _title = 'Loves'; }
+      break;
+
+    }
   }
 
   shakeDevice() async {
@@ -86,7 +109,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
             key: _scaffoldKey,
             appBar: AppBar(
               backgroundColor: Pallet.colorBottomNav,
-              title: Text("Alter Ego Mode",
+              title: Text(_title,
                   style: TextStyle(
                       fontSize: 24.0,
                       fontWeight: FontWeight.w600,
@@ -123,10 +146,10 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                 },
                 children: [
                   AdvisedPage(),
-                  NewDiariesPage(),
-                  AllDiariesPage(),
-                  FlaggedPage(),
-                  AllActivitiesTab(),
+                  TheAllPage(),
+                  FlaggedDiariesPage(),
+                  ChatRooms(),
+                  ClaireLoves(),
                 ],
               ),
           ]
@@ -143,12 +166,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                 currentIndex: currentIndex,
                 selectedItemColor: Pallet.colorWhite,
                 showUnselectedLabels: false,
-                onTap: (index) {
-                  _pageController!.jumpToPage(index);
-                  setState(() {
-                    currentIndex = index;
-                  });
-                },
+                onTap: (int index) => setTabIndex(index),
                 // A6A6B1
                 items: [
                   BottomNavigationBarItem(
@@ -159,32 +177,32 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                     label: 'Advising',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.calendar_today,
+                    icon: Icon(Icons.calendar_month_rounded,
                         color: currentIndex == 1
-                            ? Pallet.colorWhite
-                            : Pallet.colorSecondary),
-                    label: 'New',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.access_time_rounded,
-                        color: currentIndex == 2
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
                     label: 'All',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.flag,
-                        color: currentIndex == 3
+                    icon: Icon(Icons.flag_circle_rounded,
+                        color: currentIndex == 2
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
                     label: 'Flagged',
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.messenger,
-                        color: currentIndex == 4
+                    icon: Icon(Icons.message_rounded,
+                        color: currentIndex == 3
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
                     label: 'Rooms',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.attach_money_rounded,
+                        color: currentIndex == 4
+                            ? Pallet.colorWhite
+                            : Pallet.colorSecondary),
+                    label: 'Loves',
                   ),
                 ],
               ),
@@ -235,26 +253,20 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                             userType = data?["userType"] ?? " ";
                             avatarUrl = data?["avatarUrl"] ?? " ";
                             return
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.of(context)
-                                      .pushNamed(AppRoutes.home);
-                                },
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: userType == 'REGULAR'? Pallet.colorPrimary
+                                      : userType == 'ADMIN'? Pallet.colorSecondary
+                                      : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
+                                      :Pallet.colorBlue,
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                margin: EdgeInsets.only(left: 0),
                                 child: Container(
-                                  decoration: BoxDecoration(
-                                    color: userType == 'REGULAR'? Pallet.colorPrimary
-                                        : userType == 'ADMIN'? Pallet.colorSecondary
-                                        : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                                        :Pallet.colorBlue,
-                                    borderRadius: BorderRadius.circular(100),
-                                  ),
-                                  margin: EdgeInsets.only(left: 0),
-                                  child: Container(
-                                    height: 75,
-                                    width: 75,
-                                    margin: EdgeInsets.all(4),
-                                    child: RotateImage(75.h, 75.w)),
-                                  ),
+                                  height: 75,
+                                  width: 75,
+                                  margin: EdgeInsets.all(4),
+                                  child: RotateImage(75.h, 75.w)),
                                 );
                           }
 
@@ -263,27 +275,33 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                       ),
 
                       otherAccountsPictures: [
-                        CachedNetworkImage(
-                            width: 60,
-                            height: 60,
-                            imageUrl: avatarUrl,
-                            imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(100),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                  fit: BoxFit.fill,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context)
+                                .pushNamed(AppRoutes.home);
+                          },
+                          child: CachedNetworkImage(
+                              width: 60,
+                              height: 60,
+                              imageUrl: avatarUrl,
+                              imageBuilder: (context, imageProvider) => Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(100),
+                                  image: DecorationImage(
+                                    image: imageProvider,
+                                    fit: BoxFit.fill,
+                                  ),
                                 ),
                               ),
-                            ),
-                            placeholder: (context, url) =>
-                                CircularProgressIndicator(),
-                            errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/brown_boy_mask.png",
-                              width: 50,
-                              height: 50,
-                            ) //Icon(Icons.error),
+                              placeholder: (context, url) =>
+                                  CircularProgressIndicator(),
+                              errorWidget: (context, url, error) => Image.asset(
+                                "assets/images/brown_boy_mask.png",
+                                width: 50,
+                                height: 50,
+                              ) //Icon(Icons.error),
+                          ),
                         ),
 
                         GestureDetector(

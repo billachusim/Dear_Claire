@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/Categories/archive_category_stream.dart';
 import 'package:dear_claire/ui/Categories/category_streams2.dart';
-import 'package:dear_claire/ui/Categories/similar_sessions_stream.dart';
 import 'package:dear_claire/ui/featured/widget/status_stream.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
@@ -61,6 +60,7 @@ class TheFeaturedSessions extends StatelessWidget {
 
               return Scrollbar(
                 child: ListView(
+                  shrinkWrap: true,
                   children: [
                     ..._sessionList!
                         .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
@@ -165,6 +165,7 @@ class TrendingCategories extends StatelessWidget {
                   return Scrollbar(
                     child: SizedBox(height: 33,
                       child: ListView(
+                        shrinkWrap: true,
                         scrollDirection: Axis.horizontal,
                         children: [
                           ..._sessionList!
@@ -250,6 +251,7 @@ class UsersArchiveCategories extends StatelessWidget {
                   return Scrollbar(
                     child: SizedBox(height: 33,
                       child: ListView(
+                        shrinkWrap: true,
                         scrollDirection: Axis.horizontal,
                         children: [
                           ..._sessionList!
@@ -330,6 +332,7 @@ class FeaturedStatusStreams extends StatelessWidget {
                   return Scrollbar(
                     child: SizedBox(height: 82,
                       child: ListView(
+                        shrinkWrap: true,
                         scrollDirection: Axis.horizontal,
                         children: [
                           ..._sessionList!
@@ -416,6 +419,7 @@ class FriendsAndFunSessions extends StatelessWidget {
                   return Scrollbar(
                     child: SizedBox(height: 200,
                       child: ListView(
+                        shrinkWrap: true,
                         scrollDirection: Axis.horizontal,
                         children: [
                           ..._sessionList!
