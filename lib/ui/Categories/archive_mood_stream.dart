@@ -1,14 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/Categories/archive_sessions_by_mood_widget.dart';
-import 'package:dear_claire/ui/Categories/users_sessions_by_mood_widget.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/color.dart';
 import '../../utils/strings.dart';
 import '../featured/model/session.dart';
-import 'category_streams2.dart';
 
 /// This is a stream class showing public sessions based on their moods.
 
@@ -68,7 +65,8 @@ class ArchiveMoodStream extends StatelessWidget {
                   }).toList();
 
                   return Scrollbar(
-                    child: SizedBox(height: 33,
+                    child: SizedBox(
+                      height: 40,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [

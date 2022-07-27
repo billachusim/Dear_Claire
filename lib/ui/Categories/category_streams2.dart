@@ -20,7 +20,7 @@ class _CategoryStreams2State extends State<CategoryStreams2> {
     return
       Container(
         margin: const EdgeInsets.only(top: 4),
-        height: 33,
+        height: 40,
         child: ListView(
           shrinkWrap: true,
           scrollDirection: Axis.horizontal,
@@ -28,8 +28,6 @@ class _CategoryStreams2State extends State<CategoryStreams2> {
 
             GestureDetector(onTap: (){
               setState(() {
-                String featuredCategory1 = widget.element.category1.toString();
-                String thisCategory = featuredCategory1;
                 PageRouter.gotoWidget(
                     CategorySessions(visitedCategory: widget.element.category1.toString()),
                     context);
@@ -41,18 +39,16 @@ class _CategoryStreams2State extends State<CategoryStreams2> {
                     color: HexColor.fromHex(widget.element.colorHex!),
                     borderRadius: BorderRadius.circular(15)
                 ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 3,),
-                    Text(widget.element.category1.toString(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontStyle: FontStyle.italic,
-                        fontSize: 17,
-                      ),
+                child: Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Text(widget.element.category1.toString(),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 18,
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

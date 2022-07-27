@@ -163,7 +163,8 @@ class TrendingCategories extends StatelessWidget {
                   }).toList();
 
                   return Scrollbar(
-                    child: SizedBox(height: 33,
+                    child: SizedBox(
+                      height: 40,
                       child: ListView(
                         shrinkWrap: true,
                         scrollDirection: Axis.horizontal,
@@ -249,7 +250,8 @@ class UsersArchiveCategories extends StatelessWidget {
                   }).toList();
 
                   return Scrollbar(
-                    child: SizedBox(height: 33,
+                    child: SizedBox(
+                      height: 40,
                       child: ListView(
                         shrinkWrap: true,
                         scrollDirection: Axis.horizontal,

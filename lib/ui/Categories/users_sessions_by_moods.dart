@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../utils/color.dart';
 import '../../utils/strings.dart';
 import '../featured/model/session.dart';
-import 'category_streams2.dart';
 
 /// This is a stream class showing public sessions based on their moods.
 
@@ -69,7 +68,8 @@ class UsersMoodStream extends StatelessWidget {
                   }).toList();
 
                   return Scrollbar(
-                    child: SizedBox(height: 33,
+                    child: SizedBox(
+                      height: 40,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [

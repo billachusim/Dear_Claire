@@ -23,7 +23,7 @@ class _UsersMoodStreamWidget extends State<UsersMoodStreamWidget> {
     return
       Container(
         margin: const EdgeInsets.only(top: 4),
-        height: 33,
+        height: 40,
         child: ListView(
           shrinkWrap: true,
           scrollDirection: Axis.horizontal,
@@ -44,17 +44,15 @@ class _UsersMoodStreamWidget extends State<UsersMoodStreamWidget> {
                     color: HexColor.fromHex(widget.element.colorHex!),
                     borderRadius: BorderRadius.circular(15)
                 ),
-                child: Column(
-                  children: [
-                    SizedBox(height: 3,),
-                    Text(Mood.getMood(widget.element.moodId).toString(),
-                        textAlign: TextAlign.end,
-                        maxLines: 1,
-                        style: GoogleFonts.lato(
-                            fontSize: 17.0,
-                            color: Pallet.colorWhite,
-                            fontWeight: FontWeight.w700)),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.all(5.0),
+                  child: Text(Mood.getMood(widget.element.moodId).toString(),
+                      textAlign: TextAlign.end,
+                      maxLines: 1,
+                      style: GoogleFonts.lato(
+                          fontSize: 18.0,
+                          color: Pallet.colorWhite,
+                          fontWeight: FontWeight.w700)),
                 ),
               ),
             ),
