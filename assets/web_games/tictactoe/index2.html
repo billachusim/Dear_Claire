@@ -762,7 +762,7 @@
             }
           }
 
-          var hardLevel = 1;
+          var hardLevel = 10;
           if (attentionRequired.length == 2) {
             return attentionRequired[
               _getRandomInt(0, attentionRequired.length - 1)
@@ -810,9 +810,9 @@
                   function () {
                     var _self = this;
                     if (_self.userName == "You") {
-                    Score.postMessage("You won! Claim 10 Loves.")
                       $("#tic-tac-toe-board").empty();
                       $("#win").show();
+                      Score.postMessage("You won! Claim 10 Loves.")
                       setTimeout(_reset, 5000);
                     } else {
                       $("#loss").show();
@@ -831,7 +831,7 @@
               if (opponent.autoPlay) {
                 setTimeout(function () {
                   opponent.playMove();
-                }, 300);
+                }, 1000);
               } else {
                 this.playBoard.attachListeners();
                 this.playBoard.on("click", opponent.playMove.bind(opponent));

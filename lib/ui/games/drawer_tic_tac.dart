@@ -136,7 +136,6 @@ class _TicTacToeState extends State<TicTacToe> {
                 Fluttertoast.showToast(msg: message.message);
                 if (message.message != null) {
                   isWon = true;
-                  incrementTotalLoveCount();
                   Future.delayed(Duration(seconds: 4), () {
                     showCustomDialog(context,
                       message: "Great Win!\n"
