@@ -8,7 +8,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../services/user_model.dart';
 import '../../../utils/constant.dart';
+import '../../../widgets/toast.dart';
 import '../inside_chatroom.dart';
 
 class ChatRoomWidget extends StatefulWidget {
@@ -24,8 +26,20 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
   @override
   Widget build(BuildContext context) {
     return CupertinoButton(
-      onPressed: () =>
-          PageRouter.gotoWidget(ChatScreen(chatRoomPodo: widget.element), context),
+      onPressed: () async {
+        UserModel user = await firebaseServices.getUserInfo();
+        if (widget.element.title != "One On One Room" && widget.element.title != "Five Aside Room") {
+          PageRouter.gotoWidget(
+              ChatScreen(chatRoomPodo: widget.element), context);
+        }
+        else if (user.currentLoveCount > 2000) {
+          PageRouter.gotoWidget(
+              ChatScreen(chatRoomPodo: widget.element), context);
+        }
+        else {
+          showToast("You need up to 2000 Loves first");
+        }
+      },
       padding: EdgeInsets.zero,
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
