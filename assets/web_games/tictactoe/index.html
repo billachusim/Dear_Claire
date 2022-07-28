@@ -13,7 +13,7 @@
         position: relative;
         padding: 0;
         margin: 0;
-        top: 130px;
+        top: 190px;
         background-color: #36023DFF;
       }
 
@@ -128,11 +128,11 @@
         cursor: pointer;
       }
       .symbol:hover {
-        background-color: #f0f0f0;
+        background-color: red;
         border-radius: 6px;
       }
       .symbol.active {
-        background-color: #cccccc;
+        background-color: red;
         border-radius: 6px;
       }
 
@@ -164,7 +164,7 @@
                         cx="35"
                         cy="35"
                         r="24"
-                        stroke="blue"
+                        stroke="white"
                         stroke-width="10"
                         fill="none"
                 />
@@ -176,7 +176,7 @@
                         y1="13"
                         x2="57"
                         y2="57"
-                        stroke="blue"
+                        stroke="white"
                         stroke-width="10"
                         stroke-linecap="round"
                 />
@@ -185,7 +185,7 @@
                         y1="13"
                         x2="13"
                         y2="57"
-                        stroke="blue"
+                        stroke="white"
                         stroke-width="10"
                         stroke-linecap="round"
                 />
@@ -198,7 +198,7 @@
                         type="checkbox"
                         class="checkbox"
                         checked
-                /><span class="margin-left-small"
+                /><span class="margin-left-small" style="color: white;"
             >Check to make the first move</span
             >
             </div>
@@ -267,7 +267,7 @@
       var Symbol = (function () {
         var _default = {
           size: 24,
-          color: "blue",
+          color: "white",
           strokeWidth: 4,
         };
 
@@ -817,7 +817,7 @@
             }
           }
 
-          var hardLevel = 0.96;
+          var hardLevel = 1;
           if (attentionRequired.length == 2) {
             return attentionRequired[
               _getRandomInt(0, attentionRequired.length - 1)
@@ -869,6 +869,7 @@
                     if (_self.userName == "You") {
                       $("#tic-tac-toe-board").empty();
                       $("#win").show();
+                      Score.postMessage("You won! Take 10 Loves")
                       setTimeout(_reset, 3000);
                     } else {
                       $("#loss").show();

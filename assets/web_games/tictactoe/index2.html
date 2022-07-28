@@ -810,6 +810,7 @@
                   function () {
                     var _self = this;
                     if (_self.userName == "You") {
+                    Score.postMessage("You won! Take 10 Loves.")
                       $("#tic-tac-toe-board").empty();
                       $("#win").show();
                       setTimeout(_reset, 5000);
