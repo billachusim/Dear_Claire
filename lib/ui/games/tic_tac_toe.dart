@@ -1,16 +1,21 @@
 // ignore_for_file: deprecated_member_use
 
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:convert';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../services/firebase_services.dart';
 import '../../utils/color.dart';
+import '../../utils/helper.dart';
+import '../routes/page_router_animation.dart';
 import '../routes/routes.dart';
 
 class TicTacToe extends StatefulWidget {
@@ -35,6 +40,7 @@ class _TicTacToeState extends State<TicTacToe> {
   @override
   void initState() {
     super.initState();
+    _loadRewardedAd();
   }
 
 
@@ -42,6 +48,39 @@ class _TicTacToeState extends State<TicTacToe> {
   @override
   void dispose() {
     super.dispose();
+    _rewardedAd?.dispose();
+  }
+
+
+  RewardedAd? _rewardedAd;
+/// Show rewarded ad when user wins tictactoe
+  void _loadRewardedAd() {
+    RewardedAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/4046562117" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/7411092050" :
+      '',
+      request: AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              setState(() {
+                ad.dispose();
+                _rewardedAd = null;
+              });
+              _loadRewardedAd();
+            },
+          );
+
+          setState(() {
+            _rewardedAd = ad;
+          });
+        },
+        onAdFailedToLoad: (err) {
+          print('Failed to load a rewarded ad: ${err.message}');
+        },
+      ),
+    );
   }
 
 
@@ -109,7 +148,20 @@ class _TicTacToeState extends State<TicTacToe> {
               Fluttertoast.showToast(msg: message.message);
               if (message.message != null) {
                 isWon = true;
-                incrementTotalLoveCount();
+                Future.delayed(Duration(seconds: 4), () {
+                  showCustomDialog(context,
+                    message: "Great Win!\n"
+                          "Watch an Ad to claim 10 Loves.",
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _rewardedAd?.show(
+                        onUserEarnedReward: (_, reward) {
+                          incrementTotalLoveCount();
+                        },
+                      );
+                    },
+                      );
+                });
               }
       })
         ]),
