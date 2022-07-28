@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dear_claire/ui/featured/notified_session_details.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,7 +9,6 @@ import '../../../services/user_model.dart';
 import '../../../utils/color.dart';
 import '../../../utils/constant.dart';
 import '../../../utils/helper.dart';
-import '../../featured/widget/custom_post_details_screen.dart';
 import '../../routes/page_router_animation.dart';
 import '../../routes/routes.dart';
 import '../../splash_screen/custom_rotate_bacground.dart';
@@ -120,7 +120,7 @@ class AllActivitiesCard extends StatelessWidget {
         elevation: 20,
         child: GestureDetector(
           onTap: () => PageRouter.gotoWidget(
-              CustomPostDetailsWidget(sessionId: element.sessionId),
+              NotifiedSessionDetails(sessionId: element.sessionId),
               context),
           child: Container(
             decoration: BoxDecoration(

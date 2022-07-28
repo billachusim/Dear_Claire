@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/strings.dart';
-import '../featured/widget/custom_post_details_screen.dart';
+import '../featured/notified_session_details.dart';
 
 class ActivityWidget extends StatelessWidget {
 ActivityWidget({ Key? key }) : super(key: key);
@@ -90,7 +90,7 @@ class UserActivityCard extends StatelessWidget {
         elevation: 20,
         child: GestureDetector(
           onTap: () => PageRouter.gotoWidget(
-            CustomPostDetailsWidget(sessionId: element.sessionId),
+            NotifiedSessionDetails(sessionId: element.sessionId),
               context),
           child: Container(
             decoration: BoxDecoration(

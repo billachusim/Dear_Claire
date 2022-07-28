@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/ui/featured/widget/custom_post_details_screen.dart';
+import 'package:dear_claire/ui/featured/notified_session_details.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_profile_page_model.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_user_claireloves.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_user_model.dart';
@@ -1646,7 +1646,7 @@ class VisitedUserActivityCard extends StatelessWidget {
         elevation: 20,
         child: GestureDetector(
           onTap: () => PageRouter.gotoWidget(
-              CustomPostDetailsWidget(sessionId: element.sessionId),
+              NotifiedSessionDetails(sessionId: element.sessionId),
               context),
           child: Container(
             decoration: BoxDecoration(
