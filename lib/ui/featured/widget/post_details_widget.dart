@@ -42,6 +42,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   User? currentUser = FirebaseAuth.instance.currentUser;
 
   bool? isFeatured;
+  bool? isArchived;
 
   late String visitedUsersID;
   late String visitedEgoName;
@@ -399,36 +400,28 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             if (_session.userId == currentUser?.uid)
                               CupertinoButton(
                                   padding: EdgeInsets.zero,
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        vertical: 2.5, horizontal: 7),
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: Pallet.colorWhite,
-                                        )),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.edit,
-                                          size: 15,
-                                          color: Pallet.colorWhite,
-                                        ),
-                                        SizedBox(
-                                          width: 2,
-                                        ),
-                                        Text(
-                                          'Edit',
-                                          style: GoogleFonts.lato(
-                                              fontSize: 12.0,
-                                              color: Pallet.colorWhite,
-                                              fontWeight: FontWeight.w800),
-                                        ),
-                                      ],
-                                    ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.edit,
+                                        size: 15,
+                                        color: Pallet.colorWhite,
+                                      ),
+                                      SizedBox(
+                                        width: 2,
+                                      ),
+                                      Text(
+                                        'EDIT',
+                                        style: GoogleFonts.lato(
+                                            fontSize: 12.0,
+                                            color: Pallet.colorWhite,
+                                            fontWeight: FontWeight.w800),
+                                      ),
+                                    ],
                                   ),
                                   onPressed: _showCardDialog),
                             new Spacer(),
+
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -476,6 +469,99 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                 new SizedBox(
                                   width: 10,
                                 ),
+
+                                FutureBuilder<
+                                    DocumentSnapshot<Map<String, dynamic>>>(
+                                  future: FirebaseFirestore.instance
+                                      .collection("users")
+                                      .doc(currentUser?.uid)
+                                      .get(),
+                                  builder: (_, snapshot) {
+                                    if (snapshot.hasData) {
+                                      var data = snapshot.data!.data();
+                                      var userType = data?["userType"] ?? "0";
+
+                                      return
+
+                                        Visibility(
+                                          visible: userType == "SUPER_ADMIN",
+                                          child: Visibility(
+                                            visible: _session.flagged == true,
+                                            child: Row(
+                                              children: [
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    if (_session.archived == false)
+                                                      showCustomDialog(context,
+                                                          message: _session.archived == true
+                                                              ? AppString.unarchive_alert_note
+                                                              : AppString.archive_alert_note,
+                                                          onPressed: () {
+                                                            sendToArchive();
+                                                            Navigator.of(context).pop();
+                                                            setState(() {});
+                                                          });
+                                                    else
+                                                      showCustomDialog(context,
+                                                          message: _session.archived == false
+                                                              ? AppString.archive_alert_note
+                                                              : AppString.unarchive_alert_note,
+                                                          onPressed: () {
+                                                            removeFromArchive();
+                                                            Navigator.of(context).pop();
+                                                            setState(() {});
+                                                          });
+                                                  },
+
+                                                  child: Container(
+                                                    child: Icon(
+                                                      _session.archived == true ? Icons.archive_rounded : Icons.archive_outlined,
+                                                      color: Pallet.colorSecondary,
+                                                      size: 26,
+                                                    ),
+                                                  ),
+                                                ),
+
+                                                SizedBox(
+                                                  width: 4,
+                                                ),
+
+                                                  CupertinoButton(
+                                                      padding: EdgeInsets.zero,
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit,
+                                                            size: 15,
+                                                            color: Pallet.colorSecondary,
+                                                          ),
+                                                          SizedBox(
+                                                            width: 2,
+                                                          ),
+                                                          Text(
+                                                            'MOD',
+                                                            style: GoogleFonts.lato(
+                                                                fontSize: 12.0,
+                                                                color: Pallet.colorSecondary,
+                                                                fontWeight: FontWeight.w800),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      onPressed: _showCardDialog),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                    }
+
+                                    return Container();
+                                  },
+                                ),
+
+                                new SizedBox(
+                                  width: 10,
+                                ),
+
                                 CupertinoButton(
                                     padding: EdgeInsets.zero,
                                     child: Row(
@@ -725,6 +811,41 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     image.writeAsBytesSync(bytes);
     final text = '${AppString.shareHeader}\n\n${AppString.shareLink}';
     await Share.shareFiles([image.path], text: text);
+  }
+
+
+
+  /// Archive a session
+
+  Future<bool?> sendToArchive() async {
+    final value = true;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(theSession?.sessionId)
+        .update({
+      "archived": value,
+    },
+    );
+    logger.d('Successfully changed archive');
+    print('Is Archived?: $value');
+    isArchived = value;
+    return value;
+  }
+
+
+  Future<bool?> removeFromArchive() async {
+    final value = false;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(theSession?.sessionId)
+        .update({
+      "archived": value,
+    },
+    );
+    logger.d('Successfully changed archive');
+    print('Is Archived?: $value');
+    isArchived = value;
+    return value;
   }
 
 
