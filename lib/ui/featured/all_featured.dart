@@ -235,7 +235,7 @@ class _AllFeaturedPage extends State<AllFeaturedPage>
           ),
           Expanded(
             child: TabBarView(
-              physics: NeverScrollableScrollPhysics(),
+              physics: AlwaysScrollableScrollPhysics(),
               controller: _tabController,
               children: [
                 FeaturedPage(title: 'Featured Sessions'),
