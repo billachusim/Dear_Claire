@@ -847,7 +847,7 @@ class FirebaseServices extends ChangeNotifier {
     try {
       final _value = await _firebaseFirestore
           .collection(AppString.userActivity)
-          .where("userId", isEqualTo: currentUser?.uid.toString())
+          .where("clientId", isEqualTo: currentUser?.uid.toString())
           .orderBy('dateCreated', descending: true)
           .limit(AppString.allSessionLength)
           .get();

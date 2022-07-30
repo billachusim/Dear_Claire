@@ -751,8 +751,12 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
         ),
 
           ChatEditField(
-            onTap: (String comment, voiceNote, image1, image2) =>
-                _sendComment(comment, voiceNote, theSession!, image1, image2),
+            onTap: (String comment, voiceNote, image1, image2) {
+              if (theSession?.repliesEnabled == true) {
+                _sendComment(comment, voiceNote, theSession!, image1, image2);
+              }
+              else showToast("Switch to Alter Ego first.");
+            }
           )
       ]
       ),
