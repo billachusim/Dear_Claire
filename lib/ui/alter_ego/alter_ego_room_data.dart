@@ -8,7 +8,7 @@ class AlterEgoRoomData {
     chatRoomPojo = ChatRoomPodo(
         image: "assets/images/colorGirls.png",
         id: 6,
-        title: "Alter Egos Room",
+        title: "Hive Of Alter Egos",
         font: "Default",
         hex: "#880E4F",
         text: "Alter Egos, gather here!,\n" +
@@ -18,7 +18,7 @@ class AlterEgoRoomData {
     chatRoomPojo = ChatRoomPodo(
         image: "assets/images/herpower.png",
         id: 7,
-        title: "Super Egos Coven",
+        title: "Band Of Super Egos",
         font: "Default",
         hex: "#570861",
         text: "Super Egos!\n" +

@@ -234,7 +234,7 @@ class AppRouter {
 
       case AppRoutes.egoPage:
         return MaterialPageRoute<dynamic>(
-          builder: (_) => EgoProfilePage(),
+          builder: (_) => EgoProfilePage(title: 'Dear Claire'),
           settings: settings,
           fullscreenDialog: false,
         );
@@ -262,7 +262,7 @@ class AppRouter {
 
       case AppRoutes.diaryRooms:
         return MaterialPageRoute<dynamic>(
-          builder: (_) => ChatRoomsPage(),
+          builder: (_) => ChatRoomsPage(title: 'Dear Claire'),
           settings: settings,
           fullscreenDialog: false,
         );

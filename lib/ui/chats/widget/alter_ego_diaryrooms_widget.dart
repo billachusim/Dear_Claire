@@ -28,7 +28,7 @@ class _AlterEgoChatRoomWidgetState extends State<AlterEgoChatRoomWidget> {
     return CupertinoButton(
       onPressed: () async {
         UserModel user = await firebaseServices.getUserInfo();
-        if (widget.element.title != "Super Egos Coven") {
+        if (widget.element.title != "Band Of Super Egos") {
           PageRouter.gotoWidget(
               AlterEgoChatScreen(chatRoomPodo: widget.element), context);
         }

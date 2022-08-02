@@ -7,7 +7,8 @@ import '../routes/routes.dart';
 import 'data/roomdata.dart';
 
 class ChatRoomsPage extends StatelessWidget {
-  const ChatRoomsPage({Key? key}) : super(key: key);
+  final String title;
+  const ChatRoomsPage({Key? key, required this.title}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

@@ -55,8 +55,8 @@ class _HomeDashboardPageState extends State<HomePage>
     AllFeaturedPage(title: 'Dear Claire'),
     FollowedPage(title: 'Dear Claire'),
     DiaryPage(title: 'Dear Claire'),
-    ChatRoomsPage(),
-    EgoProfilePage(),
+    ChatRoomsPage(title: 'Dear Claire'),
+    EgoProfilePage(title: 'Dear Claire'),
   ];
 
   /// Get the Ego User info
@@ -145,7 +145,7 @@ class _HomeDashboardPageState extends State<HomePage>
         print("Show Alter details:: $id || $accessCode");
         id.isNotEmpty && accessCode.isNotEmpty
             ? await firebaseServices.getUserAlterEgo(context, id, accessCode)
-            : Navigator.of(context).pushReplacementNamed(AppRoutes.alterEgoLogin);
+            : Navigator.of(context).pushNamed(AppRoutes.alterEgoLogin);
       },
       minimumShakeCount: 1,
     );

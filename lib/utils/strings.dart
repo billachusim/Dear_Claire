@@ -209,12 +209,15 @@ class AppString{
   static const String create_ego = "Create Ego";
 
   static const String create_ego_welcome ="Welcome, Human,\nIt's Claire To The World!";
-  static const String create_ego_note = "\nYou used to write stuffs in a diary without expecting a reply. It's actually soothing many times to just write down your thoughts.\n\nWell, Claire took that, spun it up with the power of Alter Egos and you can get positive and critical replies to your diaries according to what you had written or recorded.\n\nYou can also earn convertible coins called Claire Love and grow your ego while at it.\nBut first, let's create that ego 🌺";
+  static const String create_ego_note = "\nCreate your ego and start a diary session with Claire or to follow diary sessions from around the world.\n\nYou can make your diary sessions just between you and Claire or you can allow other users to follow and advise positively.";
   static const String create_ego_sub_note = "You remain completely anonymous.\nClaire only needs an email in case you forget your ego code.";
   static const String i_already_have_ego = "I already have Ego,";
 
   static const String gender_label_text = "Gender";
   static const String gender_hint_text = "Female, Male or Any Other";
+
+  static const String egoName_label_text = "Choose Ego Name. Can be changed anytime.";
+  static const String egoName_hint_text = "Sasha Fierce";
 
   static const String how_claire_works_header = "Open Up 🌺 Write or record anything and get advise from Claire secret diary.";
   static const String read_how_claire_works = "Read How Claire Works";

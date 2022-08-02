@@ -508,13 +508,13 @@ class FirebaseServices extends ChangeNotifier {
 
   /// SignUp user
   Future<bool> register(
-      BuildContext context, String email, String secretCode, String gender,) async {
+      BuildContext context, String email, String secretCode, String gender, String nickname) async {
     final _user = await FirebaseAuth.instance
         .createUserWithEmailAndPassword(email: email, password: secretCode);
-    //setUsersId(_user.user!.uid);
     final _email = email;
     final _secretCode = secretCode;
     final _gender = gender;
+    final _nickname = nickname;
     try {
       final alterEgoAccessCode = "";
       final alterEgoId = "";
@@ -524,7 +524,7 @@ class FirebaseServices extends ChangeNotifier {
       final timeLastUnlocked = FieldValue.serverTimestamp();
       final timeRegistered = FieldValue.serverTimestamp();
       final userType = "REGULAR";
-      final nickname = "Claire's Darling";
+      final nickname = _nickname;
       final avatarUrl = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2FSpeak_No_Evil_Monkey_Emoji.png?alt=media&token=88242e3b-ee93-4b76-9d91-a24c112ef4f2";
       final userId = _user.user?.uid;
       final gender = _gender;
@@ -625,8 +625,8 @@ class FirebaseServices extends ChangeNotifier {
   /// follow a session immediately upon advise.
   Future<void> followAdvisedSessionImmediately(BuildContext context,
       {Session? session}) async {
-    _usersID = currentUser?.uid.toString();
-    if(!session!.followers!.contains(_usersID)) {
+    _usersID = currentUser!.uid.toString();
+    if(session!.repliesEnabled == true && !session.followers!.contains(_usersID)) {
       _firebaseFirestore
           .collection(AppString.appFeaturedSessions)
           .doc(session.sessionId)
@@ -900,7 +900,7 @@ class FirebaseServices extends ChangeNotifier {
   /// send alter ego message
   void addAlterEgoMessage(ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
     final _user = await getUserInfo();
-    final sender = _user.nickname;
+    final sender = _user.alterEgoId;
     final roomTitle = chatRoomPodo!.title.toString();
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
@@ -943,7 +943,7 @@ class FirebaseServices extends ChangeNotifier {
   void addAlterEgoSubMessage(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
     final _user = await getUserInfo();
-    final sender = _user.nickname;
+    final sender = _user.alterEgoId;
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
         to: '/topics/${chatModel.userId!}',
@@ -951,7 +951,7 @@ class FirebaseServices extends ChangeNotifier {
         data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
         notification: pushNotification.Notification(
           title: chatRoomPodo!.title!,
-          body: '$sender sent something to your corner inside the room',
+          body: '$sender sent something to your corner of the room',
         ));
     _firebaseFirestore
         .collection("alterEgoChats")
@@ -1048,7 +1048,7 @@ class FirebaseServices extends ChangeNotifier {
             data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
             notification: pushNotification.Notification(
               title: chatRoomPodo!.title!,
-              body: '$sender sent something to your corner inside the room',
+              body: '$sender sent something to your corner of the room',
             ));
     _firebaseFirestore
         .collection(AppString.appChats)

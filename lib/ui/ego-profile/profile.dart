@@ -29,7 +29,8 @@ import 'clairevatar.dart';
 
 
 class EgoProfilePage extends StatefulWidget {
-  const EgoProfilePage({Key? key,}) : super(key: key);
+  final String title;
+  const EgoProfilePage({Key? key, required this.title,}) : super(key: key);
 
   @override
   _EgoProfilePageState createState() => _EgoProfilePageState();

@@ -220,7 +220,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         incrementTotalLoveCount();
 
         flutterLocalNotificationsPlugin.show(0, 'Clairelove Wallet',
-            "You started and shared an original diary session. You just earned 10 Loves.", _notificationDetails());
+            "You started and shared an original diary session. You just earned 10 Loves.", _notificationDetails(), payload: "wallet");
 
         return true;
       }

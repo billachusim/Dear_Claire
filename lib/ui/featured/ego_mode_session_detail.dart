@@ -363,7 +363,7 @@ class _EgoModeSessionDetailState
         showToast("Thanks! You earned 10 Loves.");
 
         flutterLocalNotificationsPlugin.show(0, 'ClaireLove Wallet',
-            "Thanks for that original advise. You just earned 10 Loves.", _notificationDetails());
+            "Thanks for that original advise. You just earned 10 Loves.", _notificationDetails(), payload: "wallet");
 
         Future.delayed(Duration(seconds: 5), () {
           _showAdviseInterstitialAd();
@@ -471,7 +471,7 @@ class _EgoModeSessionDetailState
 
 
 
-  /// Save user comment activity
+  /// Save user thanks activity
 
   Future<void> saveUserThanksActivity(CommentSessionModel commentSessionModel) async {
     final UserModel _user = await firebaseServices.getUserInfo();
@@ -483,7 +483,7 @@ class _EgoModeSessionDetailState
     final sessionOwnerId = theSession?.userId;
     final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
     final sessionOwnerNickname = theSession?.userNickname.toString();
-    final sessionVisitorId = currentUser?.uid.toString();
+    final sessionVisitorId = _user.userId.toString();
     final sessionVisitorNickname = _user.nickname.toString();
     final sessionVisitorAvatar =  _user.userType != "REGULAR"
         ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
@@ -491,25 +491,27 @@ class _EgoModeSessionDetailState
     final activityMessage = "$sessionVisitorNickname thanked $commentOwnerNickname's advise.";
     final activityType = "thank";
     final userActivityId = "";
-    FirebaseFirestore.instance
-        .collection('user_activity')
-        .add({
-      "activityMessage": activityMessage,
-      "activityType": activityType,
-      "clientAvatarUrl": sessionVisitorAvatar,
-      "clientId": sessionVisitorId,
-      "clientNickname": sessionVisitorNickname,
-      "dateCreated": dateCreated,
-      "sessionId": sessionId,
-      "userActivityId": userActivityId,
-      "userId": sessionOwnerId,
-      "userNickname": sessionOwnerNickname,
-      "userAvatarUrl": sessionOwnerAvatar,
+    if (!commentSessionModel.thanks!.contains(sessionVisitorId)) {
+      FirebaseFirestore.instance
+          .collection('user_activity')
+          .add({
+        "activityMessage": activityMessage,
+        "activityType": activityType,
+        "clientAvatarUrl": sessionVisitorAvatar,
+        "clientId": sessionVisitorId,
+        "clientNickname": sessionVisitorNickname,
+        "dateCreated": dateCreated,
+        "sessionId": sessionId,
+        "userActivityId": userActivityId,
+        "userId": sessionOwnerId,
+        "userNickname": sessionOwnerNickname,
+        "userAvatarUrl": sessionOwnerAvatar,
 
-    },
-    );
-    logger.d('Successfully saved your thanks activity');
-    print('Activity Message: $activityMessage');
+      },
+      );
+      logger.d('Successfully saved your thanks activity');
+      print('Activity Message: $activityMessage');
+    }
 
   }
 

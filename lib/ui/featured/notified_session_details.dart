@@ -836,7 +836,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
           showToast("Thanks! You earned 10 Loves.");
 
           flutterLocalNotificationsPlugin.show(0, 'ClaireLove Wallet',
-              "Thanks for that original advise. You just earned 10 Loves.", _notificationDetails());
+              "Thanks for that original advise. You just earned 10 Loves.", _notificationDetails(), payload: "wallet");
 
           Future.delayed(Duration(seconds: 5), () {
             _showAdviseInterstitialAd();

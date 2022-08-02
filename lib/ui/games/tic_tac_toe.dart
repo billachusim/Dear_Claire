@@ -121,7 +121,7 @@ class _TicTacToeState extends State<TicTacToe> {
     print('Session Count is: $FieldValue');
 
     flutterLocalNotificationsPlugin.show(0, 'ClaireLove Wallet',
-        "Nice, you won me on Tic tac toe. 10 Loves for you.", _notificationDetails());
+        "Nice, you won me on Tic tac toe. 10 Loves for you.", _notificationDetails(), payload: "wallet");
   }
 
   @override

@@ -345,7 +345,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         incrementTotalLoveCount();
         showToast("Thanks! You earned 10 Loves.");
         flutterLocalNotificationsPlugin.show(0, 'ClaireLove Wallet',
-            "Thanks for that original advise. You just earned 10 Loves.", _notificationDetails());
+            "Thanks for that original advise. You just earned 10 Loves.", _notificationDetails(), payload: "wallet");
         Future.delayed(Duration(seconds: 4), () {
           _showAdviseInterstitialAd();
         });
@@ -453,6 +453,49 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
   }
 
 
+  /// Save user thanks activity
+
+  Future<void> saveUserThanksActivity(CommentSessionModel commentSessionModel) async {
+    final UserModel _user = await firebaseServices.getUserInfo();
+    final Session? theSession = widget.featuredSessionModel;
+    final CommentSessionModel? theComment = commentSessionModel;
+    final dateCreated = FieldValue.serverTimestamp();
+    final commentOwnerNickname = theComment?.userNickname.toString();
+    final sessionId = theSession?.sessionId;
+    final sessionOwnerId = theSession?.userId;
+    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
+    final sessionOwnerNickname = theSession?.userNickname.toString();
+    final sessionVisitorId = _user.userId.toString();
+    final sessionVisitorNickname = _user.userType == "ADMIN" ? "Alter Ego" : "Super Ego";
+    final sessionVisitorAvatar =  "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691";
+    final activityMessage = "$sessionVisitorNickname thanked $commentOwnerNickname's advise.";
+    final activityType = "thank";
+    final userActivityId = "";
+    if (!commentSessionModel.thanks!.contains(sessionVisitorId)) {
+      FirebaseFirestore.instance
+          .collection('user_activity')
+          .add({
+        "activityMessage": activityMessage,
+        "activityType": activityType,
+        "clientAvatarUrl": sessionVisitorAvatar,
+        "clientId": sessionVisitorId,
+        "clientNickname": sessionVisitorNickname,
+        "dateCreated": dateCreated,
+        "sessionId": sessionId,
+        "userActivityId": userActivityId,
+        "userId": sessionOwnerId,
+        "userNickname": sessionOwnerNickname,
+        "userAvatarUrl": sessionOwnerAvatar,
+
+      },
+      );
+      logger.d('Successfully saved your thanks activity');
+      print('Activity Message: $activityMessage');
+    }
+
+  }
+
+
   /// Update a session's timeLastActivity when new comment is made.
 
   Future<void> updateSessionTimeLastActivity(Session session) async {
@@ -491,6 +534,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
             : {
           'thanks': FieldValue.arrayUnion([_userModel.userId])
         });
+    saveUserThanksActivity(commentSessionModel);
   }
 
   _share(String? message) {
