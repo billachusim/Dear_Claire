@@ -686,7 +686,7 @@ class FirebaseServices extends ChangeNotifier {
   Future<void>? _followYourSession(BuildContext context,
       {Session? session}) async {
     final _user = await getUserInfo();
-    String _name = _user.userType == 'ADMIN' ? 'Claire' : _user.nickname!;
+    String _name = _user.userType == 'ADMIN' ? '${_user.nickname}\'s Alter Ego' : _user.nickname!;
     !session!.followers!.contains(_usersID)
         ? _firebaseFirestore
         .collection(AppString.appFeaturedSessions)
@@ -727,7 +727,7 @@ class FirebaseServices extends ChangeNotifier {
   Future<void>? _followASession(BuildContext context,
       {Session? session}) async {
     final _user = await getUserInfo();
-    String _name = _user.userType == 'ADMIN' ? 'Claire' : _user.nickname!;
+    String _name = _user.userType == 'ADMIN' ? '${_user.nickname}\'s Alter Ego' : _user.nickname!;
     !session!.followers!.contains(_usersID)
         ? _firebaseFirestore
             .collection(AppString.appFeaturedSessions)

@@ -345,12 +345,13 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                         ? 'Unfollow'
                                         : 'Follow',
                                     onPressed: () async {
-                                      if (await firebaseServices.isUserSignIn(
-                                          context)) saveUserFollowActivity();
+                                      if (await firebaseServices.isUserSignIn(context)) {
+                                        firebaseServices.followThisSession(
+                                            context,
+                                            session: _session);
 
-                                      firebaseServices.followThisSession(
-                                          context,
-                                          session: _session);
+                                        saveUserFollowActivity();
+                                      }
                                     },
                                     count: _session.followers!.length,
                                   ),

@@ -54,9 +54,9 @@ class ClairNotification {
     randomNumber == 19 ? "If you don't tell me, I won't know." :
 
     "Go on, Darling, talk to me...";
-    await  Future.delayed(Duration(hours: 23), () {
+    await  Future.delayed(Duration(seconds: 7), () {
       flutterLocalNotificationsPlugin.show(0, 'Claireminder',
-          message.toString(), _notificationDetails());
+          message.toString(), _notificationDetails(), payload: "claireminder");
     }
     );
   }
