@@ -167,7 +167,7 @@ class _AllFeaturedPage extends State<AllFeaturedPage>
                               fontSize: currentTabIndex != 1 ? 14 : 14,
                             ),
                           ),
-                          SizedBox(width: 10),
+                          SizedBox(width: 6),
                           currentTabIndex != 1
                               ? SizedBox.shrink()
                               : Icon(Icons.category_rounded,

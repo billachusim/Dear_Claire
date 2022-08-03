@@ -14,7 +14,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../services/firebase_services.dart';
 import '../../utils/color.dart';
-import '../../utils/helper.dart';
 import '../routes/page_router_animation.dart';
 import '../routes/routes.dart';
 
@@ -26,6 +25,8 @@ class TicTacToe extends StatefulWidget {
     return _TicTacToeState();
   }
 }
+
+const int maxFailedLoadAttempts = 3;
 
 class _TicTacToeState extends State<TicTacToe> {
   late WebViewController _webViewController;
@@ -40,7 +41,7 @@ class _TicTacToeState extends State<TicTacToe> {
   @override
   void initState() {
     super.initState();
-    _loadRewardedAd();
+    _createTictactoeInterstitialAd();
   }
 
 
@@ -48,39 +49,51 @@ class _TicTacToeState extends State<TicTacToe> {
   @override
   void dispose() {
     super.dispose();
-    _rewardedAd?.dispose();
+    _interstitialAd?.dispose();
   }
 
 
-  RewardedAd? _rewardedAd;
-/// Show rewarded ad when user wins tictactoe
-  void _loadRewardedAd() {
-    RewardedAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/4046562117" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/7411092050" :
-      '',
-      request: AdRequest(),
-      rewardedAdLoadCallback: RewardedAdLoadCallback(
-        onAdLoaded: (ad) {
-          ad.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) {
-              setState(() {
-                ad.dispose();
-                _rewardedAd = null;
-              });
-              _loadRewardedAd();
-            },
-          );
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
 
-          setState(() {
-            _rewardedAd = ad;
-          });
+  /// Create new tictactoe interstitial ad.
+
+  void _createTictactoeInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/6838873265" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/9286456091" :
+      '',      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _interstitialLoadAttempts = 0;
         },
-        onAdFailedToLoad: (err) {
-          print('Failed to load a rewarded ad: ${err.message}');
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createTictactoeInterstitialAd();
+          }
         },
       ),
     );
+  }
+
+  void _showTictactoeInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createTictactoeInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createTictactoeInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+    }
   }
 
 
@@ -148,19 +161,9 @@ class _TicTacToeState extends State<TicTacToe> {
               Fluttertoast.showToast(msg: message.message);
               if (message.message != null) {
                 isWon = true;
-                Future.delayed(Duration(seconds: 4), () {
-                  showCustomDialog(context,
-                    message: "Great Win!\n"
-                          "Watch an Ad to claim 10 Loves.",
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _rewardedAd?.show(
-                        onUserEarnedReward: (_, reward) {
-                          incrementTotalLoveCount();
-                        },
-                      );
-                    },
-                      );
+                Future.delayed(Duration(seconds: 5), () {
+                  _showTictactoeInterstitialAd();
+                  incrementTotalLoveCount();
                 });
               }
       })
