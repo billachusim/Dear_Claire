@@ -13,6 +13,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -138,6 +139,47 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         requestSoundPermission: false,
         requestBadgePermission: false,
         requestAlertPermission: false,
+          onDidReceiveLocalNotification: (id, title, body, payload) async {
+            print('onDidReceiveLocalNotification: $id, $title, $body, $payload');
+            showDialog(
+              context: context,
+              builder: (BuildContext context) => CupertinoAlertDialog(
+                title: Text(title),
+                content: Text(body),
+                actions: [
+                  CupertinoDialogAction(
+                    isDefaultAction: true,
+                    child: Text('Ok'),
+                    onPressed: () async {
+                      Navigator.of(context, rootNavigator: true).pop();
+                      if (payload != null){
+                      print(payload);
+                      if(payload == 'room') {
+                      navService.pushNamed('/diaryRooms', args: payload);
+                      }
+                      else if(payload == 'wallet') {
+                      navService.pushNamed('/egoPage', args: payload);
+                      }
+                      else if(payload == 'claireminder') {
+                      navService.pushNamed('/createSession', args: payload);
+                      }
+                      else if(payload == 'createSession') {
+                      navService.pushNamed('/createSession', args: payload);
+                      }
+                      else if(payload == null) {
+                      navService.pushNamed('/createSession', args: payload);
+                      }
+                      else if(payload != null) {
+                      navService.pushNamed('/notifiedSessionDetails', args: payload);
+                      }
+                      }
+                      else navService.pushNamed('/egoPage', args: payload);
+                    },
+                  )
+                ],
+              ),
+            );
+          }
       ),
     );
 
@@ -167,28 +209,44 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         iOS: IOSInitializationSettings(
             onDidReceiveLocalNotification: (id, title, body, payload) async {
               print('onDidReceiveLocalNotification: $id, $title, $body, $payload');
-              if (payload != null){
-                print(payload);
-                if(payload == 'room') {
-                  navService.pushNamed('/diaryRooms', args: payload);
-                }
-                else if(payload == 'wallet') {
-                  navService.pushNamed('/egoPage', args: payload);
-                }
-                else if(payload == 'claireminder') {
-                  navService.pushNamed('/createSession', args: payload);
-                }
-                else if(payload == 'createSession') {
-                  navService.pushNamed('/createSession', args: payload);
-                }
-                else if(payload == null) {
-                  navService.pushNamed('/createSession', args: payload);
-                }
-                else if(payload != null) {
-                  navService.pushNamed('/notifiedSessionDetails', args: payload);
-                }
-              }
-              else navService.pushNamed('/egoPage', args: payload);
+              showDialog(
+                context: context,
+                builder: (BuildContext context) => CupertinoAlertDialog(
+                  title: Text(title),
+                  content: Text(body),
+                  actions: [
+                    CupertinoDialogAction(
+                      isDefaultAction: true,
+                      child: Text('Ok'),
+                      onPressed: () async {
+                        Navigator.of(context, rootNavigator: true).pop();
+                        if (payload != null){
+                          print(payload);
+                          if(payload == 'room') {
+                            navService.pushNamed('/diaryRooms', args: payload);
+                          }
+                          else if(payload == 'wallet') {
+                            navService.pushNamed('/egoPage', args: payload);
+                          }
+                          else if(payload == 'claireminder') {
+                            navService.pushNamed('/createSession', args: payload);
+                          }
+                          else if(payload == 'createSession') {
+                            navService.pushNamed('/createSession', args: payload);
+                          }
+                          else if(payload == null) {
+                            navService.pushNamed('/createSession', args: payload);
+                          }
+                          else if(payload != null) {
+                            navService.pushNamed('/notifiedSessionDetails', args: payload);
+                          }
+                        }
+                        else navService.pushNamed('/egoPage', args: payload);
+                      },
+                    )
+                  ],
+                ),
+              );
             }),
       ),
     );
