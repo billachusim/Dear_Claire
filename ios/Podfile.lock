@@ -962,6 +962,7 @@ DEPENDENCIES:
   - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
   - geocoding (from `.symlinks/plugins/geocoding/ios`)
   - geolocator_apple (from `.symlinks/plugins/geolocator_apple/ios`)
+  - Google-Mobile-Ads-SDK
   - google_mobile_ads (from `.symlinks/plugins/google_mobile_ads/ios`)
   - image_gallery_saver (from `.symlinks/plugins/image_gallery_saver/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
@@ -1156,6 +1157,6 @@ SPEC CHECKSUMS:
   url_launcher_ios: 839c58cdb4279282219f5e248c3321761ff3c4de
   webview_flutter_wkwebview: b7e70ef1ddded7e69c796c7390ee74180182971f
 
-PODFILE CHECKSUM: 41172433e7ff223a7af50f88f47892c74880ceab
+PODFILE CHECKSUM: 1ed43ac716dbd817537655e0e6d30f9b982061bc
 
 COCOAPODS: 1.11.3
