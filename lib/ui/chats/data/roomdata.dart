@@ -15,7 +15,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
-        image: "assets/images/entertainedCat.gif",
+        image: "assets/images/EntCom.jpeg",
         id: 1,
         title: "Entertainment and Comedy Hall",
         font: "Default",
@@ -55,7 +55,7 @@ class RoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
-        image: "assets/images/bookOrPhone.gif",
+        image: "assets/images/DearDiary.jpg",
         id: 5,
         title: "Education Classroom",
         font: "Default",

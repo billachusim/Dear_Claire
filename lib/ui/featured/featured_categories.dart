@@ -43,7 +43,7 @@ class FeaturedCategories extends StatelessWidget {
                         margin: EdgeInsets.only(top: 6),
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            image: DecorationImage(image: AssetImage('assets/images/happyPony.gif'),
+                            image: DecorationImage(image: AssetImage('assets/images/HappyMiddles.jpeg'),
                                 fit: BoxFit.fill)
                         ),
                         child: Container(),
@@ -69,7 +69,7 @@ class FeaturedCategories extends StatelessWidget {
                         margin: EdgeInsets.only(top: 6),
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            image: DecorationImage(image: AssetImage('assets/images/bookOrPhone.gif'),
+                            image: DecorationImage(image: AssetImage('assets/images/DearDiary.jpg'),
                                 fit: BoxFit.fill)
                         ),
                         child: Container(),

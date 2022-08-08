@@ -50,7 +50,7 @@ class AlterEgoRoomData {
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
-        image: "assets/images/rollGirls.gif",
+        image: "assets/images/WalkGirls.jpeg",
         id: 10,
         isOpen: false,
         numberOfParticipants: 11,

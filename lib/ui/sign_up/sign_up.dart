@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
@@ -6,6 +8,7 @@ import 'package:dear_claire/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/helper.dart';
 import '../splash_screen/rotate_logo.dart';
@@ -34,6 +37,7 @@ class _SignUpPage extends State<SignUpPage> {
   @override
   void initState() {
     super.initState();
+    _createInterstitialAd();
   }
 
 
@@ -43,6 +47,53 @@ class _SignUpPage extends State<SignUpPage> {
         ? await launchUrl(url)
         : throw 'Could not launch site';
   }
+
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+
+  // Create interstitial ad.
+
+  void _createInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/6980026455"
+          : Platform.isIOS
+          ? "ca-app-pub-2404156870680632/1979266624"
+          : '',
+      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _interstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+    }
+  }
+
 
 
 
@@ -299,6 +350,7 @@ class _SignUpPage extends State<SignUpPage> {
                               if (validate) {
                                 isSigningIn = true;
                                 setState(() {});
+                                _createInterstitialAd();
                                 await _firebaseServices.register(
                                     context,
                                     _emailController.text,
@@ -307,6 +359,10 @@ class _SignUpPage extends State<SignUpPage> {
                                     _egoNameController.text);
                               }
                               else showToast(AppString.open_up_error);
+                              isSigningIn = false;
+                              Future.delayed(Duration(seconds: 4), () {
+                                _showInterstitialAd();
+                              });
                             },
                             child: Container(
                               width: MediaQuery.of(context).size.width,
@@ -381,6 +437,7 @@ class _SignUpPage extends State<SignUpPage> {
     _emailController.dispose();
     _secretCodeController.dispose();
     isSigningIn = false;
+    _interstitialAd?.dispose();
     super.dispose();
   }
 }
