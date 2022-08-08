@@ -92,6 +92,9 @@ class AppString{
   static const String lock_out_ego_alert_note = "💡 Do you want to lock your Diary or guest view your ego?\n"
       "If you lock out, you'll need your email and ego code to open up again.";
 
+  static const String delete_account_alert_note = "💡 Oh no. Do you really want to lose your great ego by deleting your account and all your data??\n"
+      "Consider just locking your diary instead, please.";
+
 
 
   static const String sessionCategories = "categories";

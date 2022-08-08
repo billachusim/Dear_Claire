@@ -1197,12 +1197,12 @@ class topBarWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           FocusedMenuHolder(
-              menuWidth: MediaQuery.of(context).size.width * 0.30,
+              menuWidth: MediaQuery.of(context).size.width * 0.40,
               menuItemExtent: 45,
               menuBoxDecoration: BoxDecoration(
                   color: Pallet.colorPrimary,
                   borderRadius: BorderRadius.all(Radius.circular(15.0))),
-              duration: Duration(milliseconds: 100),
+              duration: Duration(milliseconds: 700),
               animateMenuItems: true,
               blurBackgroundColor: Pallet.colorPrimary,
               openWithTap: true,
@@ -1228,6 +1228,14 @@ class topBarWidget extends StatelessWidget {
                     ),
                     onPressed: () async =>
                         lockAlertDialog(context),
+                ),
+                FocusedMenuItem(
+                  title: Text(
+                    "Delete Account",
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
+                  onPressed: () async =>
+                      deleteEgoAlertDialog(context),
                 ),
               ],
               onPressed: () {},
@@ -1265,6 +1273,44 @@ lockAlertDialog(BuildContext context) {
   AlertDialog alert = AlertDialog(
     title: Text("Close and Lock Your Diary?"),
     content: Text(AppString.lock_out_alert_note),
+    actions: [
+      cancelButton,
+      continueButton,
+    ],
+  );
+
+  // show the dialog
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
+
+
+deleteEgoAlertDialog(BuildContext context) {
+
+  // set up the buttons
+  Widget cancelButton = TextButton(
+    child: Text("No, Wait."),
+    onPressed:  () {
+      Navigator.of(context).pop();
+    },
+  );
+
+  Widget continueButton = TextButton(
+    child: Text("Yes, Delete Ego."),
+    onPressed:  () {
+      firebaseServices.deleteEgoAccount(context, currentUser!.uid);
+      Navigator.pushReplacementNamed(context, AppRoutes.authSelection);
+    },
+  );
+
+  // set up the AlertDialog
+  AlertDialog alert = AlertDialog(
+    title: Text("Delete your account and all your data?"),
+    content: Text(AppString.delete_account_alert_note),
     actions: [
       cancelButton,
       continueButton,

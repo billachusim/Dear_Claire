@@ -198,6 +198,20 @@ class FirebaseServices extends ChangeNotifier {
     Navigator.of(context).pushReplacementNamed(AppRoutes.authSelection);
   }
 
+
+  /// [delete] all users informations
+  void deleteEgoAccount(BuildContext context, String userId) async {
+    await FirebaseAuth.instance.signOut();
+    await prefs!.clear();
+    final _userId = userId;
+    final collection = FirebaseFirestore.instance
+        .collection('users');
+    await collection.doc(_userId).delete();
+    logger.d('Successfully deleted an ego account');
+    Navigator.of(context).pushReplacementNamed(AppRoutes.authSelection);
+  }
+
+
   /// checks if a user is signed in or not
   /// if the use is not signed in
   /// then request them to sign in
@@ -563,6 +577,12 @@ class FirebaseServices extends ChangeNotifier {
       print('Gender: $gender');
 
       setUsersId(_user.user!.uid);
+
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: secretCode)
+          .then((value) => {
+        setUsersId(value.user!.uid),
+      });
 
       showToast(AppString.create_ego_complete_toast);
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);

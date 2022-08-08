@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
@@ -7,7 +9,9 @@ import 'package:dear_claire/utils/strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../widgets/toast.dart';
 import '../splash_screen/rotate_logo.dart';
 
 class LoginPage extends StatefulWidget {
@@ -33,6 +37,7 @@ class _LoginPage extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    _createInterstitialAd();
   }
 
 
@@ -61,6 +66,55 @@ class _LoginPage extends State<LoginPage> {
 
     launchUrl(emailLaunchUri);
   }
+
+
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+
+  // Create interstitial ad.
+
+  void _createInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/7375897682"
+          : Platform.isIOS
+          ? "ca-app-pub-2404156870680632/9223046415"
+          : '',
+      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _interstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+    }
+  }
+
+
 
 
 
@@ -329,11 +383,17 @@ return showDialog<void>(
                             if (validate) {
                               isSigningIn = true;
                               setState(() {});
+                              _createInterstitialAd();
                               await _firebaseServices.signIn(
                                   context,
                                   _emailController.text,
                                   _secretCodeController.text);
                             }
+                            else showToast(AppString.open_up_error);
+                            isSigningIn = false;
+                            Future.delayed(Duration(seconds: 4), () {
+                              _showInterstitialAd();
+                            });
                           },
                           child: Container(
                             width: MediaQuery.of(context).size.width,
@@ -408,6 +468,7 @@ return showDialog<void>(
     _emailController.dispose();
     _secretCodeController.dispose();
     isSigningIn = false;
+    _interstitialAd?.dispose();
     super.dispose();
   }
 }
