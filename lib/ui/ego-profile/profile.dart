@@ -1293,15 +1293,18 @@ deleteEgoAlertDialog(BuildContext context) {
 
   // set up the buttons
   Widget cancelButton = TextButton(
-    child: Text("No, Wait."),
+    child: Text("NO, WAIT!"),
     onPressed:  () {
       Navigator.of(context).pop();
     },
   );
 
   Widget continueButton = TextButton(
-    child: Text("Yes, Delete Ego."),
-    onPressed:  () {
+    child: Text("YES, DELETE EGO."),
+    onPressed: () {
+      showToast("Long press to delete account.");
+    },
+    onLongPress:  () {
       firebaseServices.deleteEgoAccount(context, currentUser!.uid);
       Navigator.pushReplacementNamed(context, AppRoutes.authSelection);
     },

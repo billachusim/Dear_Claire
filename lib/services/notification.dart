@@ -41,13 +41,13 @@ class ClairNotification {
     randomNumber == 6 ? "Go ahead, type or record anything." :
     randomNumber == 7 ? "Tell me what's happening, darling?" :
     randomNumber == 8 ? "Where are you and what's going on?" :
-    randomNumber == 9 ? "You'll never be not truly loved." :
+    randomNumber == 9 ? "Choose a game and let's play!" :
     randomNumber == 10 ? "A problem shared is..." :
     randomNumber == 11 ? "You are completely anonymous." :
     randomNumber == 12 ? "Write or record anything." :
     randomNumber == 13 ? "Tap the spinning flower after." :
     randomNumber == 14 ? "It's you and me time." :
-    randomNumber == 15 ? "Start with Dear Claire" :
+    randomNumber == 15 ? "I challenge you to a game of tic tac toe" :
     randomNumber == 16 ? "Tap record and say Dear Claire" :
     randomNumber == 17 ? "I'm ready to listen." :
     randomNumber == 18 ? "I'm ready to read, listen and reply." :
@@ -56,7 +56,8 @@ class ClairNotification {
     "Go on, Darling, talk to me...";
     await  Future.delayed(Duration(minutes: 25), () {
       flutterLocalNotificationsPlugin.show(0, 'Claireminder',
-          message.toString(), _notificationDetails(), payload: "claireminder");
+          message.toString(), _notificationDetails(), payload:
+          message.contains("game") ? "game" : "claireminder");
     }
     );
   }

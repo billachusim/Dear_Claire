@@ -6,6 +6,7 @@ import 'package:dear_claire/ui/create_session/create_session_controller.dart';
 import 'package:dear_claire/ui/create_session/create_session_page.dart';
 import 'package:dear_claire/ui/ego-profile/profile.dart';
 import 'package:dear_claire/ui/featured/notified_session_details.dart';
+import 'package:dear_claire/ui/games/games_home.dart';
 import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/ui/splash_screen/splash.dart';
 import 'package:dear_claire/utils/color.dart';
@@ -163,6 +164,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                       else if(payload == 'claireminder') {
                       navService.pushNamed('/createSession', args: payload);
                       }
+                      else if(payload == 'game') {
+                        navService.pushNamed('/games', args: payload);
+                      }
                       else if(payload == 'createSession') {
                       navService.pushNamed('/createSession', args: payload);
                       }
@@ -231,6 +235,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                           else if(payload == 'claireminder') {
                             navService.pushNamed('/createSession', args: payload);
                           }
+                          else if(payload == 'game') {
+                            navService.pushNamed('/games', args: payload);
+                          }
                           else if(payload == 'createSession') {
                             navService.pushNamed('/createSession', args: payload);
                           }
@@ -264,6 +271,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         else if(payload == 'claireminder') {
           navService.pushNamed('/createSession', args: payload);
         }
+        else if(payload == 'game') {
+          navService.pushNamed('/games', args: payload);
+        }
         else if(payload == 'createSession') {
           navService.pushNamed('/createSession', args: payload);
         }
@@ -292,6 +302,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         }
         else if(route == 'claireminder') {
           navService.pushNamed('/createSession', args: route);
+        }
+        else if(route == 'game') {
+          navService.pushNamed('/games', args: route);
         }
         else if(route == 'createSession') {
           navService.pushNamed('/createSession', args: route);
@@ -341,6 +354,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         }
         else if(route == 'claireminder') {
           navService.pushNamed('/createSession', args: route);
+        }
+        else if(route == 'game') {
+          navService.pushNamed('/games', args: route);
         }
         else if(route == 'createSession') {
           navService.pushNamed('/createSession', args: route);
@@ -393,6 +409,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 return MaterialPageRoute(builder: (_) => ChatRoomsPage(title: 'Dear Claire'));
               case '/createSession':
                 return MaterialPageRoute(builder: (_) => CreateSessionPage());
+              case '/games':
+                return MaterialPageRoute(builder: (_) => GamesHome());
             }
             return AppRouter.generateRoute(settings);
           },

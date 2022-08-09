@@ -125,6 +125,7 @@ class _AlterEgoChatRoomWidgetState extends State<AlterEgoChatRoomWidget> {
                     SizedBox(height: 4,),
 
                     Container(
+                      margin: EdgeInsets.only(bottom: 6),
                       padding: EdgeInsets.all(5),
                       width: 120,
                       height: 40,
