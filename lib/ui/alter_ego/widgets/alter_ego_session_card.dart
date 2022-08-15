@@ -284,12 +284,16 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                     sorry: element.meHiFive!.length,
                     me2: element.meFlower!.length,
                     color: Pallet.colorWhite,
-                    onReactionChanged: (reaction, index) async {
-                      final _userModel = await firebaseServices.getUserInfo();
+                  onReactionChanged: (reaction, index) async {
+
                       firebaseServices.addUsersReactionToASession(
                           context, index,
-                          session: element, sender: _userModel.nickname ?? '');
-                    }, session: element,),
+                          session: element,
+                          sender: "Claire");
+
+                      saveAlterEgoMe2Activity();
+                  }, session: element,
+                ),
                 new Spacer(),
 
                 FutureBuilder<
@@ -301,7 +305,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                   builder: (_, snapshot) {
                     if (snapshot.hasData) {
                       var data = snapshot.data!.data();
-                      var userType = data?["userType"] ?? "0";
+                      var userType = data?["userType"];
                       return
                         Visibility(
                           visible: userType == "SUPER_ADMIN",
@@ -409,11 +413,9 @@ class AlterEgoModeSessionCard extends StatelessWidget {
       final _filter = _commentSessionList
           .where((element) =>
       _commentSessionList.isNotEmpty &&
-          element.isUserAdmin &&
-          element.alterEgoId == "claire" &&
-          element.userId == "fSMVS2DY8ngblW3LlUYowgPkdR83")
+          element.isUserAdmin)
           .toList();
-      return _filter.last;
+      return _filter.first;
     } catch (e) {
       return CommentSessionModel();
     }
@@ -491,6 +493,44 @@ class AlterEgoModeSessionCard extends StatelessWidget {
         return alert;
       },
     );
+  }
+
+
+  /// Save alter ego reaction activity
+
+  Future<void> saveAlterEgoMe2Activity() async {
+    final dateCreated = FieldValue.serverTimestamp();
+    final sessionId = element.sessionId;
+    final sessionOwnerId = element.userId;
+    final sessionOwnerAvatar = element.userAvatarUrl.toString();
+    final sessionOwnerNickname = element.userNickname.toString();
+    final sessionVisitorId = currentUser?.uid.toString();
+    final sessionVisitorNickname = "Claire";
+    final sessionVisitorAvatar = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691";
+
+    final activityMessage = "$sessionVisitorNickname reacted to $sessionOwnerNickname's session.";
+    final activityType = "react";
+    final userActivityId = "";
+    FirebaseFirestore.instance
+        .collection('user_activity')
+        .add({
+      "activityMessage": activityMessage,
+      "activityType": activityType,
+      "clientAvatarUrl": sessionVisitorAvatar,
+      "clientId": sessionVisitorId,
+      "clientNickname": sessionVisitorNickname,
+      "dateCreated": dateCreated,
+      "sessionId": sessionId,
+      "userActivityId": userActivityId,
+      "userId": sessionOwnerId,
+      "userNickname": sessionOwnerNickname,
+      "userAvatarUrl": sessionOwnerAvatar,
+
+    },
+    );
+    logger.d('Successfully saved alter ego reaction activity');
+    print('Activity Message: $activityMessage');
+
   }
 
 

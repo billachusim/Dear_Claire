@@ -187,9 +187,9 @@ class AppString{
 
 
   static const String sendClaireToSomeoneHeader =
-      "Just had to share this beautiful app with you, It's currently trending on Playstore. It's called Dear Claire and it's like chatting with a secret diary. \n"
-      "I use it to WRITE or RECORD anything ANONYMOUSLY and then get or even give advises.\n"
-      "Points can be converted to cash every end of month.";
+      "Just had to share this beautiful app with you, it's called Dear Claire and it's like chatting anonymously with a secret diary.\n"
+      "I use it to write or record any situation I find myself in and then I get very positive advises.\n"
+      "When I advise other people, I earn points that can be converted to cash.";
 
 
 
@@ -272,11 +272,11 @@ class AppString{
   static const String switchText2 = "Do you believe that the world will be a better place if people treat other people like themselves wish to be treated?";
   static const String switchText3 = "Do you believe that humility and selfless leadership are good practises for life?";
   static const String switchText4 = "Did you first learn about Claire on social media?";
-  static const String switchText5 = "Have you rated Claire Diary five stars with a short review on Playstore?";
+  static const String switchText5 = "Have you rated Dear Claire five stars with a short review?";
   static const String switchText6 = "Do you truly believe in the Claire Project? That everyone deserves a true friend in need and indeed?";
   static const String switchText7 = "Are you ready to become Claire now?";
   static const String switchHeaderTwo = "Please Answer The Following Questions By Switching Yes Or No";
-  static const String switchBottomHeader = "Thank you so much for coming this far ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Super Ego and cue in for your final Verification and Clairentation on Whatsapp where you will receive your Alter-Ego login details.";
+  static const String switchBottomHeader = "Thank you so much for coming this far ♥ 🌺\n\nPlease select a button below to send this form to Super Ego and cue in for your final Verification and Clairentation on Whatsapp where you will receive your Alter-Ego login details.";
   static const String WHATSAPP_URL = "https://api.whatsapp.com/send?phone=2348188578955&text=";
   static const String donate_url = "https://flutterwave.com/pay/top_up_love";
 
@@ -287,9 +287,9 @@ class AppString{
       "There are just a few situations that must be met by the algorithm before Claire automatically features a session.\n\n"
       "Whyever, if your session is not featured and you'll love for it to be; please complete the short process below.";
 
-  static const String continue_feature_request_on_whatsapp = "Thank you so much for coming this far ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Super Ego and cue in for your final Verification and Feature.";
+  static const String continue_feature_request_on_whatsapp = "Thank you so much for coming this far ♥ 🌺\n\nPlease tap a button below to send this form to Super Ego and cue in for your final Verification and Feature.";
 
-  static const String request_feature_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Super Ego and cue in for final verification.";
+  static const String request_feature_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap a button below to send this form to Super Ego and cue in for final verification.";
   static const String request_feature_switchText7 = "Agree that Claire reserves the right to feature and unfeature any session, anytime?";
 
   static const String request_clairelove_form_header = "Hello Darling🌺\n\n"
@@ -305,7 +305,7 @@ class AppString{
 
 
   static const String requestLoveSwitchText7 = "Agree that Claire reserves the right to increase, decrease, delay, withhold and deny a cash request at anytime?";
-  static const String request_clairelove_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap the Whatsapp button below to send this form to Super Ego and cue in for final verification.";
+  static const String request_clairelove_bottom_header = "Thank you for completing that ♥ 🌺\n\nPlease tap a button below to send this form to Super Ego and cue in for final verification.";
 
 
   // App Toasts

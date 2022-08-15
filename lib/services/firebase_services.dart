@@ -65,6 +65,27 @@ class FirebaseServices extends ChangeNotifier {
     logger.d('Following this session: ${session.title!}');
   }
 
+  /// subscribe alter ego to advised session topic.
+  Future<void> subscribeAlterEgoToAdvisedSession(Session session) async {
+    FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+
+    final _usersID = currentUser!.uid.toString();
+
+    await _firebaseMessaging.subscribeToTopic(session.sessionId!);
+    if(!session.respondentUserId!.contains(_usersID)) {
+      final pushNotification.NotificationModel _notificationModel =
+      pushNotification.NotificationModel(
+        to: '/topics/${session.sessionId}',
+        collapseKey: 'type_a',
+        data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
+        notification: pushNotification.Notification(
+            title: session.title ?? '', body: 'You are now assigned to this session. Will get notifications.'),
+      );
+      notificationService.sendNotification(_notificationModel.toJson());
+    }
+    logger.d('Following this session: ${session.title!}');
+  }
+
 
 
   /// subscribe user to chat room
@@ -643,8 +664,7 @@ class FirebaseServices extends ChangeNotifier {
 
 
   /// follow a session immediately upon advise.
-  Future<void> followAdvisedSessionImmediately(BuildContext context,
-      {Session? session}) async {
+  Future<void> followAdvisedSessionImmediately(session) async {
     _usersID = currentUser!.uid.toString();
     if(session!.repliesEnabled == true && !session.followers!.contains(_usersID)) {
       _firebaseFirestore

@@ -300,7 +300,10 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   firebaseServices.addUsersReactionToASession(
                                       context, index,
                                       session: _session,
-                                      sender: _userModel.nickname ?? '');
+                                    sender: _userModel.userType == 'ADMIN'? 'Claire' :
+                                    _userModel.userType == 'SUPER_ADMIN'? 'Claire' :
+                                    _userModel.nickname.toString(),
+                                  );
 
                                   saveUserMe2Activity();
                                 }

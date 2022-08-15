@@ -319,7 +319,8 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     updateSessionTimeLastActivity(session);
     isOriginalAdvise(context, comment, session);
     saveAlterEgoCommentActivity();
-    firebaseServices.followAdvisedSessionImmediately(context, session: session);
+    firebaseServices.followAdvisedSessionImmediately(session);
+    firebaseServices.subscribeAlterEgoToAdvisedSession(session);
   }
 
 

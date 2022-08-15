@@ -809,7 +809,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
     updateSessionTimeLastActivity(session);
     isOriginalAdvise(context, comment, session);
     saveUserCommentActivity();
-    firebaseServices.followAdvisedSessionImmediately(context, session: session);
+    firebaseServices.followAdvisedSessionImmediately(session);
   }
 
 

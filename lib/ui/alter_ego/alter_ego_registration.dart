@@ -873,7 +873,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
 
       *Did you first learn about Claire on social media?*: $learnedOnSocialMedia
 
-      *Have you rated Claire Diary five stars with a short review on Playstore?*: $ratedOnPlaystore
+      *Have you rated Dear Claire five stars with a short review?*: $ratedOnPlaystore
 
       *Do you truly believe in the Claire Project? That everyone deserves a true friend in need and indeed?*: $believeInClaire
 

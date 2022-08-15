@@ -10,11 +10,9 @@ import 'package:wave/wave.dart';
 import 'package:dear_claire/utils/color.dart';
 
 class SoundRecorderWidget extends StatefulWidget {
-final ValueChanged<File> onRecordComplete;
-  const SoundRecorderWidget({
-    Key? key,required this.onRecordComplete
-
-  }) : super(key: key);
+  final ValueChanged<File> onRecordComplete;
+  const SoundRecorderWidget({Key? key, required this.onRecordComplete})
+      : super(key: key);
   @override
   _SoundRecorderWidgetState createState() => _SoundRecorderWidgetState();
 }
@@ -46,13 +44,11 @@ class _SoundRecorderWidgetState extends State<SoundRecorderWidget> {
     _audioPlayer = AudioPlayer();
   }
 
-
-@override
-void dispose(){
-super.dispose();
-_audioPlayer.dispose();
-}
-
+  @override
+  void dispose() {
+    super.dispose();
+    _audioPlayer.dispose();
+  }
 
   _buildCard({
     Config? config,
@@ -75,7 +71,6 @@ _audioPlayer.dispose();
 
   late MaskFilter _blur;
   final List<MaskFilter> _blurs = [
-
     MaskFilter.blur(BlurStyle.normal, 10.0),
     MaskFilter.blur(BlurStyle.inner, 10.0),
     MaskFilter.blur(BlurStyle.outer, 10.0),
@@ -92,114 +87,115 @@ _audioPlayer.dispose();
     return _blurs[_blurIndex];
   }
 
-
   @override
   Widget build(BuildContext context) {
-    Size size=MediaQuery.of(context).size;
+    Size size = MediaQuery.of(context).size;
     return SafeArea(
       child: Material(
         child: Container(
-          height: size.height,
-          color: Pallet.colorPrimary,
-          alignment: Alignment.bottomCenter,
-          child:Column(
-            mainAxisSize:MainAxisSize.max,
-            crossAxisAlignment:CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                margin:EdgeInsets.all(20),
-                padding:EdgeInsets.only(top:10.h),
-                child: Row(
-                  mainAxisAlignment:MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(icon:Icon(Icons.close, color:Colors.white, size:30.r), onPressed:(){
-                      Navigator.pop(context);
-                    }),
-                  ],
+            height: size.height,
+            color: Pallet.colorPrimary,
+            alignment: Alignment.bottomCenter,
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  margin: EdgeInsets.all(20),
+                  padding: EdgeInsets.only(top: 10.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                          icon: Icon(Icons.close,
+                              color: Colors.white, size: 35.r),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          }),
+                    ],
+                  ),
                 ),
-              ),
-
-             Expanded(
-               child: Align(
-                 alignment: Alignment.bottomCenter,
-                 child: Column(
-                   mainAxisSize:MainAxisSize.min,
-                   children: [
-                     Center(
-                       child:
-                       // _isUploading
-                       //     ? Column(
-                       //   mainAxisAlignment: MainAxisAlignment.center,
-                       //   crossAxisAlignment: CrossAxisAlignment.center,
-                       //   children: [
-                       //     Padding(
-                       //         padding: const EdgeInsets.symmetric(horizontal: 20),
-                       //         child: LinearProgressIndicator()),
-                       //     Text('Uplaoding to Firebase'),
-                       //   ],
-                       // )
-                       //     :
-                       // Column(
-                       //   children: [
-                       //
-                       //   ],
-                       // )
-                       _isRecorded
-                           ? Row(
-                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                         crossAxisAlignment: CrossAxisAlignment.center,
-                         children: [
-                           IconButton(
-                             icon: Icon(Icons.replay, color:Colors.white,size: 50.r,),
-                             onPressed: _onRecordAgainButtonPressed,
-                           ),
-                           IconButton(
-                             icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow, color:Colors.white,size: 50.r,),
-                             onPressed: _onPlayButtonPressed,
-                           ),
-                           IconButton(icon:Icon(Icons.done, color:Colors.white,size:50.r), onPressed:(){
-                             
-                             Navigator.pop(context,File(_filePath));
-                           }),
-                         ],
-                       )
-                           : IconButton(
-                         icon: _isRecording
-                             ? Icon(Icons.pause, color:Colors.white)
-                             : Icon(Icons.fiber_manual_record, color:Colors.white, size: 50.r,),
-                         onPressed: _onRecordButtonPressed,
-                       ),
-                     ),
-                     SizedBox(height: 20.h,),
-                     _buildCard(
-                       height: size.height/3,
-                       backgroundColor: Pallet.colorPrimary,
-                       config: CustomConfig(
-                         gradients: [
-                           [Colors.red, Color(0xEE6EBF1D)],
-                           [Colors.red[800]!, Color(0x77330CBF)],
-                           [Color(0xFFFF5252), Color(0x66500D8B)],
-                           [Color(0xFFB82727), Color(0x559A0C55)]
-                         ],
-                         durations: [35000, 19440, 10800, 6000],
-                         heightPercentages: [0.10, 0.23, 0.25, 0.30],
-                         gradientBegin: Alignment.bottomLeft,
-                         gradientEnd: Alignment.topRight,
-                       ),
-                     ),
-                   ],
-                 )
-               )
-             )
-
-            ],
-          )
-        ),
+                Expanded(
+                    child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Center(
+                              child: _isRecorded
+                                  ? Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.cancel,
+                                            color: Colors.white,
+                                            size: 60.r,
+                                          ),
+                                          onPressed:
+                                              _onRecordAgainButtonPressed,
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            _isPlaying
+                                                ? Icons.pause
+                                                : Icons.play_circle_fill_rounded,
+                                            color: Colors.white,
+                                            size: 60.r,
+                                          ),
+                                          onPressed: _onPlayButtonPressed,
+                                        ),
+                                        IconButton(
+                                            icon: Icon(Icons.done,
+                                                color: Colors.white,
+                                                size: 60.r),
+                                            onPressed: () {
+                                              Navigator.pop(
+                                                  context, File(_filePath));
+                                            }),
+                                      ],
+                                    )
+                                  : IconButton(
+                                      icon: _isRecording
+                                          ? Icon(Icons.pause,
+                                              color: Colors.white, size: 60,)
+                                          : Icon(
+                                              Icons.record_voice_over_rounded,
+                                              color: Colors.white,
+                                              size: 60.r,
+                                            ),
+                                      onPressed: _onRecordButtonPressed,
+                                    ),
+                            ),
+                            SizedBox(
+                              height: 20.h,
+                            ),
+                            _buildCard(
+                              height: size.height / 3,
+                              backgroundColor: Pallet.colorPrimary,
+                              config: CustomConfig(
+                                gradients: [
+                                  [Colors.red, Color(0xEE6EBF1D)],
+                                  [Colors.red[800]!, Color(0x77330CBF)],
+                                  [Color(0xFFFF5252), Color(0x66500D8B)],
+                                  [Color(0xFFB82727), Color(0x559A0C55)]
+                                ],
+                                durations: [35000, 19440, 10800, 6000],
+                                heightPercentages: [0.10, 0.23, 0.25, 0.30],
+                                gradientBegin: Alignment.bottomLeft,
+                                gradientEnd: Alignment.topRight,
+                              ),
+                            ),
+                          ],
+                        )))
+              ],
+            )),
       ),
     );
   }
-
-
 
   void _onRecordAgainButtonPressed() {
     setState(() {
@@ -240,7 +236,7 @@ _audioPlayer.dispose();
 
   Future<void> _startRecording() async {
     final bool? hasRecordingPermission =
-    await FlutterAudioRecorder2.hasPermissions;
+        await FlutterAudioRecorder2.hasPermissions;
 
     if (hasRecordingPermission ?? false) {
       Directory directory = await getApplicationDocumentsDirectory();
