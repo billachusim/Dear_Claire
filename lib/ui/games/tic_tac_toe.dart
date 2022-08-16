@@ -3,15 +3,18 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dear_claire/utils/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../Admob/ad_state.dart';
 import '../../services/firebase_services.dart';
 import '../../utils/color.dart';
 import '../routes/page_router_animation.dart';
@@ -53,6 +56,8 @@ class _TicTacToeState extends State<TicTacToe> {
   }
 
 
+  // Admob Ad Units.
+  late BannerAd tictactoeTopBanner;
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
 
@@ -94,6 +99,31 @@ class _TicTacToeState extends State<TicTacToe> {
       );
       _interstitialAd!.show();
     }
+  }
+
+
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final adState = Provider.of<AdState>(context);
+
+    // Implement a top location banner ad unit.
+    adState.initialization.then((status) {
+      setState(() {
+        tictactoeTopBanner = BannerAd(
+            size: AdSize.banner,
+            adUnitId: adState.tictactoeTopBannerAdUnitId,
+            request: AdRequest(),
+            listener: BannerAdListener(
+              onAdFailedToLoad: (ad, error) {
+                ad.dispose();
+              },
+            )
+        )
+          ..load();
+      });
+    });
   }
 
 
@@ -140,10 +170,11 @@ class _TicTacToeState extends State<TicTacToe> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Pallet.colorSecondaryDark,
       appBar: AppBar(
         backgroundColor: Pallet.colorPrimary,
         centerTitle: false,
-        title: Text('Claire Games',
+        title: Text('Tic Tac Toe',
             textAlign: TextAlign.start,
             maxLines: 1,
             style: GoogleFonts.lato(
@@ -151,27 +182,44 @@ class _TicTacToeState extends State<TicTacToe> {
                 color: Pallet.colorWhite,
                 fontWeight: FontWeight.w600)),
       ),
-      body: WebView(
-        initialUrl: '',
-        javascriptMode: JavascriptMode.unrestricted,
-        javascriptChannels: Set.from([
-          JavascriptChannel(
-              name: 'Score',
-              onMessageReceived: (JavascriptMessage message){
-              Fluttertoast.showToast(msg: message.message);
-              if (message.message != null) {
-                isWon = true;
-                Future.delayed(Duration(seconds: 5), () {
-                  _showTictactoeInterstitialAd();
-                  incrementTotalLoveCount();
-                });
-              }
-      })
-        ]),
-        onWebViewCreated: (WebViewController webViewController) {
-          _webViewController = webViewController;
-          _loadHtmlFromAssets();
-        },
+      body: ListView(
+        shrinkWrap: true,
+        children: [
+          // Top ad unit is here
+          if(tictactoeTopBanner == null)
+            SizedBox(height: 70)
+          else
+            Container(
+              height: 60,
+              child: AdWidget(ad: tictactoeTopBanner),
+            ),
+
+          Container(
+            height: 600,
+            child: WebView(
+              initialUrl: '',
+              javascriptMode: JavascriptMode.unrestricted,
+              javascriptChannels: Set.from([
+                JavascriptChannel(
+                    name: 'Score',
+                    onMessageReceived: (JavascriptMessage message){
+                    Fluttertoast.showToast(msg: message.message);
+                    if (message.message != null) {
+                      isWon = true;
+                      Future.delayed(Duration(seconds: 5), () {
+                        _showTictactoeInterstitialAd();
+                        incrementTotalLoveCount();
+                      });
+                    }
+            })
+              ]),
+              onWebViewCreated: (WebViewController webViewController) {
+                _webViewController = webViewController;
+                _loadHtmlFromAssets();
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

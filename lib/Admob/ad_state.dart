@@ -110,6 +110,17 @@ class AdState {
     }
   }
 
+  // Create Tictactoe top banner ad unit.
+  String get tictactoeTopBannerAdUnitId {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/4239180954";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/3116018582";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
   // Create Mood Sessions top banner ad unit.
   String get moodSessionTopBannerAdUnitId {
     if (Platform.isAndroid) {
