@@ -12,6 +12,7 @@ import 'package:dear_claire/ui/donate/donate.dart';
 import 'package:dear_claire/ui/ego-profile/clairevatar.dart';
 import 'package:dear_claire/ui/ego-profile/profile.dart';
 import 'package:dear_claire/ui/ego-profile/request_claire_love_form.dart';
+import 'package:dear_claire/ui/featured/all_featured.dart';
 import 'package:dear_claire/ui/games/games_home.dart';
 import 'package:dear_claire/ui/games/space_shooter.dart';
 import 'package:dear_claire/ui/games/tic_tac_toe.dart';
@@ -60,6 +61,7 @@ class AppRoutes {
   static const requestClaireLoveForm = '/requestClaireLoveForm';
   static const editClairevatar = '/editClairevatar';
   static const searchPage = '/searchPage';
+  static const allFeaturedPage = '/allFeaturedPage';
   static const egoPage = '/egoPage';
   static const diaryRooms = '/diaryRooms';
   static const spaceShooter = '/spaceShooter';
@@ -214,6 +216,13 @@ class AppRouter {
       case AppRoutes.searchPage:
         return MaterialPageRoute<dynamic>(
           builder: (_) => SearchPage(title: 'Search Claire',),
+          settings: settings,
+          fullscreenDialog: true,
+        );
+
+      case AppRoutes.allFeaturedPage:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => AllFeaturedPage(title: 'Search Claire',),
           settings: settings,
           fullscreenDialog: true,
         );

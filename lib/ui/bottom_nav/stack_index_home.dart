@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/chats/chatrooms.dart';
 import 'package:dear_claire/ui/dairy/diary.dart';
 import 'package:dear_claire/ui/ego-profile/profile.dart';
-import 'package:dear_claire/ui/featured/all_featured.dart';
+import 'package:dear_claire/ui/featured/featured_session_screen.dart';
 import 'package:dear_claire/ui/followed/followed.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
@@ -52,7 +52,7 @@ class _HomeDashboardPageState extends State<HomePage>
   PageController _pageController = PageController(initialPage: 0);
 
   List<Widget> _body = [
-    AllFeaturedPage(title: 'Dear Claire'),
+    FeaturedPage(title: 'Dear Claire'),
     FollowedPage(title: 'Dear Claire'),
     DiaryPage(title: 'Dear Claire'),
     ChatRoomsPage(title: 'Dear Claire'),
@@ -182,7 +182,7 @@ class _HomeDashboardPageState extends State<HomePage>
                 ),
                 onPressed: () {
                   Navigator.of(context)
-                      .pushNamed(AppRoutes.searchPage);
+                      .pushNamed(AppRoutes.allFeaturedPage);
                 })
           ],
           leading: IconButton(
@@ -197,7 +197,7 @@ class _HomeDashboardPageState extends State<HomePage>
         body: Stack(
           children: [
             PageView(
-            physics: NeverScrollableScrollPhysics(),
+            physics: AlwaysScrollableScrollPhysics(),
             controller: _pageController,
             onPageChanged: (index){
               setState(() {

@@ -210,11 +210,11 @@ class _SearchPageState extends State<SearchPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: EdgeInsets.only(top: 20),
-                height: 100,
+                padding: EdgeInsets.only(top: 10),
+                height: 80,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(0),
-                    color: Pallet.colorPrimary),
+                    color: Pallet.colorSecondaryDark),
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
@@ -269,7 +269,7 @@ class _SearchPageState extends State<SearchPage> {
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
                                       contentPadding:
-                                      EdgeInsets.only(left: 13.0, right: 13.0, top: 5, bottom: 6),
+                                      EdgeInsets.only(left: 13.0, right: 13.0, top: 1, bottom: 1),
                                       hintText: AppString.search_bar_hint,
                                       hintStyle: TextStyle(
                                         fontStyle: FontStyle.italic,

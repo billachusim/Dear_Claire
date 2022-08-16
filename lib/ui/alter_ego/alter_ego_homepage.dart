@@ -137,7 +137,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
             body: Stack(
               children: [
                 PageView(
-                physics: NeverScrollableScrollPhysics(),
+                physics: AlwaysScrollableScrollPhysics(),
                 controller: _pageController,
                 onPageChanged: (index) {
                   setState(() {

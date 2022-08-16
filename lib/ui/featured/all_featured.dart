@@ -1,8 +1,8 @@
 import 'dart:math';
 
+import 'package:dear_claire/ui/Search/search_page.dart';
 import 'package:dear_claire/ui/featured/featured_categories.dart';
 import 'package:dear_claire/ui/featured/featured_moods.dart';
-import 'package:dear_claire/ui/featured/featured_session_screen.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/color.dart';
 
@@ -238,7 +238,7 @@ class _AllFeaturedPage extends State<AllFeaturedPage>
               physics: AlwaysScrollableScrollPhysics(),
               controller: _tabController,
               children: [
-                FeaturedPage(title: 'Featured Sessions'),
+                SearchPage(title: 'Popular Searches'),
                 FeaturedCategories(),
                 FeaturedMoods(),
               ],
