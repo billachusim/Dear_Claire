@@ -74,6 +74,9 @@ class AppString{
 
   static const String delete_advise_alert_note = "💡 Do you want to delete this advise permanently?";
 
+  static const String delete_mantra_alert_note = "💡 Do you want to delete this mantra permanently?";
+
+
   static const String flag_ego_alert_note = "💡 Did this user do something bad?\n"
       "\nFlag it so Claire can check for violations and block this user?";
 

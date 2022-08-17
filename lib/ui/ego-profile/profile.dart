@@ -124,6 +124,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     final egoName = userModel.nickname;
     final egoImage = userModel.avatarUrl;
     final userId = userModel.userId;
+    final senderId = currentUser?.uid;
     FirebaseFirestore.instance
         .collection('ego_stream')
         .add({
@@ -132,12 +133,28 @@ class _EgoProfilePageState extends State<EgoProfilePage>
       "egoName": egoName,
       "egoImage": egoImage,
       "userId": userId,
+      "senderId": senderId,
     },
       //SetOptions(merge: true)
     );
     logger.d('Successfully saved your Ego message');
     print('Ego Message: $egoMessage');
 
+  }
+
+
+  /// Delete an ego message
+
+  Future<void> deleteEgoMessage(String egoMessage) async {
+    final collection = FirebaseFirestore.instance
+        .collection('ego_stream')
+        .where("egoMessage", isEqualTo: egoMessage);
+    collection.get().then((value) {
+      value.docs.forEach((element) {
+        element.reference.delete();
+      });
+    });
+    logger.d('Successfully deleted an ego message');
   }
 
   InterstitialAd? _interstitialAd;
@@ -871,14 +888,12 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                       leading: ClipOval(
                                         child: GestureDetector(
                                           onTap: (){
-                                            mantraUserId = data['userId'];
-                                            mantraEgoName = data['egoName'];
-                                            String thisUserId = mantraUserId;
-                                            String thisUserEgoName = mantraEgoName;
+                                            final String _mantraUserId = data['senderId'].toString();
+                                            final String _mantraEgoName = data['egoName'].toString();
                                             PageRouter.gotoWidget(
-                                                VisitedUserEgoProfilePage(visitedUsersID: thisUserId, visitedEgoName: thisUserEgoName),
+                                                VisitedUserEgoProfilePage(visitedUsersID: _mantraUserId, visitedEgoName: _mantraEgoName),
                                                 context);
-                                            print("Visited User ID::: $mantraUserId");
+                                            print("Visited User ID::: $_mantraUserId");
                                           },
                                           child: CachedNetworkImage(
                                             width: 40,
@@ -915,6 +930,25 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
+                                      trailing: Visibility(
+                                        visible: data['userId'] == currentUser!.uid,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            final String _egoMessage = data['egoMessage'];
+                                            showCustomDialog(context,
+                                                message: AppString.delete_mantra_alert_note,
+                                                onPressed: () {
+                                                  PageRouter.goBack(context);
+                                                  deleteEgoMessage(_egoMessage);
+                                                });
+                                            },
+                                          child: Icon(
+                                            Icons.delete_forever_rounded,
+                                            color: Colors.white70,
+                                            size: 15,
+                                          ),
+                                        ),
+                                      ),
                                     );
                                   }).toList(),
                                 );
@@ -948,7 +982,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
       child: WillPopScope(
         onWillPop: (){
           Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.diaryRooms);
+              .pushReplacementNamed(AppRoutes.allFeaturedPage);
           return Future.value(false);
         },
         child: Scaffold(

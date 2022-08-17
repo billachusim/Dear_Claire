@@ -25,6 +25,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
+import '../../services/notification_service.dart';
+import '/services/data/notification_model.dart' as pushNotification;
 import '../../services/user_activity_model.dart';
 import '../../services/user_model.dart';
 import '../../utils/constant.dart';
@@ -56,8 +58,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   late FocusNode _visitorMantraFocusNode = FocusNode();
   GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
   GlobalKey<FlipCardState> cardKey2 = GlobalKey<FlipCardState>();
-  late String mantraUserId;
-  late String mantraEgoName;
 
 
 
@@ -197,6 +197,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   }
 
 
+
   /// Query Ego stream from Firestore
 
   Stream<QuerySnapshot<Map<String, dynamic>>> getVisitedUserEgoStream() {
@@ -210,6 +211,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   }
 
 
+
   /// Save Ego mantra
 
   Future<void> saveEgoMessage() async {
@@ -218,6 +220,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     final egoName = _visitingUser?.nickname;
     final egoImage = _visitingUser?.avatarUrl;
     final userId = widget.visitedUsersID;
+    final senderId = currentUser?.uid;
     FirebaseFirestore.instance
         .collection('ego_stream')
         .add({
@@ -226,13 +229,40 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       "egoName": egoName,
       "egoImage": egoImage,
       "userId": userId,
+      "senderId": senderId,
     },
-      //SetOptions(merge: true)
     );
     logger.d('Successfully sent an Ego message to $egoName');
     print('Ego Message: $egoMessage');
 
+    final pushNotification.NotificationModel _notificationModel =
+    pushNotification.NotificationModel(
+        to: '/topics/${userId.toString()}',
+        collapseKey: 'type_a',
+        data: pushNotification.Data(id: senderId, route: 'ego'),
+        notification: pushNotification.Notification(
+            title: "Ego Mantra",
+            body: '$egoName sent a new mantra to your ego stream.\n$egoMessage'));
+    notificationService.sendNotification(_notificationModel.toJson());
   }
+
+
+
+  /// Delete an ego message
+
+  Future<void> deleteEgoMessage(String egoMessage) async {
+    final collection = FirebaseFirestore.instance
+        .collection('ego_stream')
+        .where("egoMessage", isEqualTo: egoMessage);
+    collection.get().then((value) {
+      value.docs.forEach((element) {
+        element.reference.delete();
+      });
+    });
+    logger.d('Successfully deleted an ego message');
+  }
+
+
 
   /// Get Visited Ego User info
   Future<VisitedUserModel> getVisitedUserInfo() async {
@@ -245,6 +275,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     logger.d('Successfully got the visited user model');
     return visitedUser;
   }
+
 
 
   /// Get visited user's sessions that have been featured or marked for replies.
@@ -1164,14 +1195,12 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                       leading: ClipOval(
                                         child: GestureDetector(
                                           onTap: (){
-                                            mantraUserId = data['userId'];
-                                            mantraEgoName = data['egoName'];
-                                            String thisUserId = mantraUserId;
-                                            String thisUserEgoName = mantraEgoName;
+                                            final String _mantraUserId = data['senderId'].toString();
+                                            final String _mantraEgoName = data['egoName'].toString();
                                             PageRouter.gotoWidget(
-                                                VisitedUserEgoProfilePage(visitedUsersID: thisUserId, visitedEgoName: thisUserEgoName),
+                                                VisitedUserEgoProfilePage(visitedUsersID: _mantraUserId, visitedEgoName: _mantraEgoName),
                                                 context);
-                                            print("Visited User ID::: $mantraUserId");
+                                            print("Visited User ID::: $_mantraUserId");
                                           },
                                           child: CachedNetworkImage(
                                             width: 40,
@@ -1206,6 +1235,25 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                           color: Colors.white,
                                           fontSize: 15,
                                           fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      trailing: Visibility(
+                                        visible: _visitingUser!.userType == "SUPER_ADMIN",
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            final String _egoMessage = data['egoMessage'];
+                                            showCustomDialog(context,
+                                                message: AppString.delete_mantra_alert_note,
+                                                onPressed: () {
+                                                  PageRouter.goBack(context);
+                                                  deleteEgoMessage(_egoMessage);
+                                                });
+                                          },
+                                          child: Icon(
+                                            Icons.delete_forever_rounded,
+                                            color: Colors.white70,
+                                            size: 15,
+                                          ),
                                         ),
                                       ),
                                     );
