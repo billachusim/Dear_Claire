@@ -1,14 +1,20 @@
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:flutter_svg/svg.dart';
 
 import '../../utils/color.dart';
+import '../../utils/helper.dart';
+import '../../utils/strings.dart';
 import '../Categories/category_sessions.dart';
 
 
 
 class FeaturedCategories extends StatelessWidget {
-  const FeaturedCategories({Key? key}) : super(key: key);
+  FeaturedCategories({Key? key}) : super(key: key);
+
+  final TextEditingController _searchController = TextEditingController();
+
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +23,102 @@ class FeaturedCategories extends StatelessWidget {
         body: SingleChildScrollView(
           child: Column(
             children: [
+
+              Container(
+                padding: EdgeInsets.only(top: 10),
+                height: 80,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(0),
+                    color: Pallet.colorSecondaryDark),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Align(
+                            alignment:Alignment.centerLeft,
+                            child: GestureDetector(
+                                onTap: (){
+                                  print("Clicking on X");
+                                  Navigator.pop(context);
+                                },
+                                child: SvgPicture.asset("assets/images/ic_close.svg",
+                                  width: 17.0,
+                                  height: 17.0,
+                                  color: Colors.white,)
+                            ),
+                          ),
+                          SizedBox(width: 10,),
+                          FloatingActionButton(
+                            heroTag: "searchRecord",
+                            onPressed: () => {},
+                            mini: true,
+                            backgroundColor: Pallet.colorWhite,
+                            child: Icon(
+                              Icons.mic_rounded,
+                              size: 19,
+                              color: Pallet.colorPrimary,
+                            ),),
+                          Expanded(
+                            child: new ConstrainedBox(
+                              constraints: new BoxConstraints(
+                                minWidth: getDeviceWidth(context),
+                                maxWidth: getDeviceWidth(context),
+                                minHeight: 35.0,
+                                maxHeight: 40.0,
+                              ),
+                              child: Scrollbar(
+                                child: Container(
+                                  padding: EdgeInsets.zero,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(30),
+                                    color: Pallet.colorWhite,
+                                  ),
+                                  child: TextField(
+                                    cursorColor: Pallet.colorSplashScreen,
+                                    keyboardType: TextInputType.text,
+                                    maxLines: 1,
+                                    cursorHeight: 33,
+                                    controller: _searchController,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding:
+                                      EdgeInsets.only(left: 13.0, right: 13.0, top: 1, bottom: 1),
+                                      hintText: "Search By Categories",
+                                      hintStyle: TextStyle(
+                                        fontStyle: FontStyle.italic,
+                                        color: Pallet.colorSecondary,
+                                        fontSize: 22,
+                                      ),
+                                      counterText: '',
+                                    ),
+                                    maxLength: 160,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          FloatingActionButton(
+                              heroTag: "searchWrite",
+                              onPressed: () {
+                                if (_searchController.text.isNotEmpty)
+                                  // saveEgoMessage();
+                                  _searchController.clear();
+                              },
+                              mini: true,
+                              backgroundColor: Pallet.colorWhite,
+                              child: SvgPicture.asset(
+                                AppImages.appSend,
+                                color: Pallet.colorPrimary,
+                                height: 20,
+                              )),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
 
               StaggeredGrid.count(

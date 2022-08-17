@@ -1,6 +1,5 @@
 import 'package:dear_claire/ui/chats/widget/chat_room_widget.dart';
 import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/widgets/toast.dart';
 import 'package:flutter/material.dart';
 
 import '../routes/routes.dart';
@@ -16,8 +15,7 @@ class ChatRoomsPage extends StatelessWidget {
       child: WillPopScope(
         onWillPop: (){
           Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.home);
-          showToast("Press back again to exit.");
+              .pushReplacementNamed(AppRoutes.allFeaturedPage);
           return Future.value(false);
         },
         child: Scaffold(

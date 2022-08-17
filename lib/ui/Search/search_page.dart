@@ -35,12 +35,11 @@ class _SearchPageState extends State<SearchPage> {
   Stream<QuerySnapshot<Map<String, dynamic>>> showHappySearches() {
     return FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
-       // .where("moodId", isEqualTo: 1)
         .where("category1", isEqualTo: "happy and blessed")
         .where("repliesEnabled", isEqualTo: true)
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
-       // .orderBy('timeLastActivity', descending: true)
+        .orderBy('timeLastActivity', descending: true)
         .limit(AppString.appSessionLength)
         .snapshots();
   }
@@ -54,7 +53,7 @@ class _SearchPageState extends State<SearchPage> {
         .where("repliesEnabled", isEqualTo: true)
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
-       // .orderBy('timeLastActivity', descending: true)
+        .orderBy('timeLastActivity', descending: true)
         .limit(AppString.appSessionLength)
         .snapshots();
   }
@@ -69,7 +68,7 @@ class _SearchPageState extends State<SearchPage> {
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(AppString.appSessionLength)
-    // .orderBy('timeCreated', descending: true)
+        .orderBy('timeCreated', descending: true)
         .snapshots();
   }
 
@@ -83,7 +82,7 @@ class _SearchPageState extends State<SearchPage> {
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(AppString.appSessionLength)
-    // .orderBy('timeCreated', descending: true)
+        .orderBy('timeCreated', descending: true)
         .snapshots();
   }
 
@@ -97,7 +96,7 @@ class _SearchPageState extends State<SearchPage> {
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(AppString.appSessionLength)
-    // .orderBy('timeCreated', descending: true)
+        .orderBy('timeCreated', descending: true)
         .snapshots();
   }
 
@@ -112,7 +111,93 @@ class _SearchPageState extends State<SearchPage> {
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(AppString.appSessionLength)
-    // .orderBy('timeCreated', descending: true)
+        .orderBy('timeCreated', descending: true)
+        .snapshots();
+  }
+
+
+  /// Get Featured sessions for "Comedy and entertainment" search
+  /// But not flagged or even archived
+  Stream<QuerySnapshot<Map<String, dynamic>>> showComedyAndEntertainmentSearches() {
+    return FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .where("category1", isEqualTo: "comedy and entertainment")
+        .where("repliesEnabled", isEqualTo: true)
+        .where("archived", isEqualTo: false)
+        .where("flagged", isEqualTo: false)
+        .orderBy('timeLastActivity', descending: true)
+        .limit(AppString.appSessionLength)
+        .snapshots();
+  }
+
+  /// Get Featured sessions for "Parents and children" search
+  /// But not flagged or even archived
+  Stream<QuerySnapshot<Map<String, dynamic>>> showParentsAndChildrenSearches() {
+    return FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .where("category1", isEqualTo: "parents and children")
+        .where("repliesEnabled", isEqualTo: true)
+        .where("archived", isEqualTo: false)
+        .where("flagged", isEqualTo: false)
+        .orderBy('timeLastActivity', descending: true)
+        .limit(AppString.appSessionLength)
+        .snapshots();
+  }
+
+  /// Get Featured sessions for "Single and lonely" search
+  /// But not flagged or even archived
+  Stream<QuerySnapshot<Map<String, dynamic>>> showSingleAndLonelySearches() {
+    return FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .where("category1", isEqualTo: "single and lonely")
+        .where("repliesEnabled", isEqualTo: true)
+        .where("archived", isEqualTo: false)
+        .where("flagged", isEqualTo: false)
+        .limit(AppString.appSessionLength)
+        .orderBy('timeCreated', descending: true)
+        .snapshots();
+  }
+
+  /// Get Featured sessions for "Prayer and thanksgiving" search
+  /// But not flagged or even archived
+  Stream<QuerySnapshot<Map<String, dynamic>>> showPrayerAndThanksgivingSearches() {
+    return FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .where("category1", isEqualTo: "prayer and thanksgiving")
+        .where("repliesEnabled", isEqualTo: true)
+        .where("archived", isEqualTo: false)
+        .where("flagged", isEqualTo: false)
+        .limit(AppString.appSessionLength)
+        .orderBy('timeCreated', descending: true)
+        .snapshots();
+  }
+
+  /// Get Featured sessions for "marriage and family" search
+  /// But not flagged or even archived
+  Stream<QuerySnapshot<Map<String, dynamic>>> showMarriageAndFamilySearches() {
+    return FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .where("category1", isEqualTo: "marriage and family")
+        .where("repliesEnabled", isEqualTo: true)
+        .where("archived", isEqualTo: false)
+        .where("flagged", isEqualTo: false)
+        .limit(AppString.appSessionLength)
+        .orderBy('timeCreated', descending: true)
+        .snapshots();
+  }
+
+
+  /// Get Featured sessions for "Sex and dating" search
+  /// But not flagged or even archived
+  Stream<QuerySnapshot<Map<String, dynamic>>> showSexAndDatingSearches() {
+    return FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .where("category1", isEqualTo: "sex and dating")
+        .where("repliesEnabled", isEqualTo: true)
+        .where("archived", isEqualTo: false)
+        .where("flagged", isEqualTo: false)
+        .limit(AppString.appSessionLength)
+        .orderBy('timeCreated', descending: true)
         .snapshots();
   }
 
@@ -903,7 +988,7 @@ class _SearchPageState extends State<SearchPage> {
                         ),
                         child: GestureDetector(onTap: (){
                           setState(() {
-                            String featuredCategory1 = "happy and blessed";
+                            String featuredCategory1 = "marriage and family";
                             String thisCategory = featuredCategory1;
                             PageRouter.gotoWidget(
                                 CategorySessions(visitedCategory: thisCategory,),
@@ -917,8 +1002,7 @@ class _SearchPageState extends State<SearchPage> {
                                 color: Pallet.colorWhite,
                                 borderRadius: BorderRadius.circular(20)
                             ),
-                            child: Text(
-                              AppString.im_so_happy,
+                            child: Text( "Marriage and Family",
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 14,
@@ -932,7 +1016,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                     Container(
                       child: StreamBuilder(
-                        stream: showHappySearches(),
+                        stream: showMarriageAndFamilySearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
                             return Text('');
@@ -984,7 +1068,7 @@ class _SearchPageState extends State<SearchPage> {
                       alignment: Alignment.topLeft,
                       child: GestureDetector(onTap: (){
                         setState(() {
-                          String featuredCategory1 = "love and relationship";
+                          String featuredCategory1 = "sex and dating";
                           String thisCategory = featuredCategory1;
                           PageRouter.gotoWidget(
                               CategorySessions(visitedCategory: thisCategory,),
@@ -1007,7 +1091,7 @@ class _SearchPageState extends State<SearchPage> {
                                 borderRadius: BorderRadius.circular(20)
                             ),
                             child: Text(
-                              AppString.relationship_issues,
+                              "Sex and dating sessions",
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 14,
@@ -1021,7 +1105,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                     Container(
                       child: StreamBuilder(
-                        stream: showRelationshipIssuesSearches(),
+                        stream: showSexAndDatingSearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
                             return Text('');
@@ -1074,7 +1158,7 @@ class _SearchPageState extends State<SearchPage> {
                       alignment: Alignment.topLeft,
                       child: GestureDetector(onTap: (){
                         setState(() {
-                          String featuredCategory1 = "sad and depressed";
+                          String featuredCategory1 = "comedy and entertainment";
                           String thisCategory = featuredCategory1;
                           PageRouter.gotoWidget(
                               CategorySessions(visitedCategory: thisCategory,),
@@ -1097,7 +1181,7 @@ class _SearchPageState extends State<SearchPage> {
                                 borderRadius: BorderRadius.circular(20)
                             ),
                             child: Text(
-                              AppString.sad_and_depressed,
+                              "Comedy and entertainment",
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 14,
@@ -1111,7 +1195,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                     Container(
                       child: StreamBuilder(
-                        stream: showSadAndDepressedSearches(),
+                        stream: showComedyAndEntertainmentSearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
                             return Text('');
@@ -1173,7 +1257,7 @@ class _SearchPageState extends State<SearchPage> {
                       alignment: Alignment.topLeft,
                       child: GestureDetector(onTap: (){
                         setState(() {
-                          String featuredCategory1 = "school and education";
+                          String featuredCategory1 = "single and lonely";
                           String thisCategory = featuredCategory1;
                           PageRouter.gotoWidget(
                               CategorySessions(visitedCategory: thisCategory,),
@@ -1196,7 +1280,7 @@ class _SearchPageState extends State<SearchPage> {
                                 borderRadius: BorderRadius.circular(20)
                             ),
                             child: Text(
-                              AppString.school_and_work,
+                              "Single and lonely",
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 14,
@@ -1210,7 +1294,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                     Container(
                       child: StreamBuilder(
-                        stream: showSchoolAndWorkSearches(),
+                        stream: showSingleAndLonelySearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
                             return Text('');
@@ -1262,7 +1346,7 @@ class _SearchPageState extends State<SearchPage> {
                       alignment: Alignment.topLeft,
                       child: GestureDetector(onTap: (){
                         setState(() {
-                          String featuredCategory1 = "friends and fun";
+                          String featuredCategory1 = "parents and children";
                           String thisCategory = featuredCategory1;
                           PageRouter.gotoWidget(
                               CategorySessions(visitedCategory: thisCategory,),
@@ -1285,7 +1369,7 @@ class _SearchPageState extends State<SearchPage> {
                                 borderRadius: BorderRadius.circular(20)
                             ),
                             child: Text(
-                              AppString.make_new_friends,
+                              "Parents and children",
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 14,
@@ -1299,7 +1383,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                     Container(
                       child: StreamBuilder(
-                        stream: showMakeNewFriendsSearches(),
+                        stream: showParentsAndChildrenSearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
                             return Text('');
@@ -1352,7 +1436,7 @@ class _SearchPageState extends State<SearchPage> {
                       alignment: Alignment.topLeft,
                       child: GestureDetector(onTap: (){
                         setState(() {
-                          String featuredCategory1 = "health and fitness";
+                          String featuredCategory1 = "prayer and thanksgiving";
                           String thisCategory = featuredCategory1;
                           PageRouter.gotoWidget(
                               CategorySessions(visitedCategory: thisCategory,),
@@ -1375,7 +1459,7 @@ class _SearchPageState extends State<SearchPage> {
                                 borderRadius: BorderRadius.circular(20)
                             ),
                             child: Text(
-                              AppString.sick_and_tired,
+                              "Prayer and thanksgiving",
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 14,
@@ -1389,7 +1473,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                     Container(
                       child: StreamBuilder(
-                        stream: showSickAndTiredSearches(),
+                        stream: showPrayerAndThanksgivingSearches(),
                         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
                           if (session.connectionState == ConnectionState.waiting) {
                             return Text('');

@@ -27,7 +27,7 @@ class _DiaryPageState extends State<DiaryPage> {
 
         onWillPop: (){
           Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.diaryRooms);
+              .pushReplacementNamed(AppRoutes.allFeaturedPage);
           return Future.value(false);
         },
         child: Scaffold(
