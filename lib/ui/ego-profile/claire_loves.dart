@@ -117,13 +117,21 @@ class _ClaireLovesState extends State<ClaireLoves> {
               body: SingleChildScrollView(
                 child: Column(
                   children: [
-                    Container(
-                      child: Text(
-                        "Love Wallet 🌺",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
+                    Center(
+                      child: Container(
+                        margin: EdgeInsets.only(top: 10),
+                        padding: EdgeInsets.all(7),
+                        decoration: BoxDecoration(
                           color: Pallet.colorWhite,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Text(
+                          "Love Wallet  🌺",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     ),
@@ -185,8 +193,9 @@ class _ClaireLovesState extends State<ClaireLoves> {
                     SizedBox(height: 7,),
 
                     Container(
+                      width: getDeviceWidth(context),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           SizedBox(width: 8,),
                           Column(
@@ -195,8 +204,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                 alignment: Alignment.topLeft,
                                 child: Container(
                                   padding: EdgeInsets.only(top: 7),
-                                  height: 30,
-                                  width: 60,
+                                  height: 35,
+                                  width: 75,
                                   decoration: BoxDecoration(
                                       color: Pallet.colorWhite,
                                       borderRadius: BorderRadius.circular(5)
@@ -242,19 +251,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                             ],
                           ),
 
-                          SizedBox(width: 5,),
-
-                          Text(
-                            "+",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 40,
-                              color: Colors.white,
-                            ),
-                          ),
-
-                          SizedBox(width: 5,),
+                          SizedBox(width: 15,),
 
                           Column(
                             children: [
@@ -262,8 +259,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                 alignment: Alignment.topLeft,
                                 child: Container(
                                   padding: EdgeInsets.only(top: 7),
-                                  height: 30,
-                                  width: 60,
+                                  height: 35,
+                                  width: 75,
                                   decoration: BoxDecoration(
                                       color: Pallet.colorWhite,
                                       borderRadius: BorderRadius.circular(5)
@@ -309,18 +306,6 @@ class _ClaireLovesState extends State<ClaireLoves> {
                             ],
                           ),
 
-                          SizedBox(width: 5,),
-
-                          Text(
-                            "x",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 40,
-                              color: Colors.white,
-                            ),
-                          ),
-
                           SizedBox(width: 4,),
 
                           Column(
@@ -347,7 +332,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                               ),
                               SizedBox(height: 2,),
                               Text(
-                                "Rate",
+                                "Naira Rate",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
@@ -358,19 +343,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
                             ],
                           ),
 
-                          SizedBox(width: 4,),
 
-                          Text(
-                            "=",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 40,
-                              color: Colors.white,
-                            ),
-                          ),
-
-                          SizedBox(width: 4,),
+                          SizedBox(width: 15,),
 
                           Column(
                             children: [
@@ -378,8 +352,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                 alignment: Alignment.topLeft,
                                 child: Container(
                                   padding: EdgeInsets.only(top: 7),
-                                  height: 30,
-                                  width: 75,
+                                  height: 35,
+                                  width: 90,
                                   decoration: BoxDecoration(
                                       color: Pallet.colorWhite,
                                       borderRadius: BorderRadius.circular(5)
@@ -403,7 +377,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                           totalLoveCount.toString(),
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            fontSize: 16,
+                                            fontSize: 18,
                                             color: Colors.black,
                                           ),
                                         );
@@ -417,7 +391,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                               ),
                               SizedBox(height: 2,),
                               Text(
-                                "Loves",
+                                "Total Loves",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
@@ -637,8 +611,10 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
 
                     Container(
+                      width: getDeviceWidth(context),
+                      margin: EdgeInsets.only(left: 10, right: 15),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           SizedBox(width: 8,),
                           Column(
@@ -688,7 +664,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                           ),
 
 
-                          SizedBox(width: 5,),
+                          SizedBox(width: 10,),
 
                           Text(
                             "x",
@@ -700,7 +676,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                             ),
                           ),
 
-                          SizedBox(width: 4,),
+                          SizedBox(width: 2,),
 
                           Column(
                             children: [
@@ -757,10 +733,10 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                   if (snapshot.hasData) {
                                     var data = snapshot.data!.data();
                                     var userType = data?["userType"];
-                                    _rateBadge = userType == 'REGULAR'? 'Ego Rate' :
-                                    userType == 'ADMIN'? 'Alter Ego Rate' :
-                                    userType == 'SUPER_ADMIN'? 'Super Ego Rate' :
-                                    'Ego Rate';
+                                    _rateBadge = userType == 'REGULAR'? 'Ego Bonus' :
+                                    userType == 'ADMIN'? 'Alter Bonus' :
+                                    userType == 'SUPER_ADMIN'? 'Super Bonus' :
+                                    'Ego Bonus';
                                     debugPrint(
                                         " This is the rate badge for for this user ${_rateBadge.toString()}");
                                     return Text(
@@ -781,7 +757,6 @@ class _ClaireLovesState extends State<ClaireLoves> {
                             ],
                           ),
 
-                          SizedBox(width: 4,),
 
                           Text(
                             "=",
@@ -793,7 +768,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                             ),
                           ),
 
-                          SizedBox(width: 4,),
+                          SizedBox(width: 12,),
 
                           Column(
                             children: [
@@ -802,7 +777,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                 child: Container(
                                   padding: EdgeInsets.only(top: 7),
                                   height: 40,
-                                  width: 100,
+                                  width: 90,
                                   decoration: BoxDecoration(
                                       color: Pallet.colorWhite,
                                       borderRadius: BorderRadius.circular(5)
@@ -875,7 +850,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                             ),
                             child: Text("Show Cash Out",
                                 style: GoogleFonts.lato(
-                                    fontSize: 12.0, fontWeight: FontWeight.w700, color: Colors.white)),
+                                    fontSize: 13.0, fontWeight: FontWeight.w700, color: Colors.white)),
                           ),
                         ),
 
@@ -914,6 +889,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
                       ],
                     ),
+
+                    SizedBox(height: 35,),
 
                   ],
                 ),
