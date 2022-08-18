@@ -6,14 +6,17 @@ import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/widgets/play_advise_voice_note.dart';
 import 'package:dear_claire/widgets/thanks_button.dart';
+import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/data/notification_model.dart' as pushNotification;
 import '../services/notification_service.dart';
+import '../services/user_model.dart';
 import '../ui/featured/model/session.dart';
 import '../ui/routes/page_router_animation.dart';
 import '../ui/visited_user_ego_page/visited_user_ego_page.dart';
+import '../utils/constant.dart';
 import '../utils/strings.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'custom_image_widget.dart';
@@ -273,7 +276,7 @@ class _CommentWidgetState extends State<CommentWidget> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               GestureDetector(
-                onTap: () {
+                onTap: () async {
                   widget.visitedUsersID =
                       widget.commentSessionModel?.isUserAdmin == true
                           ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
@@ -287,11 +290,20 @@ class _CommentWidgetState extends State<CommentWidget> {
                       widget.commentSessionModel?.isUserAdmin == true
                           ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
                           : widget.commentSessionModel!.userId ?? '';
-                  PageRouter.gotoWidget(
-                      VisitedUserEgoProfilePage(
-                          visitedUsersID: thisUser,
-                          visitedEgoName: thisEgoName),
-                      context);
+                  UserModel user = await firebaseServices.getUserInfo();
+                  if (user.userType != "REGULAR") {
+                    PageRouter.gotoWidget(
+                        VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                        context);
+                  }
+                  else if (user.currentLoveCount > 500) {
+                    PageRouter.gotoWidget(
+                        VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                        context);
+                  }
+                  else {
+                    showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                  }
                   print("Visited User ID::: $thisEgoName");
                 },
                 child: CachedNetworkImage(
@@ -326,7 +338,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     GestureDetector(
-                      onTap: () {
+                      onTap: () async {
                         widget.visitedUsersID =
                             widget.commentSessionModel?.isUserAdmin == true
                                 ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
@@ -341,11 +353,20 @@ class _CommentWidgetState extends State<CommentWidget> {
                             widget.commentSessionModel?.isUserAdmin == true
                                 ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
                                 : widget.commentSessionModel!.userId ?? '';
-                        PageRouter.gotoWidget(
-                            VisitedUserEgoProfilePage(
-                                visitedUsersID: thisUser,
-                                visitedEgoName: thisEgoName),
-                            context);
+                        UserModel user = await firebaseServices.getUserInfo();
+                        if (user.userType != "REGULAR") {
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                              context);
+                        }
+                        else if (user.currentLoveCount > 500) {
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                              context);
+                        }
+                        else {
+                          showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                        }
                         print("Visited User ID::: $thisEgoName");
                       },
                       child: Text(

@@ -887,13 +887,24 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                     return ListTile(
                                       leading: ClipOval(
                                         child: GestureDetector(
-                                          onTap: (){
+                                          onTap: () async {
                                             final String _mantraUserId = data['senderId'].toString();
                                             final String _mantraEgoName = data['egoName'].toString();
-                                            PageRouter.gotoWidget(
-                                                VisitedUserEgoProfilePage(visitedUsersID: _mantraUserId, visitedEgoName: _mantraEgoName),
-                                                context);
-                                            print("Visited User ID::: $_mantraUserId");
+                                            UserModel user = await firebaseServices.getUserInfo();
+                                            if (user.userType != "REGULAR") {
+                                              PageRouter.gotoWidget(
+                                                  VisitedUserEgoProfilePage(visitedUsersID: _mantraUserId, visitedEgoName: _mantraEgoName),
+                                                  context);
+                                            }
+                                            else if (user.currentLoveCount > 500) {
+                                              PageRouter.gotoWidget(
+                                                  VisitedUserEgoProfilePage(visitedUsersID: _mantraUserId, visitedEgoName: _mantraEgoName),
+                                                  context);
+                                            }
+                                            else {
+                                              showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                                            }
+                                            print("Visited User ID::: $_mantraEgoName");
                                           },
                                           child: CachedNetworkImage(
                                             width: 40,

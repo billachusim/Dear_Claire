@@ -213,18 +213,27 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   GestureDetector(
-                                    onTap: () {
+                                    onTap: () async {
                                       visitedUsersID = _session.userId!;
                                       visitedEgoName = _session.userNickname!;
-                                      String thisEgoName =
-                                      _session.userNickname.toString();
-                                      String thisUser = _session.userId.toString();
-                                      PageRouter.gotoWidget(
-                                          VisitedUserEgoProfilePage(
-                                              visitedUsersID: thisUser,
-                                              visitedEgoName: thisEgoName),
-                                          context);
-                                      print("Visited User ID::: $thisEgoName");
+                                      String thisEgoName = visitedEgoName;
+                                      String thisUser = visitedUsersID;
+
+                                      UserModel user = await firebaseServices.getUserInfo();
+                                      if (user.userType != "REGULAR") {
+                                        PageRouter.gotoWidget(
+                                            VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                            context);
+                                      }
+                                      else if (user.currentLoveCount > 500) {
+                                        PageRouter.gotoWidget(
+                                            VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                            context);
+                                      }
+                                      else {
+                                        showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                                      }
+                                      print("Visited User ID::: $visitedUsersID");
                                     },
                                     child: CachedNetworkImage(
                                         width: 48,
@@ -258,19 +267,28 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         GestureDetector(
-                                          onTap: () {
+                                          onTap: () async {
                                             visitedUsersID = _session.userId!;
                                             visitedEgoName = _session.userNickname!;
                                             String thisEgoName =
                                             _session.userNickname.toString();
                                             String thisUser =
                                             _session.userId.toString();
-                                            PageRouter.gotoWidget(
-                                                VisitedUserEgoProfilePage(
-                                                    visitedUsersID: thisUser,
-                                                    visitedEgoName: thisEgoName),
-                                                context);
-                                            print("Visited User ID::: $thisEgoName");
+                                            UserModel user = await firebaseServices.getUserInfo();
+                                            if (user.userType != "REGULAR") {
+                                              PageRouter.gotoWidget(
+                                                  VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                                  context);
+                                            }
+                                            else if (user.currentLoveCount > 500) {
+                                              PageRouter.gotoWidget(
+                                                  VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                                  context);
+                                            }
+                                            else {
+                                              showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                                            }
+                                            print("Visited User ID::: $visitedUsersID");
                                           },
                                           child: Text(_session.userNickname!,
                                               textAlign: TextAlign.start,

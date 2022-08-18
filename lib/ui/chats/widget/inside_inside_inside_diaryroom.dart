@@ -13,6 +13,7 @@ import '../../../services/firebase_services.dart';
 import '../../../utils/strings.dart';
 import '../../../widgets/custom_image_widget.dart';
 import '../../../widgets/play_advise_voice_note.dart';
+import '../../../widgets/toast.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -81,16 +82,26 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     GestureDetector(
-                      onTap: () {
+                      onTap: () async {
                         visitedUsersID = _user?.userId ?? '';
                         visitedEgoName = _user?.nickname ?? 'Chatter';
                         String thisEgoName = visitedEgoName;
                         String thisUser = visitedUsersID;
-                        PageRouter.gotoWidget(
-                            VisitedUserEgoProfilePage(
-                                visitedUsersID: thisUser,
-                                visitedEgoName: thisEgoName),
-                            context);
+
+                        UserModel user = await firebaseServices.getUserInfo();
+                        if (user.userType != "REGULAR") {
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                              context);
+                        }
+                        else if (user.currentLoveCount > 500) {
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                              context);
+                        }
+                        else {
+                          showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                        }
                         print("Visited User ID::: $visitedUsersID");
                       },
                       child: CachedNetworkImage(
@@ -123,16 +134,25 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           GestureDetector(
-                            onTap: () {
+                            onTap: () async {
                               visitedUsersID = _user.userId ?? '';
                               visitedEgoName = _user.nickname ?? 'Chatter';
                               String thisEgoName = visitedEgoName;
                               String thisUser = visitedUsersID;
-                              PageRouter.gotoWidget(
-                                  VisitedUserEgoProfilePage(
-                                      visitedUsersID: thisUser,
-                                      visitedEgoName: thisEgoName),
-                                  context);
+                              UserModel user = await firebaseServices.getUserInfo();
+                              if (user.userType != "REGULAR") {
+                                PageRouter.gotoWidget(
+                                    VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                    context);
+                              }
+                              else if (user.currentLoveCount > 500) {
+                                PageRouter.gotoWidget(
+                                    VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                    context);
+                              }
+                              else {
+                                showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                              }
                               print("Visited User ID::: $visitedUsersID");
                             },
                             child: Text(_user.nickname ?? '',
