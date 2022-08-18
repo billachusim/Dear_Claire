@@ -9,6 +9,7 @@ import 'package:dear_claire/ui/visited_user_ego_page/visited_user_model.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/widgets/toast.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter_svg/svg.dart';
 import 'dart:async';
@@ -58,6 +59,8 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   late FocusNode _visitorMantraFocusNode = FocusNode();
   GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
   GlobalKey<FlipCardState> cardKey2 = GlobalKey<FlipCardState>();
+  /// create instance of FirebaseMessaging
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
 
 
@@ -234,16 +237,29 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     );
     logger.d('Successfully sent an Ego message to $egoName');
     print('Ego Message: $egoMessage');
+  }
+
+
+  Future<void> pushMantraNotification() async {
+    final egoMessage = _visitorMantraController.text;
+    final egoName = _visitingUser?.nickname;
+    final userId = widget.visitedUsersID;
+    final senderId = currentUser?.uid;
+
+    await _firebaseMessaging.subscribeToTopic(userId);
 
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
         to: '/topics/${userId.toString()}',
         collapseKey: 'type_a',
-        data: pushNotification.Data(id: senderId, route: 'ego'),
+        data: pushNotification.Data(id: senderId, route: 'wallet'),
         notification: pushNotification.Notification(
             title: "Ego Mantra",
             body: '$egoName sent a new mantra to your ego stream.\n$egoMessage'));
     notificationService.sendNotification(_notificationModel.toJson());
+
+    logger.d('Successfully pushed an Ego message notification to $egoName');
+    print('Ego Message: $egoMessage');
   }
 
 
@@ -388,17 +404,19 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                 ),
                 onPressed: () {
                   if (userModel.nickname != null)
-                    if (_visitorMantraController.text.isNotEmpty)
-                      saveEgoMessage();
-                  Navigator.of(context).pop();
-                  setState(() {
-                    _visitorMantraController.text = "";
-                  });
-                  showToast(AppString.sent_ego_message);
+                    if (_visitorMantraController.text.isNotEmpty) {
 
-                  Future.delayed(Duration(seconds: 4), () {
-                    _showEgoMantraInterstitialAd();
-                  });
+                      saveEgoMessage();
+                      pushMantraNotification();
+                      _visitorMantraController.clear();
+                      Navigator.of(context).pop();
+                      //setState(() {});
+                      showToast(AppString.sent_ego_message);
+
+                      Future.delayed(Duration(seconds: 4), () {
+                        _showEgoMantraInterstitialAd();
+                      });
+                    }
                 },
               ),
             ],
