@@ -1,6 +1,6 @@
 import 'package:dear_claire/ui/alter_ego/all_page.dart';
-import 'package:dear_claire/ui/alter_ego/empty_advising_screen_widget.dart';
 import 'package:dear_claire/ui/alter_ego/widgets/all_activities_tab.dart';
+import 'package:dear_claire/ui/alter_ego/widgets/all_mantra_tab.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/color.dart';
 import '../../../utils/helper.dart';
@@ -123,7 +123,7 @@ class _TheAllPageState extends State<TheAllPage>
 
 
 
-                          /// Second tab is the all Advises chats Tab
+                          /// Second tab is the all mantras chats Tab
 
                           Expanded(
                             child: GestureDetector(
@@ -153,7 +153,7 @@ class _TheAllPageState extends State<TheAllPage>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        "Advises",
+                                        "Mantras",
                                         style: TextStyle(
                                           color: currentTabIndex != 1
                                               ? Pallet.colorSecondary
@@ -236,11 +236,11 @@ class _TheAllPageState extends State<TheAllPage>
 
                   Expanded(
                     child: TabBarView(
-                      physics: NeverScrollableScrollPhysics(),
+                      physics: AlwaysScrollableScrollPhysics(),
                       controller: _tabController,
                       children: [
                         AllDiariesPage(),
-                        EmptyAdvisingSessionWidget(),
+                        AllMantraTab(),
                         AllActivitiesTab(),
                       ],
                     ),
