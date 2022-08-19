@@ -6,6 +6,7 @@ import 'package:flutter_svg/svg.dart';
 import '../../utils/color.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
+import '../../widgets/toast.dart';
 import '../Categories/category_sessions.dart';
 
 
@@ -41,25 +42,19 @@ class FeaturedCategories extends StatelessWidget {
                             child: GestureDetector(
                                 onTap: (){
                                   print("Clicking on X");
-                                  Navigator.pop(context);
+                                  Navigator.of(context)
+                                      .pushReplacementNamed(AppRoutes.home);
+                                  showToast("Press back again to exit.");
                                 },
-                                child: SvgPicture.asset("assets/images/ic_close.svg",
-                                  width: 17.0,
-                                  height: 17.0,
-                                  color: Colors.white,)
+                                child: Container(
+                                  child: SvgPicture.asset("assets/images/ic_close.svg",
+                                    width: 20.0,
+                                    height: 20.0,
+                                    color: Colors.white,),
+                                )
                             ),
                           ),
                           SizedBox(width: 10,),
-                          FloatingActionButton(
-                            heroTag: "searchRecord",
-                            onPressed: () => {},
-                            mini: true,
-                            backgroundColor: Pallet.colorWhite,
-                            child: Icon(
-                              Icons.mic_rounded,
-                              size: 19,
-                              color: Pallet.colorPrimary,
-                            ),),
                           Expanded(
                             child: new ConstrainedBox(
                               constraints: new BoxConstraints(

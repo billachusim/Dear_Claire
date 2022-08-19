@@ -52,7 +52,7 @@ class MetooButton extends StatelessWidget {
             icon: Text('${me2 ?? 0} Me2🌺',
                 style: GoogleFonts.lato(
                     fontSize: 13.0,
-                    color: Colors.pink,
+                    color: Colors.black,
                     fontWeight: FontWeight.w900))),
       ],
       initialReaction:

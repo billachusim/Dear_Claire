@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
+import '../../widgets/toast.dart';
 import '../Categories/category_sessions.dart';
 import '../featured/model/session.dart';
 import '../routes/page_router_animation.dart';
@@ -311,25 +312,19 @@ class _SearchPageState extends State<SearchPage> {
                             child: GestureDetector(
                                 onTap: (){
                                   print("Clicking on X");
-                                  Navigator.pop(context);
+                                  Navigator.of(context)
+                                      .pushReplacementNamed(AppRoutes.home);
+                                  showToast("Press back again to exit.");
                                 },
-                                child: SvgPicture.asset("assets/images/ic_close.svg",
-                                  width: 17.0,
-                                  height: 17.0,
-                                color: Colors.white,)
+                                child: Container(
+                                  child: SvgPicture.asset("assets/images/ic_close.svg",
+                                    width: 20.0,
+                                    height: 20.0,
+                                  color: Colors.white,),
+                                )
                             ),
                           ),
                           SizedBox(width: 10,),
-                          FloatingActionButton(
-                            heroTag: "searchRecord",
-                            onPressed: () => widget.record!(),
-                            mini: true,
-                            backgroundColor: Pallet.colorWhite,
-                            child: Icon(
-                              Icons.mic_rounded,
-                              size: 19,
-                              color: Pallet.colorPrimary,
-                            ),),
                           Expanded(
                             child: new ConstrainedBox(
                               constraints: new BoxConstraints(
