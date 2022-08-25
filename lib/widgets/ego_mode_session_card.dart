@@ -360,6 +360,7 @@ class EgoModeSessionCard extends StatelessWidget {
                             sender: _userModel.nickname ?? '');
 
                         saveUserMe2Activity();
+                        await firebaseServices.updateSessionLastTimeActivity(element.sessionId.toString());
                       }
 
                     }, session: element,

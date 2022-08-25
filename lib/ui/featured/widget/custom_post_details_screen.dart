@@ -455,6 +455,8 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
                                                     sender: _userModel.nickname ?? '');
 
                                                 saveUserMe2Activity();
+                                                await firebaseServices.updateSessionLastTimeActivity(_session.sessionId.toString());
+
                                               }
                                             },
                                             color: Pallet.colorWhite,

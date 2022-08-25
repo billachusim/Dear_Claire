@@ -292,6 +292,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                           sender: "Claire");
 
                       saveAlterEgoMe2Activity();
+                      await firebaseServices.updateSessionLastTimeActivity(element.sessionId.toString());
                   }, session: element,
                 ),
                 new Spacer(),

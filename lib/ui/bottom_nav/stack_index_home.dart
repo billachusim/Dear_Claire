@@ -70,7 +70,9 @@ class _HomeDashboardPageState extends State<HomePage>
     userName = egoInfo.nickname.toString();
     userType = egoInfo.userType.toString();
     avatarUrl = egoInfo.avatarUrl.toString();
-    logger.d('Successfully got an Ego user model');
+    final _userId = egoInfo.userId.toString();
+    await firebaseServices.updateUserLastTimeUnlocked(_userId);
+    logger.d('Successfully got an Ego user model and updated time last unlocked.');
     return egoInfo;
   }
 

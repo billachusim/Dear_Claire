@@ -449,9 +449,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                 child: Obx(
                   () => c.acceptReplies.value
                       ? Text("Share and Save",
-                          style: TextStyle(color: Pallet.colorSecondary))
+                          style: TextStyle(color: Pallet.colorSecondary, fontSize: 18))
                       : Text('Save',
-                          style: TextStyle(color: Pallet.colorSecondary)),
+                          style: TextStyle(color: Pallet.colorSecondary, fontSize: 18)),
                 ),
                 onPressed: () {
                   if (sessionTitleController.text.isNotEmpty) {

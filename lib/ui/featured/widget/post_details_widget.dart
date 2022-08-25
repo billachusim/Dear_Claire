@@ -325,6 +325,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   );
 
                                   saveUserMe2Activity();
+                                  await firebaseServices.updateSessionLastTimeActivity(_session.sessionId.toString());
+
                                 }
                               },
                               color: Pallet.colorWhite,

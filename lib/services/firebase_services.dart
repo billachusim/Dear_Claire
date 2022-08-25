@@ -1185,6 +1185,41 @@ class FirebaseServices extends ChangeNotifier {
         .update(map);
   }
 
+
+
+  /// Update a session's last time activity
+
+  Future<void> updateSessionLastTimeActivity(String id) async {
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(id)
+        .update(
+      {
+        "timeLastActivity": FieldValue.serverTimestamp(),
+      },
+    );
+    logger.d('Successfully updated session last time activity');
+  }
+
+
+
+
+
+  /// Update a user's last time unlocked
+
+  Future<void> updateUserLastTimeUnlocked(String id) async {
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(id)
+        .update(
+      {
+        "timeLastUnlocked": FieldValue.serverTimestamp(),
+      },
+    );
+    logger.d('Successfully updated user last time unlocked');
+  }
+
+
   /// Get all sessions that have been created by a particular user
   /// @param lastSession The last session from previous request. Used for pagination
   /// @return LiveData
