@@ -307,6 +307,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
             SizedBox(height: 4),
             Center(
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -394,90 +395,74 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                     ],
                   ),
 
-                  SizedBox(width: 12,),
 
                   // The count columns are here
-                  Container(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              sessionCount ?? "---",
-                              style: TextStyle(
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.black),
-                            ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        sessionCount ?? "---",
+                        style: TextStyle(
+                            fontSize: 23,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black),
+                      ),
 
-                            Text(
-                              "Sessions",
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-
-
-
-                            Text(
-                              advisesCount ?? "---",
-                              style: TextStyle(
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.black),
-                            ),
-
-
-
-                            Text(
-                              "Advises",
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black),
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              totalLoveCount ?? "---",
-                              style: TextStyle(
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.black),
-                            ),
-
-                            Text(
-                              "Loves",
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black),
-                            ),
-                          ],
-                        )
-                      ],
-                    ),
+                      Text(
+                        "Sessions",
+                        style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black),
+                      ),
+                    ],
                   ),
+
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+
+                      Text(
+                        advisesCount ?? "---",
+                        style: TextStyle(
+                            fontSize: 23,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black),
+                      ),
+
+                      Text(
+                        "Advises",
+                        style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        totalLoveCount ?? "---",
+                        style: TextStyle(
+                            fontSize: 23,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black),
+                      ),
+
+                      Text(
+                        "Loves",
+                        style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black),
+                      ),
+                    ],
+                  ),
+                  SizedBox(width: 6,),
                 ],
               ),
             ),

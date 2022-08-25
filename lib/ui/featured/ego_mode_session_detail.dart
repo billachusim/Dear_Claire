@@ -536,9 +536,10 @@ class _EgoModeSessionDetailState
       showToast('You have to login first before reacting.');
       return;
     }
+    final _user = await firebaseServices.getUserInfo();
     final String commentId = commentSessionModel!.commentId.toString();
     final String docId = session.sessionId.toString();
-    final String sender = commentSessionModel.userNickname.toString();
+    final String sender = _user.nickname.toString();
     firebaseServices.addThanksReaction(
         session: session,
         commentID: commentId,

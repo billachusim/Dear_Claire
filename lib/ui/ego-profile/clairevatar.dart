@@ -3,7 +3,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/user_model.dart';
-import 'package:dear_claire/ui/ego-profile/profile.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';

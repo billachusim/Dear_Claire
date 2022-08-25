@@ -92,6 +92,15 @@ class _HomeDashboardPageState extends State<HomePage>
     launchUrl(emailLaunchUri);
   }
 
+  String getDonateUrl(){
+    return AppString.donate_url;
+  }
+
+  onDonateClicked() {
+    Uri donateUrl = Uri.parse(getDonateUrl());
+    launchUrl(donateUrl);
+  }
+
 
   _loadHtmlFromAssets() async {
     String fileHtmlContents = await rootBundle.loadString(filePath);
@@ -385,13 +394,13 @@ class _HomeDashboardPageState extends State<HomePage>
                   ),
                   SizedBox(height: 18,),
                   ListTile(
-                    title: Text("Contact Us",
+                    title: Text("Top Up Your Love",
                         style: TextStyle(color: Pallet.colorWhite)),
-                    onTap: () =>launchEmailApp(),
-                    leading: Icon(Icons.email, color: Pallet.colorWhite),
+                    onTap: () => onDonateClicked(),
+                    leading: Icon(Icons.currency_exchange_rounded, color: Pallet.colorWhite),
                   ),
+
                   SizedBox(height: 10,),
-                  
                   Container(
                     height: 300,
                     child: WebView(
@@ -422,6 +431,14 @@ class _HomeDashboardPageState extends State<HomePage>
                     Navigator.of(context).pushNamed(AppRoutes.updatesAndAnnouncements);
                     },
                     leading: Icon(Icons.announcement_rounded, color: Pallet.colorWhite),
+                  ),
+
+                  SizedBox(height: 18,),
+                  ListTile(
+                    title: Text("Contact Us",
+                        style: TextStyle(color: Pallet.colorWhite)),
+                    onTap: () =>launchEmailApp(),
+                    leading: Icon(Icons.email, color: Pallet.colorWhite),
                   ),
 
                   SizedBox(height: 18,),

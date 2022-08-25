@@ -3,12 +3,14 @@ import 'dart:core';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/ego-profile/request_claire_love_form.dart';
 import 'package:dear_claire/utils/color.dart';
+import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../services/firebase_services.dart';
+import '../../widgets/toast.dart';
 import '../routes/page_router_animation.dart';
 
 class ClaireLoves extends StatefulWidget {
@@ -700,9 +702,9 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                       if (snapshot.hasData) {
                                         var data = snapshot.data!.data();
                                         var userType = data?["userType"];
-                                        _rate = userType == 'REGULAR'? 2 :
-                                        userType == 'ADMIN'? 3 :
-                                        userType == 'SUPER_ADMIN'? 5 :
+                                        _rate = userType == 'REGULAR'? 1.5 :
+                                        userType == 'ADMIN'? 2 :
+                                        userType == 'SUPER_ADMIN'? 3 :
                                         3;
                                         debugPrint(
                                             " This is the ego rate used for conversion for this user ${_rate.toString()}");
@@ -859,21 +861,23 @@ class _ClaireLovesState extends State<ClaireLoves> {
                         Visibility(
                           visible: _showRequestButton,
                           child: OutlinedButton(
-                            onPressed: (){
-                              ascertainWithdrawnLoveCount();
-                              PageRouter.gotoWidget(
-                                  RequestClaireLoveForm(
-                                    currentWithdrawal: _currentWithdrawal.toString(),
-                                    totalLoveCount: _totalLoveCount.toString(),
-                                    userId: _userId.toString(),
-                                    currentWithdrawable: _currentLoveCount.toString(),
-                                    totalWithdrawn: _withdrawnLoveCount.toString(),
-                                  ), context);
+                            onPressed: () async {
+                              final _user = await firebaseServices.getUserInfo();
+                              if (_user.currentLoveCount > _currentWithdrawal) {
+                                ascertainWithdrawnLoveCount();
+                                PageRouter.gotoWidget(
+                                    RequestClaireLoveForm(
+                                      currentWithdrawal: _currentWithdrawal.toString(),
+                                      totalLoveCount: _totalLoveCount.toString(),
+                                      userId: _userId.toString(),
+                                      currentWithdrawable: _currentLoveCount.toString(),
+                                      totalWithdrawn: _withdrawnLoveCount.toString(),
+                                    ), context);
 
-                              print("Requested Amount Is::: $_currentWithdrawal");
-                              print("Available Amount Is::: $_currentLoveCount");
-
-
+                                print("Requested Amount Is::: $_currentWithdrawal");
+                                print("Available Amount Is::: $_currentLoveCount");
+                              }
+                              else showToast("You can't request higher than current loves.");
                             },
                             style: OutlinedButton.styleFrom(
                               backgroundColor: Pallet.colorSecondary,

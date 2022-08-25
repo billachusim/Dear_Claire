@@ -23,17 +23,17 @@ class CommentsButton extends StatelessWidget {
                     color: Pallet.colorWhite,
                     fontWeight: FontWeight.w900)
             ),
-            Icon(
-              Icons.chat,
-              size: 15,
-              color: Pallet.colorWhite,
-            ),
             Text(
                 'Advises',
                 style: GoogleFonts.lato(
                     fontSize: 13.0,
                     color: Pallet.colorWhite,
                     fontWeight: FontWeight.w900)
+            ),
+            Icon(
+              Icons.mark_unread_chat_alt_outlined,
+              size: 15,
+              color: Pallet.colorWhite,
             ),
           ],
         ),

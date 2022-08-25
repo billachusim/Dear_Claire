@@ -213,14 +213,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     if (_session.contains("ear"))
       if (_session.contains("laire"))
         if (_length >= 50)
-        if (acceptReplies)
 
       {
         incrementSessionCount();
         incrementTotalLoveCount();
 
         flutterLocalNotificationsPlugin.show(0, 'Clairelove Wallet',
-            "You started and shared an original diary session. 10 Loves for you.", _notificationDetails(), payload: "wallet");
+            "You started an original diary session. 10 Loves for you.", _notificationDetails(), payload: "wallet");
 
         return true;
       }
@@ -1620,21 +1619,17 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     sessionObject.sessionId = uuid.v1();
     sessionObject.userId = userModel.userId;
     sessionObject.moodId = mood;
-    sessionObject.location = '#QuickSessions';
+    sessionObject.location = '#QuickSession';
     sessionObject.timeLastActivity = Timestamp.now();
 
     bool isSuccessfull =
     await _firebaseServices.createSession(session: sessionObject);
-
-    ascertainCurrentLoveCount();
 
     Future.delayed(Duration(seconds: 4), () {
       _showQuickInterstitialAd();
     });
 
     _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
-
-    isOriginalSession(sessionTextEditingController.text);
 
   }
 
