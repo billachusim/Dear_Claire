@@ -143,7 +143,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     randomizeBackgroundColor();
     initializeDatabaseObject();
     sessionTextFocusNode = FocusNode();
-    Future.delayed(Duration(seconds: 8), () {
+    Future.delayed(Duration(seconds: 5), () {
       sessionTextFocusNode.requestFocus();
     }
     );
@@ -163,7 +163,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     Random random = new Random();
     int randomNumber = random.nextInt(Constant.TOAST_NUMBERS.length);
     var message = randomNumber == 1 ? "Go on, Darling, talk to me..." :
-    randomNumber == 2 ? "I'm glad you are here" :
+    randomNumber == 2 ? "Start typing or recording anything." :
     randomNumber == 3 ? "You have come to a safe place." :
     randomNumber == 4 ? "Everything can be between us." :
     randomNumber == 5 ? "I'll always be here for you." :
@@ -184,7 +184,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     randomNumber == 19 ? "If you don't tell me, I won't know." :
 
     "Go on, Darling, talk to me...";
-    await  Future.delayed(Duration(seconds: 8), () {
+    await  Future.delayed(Duration(seconds: 5), () {
       Fluttertoast.showToast(
         toastLength: Toast.LENGTH_LONG,
         msg: message.toString(),

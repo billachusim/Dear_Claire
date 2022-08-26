@@ -1,19 +1,17 @@
 import 'dart:core';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/ego-profile/request_claire_love_form.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/send_clairelove_form.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
+import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../services/firebase_services.dart';
 import '../../utils/constant.dart';
-import '../../utils/strings.dart';
 import '../routes/page_router_animation.dart';
-import '../routes/routes.dart';
 
 class VisitedUserClaireLoves extends StatefulWidget {
   final String visitedUsersID;
@@ -30,7 +28,6 @@ class VisitedUserClaireLoves extends StatefulWidget {
 class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
   var _withdrawnLoveCount;
   var _currentLoveCount;
-  var _totalLoveCount;
   var _currentWithdrawal;
   var _toRequest;
   var _rate;
@@ -41,7 +38,6 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
 
 
   final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _amountRequestController = TextEditingController();
 
   User? currentUser = FirebaseAuth.instance.currentUser;
 
@@ -189,18 +185,19 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                   SizedBox(height: 7,),
 
                   Container(
+                    width: getDeviceWidth(context),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(width: 8,),
+                        SizedBox(width: 5,),
                         Column(
                           children: [
                             Align(
                               alignment: Alignment.topLeft,
                               child: Container(
                                 padding: EdgeInsets.only(top: 7),
-                                height: 30,
-                                width: 60,
+                                height: 45,
+                                width: 90,
                                 decoration: BoxDecoration(
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
@@ -216,7 +213,6 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                                       var data = snapshot.data!.data();
                                       var totalLoveCount = data?["totalLoveCount"] ?? "0";
                                       String userId = data?["userId"] ?? "";
-                                      _totalLoveCount = totalLoveCount;
                                       _userId = userId;
                                       debugPrint(
                                           " This is the Total number of LOVES earned by this user ${totalLoveCount.toString()}");
@@ -269,8 +265,8 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                               alignment: Alignment.topLeft,
                               child: Container(
                                 padding: EdgeInsets.only(top: 7),
-                                height: 30,
-                                width: 60,
+                                height: 37,
+                                width: 70,
                                 decoration: BoxDecoration(
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
@@ -337,8 +333,8 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                               alignment: Alignment.topLeft,
                               child: Container(
                                 padding: EdgeInsets.only(top: 7),
-                                height: 30,
-                                width: 75,
+                                height: 37,
+                                width: 80,
                                 decoration: BoxDecoration(
                                     color: Pallet.colorWhite,
                                     borderRadius: BorderRadius.circular(5)
@@ -353,7 +349,6 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
                                       var currentLoveCount = data?["currentLoveCount"] ?? "0";
-                                      var _currentLoveCount = currentLoveCount;
                                       debugPrint(
                                           " This is the CURRENT loves for this user ${currentLoveCount.toString()}");
                                       return Text(
@@ -492,7 +487,6 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
                                       var currentLoveCount = data?["currentLoveCount"] ?? "0";
-                                      var _currentLoveCount = currentLoveCount;
                                       debugPrint(
                                           " This is the CURRENT loves for this user ${currentLoveCount.toString()}");
                                       return Text(
@@ -686,9 +680,9 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                                     if (snapshot.hasData) {
                                       var data = snapshot.data!.data();
                                       var userType = data?["userType"] ?? "REGULAR";
-                                      _rate = userType == 'REGULAR'? '2' :
-                                      userType == 'ADMIN'? '3' :
-                                      userType == 'SUPER_ADMIN'? '5' :
+                                      _rate = userType == 'REGULAR'? '1.5' :
+                                      userType == 'ADMIN'? '2' :
+                                      userType == 'SUPER_ADMIN'? '3' :
                                       '2';
                                       _userType = userType;
                                       debugPrint(
@@ -830,20 +824,22 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                         Visibility(
                           visible: _showRequestButton,
                           child: OutlinedButton(
-                            onPressed: (){
-                              ascertainWithdrawnLoveCount();
-                              PageRouter.gotoWidget(
-                                  SendClaireLoveForm(
-                                    amountToSend: _currentWithdrawal.toString(),
-                                    userId: _userId.toString(),
-                                    visitedUsersId: widget.visitedUsersID,
-                                    visitedUser: widget.visitedEgoName,
-                                  ), context);
+                            onPressed: () async {
+                              final _user = await firebaseServices.getUserInfo();
+                              if (_user.currentLoveCount > _currentWithdrawal) {
+                                ascertainWithdrawnLoveCount();
+                                PageRouter.gotoWidget(
+                                    SendClaireLoveForm(
+                                      amountToSend: _currentWithdrawal.toString(),
+                                      userId: _userId.toString(),
+                                      visitedUsersId: widget.visitedUsersID,
+                                      visitedUser: widget.visitedEgoName,
+                                    ), context);
 
-                              print("Requested Amount Is::: $_currentWithdrawal");
-                              print("Available Amount Is::: $_currentLoveCount");
-
-
+                                print("Requested Amount Is::: $_currentWithdrawal");
+                                print("Available Amount Is::: $_currentLoveCount");
+                              }
+                              else showToast("You can't request higher than current loves.");
                             },
                             style: OutlinedButton.styleFrom(
                               backgroundColor: Pallet.colorSecondary,

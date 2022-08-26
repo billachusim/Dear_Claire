@@ -1,11 +1,16 @@
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../services/firebase_services.dart';
+import '../../services/notification_service.dart';
+import '/services/data/notification_model.dart' as pushNotification;
+import '../../utils/constant.dart';
 
 class SendClaireLoveForm extends StatefulWidget {
   final String amountToSend;
@@ -37,6 +42,8 @@ class _SendClaireLoveFormState extends State<SendClaireLoveForm> {
   bool value7 = false;
 
   User? currentUser = FirebaseAuth.instance.currentUser;
+  /// create instance of FirebaseMessaging
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
 
   @override
@@ -364,6 +371,29 @@ class _SendClaireLoveFormState extends State<SendClaireLoveForm> {
     });
   }
 
+  Future<void> pushSendLoveNotification() async {
+    final _user = await firebaseServices.getUserInfo();
+    final senderName = _user.nickname;
+    final senderId = _user.userId;
+    final userId = widget.visitedUsersId;
+    final username = widget.visitedUser;
+
+
+    await _firebaseMessaging.subscribeToTopic(userId);
+
+    final pushNotification.NotificationModel _notificationModel =
+    pushNotification.NotificationModel(
+        to: '/topics/${userId.toString()}',
+        collapseKey: 'type_a',
+        data: pushNotification.Data(id: userId, route: 'wallet'),
+        notification: pushNotification.Notification(
+            title: "Love Transfer",
+            body: "$senderName's request to send $username Loves is pending..."));
+    notificationService.sendNotification(_notificationModel.toJson());
+
+    logger.d('Successfully requested to send Love.');
+  }
+
   String? getWhatsAppUrl(String payload ){
     return AppString.WHATSAPP_URL + (payload);
   }
@@ -371,6 +401,7 @@ class _SendClaireLoveFormState extends State<SendClaireLoveForm> {
   onContinueToWhatsAppClicked() {
     var whatsAppUrl = getWhatsAppUrl(getPayload() ?? "");
     launch(whatsAppUrl!);
+    pushSendLoveNotification();
   }
 
   launchEmailApp() {
@@ -393,6 +424,7 @@ class _SendClaireLoveFormState extends State<SendClaireLoveForm> {
     );
 
     launchUrl(emailLaunchUri);
+    pushSendLoveNotification();
   }
 
   String? getPayload(){
