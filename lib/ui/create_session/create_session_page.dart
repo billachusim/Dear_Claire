@@ -1598,6 +1598,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     if (recordFile != null) {
       sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile!);
+      sessionObject.containsAudio = true;
     }
 
     if (imageList != null) {
@@ -1649,6 +1650,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     CreateSessionModel sessionObject = CreateSessionModel();
     if (recordFile != null) {
       sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile!);
+      sessionObject.containsAudio = true;
     }
 
     if (imageList != null) {

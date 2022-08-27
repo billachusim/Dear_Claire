@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreateSessionModel {
+  bool? containsAudio;
   bool? archived;
   String? audioUrl;
   String? colorHex;
@@ -29,6 +30,7 @@ class CreateSessionModel {
 
   CreateSessionModel(
       {this.archived = false,
+      this.containsAudio,
       this.audioUrl,
       this.colorHex,
       this.featured = false,
@@ -94,6 +96,7 @@ class CreateSessionModel {
 
     if (json['audioUrl'] != null) {
       audioUrl = json['audioUrl'];
+      containsAudio = json['containsAudio'];
     }
 
     message = json['message'];
@@ -142,6 +145,7 @@ class CreateSessionModel {
     }
     if (audioUrl != null) {
       data['audioUrl'] = audioUrl;
+      data['containsAudio'] = containsAudio;
     }
 
     data['category1'] = category1;

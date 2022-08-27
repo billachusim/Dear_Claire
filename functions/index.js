@@ -7,25 +7,25 @@ admin.initializeApp(functions.config().firebase);
 
 const runtimeOpts = {
   timeoutSeconds: 540,
-  memory: "2GB",
+  memory: "256MB",
 };
 
-exports.addCategoriesToSessionsWithMood5 = functions.runWith(runtimeOpts)
+exports.addAudioTagToSessions = functions.runWith(runtimeOpts)
     .https.onRequest(
         (req, res) => {
-          const Activities =
-          admin.firestore().collection("user_activity");
+          const Sessions =
+          admin.firestore().collection("sessions");
 
-          Activities.where("clientId", "==", "fSMVS2DY8ngblW3LlUYowgPkdR83")
+          Sessions.where("audioUrl", ">=", "http")
               .get()
               .then((snapshots) => {
                 if (snapshots.size > 0) {
-                  snapshots.forEach((activity) => {
-                    Activities.doc(activity.id).update({
-                      clientId: "PbRuh3FmtESK57j3PM1Tc9RvPKh2",
+                  snapshots.forEach((sessions) => {
+                    Sessions.doc(sessions.id).update({
+                      containsAudio: true,
                     });
                   });
                 }
               });
-          return Activities;
+          return Sessions;
         });

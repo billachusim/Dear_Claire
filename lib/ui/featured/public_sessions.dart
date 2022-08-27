@@ -290,17 +290,16 @@ class FeaturedStatusStreams extends StatelessWidget {
   final List<Session>? _sessionList = [];
 
 
-  /// Get Featured sessions for "love and relationship" search
+  /// Get Featured sessions with audio
   /// But not flagged or even archived
   Stream<QuerySnapshot<Map<String, dynamic>>> showAudioSessions() {
     return FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
+        .where("containsAudio", isEqualTo: true)
         .where("repliesEnabled", isEqualTo: true)
-        .where("audioUrl", isGreaterThanOrEqualTo: "https")
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(100)
-        .orderBy('audioUrl', descending: true)
         .orderBy('timeLastActivity', descending: true)
         .snapshots();
   }
