@@ -827,7 +827,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                             onPressed: () async {
                               final _user = await firebaseServices.getUserInfo();
                               if (_user.currentLoveCount > _currentWithdrawal) {
-                                ascertainWithdrawnLoveCount();
+                                //ascertainWithdrawnLoveCount();
                                 PageRouter.gotoWidget(
                                     SendClaireLoveForm(
                                       amountToSend: _currentWithdrawal.toString(),

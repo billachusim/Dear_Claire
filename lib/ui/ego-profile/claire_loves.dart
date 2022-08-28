@@ -53,10 +53,10 @@ class _ClaireLovesState extends State<ClaireLoves> {
   /// Set and show current withdrawal available to the user.
 
   void setWithdrawalAmount() {
-    final rate = _rateBadge == 'Ego Rate'? 2 :
-    _rateBadge == 'Alter Ego Rate'? 3 :
-    _rateBadge == 'Super Ego Rate'? 5 :
-    3;
+    final rate = _rateBadge == 'Ego Rate'? 1.5 :
+    _rateBadge == 'Alter Ego Rate'? 2 :
+    _rateBadge == 'Super Ego Rate'? 3 :
+    1.5;
     final currentWithdrawal = int.parse(_amountController.text);
     final totalWithdrawal = _withdrawnLoveCount! + currentWithdrawal;
     final withdrawnLoveCount = currentWithdrawal + totalWithdrawal;
@@ -705,7 +705,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                         _rate = userType == 'REGULAR'? 1.5 :
                                         userType == 'ADMIN'? 2 :
                                         userType == 'SUPER_ADMIN'? 3 :
-                                        3;
+                                        1.5;
                                         debugPrint(
                                             " This is the ego rate used for conversion for this user ${_rate.toString()}");
                                         return Text(
@@ -864,7 +864,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                             onPressed: () async {
                               final _user = await firebaseServices.getUserInfo();
                               if (_user.currentLoveCount > _currentWithdrawal) {
-                                ascertainWithdrawnLoveCount();
+                                //ascertainWithdrawnLoveCount();
                                 PageRouter.gotoWidget(
                                     RequestClaireLoveForm(
                                       currentWithdrawal: _currentWithdrawal.toString(),
