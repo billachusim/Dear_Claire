@@ -20,7 +20,6 @@ final AutoDiary autoDiary = AutoDiary();
 
 class AutoDiary {
   User? currentUser = FirebaseAuth.instance.currentUser;
-  late String _filePath;
   File? recordFile;
   final FirebaseServices _firebaseServices = FirebaseServices();
   late FlutterAudioRecorder2 _audioRecorder;
@@ -40,21 +39,9 @@ class AutoDiary {
   FlutterLocalNotificationsPlugin();
 
 
-  void startForegroundService() async {
-
-  }
-
-  void globalForegroundService() {
-    debugPrint("current datetime is ${DateTime.now()}");
-  }
-
-  Future<void> _startRecording() async {
-    final bool? hasRecordingPermission =
-    await FlutterAudioRecorder2.hasPermissions;
-
-    if (hasRecordingPermission ?? false) {
+  Future<void> startRecording() async {
       Directory directory = await getApplicationDocumentsDirectory();
-      String filepath = directory.path +
+      var filepath = directory.path +
           '/' +
           DateTime.now().millisecondsSinceEpoch.toString() +
           '.aac';
@@ -62,20 +49,18 @@ class AutoDiary {
           FlutterAudioRecorder2(filepath, audioFormat: AudioFormat.AAC);
       await _audioRecorder.initialized;
       _audioRecorder.start();
-      _filePath = filepath;
-    } else {
-      _audioRecorder.stop();
-    }
+      recordFile = filepath as File?;
+      //saveAndSendAutoDiary(recordFile!);
   }
 
 
 
-  saveAndSendAutoDiary() async {
+  saveAndSendAutoDiary(File recordFile) async {
     userModel = await _firebaseServices.getUserInfo();
     CreateSessionModel sessionObject = CreateSessionModel();
 
     if (recordFile != null) {
-      sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile!);
+      sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile);
     }
 
     sessionObject.userAvatarUrl = userModel.avatarUrl;
@@ -99,7 +84,7 @@ class AutoDiary {
   }
 
 
-  randomizeReminderNotes() async {
+  randomizeReminderNotes() {
     Random random = new Random();
     int randomNumber = random.nextInt(Constant.TOAST_NUMBERS.length);
     var message = randomNumber == 1 ? "Go on, Darling, talk to me..." :
@@ -124,12 +109,9 @@ class AutoDiary {
     randomNumber == 19 ? "If you don't tell me, I won't know." :
 
     "Go on, Darling, talk to me...";
-    await  Future.delayed(Duration(minutes: 45), () {
       flutterLocalNotificationsPlugin.show(0, 'Claireminder',
           message.toString(), _notificationDetails(), payload:
           message.contains("game") ? "game" : "claireminder");
-    }
-    );
   }
 
 

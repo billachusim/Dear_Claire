@@ -389,10 +389,13 @@ class _HomeDashboardPageState extends State<HomePage>
                   ),
                   SizedBox(height: 18,),
                   ListTile(
-                    title: Text("Send Claire To Someone",
+                    title: Text("Start Or Stop Auto Diary",
                         style: TextStyle(color: Pallet.colorWhite)),
-                    onTap: ()=>sendClaireToSomeone(),
-                    leading: Icon(Icons.share, color: Pallet.colorWhite),
+                    onTap: () async {
+                      if (await firebaseServices.isUserSignIn(context))
+                      Navigator.of(context).pushNamed(AppRoutes.setupAutoDiary);
+                    },
+                    leading: Icon(Icons.auto_awesome_motion_rounded, color: Pallet.colorWhite),
                   ),
                   SizedBox(height: 18,),
                   ListTile(
@@ -424,7 +427,13 @@ class _HomeDashboardPageState extends State<HomePage>
                     },
                     leading: Icon(Icons.gamepad_rounded, color: Pallet.colorWhite),
                   ),
-
+                  SizedBox(height: 18,),
+                  ListTile(
+                    title: Text("Send Claire To Someone",
+                        style: TextStyle(color: Pallet.colorWhite)),
+                    onTap: ()=>sendClaireToSomeone(),
+                    leading: Icon(Icons.share, color: Pallet.colorWhite),
+                  ),
                   SizedBox(height: 18,),
                   ListTile(
                     title: Text("Updates And Announcements",

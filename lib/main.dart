@@ -1,4 +1,6 @@
 // @dart=2.9
+import 'dart:io';
+import 'package:dear_claire/Automations/auto_diary.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/notification.dart';
 import 'package:dear_claire/ui/chats/chatrooms.dart';
@@ -22,10 +24,32 @@ import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:workmanager/workmanager.dart';
 import 'Admob/ad_state.dart';
 import 'data/core/config.dart';
 import 'firebase_options.dart';
 
+const BgTaskName = "autoDiary";
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) {
+    switch (task) {
+      case 'autoDiary': autoDiary.randomizeReminderNotes();
+        break;
+    }
+    return Future.value(true);
+  });
+}
+void iOSCallbackDispatcher() {
+  Workmanager().executeTask((task, inputData) {
+    switch (task) {
+      case Workmanager.iOSBackgroundTask: autoDiary.startRecording();
+        stderr.writeln("The iOS background fetch was triggered");
+        break;
+    }
+    bool success = true;
+    return Future.value(success);
+  });
+}
 /// Receive message when the app is closed and in background.
 Future<void> backgroundHandler(RemoteMessage message) async{
 print(message.data.toString());
@@ -41,6 +65,8 @@ Future<void> main() async {
   );
   FirebaseMessaging.instance.getToken();
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
+  await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
+  await Workmanager().initialize(iOSCallbackDispatcher, isInDebugMode: true);
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
   Config.appFlavor = Flavor.DEVELOPMENT;
   await Hive.initFlutter();

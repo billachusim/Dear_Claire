@@ -25,7 +25,7 @@ dependencies:
   flutter_local_notifications: ^9.5.3+1
   http: ^0.13.3
   fluttertoast: ^8.0.8
-  firebase_auth: ^3.0.1
+  firebase_auth: ^3.6.0
   provider: ^6.0.0
   firebase_database: ^9.0.19
   flutter_reaction_button: ^1.0.8
@@ -81,6 +81,7 @@ dependencies:
   flutter_staggered_animations:
   animated_text_kit:
   firebase_in_app_messaging: ^0.6.0+19
+  workmanager: ^0.5.0
 
 
 dev_dependencies:

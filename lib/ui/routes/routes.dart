@@ -1,3 +1,4 @@
+import 'package:dear_claire/Automations/setup_autoDiary_widget.dart';
 import 'package:dear_claire/ui/Categories/category_sessions.dart';
 import 'package:dear_claire/ui/alter_ego/alter_ego_homepage.dart';
 import 'package:dear_claire/ui/alter_ego/alter_ego_login.dart';
@@ -72,6 +73,8 @@ class AppRoutes {
   static const categorySessions = '/categorySessions';
   static const games = '/games';
   static const updatesAndAnnouncements = '/updatesAndAnnouncements';
+  static const setupAutoDiary = '/setupAutoDiary';
+
 
 
 }
@@ -176,6 +179,14 @@ class AppRouter {
           fullscreenDialog: true,
         );
 
+
+      case AppRoutes.setupAutoDiary:
+        return MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider(
+              create: (_) => HowClaireWorksProvider(), child: SetupAutoDiary()),
+          settings: settings,
+          fullscreenDialog: true,
+        );
 
         case AppRoutes.howAlterEgoWorks:
          return MaterialPageRoute(

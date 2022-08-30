@@ -6,6 +6,7 @@ import UIKit
 import Flutter
 import Firebase
 import FirebaseMessaging
+import workmanager
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate, MessagingDelegate {
@@ -31,6 +32,7 @@ import FirebaseMessaging
         application.registerUserNotificationSettings(settings)
       }
     application.registerForRemoteNotifications()
+    UIApplication.shared.setMinimumBackgroundFetchInterval(TimeInterval(60*15))
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
     override func application(_ application: UIApplication,
