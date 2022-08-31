@@ -1,6 +1,11 @@
 // !$*UTF8*$!
 {
-	archiveVersion = 1;
+	 SystemCapabilities = {
+     com.apple.BackgroundModes = {
+     enabled = 1;
+     };
+   };
+    archiveVersion = 1;
 	classes = {
 	};
 	objectVersion = 54;
