@@ -2316,14 +2316,14 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.category3 = 'husband and wife';
     }
 
-    if (sessionTextEditingController.text.contains('bro'))
+    if (sessionTextEditingController.text.contains('my bro'))
     {
       sessionObject.category1 = 'brothers and sisters';
       sessionObject.category2 = 'marriage and family';
       sessionObject.category3 = 'husband and wife';
     }
 
-    if (sessionTextEditingController.text.contains('sis'))
+    if (sessionTextEditingController.text.contains('my sis'))
     {
       sessionObject.category1 = 'brothers and sisters';
       sessionObject.category2 = 'marriage and family';

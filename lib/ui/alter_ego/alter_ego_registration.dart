@@ -20,7 +20,6 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
   TextEditingController _nameOfSchoolController = TextEditingController();
   TextEditingController _nameOfBestFriendController = TextEditingController();
   TextEditingController _bestFriendNumController = TextEditingController();
-  TextEditingController _amountDonatedController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _facebookNameController = TextEditingController();
   TextEditingController _instagramUserNameController = TextEditingController();
@@ -319,41 +318,6 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               EdgeInsets.only(right: 15, left: 15),
                             ),
                             keyboardType: TextInputType.phone,
-                            style: GoogleFonts.lato(
-                                fontSize: 12.0,
-                                color: Pallet.colorBlack,
-                                fontWeight: FontWeight.w400)),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Container(
-                        color: Pallet.colorWhite,
-                        child: TextFormField(
-                            onChanged: (value) {},
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "Enter an amount you donated";
-                              }
-                              return null;
-                            },
-                            textInputAction: TextInputAction.next,
-                            controller: _amountDonatedController,
-                            decoration: new InputDecoration(
-                              hintText: "₦1000",
-                              labelText: "Amount Donated",
-                              labelStyle:
-                              TextStyle(color: Pallet.colorTextGray),
-                              focusedBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
-                              enabledBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorTextGray)),
-                              contentPadding:
-                              EdgeInsets.only(right: 15, left: 15),
-                            ),
-                            keyboardType: TextInputType.number,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
                                 color: Pallet.colorBlack,
@@ -816,7 +780,6 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
     var nameOfSchoolOrOccupation = _nameOfSchoolController.text.isEmpty ? "null" : _nameOfSchoolController.text;
     var nameOfFriendOrRelative = _nameOfBestFriendController.text.isEmpty ? "null" : _nameOfBestFriendController.text;
     var phoneNumberFriendOrRelative = _bestFriendNumController.text.isEmpty ? "null" : _bestFriendNumController.text;
-    var amountDonated = _amountDonatedController.text.isEmpty ? "null" : _amountDonatedController.text;
     var emailAddress = _emailController.text.isEmpty ? "null" : _emailController.text;
     var facebookName = _facebookNameController.text.isEmpty ? "null" : _facebookNameController.text;
     var instagramUsername = _instagramUserNameController.text.isEmpty ? "null" : _instagramUserNameController.text;
@@ -852,8 +815,6 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
       *Name Of Friend Or Relative*: $nameOfFriendOrRelative
 
       *Phone Number Of Friend Or Relative*: $phoneNumberFriendOrRelative
-
-      *Amount Donated*: $amountDonated
 
       *Email Address*: $emailAddress
 

@@ -9,6 +9,9 @@ import 'package:swipedetector/swipedetector.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../utils/constant.dart';
+import '../../widgets/toast.dart';
+
 class HowAlterEgoWorks extends StatefulWidget {
   const HowAlterEgoWorks({Key? key}) : super(key: key);
 
@@ -162,8 +165,11 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
                       height: 20,
                     ),
                     OutlinedButton(
-                      onPressed: (){
-                        Navigator.pushNamed(context, AppRoutes.alterEgoRegistration);
+                      onPressed: () async {
+                        final _user = await firebaseServices.getUserInfo();
+                        if (_user.currentLoveCount > 2000) {
+                          Navigator.pushNamed(context, AppRoutes.alterEgoRegistration);
+                        } else showToast("...but you need 2000 Loves.");
                       },
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Pallet.colorSecondary,

@@ -773,6 +773,10 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
             onTap: (String comment, voiceNote, image1, image2) {
               if (theSession?.repliesEnabled == true) {
                 _sendComment(comment, voiceNote, theSession!, image1, image2);
+              } else if (theSession!.respondentUserId == currentUser!.uid) {
+                _sendComment(comment, voiceNote, theSession!, image1, image2);
+              }else if (theSession?.userId == currentUser.uid) {
+                _sendComment(comment, voiceNote, theSession!, image1, image2);
               }
               else showToast("Switch to Alter Ego first.");
             }
@@ -821,7 +825,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
     firebaseServices.addCommentNotification(
       title: session.title ?? '',
       docId: session.sessionId!,
-      sender: _userModel.nickname.toString(),
+      sender: "Someone",
     );
 
     updateSessionTimeLastActivity(session);

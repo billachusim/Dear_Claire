@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../widgets/toast.dart';
+
 class RequestFeatureForm extends StatefulWidget {
   const RequestFeatureForm({Key? key}) : super(key: key);
 
@@ -230,7 +232,12 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: onContinueToWhatsAppClicked,
+                  onTap: () async {
+                    final _user = await firebaseServices.getUserInfo();
+                    if (_user.currentLoveCount > 2000) {
+                      onContinueToWhatsAppClicked();
+                    } else showToast("Need at least 500 Loves in your wallet.");
+                  },
                   child: Container(
                     color: Pallet.green,
                     child: Padding(
@@ -258,7 +265,12 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
 
                 SizedBox(height: 8,),
                 GestureDetector(
-                  onTap: launchEmailApp,
+                  onTap: () async {
+                    final _user = await firebaseServices.getUserInfo();
+                    if (_user.currentLoveCount > 2000) {
+                      launchEmailApp();
+                    } else showToast("Need at least 500 Loves in your wallet.");
+                  },
                   child: Container(
                     color: Colors.red,
                     child: Padding(
