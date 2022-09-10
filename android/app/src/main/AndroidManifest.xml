@@ -25,6 +25,15 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="socialFaculty"/>
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="454438896370655"/>
+        <meta-data
+            android:name="com.facebook.sdk.ClientToken"
+            android:value="3131c96e49b3e9f969d022001735c451"/>
+        <meta-data
+            android:name="com.facebook.sdk.CodelessDebugLogEnabled"
+            android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

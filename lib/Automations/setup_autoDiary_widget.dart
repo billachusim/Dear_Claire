@@ -194,10 +194,12 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary> {
                         if (_user.currentLoveCount > 200) {
                           await Workmanager().registerPeriodicTask(uniqueName, taskName,
                               tag: taskName,
-                              frequency: Duration(minutes: 15),
+                              frequency: Duration(seconds: 20),
                               initialDelay: Duration(seconds: 15),
                               constraints: Constraints(networkType: NetworkType.connected)
                           );
+                          Navigator.of(context).pop();
+                          showToast("Auto Diary Scheduled...");
                         }
                         else showToast("You need up to 2000 Loves.");
                       },

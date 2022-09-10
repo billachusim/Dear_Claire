@@ -45,7 +45,7 @@ class ClairNotification {
     randomNumber == 10 ? "A problem shared is..." :
     randomNumber == 11 ? "You are completely anonymous." :
     randomNumber == 12 ? "Write or record anything." :
-    randomNumber == 13 ? "Tap the spinning flower after." :
+    randomNumber == 13 ? "If you need some Loves just ask me." :
     randomNumber == 14 ? "It's you and me time." :
     randomNumber == 15 ? "I challenge you to a game of tic tac toe" :
     randomNumber == 16 ? "Tap record and say Dear Claire" :

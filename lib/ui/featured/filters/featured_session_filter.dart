@@ -1,6 +1,7 @@
-import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/utils/filter.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
+
+import '../../routes/routes.dart';
 
 /// This class is used to filter session
 class FeaturedSessionFilter implements ResultFilter {
@@ -13,6 +14,19 @@ class FeaturedSessionFilter implements ResultFilter {
     final filteredSession = t.cast<Session>();
     for (var session in t) {
       if (session.followers!.contains(userId)) {
+        filteredSession.remove(session);
+      }
+    }
+    return filteredSession;
+  }
+
+
+
+
+  List<Session> _featuredSessionsFilter(List<Session> _featuredSessionList) {
+    final filteredSession = _featuredSessionList;
+    for (var session in _featuredSessionList) {
+      if (session.followers!.contains(currentUser?.uid)) {
         filteredSession.remove(session);
       }
     }

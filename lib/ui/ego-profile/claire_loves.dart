@@ -640,11 +640,11 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                       border: InputBorder.none,
                                       contentPadding:
                                       EdgeInsets.only(left: 22.0, bottom: 13, right: 2.0),
-                                      hintText: "000",
+                                      hintText: "0000",
                                       hintStyle: TextStyle(
                                         fontStyle: FontStyle.italic,
                                         color: Pallet.grey,
-                                        fontSize: 14,
+                                        fontSize: 15,
                                       ),
                                       counterText: '',
                                     ),
@@ -792,7 +792,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                                       border: InputBorder.none,
                                       contentPadding:
                                       EdgeInsets.only(left: 22.0, bottom: 13, right: 2.0),
-                                      hintText: _currentWithdrawal.toString(),
+                                      hintText: _currentWithdrawal ?? "0000",
                                       hintStyle: TextStyle(
                                         fontStyle: FontStyle.italic,
                                         color: Pallet.colorBlack,
