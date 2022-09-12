@@ -54,7 +54,7 @@ class _AlterEgoChatRoomWidgetState extends State<AlterEgoChatRoomWidget> {
 
             Container(
               height: 70,
-              width: 400,
+              width: getDeviceWidth(context),
               margin: EdgeInsets.only(top: 6, bottom: 4),
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),

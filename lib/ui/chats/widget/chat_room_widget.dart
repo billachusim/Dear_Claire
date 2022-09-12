@@ -52,16 +52,44 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
           mainAxisSize: MainAxisSize.min,
           children: [
 
-            Container(
-              height: 70,
-              width: 400,
-              margin: EdgeInsets.only(top: 6, bottom: 4),
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  image: DecorationImage(image: AssetImage(widget.element.image.toString()),
-                      fit: BoxFit.fill)
-              ),
-              child: Container(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image.asset(
+                  "assets/images/claire_icon.png",
+                  height: 50,
+                  width: 50,
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Anonymous  Diaryroom',
+                          textAlign: TextAlign.start,
+                          maxLines: 1,
+                          style: GoogleFonts.lato(
+                              fontSize: 16.0,
+                              color: Pallet.colorWhite,
+                              fontWeight: FontWeight.w700)),
+                      SizedBox(
+                        height: 3,
+                      ),
+                      Text('By Claire 🌺',
+                          textAlign: TextAlign.start,
+                          maxLines: 1,
+                          style: GoogleFonts.lato(
+                              fontSize: 14.0,
+                              color: Pallet.colorWhite,
+                              fontWeight: FontWeight.normal)),
+                    ],
+                  ),
+                ),
+              ],
             ),
             SizedBox(
                 height: 6,

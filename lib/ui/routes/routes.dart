@@ -17,7 +17,6 @@ import 'package:dear_claire/ui/featured/all_featured.dart';
 import 'package:dear_claire/ui/games/games_home.dart';
 import 'package:dear_claire/ui/games/space_shooter.dart';
 import 'package:dear_claire/ui/games/tic_tac_toe.dart';
-import 'package:dear_claire/ui/games/whot.dart';
 import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
 import 'package:dear_claire/ui/featured/request_feature_form.dart';
 import 'package:dear_claire/ui/login/login_screen.dart';
@@ -269,13 +268,6 @@ class AppRouter {
       case AppRoutes.ticTacToe:
         return MaterialPageRoute<dynamic>(
           builder: (_) => TicTacToe(),
-          settings: settings,
-          fullscreenDialog: false,
-        );
-
-      case AppRoutes.whot:
-        return MaterialPageRoute<dynamic>(
-          builder: (_) => Whot(),
           settings: settings,
           fullscreenDialog: false,
         );

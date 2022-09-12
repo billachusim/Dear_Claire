@@ -90,35 +90,6 @@ class GamesHome extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 20),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pushNamed(AppRoutes.whot);
-                    },
-                    child: Column(
-                      children: [
-                        Container(
-                          height: 130,
-                          width: 300,
-                          decoration: BoxDecoration(
-                              image: DecorationImage(image: AssetImage('assets/images/whot.png'),
-                                  fit: BoxFit.fill)
-                          ),
-                          child: Container(),
-                        ),
-                        TextButton(
-                          child: const Text("Whot Cards",
-                            style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),),
-                          onPressed: () {
-                            Navigator.of(context).pushNamed(AppRoutes.whot);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             )
