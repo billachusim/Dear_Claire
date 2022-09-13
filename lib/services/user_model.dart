@@ -19,6 +19,9 @@ class UserModel {
   var currentLoveCount;
   var withdrawnLoveCount;
   bool flagged;
+  String? claireminderTitle;
+  String? claireminderMessage;
+  int? claireminderDelay;
 
   UserModel({
     this.alterEgoAccessCode,
@@ -39,6 +42,9 @@ class UserModel {
     this.currentLoveCount,
     this.withdrawnLoveCount,
     this.flagged = false,
+    this.claireminderTitle,
+    this.claireminderMessage,
+    this.claireminderDelay,
   });
 
   factory UserModel.fromJson(json) {
@@ -61,6 +67,9 @@ class UserModel {
       currentLoveCount: json['currentLoveCount'] ?? 0,
       withdrawnLoveCount: json['withdrawnLoveCount'] ?? 0,
       flagged: json['flagged'],
+      claireminderTitle: json['claireminderTitle'] ?? '',
+      claireminderMessage: json['claireminderMessage'] ?? '',
+      claireminderDelay: json['claireminderDelay'] ?? 0,
     );
   }
 
@@ -84,6 +93,9 @@ class UserModel {
       currentLoveCount: json['currentLoveCount'] ?? 0.0,
       withdrawnLoveCount: json['withdrawnLoveCount'] ?? 0.0,
       flagged: json['flagged'] ?? false,
+      claireminderTitle: json['claireminderTitle'] ?? '',
+      claireminderMessage: json['claireminderMessage'] ?? '',
+      claireminderDelay: json['claireminderDelay'] ?? 0,
     );
   }
 
@@ -106,5 +118,8 @@ class UserModel {
         'currentLoveCount': currentLoveCount,
         'withdrawnLoveCount': withdrawnLoveCount,
         'flagged': flagged,
+        'claireminderTitle': claireminderTitle,
+        'claireminderMessage': claireminderMessage,
+        'claireminderDelay': claireminderDelay,
   };
 }

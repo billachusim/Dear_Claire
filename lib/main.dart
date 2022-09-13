@@ -1,7 +1,7 @@
 // @dart=2.9
 import 'dart:io';
 import 'dart:ui';
-import 'package:dear_claire/Automations/auto_diary.dart';
+import 'package:dear_claire/Automations/claireminder.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/notification.dart';
 import 'package:dear_claire/ui/chats/chatrooms.dart';
@@ -37,9 +37,9 @@ void callbackDispatcher() {
   DartPluginRegistrant.ensureInitialized();
   Workmanager().executeTask((task, inputData) {
     switch (task) {
-      case 'autoDiary': AutoDiary.startRecording();
+      case 'claireminder': Claireminder.randomizeReminderNotes();
       break;
-      case Workmanager.iOSBackgroundTask: AutoDiary.randomizeReminderNotes();
+      case Workmanager.iOSBackgroundTask: Claireminder.randomizeReminderNotes();
       stderr.writeln("The iOS background fetch was triggered");
       break;
     }
@@ -125,7 +125,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     triggerNotifications();
     clairNotification.randomizeNewAppSessionToast();
-    clairNotification.randomizeReminderNotes();
   }
 
 

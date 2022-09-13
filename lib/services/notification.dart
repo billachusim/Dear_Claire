@@ -28,6 +28,24 @@ class ClairNotification {
       FlutterLocalNotificationsPlugin();
 
 
+  NotificationDetails? _notificationDetails() {
+    return NotificationDetails(
+        android: AndroidNotificationDetails(
+            channel.id, channel.name,
+            color: Pallet.colorPrimary,
+            playSound: true,
+            icon: '@drawable/claire_icon',
+            enableLights: true,
+            enableVibration: true,
+            showWhen: true,
+            channelShowBadge: true),
+        iOS: IOSNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true));
+  }
+
+
 
   randomizeReminderNotes() async {
     Random random = new Random();
@@ -97,22 +115,4 @@ class ClairNotification {
       );    });
   }
 
-
-
-  NotificationDetails? _notificationDetails() {
-    return NotificationDetails(
-        android: AndroidNotificationDetails(
-            channel.id, channel.name,
-            color: Pallet.colorPrimary,
-            playSound: true,
-            icon: '@drawable/claire_icon',
-            enableLights: true,
-            enableVibration: true,
-            showWhen: true,
-            channelShowBadge: true),
-        iOS: IOSNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true));
-  }
 }

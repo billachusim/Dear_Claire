@@ -165,7 +165,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary> {
                         if (_user.currentLoveCount > 200) {
                           await Workmanager().registerOneOffTask(uniqueName, taskName,
                               tag: taskName,
-                              initialDelay: Duration(seconds: 15),
+                              initialDelay: Duration(seconds: _user.claireminderDelay!),
                               constraints: Constraints(networkType: NetworkType.connected)
                           );
                           Navigator.of(context).pop();
@@ -194,7 +194,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary> {
                         if (_user.currentLoveCount > 200) {
                           await Workmanager().registerPeriodicTask(uniqueName, taskName,
                               tag: taskName,
-                              frequency: Duration(seconds: 20),
+                              frequency: Duration(days: _user.claireminderDelay!),
                               initialDelay: Duration(seconds: 15),
                               constraints: Constraints(networkType: NetworkType.connected)
                           );
@@ -219,7 +219,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary> {
                     OutlinedButton(
                       onPressed: () async {
                         final _user = await firebaseServices.getUserInfo();
-                        final String taskName = "autoDiary";
+                        //final String taskName = "autoDiary";
                         if (_user.currentLoveCount > 200) {
                           await Workmanager().cancelAll();
                         }
