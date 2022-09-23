@@ -1,11 +1,11 @@
 import 'package:dear_claire/ui/ego-profile/empty_session_widget.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/widgets/ego_mode_session_card.dart';
-import 'package:dear_claire/utils/color.dart';
 import 'package:flutter/material.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 
+import '../../widgets/toast.dart';
 import '../routes/routes.dart';
 
 
@@ -24,14 +24,12 @@ class _DiaryPageState extends State<DiaryPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: WillPopScope(
-
-        onWillPop: (){
-          Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.allFeaturedPage);
+        onWillPop: () {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          showToast("Press back again to exit.");
           return Future.value(false);
         },
         child: Scaffold(
-          backgroundColor: Pallet.colorSecondaryDark,
           body: Stack(
             children: [
 
@@ -80,7 +78,7 @@ class DiarySessionNotice extends StatelessWidget {
           "Only YOUR Diary Sessions appear here. Archived Sessions can be found on Ego page.\n"
               "Open Up, write or record anything, share or save it and Claire will be there for you.",
           style: TextStyle(
-            color: Colors.white70,
+            color: Colors.black45,
             fontSize: 10,
             fontWeight: FontWeight.w600,
             fontStyle: FontStyle.italic,

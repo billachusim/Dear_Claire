@@ -4,7 +4,6 @@ import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/data/chats.dart';
 import 'package:dear_claire/ui/chats/widget/inside_inside_diaryrooms.dart';
 import 'package:dear_claire/ui/chats/widget/inside_inside_inside_diaryroom.dart';
-import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
@@ -133,7 +132,7 @@ class _SubChatScreenState extends State<SubChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Pallet.colorSecondaryDark,
+      backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),

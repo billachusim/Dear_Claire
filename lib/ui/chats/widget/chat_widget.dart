@@ -292,7 +292,7 @@ class ChatWidget extends StatelessWidget {
                                 textAlign: TextAlign.start,
                                 maxLines: 1,
                                 style: GoogleFonts.lato(
-                                    fontSize: 15.0,
+                                    fontSize: 16.0,
                                     color: Pallet.colorBlack,
                                     fontWeight: FontWeight.w800)),
                             SizedBox(
@@ -304,7 +304,7 @@ class ChatWidget extends StatelessWidget {
                                 textAlign: TextAlign.start,
                                 maxLines: 1,
                                 style: GoogleFonts.lato(
-                                    fontSize: 11.0,
+                                    fontSize: 12.0,
                                     color: Pallet.colorGrey,
                                     fontWeight: FontWeight.normal)),
                           ],
@@ -324,7 +324,7 @@ class ChatWidget extends StatelessWidget {
                               snapShot.data!.docs.length.toString() + " Online 🟢",
                               style: TextStyle(
                                   color: Colors.black,
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w600
                               ),
                             );
@@ -342,7 +342,7 @@ class ChatWidget extends StatelessWidget {
             chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
-                fontSize: 16.0,
+                fontSize: 18.0,
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
@@ -504,7 +504,7 @@ class ChatWidget extends StatelessWidget {
                         child: Text(
                           '${chatModel!.members!.length} LEAVE',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 13,
                               fontWeight: FontWeight.w800,
                               color: _isCompleted(chatModel, chatRoomPodo)
                                   ? Pallet.colorPrimaryDark
@@ -616,9 +616,9 @@ class ChatWidget extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            'Continue',
+                            'CONTINUE',
                             style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w800,
                                 color: Pallet.colorPrimaryDark,
                             ),
@@ -679,7 +679,7 @@ class ChatWidget extends StatelessWidget {
                           child: Text(
                             '${chatModel!.members!.length} JOIN',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 14,
                               fontWeight: FontWeight.w800,
                                 color: _isCompleted(chatModel, chatRoomPodo)
                                     ? Pallet.blueGreyBgColor

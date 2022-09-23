@@ -24,12 +24,12 @@ import '../services/user_model.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../utils/strings.dart';
 
-class EgoModeSessionCard extends StatelessWidget {
+class FeaturedSessionCard extends StatelessWidget {
   Session element;
   bool? isFeatured;
   bool? isArchived;
 
-  EgoModeSessionCard({Key? key, required this.element, required this.visitedUsersID, required this.visitedEgoName}) : super(key: key);
+  FeaturedSessionCard({Key? key, required this.element, required this.visitedUsersID, required this.visitedEgoName}) : super(key: key);
   late String visitedUsersID;
   late String visitedEgoName;
 
@@ -113,8 +113,10 @@ class EgoModeSessionCard extends StatelessWidget {
           context),
       padding: EdgeInsets.zero,
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 7, horizontal: 7),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        height: 400,
+        width: 400,
+        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
             color: HexColor.fromHex(element.colorHex!)),
@@ -148,26 +150,26 @@ class EgoModeSessionCard extends StatelessWidget {
                       showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
                     }
                     print("Visited User ID::: $visitedUsersID");
-                    },
+                  },
                   child: CachedNetworkImage(
-                      width: 50,
-                      height: 50,
+                      width: 48,
+                      height: 48,
                       imageUrl: element.userAvatarUrl!,
                       imageBuilder: (context, imageProvider) => Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.fill,
-                              ),
-                            ),
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: imageProvider,
+                            fit: BoxFit.fill,
                           ),
+                        ),
+                      ),
                       placeholder: (context, url) => CircularProgressIndicator(),
                       errorWidget: (context, url, error) => Image.asset(
-                            "assets/images/brown_boy_mask.png",
-                            width: 50,
-                            height: 50,
-                          ) //Icon(Icons.error),
-                      ),
+                        "assets/images/brown_boy_mask.png",
+                        width: 48,
+                        height: 48,
+                      ) //Icon(Icons.error),
+                  ),
                 ),
                 SizedBox(
                   width: 8,
@@ -203,7 +205,7 @@ class EgoModeSessionCard extends StatelessWidget {
                             textAlign: TextAlign.start,
                             maxLines: 1,
                             style: GoogleFonts.lato(
-                                fontSize: 22.0,
+                                fontSize: 18.0,
                                 color: Pallet.colorWhite,
                                 fontWeight: FontWeight.w800)),
                       ),
@@ -214,7 +216,7 @@ class EgoModeSessionCard extends StatelessWidget {
                           textAlign: TextAlign.start,
                           maxLines: 1,
                           style: GoogleFonts.lato(
-                              fontSize: 13.0,
+                              fontSize: 12.0,
                               color: Colors.white70,
                               fontWeight: FontWeight.w700)),
                     ],
@@ -230,19 +232,19 @@ class EgoModeSessionCard extends StatelessWidget {
                           textAlign: TextAlign.end,
                           maxLines: 1,
                           style: GoogleFonts.lato(
-                              fontSize: 14.0,
+                              fontSize: 13.0,
                               color: Pallet.colorWhite,
                               fontWeight: FontWeight.w700)),
                       SizedBox(
                         height: 3,
                       ),
                       Text(element.location ?? "",
-                          textAlign: TextAlign.end,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 13.0,
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w700),
+                        textAlign: TextAlign.end,
+                        maxLines: 1,
+                        style: GoogleFonts.lato(
+                            fontSize: 12.0,
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w700),
                       ),
                     ],
                   ),
@@ -250,7 +252,7 @@ class EgoModeSessionCard extends StatelessWidget {
               ],
             ),
             SizedBox(
-              height: 8,
+              height: 6,
             ),
             Center(
               child: Text(element.title!,
@@ -262,22 +264,22 @@ class EgoModeSessionCard extends StatelessWidget {
                       fontWeight: FontWeight.w800)),
             ),
             SizedBox(
-              height: 7,
+              height: 5,
             ),
             Column(
               children: [
-                  Text(
-                    element.message!,
-                    textAlign: TextAlign.justify,
-                    maxLines: element.imageUrls!.isNotEmpty ? 8 : 10,
-                    style: GoogleFonts.lato(
-                        fontSize: 21.0,
-                        color: Pallet.colorWhite,
-                        fontWeight: FontWeight.w600),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                Text(
+                  element.message!,
+                  textAlign: TextAlign.start,
+                  maxLines: element.imageUrls!.isNotEmpty ? 4 : 6,
+                  style: GoogleFonts.lato(
+                      fontSize: 25.0,
+                      color: Pallet.colorWhite,
+                      fontWeight: FontWeight.w500),
+                  overflow: TextOverflow.ellipsis,
+                ),
                 SizedBox(
-                  height: 7,
+                  height: 6,
                 ),
 
                 Container(
@@ -300,8 +302,7 @@ class EgoModeSessionCard extends StatelessWidget {
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
                     crossAxisCount: 5,
-                    children: List.generate(
-                        element.imageUrls!.length, (index) {
+                    children: List.generate(element.imageUrls!.length, (index) {
                       String image = element.imageUrls![index].toString();
                       return Stack(
                         fit: StackFit.expand,
@@ -311,15 +312,18 @@ class EgoModeSessionCard extends StatelessWidget {
                               PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
                             },
                             child: CachedNetworkImage(
+                                height: 100,
+                                width: 100,
                                 imageUrl: image,
                                 imageBuilder: (context, imageProvider) => Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(25),
                                     image: DecorationImage(
-                                      image: imageProvider,
-                                      //fit: BoxFit.fill,
+                                        image: imageProvider,
+                                        fit: BoxFit.cover
                                     ),
                                   ),
+                                  margin: EdgeInsets.all(3),
                                 ),
                                 placeholder: (context, url) =>
                                     Center(child: CircularProgressIndicator()),
@@ -338,56 +342,54 @@ class EgoModeSessionCard extends StatelessWidget {
               ],
             ),
 
-            SizedBox(height: 8,),
-
             Row(
               children: [
                 MetooButton(
-                    cheers: element.meToos!.length,
-                    thanks: element.meLove!.length,
-                    sorry: element.meHiFive!.length,
-                    me2: element.meFlower!.length,
-                    color: Pallet.colorWhite,
-                    onReactionChanged: (reaction, index) async {
-                      if (await firebaseServices
-                          .isUserSignIn(context)) {
-                        final _userModel =
-                        await firebaseServices.getUserInfo();
+                  cheers: element.meToos!.length,
+                  thanks: element.meLove!.length,
+                  sorry: element.meHiFive!.length,
+                  me2: element.meFlower!.length,
+                  color: Pallet.colorWhite,
+                  onReactionChanged: (reaction, index) async {
+                    if (await firebaseServices
+                        .isUserSignIn(context)) {
+                      final _userModel =
+                      await firebaseServices.getUserInfo();
 
-                        firebaseServices.addUsersReactionToASession(
-                            context, index,
-                            session: element,
-                            sender: _userModel.nickname ?? '');
+                      firebaseServices.addUsersReactionToASession(
+                          context, index,
+                          session: element,
+                          sender: _userModel.nickname ?? '');
 
-                        saveUserMe2Activity();
-                        await firebaseServices.updateSessionLastTimeActivity(element.sessionId.toString());
-                      }
+                      saveUserMe2Activity();
+                      await firebaseServices.updateSessionLastTimeActivity(element.sessionId.toString());
+                    }
 
-                    }, session: element,
-                    ),
+                  }, session: element,
+                ),
 
                 new Spacer(),
 
-                        Visibility(
-                          visible: element.userId == currentUser?.uid,
-                          child: GestureDetector(
-                            onTap: () {
-                              if (element.featured == false)
-                                featureAlertDialog(context);
-                              else unfeatureAlertDialog(context);
-                            },
-                            child: Container(
-                              child: Visibility(
-                                visible: element.repliesEnabled == true,
-                                child: Icon(
-                                  element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
-                                  color: Pallet.colorWhite,
-                                  size: 28,
-                                ),
-                              ),
-                            ),
-                          ),
+                Visibility(
+                  visible: element.userId == currentUser?.uid,
+                  child: GestureDetector(
+                    onTap: () {
+                      if (element.featured == false)
+                        featureAlertDialog(context);
+                      else unfeatureAlertDialog(context);
+                    },
+                    child: Container(
+                      child: Visibility(
+                        visible: element.repliesEnabled == true,
+                        child: Icon(
+                          element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
+                          color: Pallet.colorWhite,
+                          size: 26,
                         ),
+                      ),
+                    ),
+                  ),
+                ),
 
                 SizedBox(width: 10,),
 
@@ -441,7 +443,7 @@ class EgoModeSessionCard extends StatelessWidget {
                       }
                       if (snapShot.hasData) {
                         return CommentsButton(
-                            count: snapShot.data!.docs.length,
+                          count: snapShot.data!.docs.length,
                           onPressed: () => PageRouter.gotoWidget(
                               EgoModeSessionDetail(featuredSessionModel: element),
                               context),);
@@ -474,7 +476,7 @@ class EgoModeSessionCard extends StatelessWidget {
                     /// clear list
                     snapShot.data!.docs
                         .map((e) => _commentSessionList
-                            .add(CommentSessionModel.fromJson(e.data())))
+                        .add(CommentSessionModel.fromJson(e.data())))
                         .toList();
 
                     return Column(
@@ -487,7 +489,7 @@ class EgoModeSessionCard extends StatelessWidget {
                           textAlign: TextAlign.start,
                           maxLines: 2,
                           style: GoogleFonts.lato(
-                            fontSize: 13.0,
+                            fontSize: 12.0,
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                           ),
@@ -509,8 +511,8 @@ class EgoModeSessionCard extends StatelessWidget {
     try {
       final _filter = _commentSessionList
           .where((element) =>
-              _commentSessionList.isNotEmpty &&
-              element.isUserAdmin)
+      _commentSessionList.isNotEmpty &&
+          element.isUserAdmin)
           .toList();
       return _filter.first;
     } catch (e) {
@@ -545,7 +547,7 @@ class EgoModeSessionCard extends StatelessWidget {
       child: Text("Request Feature\n"
           "Cost: 1,000+ Loves"),
       onPressed:  () {
-       // setToFeatured();
+        // setToFeatured();
         Navigator.pushReplacementNamed(context, AppRoutes.requestFeatureForm);
       },
     );
@@ -577,7 +579,7 @@ class EgoModeSessionCard extends StatelessWidget {
       child: Text("Cancel"),
       onPressed:  () {
         Navigator.of(context).pop();
-        },
+      },
     );
     Widget continueButton = TextButton(
       child: Text("Unfeature"),

@@ -257,7 +257,7 @@ class _CommentWidgetState extends State<CommentWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         image: DecorationImage(
@@ -376,7 +376,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                           textAlign: TextAlign.start,
                           maxLines: 1,
                           style: GoogleFonts.lato(
-                              fontSize: 14.0,
+                              fontSize: 15.0,
                               color: Pallet.colorBlack,
                               fontWeight: FontWeight.w800)),
                     ),
@@ -439,9 +439,9 @@ class _CommentWidgetState extends State<CommentWidget> {
           ),
           Text(
             widget.commentSessionModel!.message!,
-            textAlign: TextAlign.start,
+            textAlign: TextAlign.justify,
             style: GoogleFonts.lato(
-                fontSize: 15.0,
+                fontSize: 16.0,
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
@@ -478,8 +478,8 @@ class _CommentWidgetState extends State<CommentWidget> {
                               .commentSessionModel!.image1!), context);
                         },
                         child: CachedNetworkImage(
-                            height: 85,
-                            width: 70,
+                            height: 250,
+                            width: 250,
                             imageUrl: widget
                                     .commentSessionModel!.image1!,
                             imageBuilder: (context, imageProvider) => Container(
@@ -510,8 +510,8 @@ class _CommentWidgetState extends State<CommentWidget> {
                               .commentSessionModel!.image2!), context);
                         },
                         child: CachedNetworkImage(
-                            height: 85,
-                            width: 70,
+                            height: 250,
+                            width: 250,
                             imageUrl: widget.commentSessionModel!.image2!,
                             imageBuilder: (context, imageProvider) => Container(
                                   decoration: BoxDecoration(
@@ -550,13 +550,13 @@ class _CommentWidgetState extends State<CommentWidget> {
                       children: [
                         Icon(
                           Icons.share_rounded,
-                          size: 15,
+                          size: 17,
                           color: Pallet.colorSecondary,
                         ),
                         Text(
                           'Share',
                           style: GoogleFonts.lato(
-                              fontSize: 13.0,
+                              fontSize: 15.0,
                               color: Pallet.colorSecondary,
                               fontWeight: FontWeight.w800),
                         ),
@@ -587,12 +587,12 @@ class _CommentWidgetState extends State<CommentWidget> {
                             Icon(
                               Icons.delete_forever_rounded,
                               color: Pallet.colorPrimaryDark,
-                              size: 15,
+                              size: 16,
                             ),
                             Text(
                               'Delete',
                               style: GoogleFonts.lato(
-                                  fontSize: 11.0,
+                                  fontSize: 12.0,
                                   color: Pallet.colorPrimaryDark,
                                   fontWeight: FontWeight.w800),
                             ),
@@ -611,13 +611,13 @@ class _CommentWidgetState extends State<CommentWidget> {
                           children: [
                             Icon(
                               Icons.edit,
-                              size: 15,
+                              size: 17,
                               color: Pallet.colorPrimaryDark,
                             ),
                             Text(
                               'Edit',
                               style: GoogleFonts.lato(
-                                  fontSize: 12.0,
+                                  fontSize: 13.0,
                                   color: Pallet.colorPrimaryDark,
                                   fontWeight: FontWeight.w800),
                             ),
@@ -663,7 +663,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                                 ? Icons.flag
                                 : Icons.flag_outlined,
                             color: Pallet.colorPrimary,
-                            size: 15,
+                            size: 16,
                           ),
                           Text(
                             'Flag',
@@ -707,14 +707,14 @@ class _CommentWidgetState extends State<CommentWidget> {
 
                                       Icon(
                                         Icons.edit,
-                                        size: 15,
+                                        size: 16,
                                         color: Pallet.colorSecondary,
                                       ),
 
                                       Text(
                                         'Mod',
                                         style: GoogleFonts.lato(
-                                            fontSize: 12.0,
+                                            fontSize: 13.0,
                                             color: Pallet.colorSecondary,
                                             fontWeight: FontWeight.w800),
                                       ),
@@ -748,7 +748,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                                         Icon(
                                           Icons.delete_forever_rounded,
                                           color: Pallet.colorSecondary,
-                                          size: 15,
+                                          size: 16,
                                         ),
                                       ],
                                     ),

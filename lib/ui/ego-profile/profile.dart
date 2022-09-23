@@ -976,9 +976,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
     return SafeArea(
       child: WillPopScope(
-        onWillPop: (){
-          Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.allFeaturedPage);
+        onWillPop: () {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          showToast("Press back again to exit.");
           return Future.value(false);
         },
         child: Scaffold(

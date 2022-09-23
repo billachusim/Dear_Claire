@@ -70,7 +70,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                   theSession = _session;
                   return Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 6.0, vertical: 5),
+                        horizontal: 10.0, vertical: 7),
                     decoration: BoxDecoration(
                         color: HexColor.fromHex(_session.colorHex!)),
                     child: Column(
@@ -105,8 +105,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                 print("Visited User ID::: $visitedUsersID");
                               },
                               child: CachedNetworkImage(
-                                  width: 48,
-                                  height: 48,
+                                  width: 60,
+                                  height: 60,
                                   imageUrl: _session.userAvatarUrl!,
                                   imageBuilder: (context, imageProvider) =>
                                       Container(
@@ -122,8 +122,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   errorWidget: (context, url, error) =>
                                       Image.asset(
                                         "assets/images/brown_boy_mask.png",
-                                        width: 48,
-                                        height: 48,
+                                        width: 50,
+                                        height: 50,
                                       ) //Icon(Icons.error),
                                   ),
                             ),
@@ -163,7 +163,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                         textAlign: TextAlign.start,
                                         maxLines: 1,
                                         style: GoogleFonts.lato(
-                                            fontSize: 18.0,
+                                            fontSize: 22.0,
                                             color: Pallet.colorWhite,
                                             fontWeight: FontWeight.w700)),
                                   ),
@@ -174,7 +174,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       textAlign: TextAlign.start,
                                       maxLines: 1,
                                       style: GoogleFonts.lato(
-                                          fontSize: 13.0,
+                                          fontSize: 14.0,
                                           color: Pallet.colorWhite,
                                           fontWeight: FontWeight.normal)),
                                 ],
@@ -189,7 +189,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       textAlign: TextAlign.end,
                                       maxLines: 1,
                                       style: GoogleFonts.lato(
-                                          fontSize: 13.0,
+                                          fontSize: 14.0,
                                           color: Pallet.colorWhite,
                                           fontWeight: FontWeight.w700)),
                                   SizedBox(
@@ -199,7 +199,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       textAlign: TextAlign.end,
                                       maxLines: 1,
                                       style: GoogleFonts.lato(
-                                          fontSize: 12.0,
+                                          fontSize: 13.0,
                                           color: Colors.white70,
                                           fontWeight: FontWeight.w700)),
                                 ],
@@ -208,36 +208,36 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                           ],
                         ),
                         SizedBox(
-                          height: 14,
+                          height: 13,
                         ),
                         Center(
                           child: Text(_session.title!,
                               textAlign: TextAlign.center,
                               maxLines: 3,
                               style: GoogleFonts.lato(
-                                  fontSize: 20.0,
+                                  fontSize: 28.0,
                                   color: Pallet.colorWhite,
-                                  fontWeight: FontWeight.w700)),
+                                  fontWeight: FontWeight.w800)),
                         ),
                         SizedBox(
-                          height: 12,
+                          height: 13,
                         ),
                         Row(
                           children: [
                             Expanded(
                               child: Text(
                                 _session.message!,
-                                textAlign: TextAlign.left,
+                                textAlign: TextAlign.justify,
                                 style: GoogleFonts.lato(
-                                    fontSize: 17.0,
+                                    fontSize: 22.0,
                                     color: Pallet.colorWhite,
-                                    fontWeight: FontWeight.normal),
+                                    fontWeight: FontWeight.w600),
                               ),
                             ),
                           ],
                         ),
 
-                        SizedBox(height: 5,),
+                        SizedBox(height: 7,),
 
                         Container(
                           alignment: Alignment.centerLeft,
@@ -271,8 +271,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                     },
                                     child: Container(
                                       child: CachedNetworkImage(
-                                          height: 100,
-                                          width: 100,
+                                          height: 200,
+                                          width: 200,
                                           imageUrl: image,
                                           imageBuilder: (context, imageProvider) => Container(
                                             decoration: BoxDecoration(
@@ -301,7 +301,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                         ),
 
                         SizedBox(
-                          height: 10,
+                          height: 12,
                         ),
                         Row(
                           children: [
@@ -347,7 +347,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                         Text(_session.followers!.length.toString(),
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 13,
+                                          fontSize: 15,
                                             fontWeight: FontWeight.w900,
                                         ),
                                         ),
@@ -358,7 +358,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                               ? Icons.notifications_active_rounded
                                               : Icons.notifications_off_outlined,
                                           color: Pallet.colorWhite,
-                                          size: 24,
+                                          size: 26,
                                         ),
                                       ],
                                     ),
@@ -408,7 +408,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                             child: Icon(
                                               _session.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
                                               color: Pallet.colorSecondary,
-                                              size: 24,
+                                              size: 26,
                                             ),
                                           ),
                                         ),
@@ -429,7 +429,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                     children: [
                                       Icon(
                                         Icons.edit,
-                                        size: 15,
+                                        size: 17,
                                         color: Pallet.colorWhite,
                                       ),
                                       SizedBox(
@@ -438,7 +438,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       Text(
                                         'EDIT',
                                         style: GoogleFonts.lato(
-                                            fontSize: 12.0,
+                                            fontSize: 14.0,
                                             color: Pallet.colorWhite,
                                             fontWeight: FontWeight.w800),
                                       ),
@@ -479,12 +479,12 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                               ? Icons.flag
                                               : Icons.flag_outlined,
                                           color: Pallet.colorWhite,
-                                          size: 20,
+                                          size: 22,
                                         ),
                                         Text(
                                           'Flag',
                                           style: GoogleFonts.lato(
-                                              fontSize: 13.0,
+                                              fontSize: 15.0,
                                               color: Pallet.colorWhite,
                                               fontWeight: FontWeight.w800),
                                         ),
@@ -542,7 +542,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                                     child: Icon(
                                                       _session.archived == true ? Icons.archive_rounded : Icons.archive_outlined,
                                                       color: Pallet.colorSecondary,
-                                                      size: 26,
+                                                      size: 28,
                                                     ),
                                                   ),
                                                 ),
@@ -557,7 +557,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                                         children: [
                                                           Icon(
                                                             Icons.edit,
-                                                            size: 15,
+                                                            size: 17,
                                                             color: Pallet.colorSecondary,
                                                           ),
                                                           SizedBox(
@@ -566,7 +566,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                                           Text(
                                                             'MOD',
                                                             style: GoogleFonts.lato(
-                                                                fontSize: 12.0,
+                                                                fontSize: 14.0,
                                                                 color: Pallet.colorSecondary,
                                                                 fontWeight: FontWeight.w800),
                                                           ),
@@ -593,13 +593,13 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       children: [
                                         Icon(
                                           Icons.share_rounded,
-                                          size: 15,
+                                          size: 17,
                                           color: Pallet.colorWhite,
                                         ),
                                         Text(
                                           'Share',
                                           style: GoogleFonts.lato(
-                                              fontSize: 13.0,
+                                              fontSize: 15.0,
                                               color: Pallet.colorWhite,
                                               fontWeight: FontWeight.w800),
                                         ),

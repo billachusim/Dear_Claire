@@ -86,7 +86,6 @@ class _MoodSessionsState extends State<MoodSessions> {
   Widget build(BuildContext context) {
     return Material(
       child: Scaffold(
-        backgroundColor: Pallet.colorSecondaryDark,
         appBar: AppBar(
           backgroundColor: Pallet.colorPrimaryDark,
           title: Row(

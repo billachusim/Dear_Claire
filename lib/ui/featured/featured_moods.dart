@@ -3,120 +3,21 @@ import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
-import 'package:flutter_svg/svg.dart';
-
-import '../../utils/color.dart';
-import '../../utils/helper.dart';
-import '../../utils/strings.dart';
-import '../../widgets/toast.dart';
 
 
 
 class FeaturedMoods extends StatelessWidget {
    FeaturedMoods({Key? key}) : super(key: key);
 
-   final TextEditingController _searchController = TextEditingController();
 
 
    @override
   Widget build(BuildContext context) {
     int columnCount =3;
     return Scaffold(
-        backgroundColor: Pallet.colorSecondary,
         body: SingleChildScrollView(
           child: Column(
             children: [
-
-              Container(
-                padding: EdgeInsets.only(top: 10),
-                height: 80,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(0),
-                    color: Pallet.colorSecondaryDark),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Align(
-                            alignment:Alignment.centerLeft,
-                            child: GestureDetector(
-                                onTap: (){
-                                  print("Clicking on X");
-                                  Navigator.of(context)
-                                      .pushReplacementNamed(AppRoutes.home);
-                                  showToast("Press back again to exit.");
-                                },
-                                child: Container(
-                                  child: SvgPicture.asset("assets/images/ic_close.svg",
-                                    width: 20.0,
-                                    height: 20.0,
-                                    color: Colors.white,),
-                                )
-                            ),
-                          ),
-                          SizedBox(width: 10,),
-                          Expanded(
-                            child: new ConstrainedBox(
-                              constraints: new BoxConstraints(
-                                minWidth: getDeviceWidth(context),
-                                maxWidth: getDeviceWidth(context),
-                                minHeight: 35.0,
-                                maxHeight: 40.0,
-                              ),
-                              child: Scrollbar(
-                                child: Container(
-                                  padding: EdgeInsets.zero,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(30),
-                                    color: Pallet.colorWhite,
-                                  ),
-                                  child: TextField(
-                                    cursorColor: Pallet.colorSplashScreen,
-                                    keyboardType: TextInputType.text,
-                                    maxLines: 1,
-                                    cursorHeight: 33,
-                                    controller: _searchController,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      contentPadding:
-                                      EdgeInsets.only(left: 13.0, right: 13.0, top: 1, bottom: 1),
-                                      hintText: "Search By Moods",
-                                      hintStyle: TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        color: Pallet.colorSecondary,
-                                        fontSize: 22,
-                                      ),
-                                      counterText: '',
-                                    ),
-                                    maxLength: 160,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          FloatingActionButton(
-                              heroTag: "searchWrite",
-                              onPressed: () {
-                                if (_searchController.text.isNotEmpty)
-                                  // saveEgoMessage();
-                                  _searchController.clear();
-                              },
-                              mini: true,
-                              backgroundColor: Pallet.colorWhite,
-                              child: SvgPicture.asset(
-                                AppImages.appSend,
-                                color: Pallet.colorPrimary,
-                                height: 20,
-                              )),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
               AnimationLimiter(
                 child: GridView.count(
                     shrinkWrap: true,

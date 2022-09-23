@@ -33,25 +33,25 @@ class MetooButton extends StatelessWidget {
         Reaction(
             icon: Text('${cheers ?? 0} Cheers👍',
                 style: GoogleFonts.lato(
-                    fontSize: 13.0,
+                    fontSize: 16.0,
                     color: Colors.amber,
                     fontWeight: FontWeight.w900))),
         Reaction(
             icon: Text('${thanks ?? 0} Thanks💕',
                 style: GoogleFonts.lato(
-                    fontSize: 13.0,
+                    fontSize: 16.0,
                     color: Colors.red,
                     fontWeight: FontWeight.w900))),
         Reaction(
             icon: Text('${sorry ?? 0} Sorry🖐',
                 style: GoogleFonts.lato(
-                    fontSize: 13.0,
+                    fontSize: 16.0,
                     color: Colors.deepPurple,
                     fontWeight: FontWeight.w900))),
         Reaction(
             icon: Text('${me2 ?? 0} Me2🌺',
                 style: GoogleFonts.lato(
-                    fontSize: 13.0,
+                    fontSize: 16.0,
                     color: Colors.black,
                     fontWeight: FontWeight.w900))),
       ],
@@ -60,7 +60,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${me2 ?? 0} Me2🌺',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -68,7 +68,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${me2 ?? 0} Me2🌺',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -76,7 +76,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${me2 ?? 0} Me2🌺',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -84,7 +84,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${sorry ?? 0} Sorry🖐',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -92,7 +92,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${cheers ?? 0} Cheers👍',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -100,7 +100,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${cheers ?? 0} Cheers👍',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -108,7 +108,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${sorry ?? 0} Sorry🖐',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -116,7 +116,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${sorry ?? 0} Sorry🖐',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -124,7 +124,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${cheers ?? 0} Cheers👍',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -132,7 +132,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${sorry ?? 0} Sorry🖐',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -140,7 +140,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${sorry ?? 0} Sorry🖐',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -148,7 +148,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${sorry ?? 0} Sorry🖐',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -156,7 +156,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${me2 ?? 0} Me2🌺',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -164,7 +164,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${sorry ?? 0} Sorry🖐',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -172,7 +172,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${sorry ?? 0} Sorry🖐',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -180,7 +180,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${sorry ?? 0} Sorry🖐',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -188,7 +188,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${thanks ?? 0} Thanks💕',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -196,7 +196,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${cheers ?? 0} Cheers👍',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -204,7 +204,7 @@ class MetooButton extends StatelessWidget {
           ? Reaction(
           icon: Text('${me2 ?? 0} Me2🌺',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900)))
 
@@ -212,7 +212,7 @@ class MetooButton extends StatelessWidget {
           : Reaction(
           icon: Text('${me2 ?? 0}  🌺Me2',
               style: GoogleFonts.lato (
-                  fontSize: 13.0,
+                  fontSize: 16.0,
                   color: Colors.white,
                   fontWeight: FontWeight.w900))),
 

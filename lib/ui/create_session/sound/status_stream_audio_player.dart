@@ -1,11 +1,15 @@
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:dear_claire/ui/featured/widget/audio_status_playing_widget.dart';
+import 'package:dear_claire/ui/featured/widget/status_stream.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../featured/model/session.dart';
+
 class StatusSoundPlayWidget extends StatefulWidget {
-  final String? filePath;
-  StatusSoundPlayWidget({Key? key, this.filePath})
+  final Session element;
+  StatusSoundPlayWidget({Key? key, required this.element})
       : super(key: key);
 
   @override
@@ -36,43 +40,60 @@ class _StatusSoundPlayWidgetState extends State<StatusSoundPlayWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(
-        _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
-        color: Colors.white,
-        size: 37.r,
-      ),
-      onPressed: _onPlayButtonPressed,
-    );
-  }
+    return
+      Container(
+        width: 75,
+        height: 75,
+        margin: EdgeInsets.all(2),
+        child: Stack(
+            children: [
+              _isPlaying ? AudioStatusPlaying(element: widget.element)
+              : StatusStreamWidget(element: widget.element),
 
-  void _onPlayButtonPressed() {
-    if (!_isPlaying) {
-      _isPlaying = true;
+              Align(
+                  alignment: Alignment.bottomCenter,
+                  child: IconButton(
+                    icon: Icon(
+                      _isPlaying ? Icons.pause : Icons.play_arrow_rounded,
+                      color: Colors.grey,
+                      size: 37.r,
+                    ),
+                    onPressed: () {
+                      if (!_isPlaying) {
+                        _isPlaying = true;
 
-      print("selected file path is: ${widget.filePath!}");
-      _audioPlayer.play(
-        widget.filePath!,
-        isLocal: false,
+                        print("selected file path is: ${widget.element.audioUrl!}");
+                        _audioPlayer.play(
+                          widget.element.audioUrl!,
+                          isLocal: false,
+                        );
+                        _audioPlayer.onDurationChanged.listen((Duration d) {
+                          print('Max duration: $d');
+                          setState(() => _time = d.inSeconds);
+                        });
+                        _audioPlayer.onAudioPositionChanged.listen((Duration p) {
+                          print('Current position: $p');
+                          setState(() => _duration = p.inSeconds);
+                        });
+                        _audioPlayer.onPlayerCompletion.listen((duration) {
+                          setState(() {
+                            _isPlaying = false;
+                          });
+                        });
+                      } else {
+                        _audioPlayer.pause();
+                        _isPlaying = false;
+                      }
+                      setState(() {});
+                    }
+                  )
+              ),
+
+            ]
+        ),
       );
-      _audioPlayer.onDurationChanged.listen((Duration d) {
-        print('Max duration: $d');
-        setState(() => _time = d.inSeconds);
-      });
-      _audioPlayer.onAudioPositionChanged.listen((Duration p) {
-        print('Current position: $p');
-        setState(() => _duration = p.inSeconds);
-      });
-      _audioPlayer.onPlayerCompletion.listen((duration) {
-        setState(() {
-          _isPlaying = false;
-        });
-      });
-    } else {
-      _audioPlayer.pause();
-      _isPlaying = false;
-    }
-    setState(() {});
+
   }
+
 
 }

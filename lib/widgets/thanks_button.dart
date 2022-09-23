@@ -21,7 +21,7 @@ class ThanksButton extends StatelessWidget {
         child: Text(
           '$count Thanks 💕',
           style: GoogleFonts.lato(
-              fontSize: 11.0,
+              fontSize: 13.0,
               color: Pallet.colorPrimary,
               fontWeight: FontWeight.w900),
         ),

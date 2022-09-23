@@ -43,7 +43,7 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
       padding: EdgeInsets.zero,
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             color: HexColor.fromHex(widget.element.hex!)),
@@ -73,7 +73,7 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
                           textAlign: TextAlign.start,
                           maxLines: 1,
                           style: GoogleFonts.lato(
-                              fontSize: 16.0,
+                              fontSize: 17.0,
                               color: Pallet.colorWhite,
                               fontWeight: FontWeight.w700)),
                       SizedBox(
@@ -83,7 +83,7 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
                           textAlign: TextAlign.start,
                           maxLines: 1,
                           style: GoogleFonts.lato(
-                              fontSize: 14.0,
+                              fontSize: 15.0,
                               color: Pallet.colorWhite,
                               fontWeight: FontWeight.normal)),
                     ],
@@ -92,14 +92,14 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
               ],
             ),
             SizedBox(
-                height: 6,
+                height: 7,
             ),
             Center(
               child: Text(widget.element.title!,
                   textAlign: TextAlign.start,
                   maxLines: 1,
                   style: GoogleFonts.lato(
-                      fontSize: 19.0,
+                      fontSize: 23.0,
                       color: Pallet.colorWhite,
                       fontWeight: FontWeight.w800)),
             ),
@@ -108,9 +108,9 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
             ),
             Text(
               widget.element.text!,
-              textAlign: TextAlign.start,
+              textAlign: TextAlign.justify,
               style: GoogleFonts.lato(
-                  fontSize: 16.0,
+                  fontSize: 18.0,
                   color: Pallet.colorWhite,
                   fontWeight: FontWeight.normal),
             ),

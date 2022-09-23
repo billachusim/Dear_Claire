@@ -1,4 +1,3 @@
-import 'package:dear_claire/ui/Categories/users_sessions_by_moods.dart';
 import 'package:dear_claire/ui/featured/public_sessions.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:flutter/material.dart';
@@ -30,11 +29,9 @@ class _FeaturedPageState extends State<FeaturedPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Pallet.colorSecondaryDark,
+        backgroundColor: Pallet.colorWhite,
         body: Stack(
           children: [
-            //CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
-
             Column(
             children: [
 
@@ -85,15 +82,6 @@ class _FeaturedPageState extends State<FeaturedPage> {
                 ),
               ),
 
-              Container(
-                decoration: BoxDecoration(
-                    color: Colors.black
-                ),
-                child: Visibility(
-                  visible: showFilter,
-                    child: UsersMoodStream()
-                ),
-              ),
 
       ],
           ),

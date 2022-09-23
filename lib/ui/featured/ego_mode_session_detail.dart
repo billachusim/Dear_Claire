@@ -167,7 +167,7 @@ class _EgoModeSessionDetailState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Pallet.colorSecondaryDark,
+      backgroundColor: HexColor.fromHex(featuredSessionModel!.colorHex!),
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: HexColor.fromHex(featuredSessionModel!.colorHex!),

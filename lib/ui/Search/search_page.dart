@@ -1,16 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/Search/custom_search_card.dart';
-import 'package:dear_claire/ui/splash_screen/custom_rotate_bacground.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
-import '../../utils/helper.dart';
 import '../../utils/strings.dart';
-import '../../widgets/toast.dart';
 import '../Categories/category_sessions.dart';
 import '../featured/model/session.dart';
 import '../routes/page_router_animation.dart';
@@ -28,7 +24,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   List<Session>? _sessionList = [];
 
-  final TextEditingController _searchController = TextEditingController();
+  //final TextEditingController _searchController = TextEditingController();
 
 
   /// Get Featured sessions for "I'm so happy" search
@@ -290,123 +286,11 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     return Material(
       child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(80.5), // Set this height
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: EdgeInsets.only(top: 10),
-                height: 80,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(0),
-                    color: Pallet.colorSecondaryDark),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Align(
-                            alignment:Alignment.centerLeft,
-                            child: GestureDetector(
-                                onTap: (){
-                                  print("Clicking on X");
-                                  Navigator.of(context)
-                                      .pushReplacementNamed(AppRoutes.home);
-                                  showToast("Press back again to exit.");
-                                },
-                                child: Container(
-                                  child: SvgPicture.asset("assets/images/ic_close.svg",
-                                    width: 20.0,
-                                    height: 20.0,
-                                  color: Colors.white,),
-                                )
-                            ),
-                          ),
-                          SizedBox(width: 10,),
-                          Expanded(
-                            child: new ConstrainedBox(
-                              constraints: new BoxConstraints(
-                                minWidth: getDeviceWidth(context),
-                                maxWidth: getDeviceWidth(context),
-                                minHeight: 35.0,
-                                maxHeight: 40.0,
-                              ),
-                              child: Scrollbar(
-                                child: Container(
-                                  padding: EdgeInsets.zero,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(30),
-                                    color: Pallet.colorWhite,
-                                  ),
-                                  child: TextField(
-                                    cursorColor: Pallet.colorSplashScreen,
-                                    keyboardType: TextInputType.text,
-                                    maxLines: 1,
-                                    cursorHeight: 33,
-                                    controller: _searchController,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      contentPadding:
-                                      EdgeInsets.only(left: 13.0, right: 13.0, top: 1, bottom: 1),
-                                      hintText: AppString.search_bar_hint,
-                                      hintStyle: TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        color: Pallet.colorSecondary,
-                                        fontSize: 22,
-                                      ),
-                                      counterText: '',
-                                    ),
-                                    maxLength: 160,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          FloatingActionButton(
-                            heroTag: "searchWrite",
-                              onPressed: () {
-                                if (_searchController.text.isNotEmpty)
-                                  // saveEgoMessage();
-                                  _searchController.clear();
-                              },
-                              mini: true,
-                              backgroundColor: Pallet.colorWhite,
-                              child: SvgPicture.asset(
-                                AppImages.appSend,
-                                color: Pallet.colorPrimary,
-                                height: 20,
-                              )),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
         body: Stack(
            children: [
-             CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
              ListView(
               children: [
                 SizedBox(height: 7,),
-                Container(
-                  margin: EdgeInsets.only(bottom: 10),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: Text(
-                        AppString.featured_searches,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 22,
-                        color: Pallet.colorWhite,
-                      ),
-                    ),
-                  ),
-                ),
                 Column(
                   children: [
                     Align(
@@ -496,6 +380,8 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
+
                 Column(
                   children: [
                     Align(
@@ -585,6 +471,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
 
                 Column(
                   children: [
@@ -675,6 +562,8 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
+
 
                 // Top ad unit is here
                 if(searchPageMiddleBanner == null)
@@ -684,6 +573,7 @@ class _SearchPageState extends State<SearchPage> {
                     height: 60,
                     child: AdWidget(ad: searchPageMiddleBanner),
                   ),
+                SizedBox(height: 10,),
 
                 Column(
                   children: [
@@ -774,6 +664,8 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
+
                 Column(
                   children: [
                     Align(
@@ -863,6 +755,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
 
                 Column(
                   children: [
@@ -953,6 +846,8 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
+
 
                 // Top ad unit is here
                 if(searchPageBottomBanner == null)
@@ -965,6 +860,7 @@ class _SearchPageState extends State<SearchPage> {
 
 
 
+                SizedBox(height: 10,),
 
 
                 /// More Lists
@@ -1057,6 +953,8 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
+
                 Column(
                   children: [
                     Align(
@@ -1146,6 +1044,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
 
                 Column(
                   children: [
@@ -1236,6 +1135,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
 
                 // Top ad unit is here
                 if(searchPageMiddleBanner2 == null)
@@ -1245,6 +1145,7 @@ class _SearchPageState extends State<SearchPage> {
                     height: 60,
                     child: AdWidget(ad: searchPageMiddleBanner2),
                   ),
+                SizedBox(height: 10,),
 
                 Column(
                   children: [
@@ -1335,6 +1236,8 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
+
                 Column(
                   children: [
                     Align(
@@ -1424,6 +1327,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
 
                 Column(
                   children: [
@@ -1514,6 +1418,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ],
                 ),
+                SizedBox(height: 10,),
 
                 // Top ad unit is here
                 if(searchPageBottomBanner2 == null)
@@ -1523,6 +1428,7 @@ class _SearchPageState extends State<SearchPage> {
                     height: 60,
                     child: AdWidget(ad: searchPageBottomBanner2),
                   ),
+                SizedBox(height: 10,),
 
               ],
             ),

@@ -1,12 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/Categories/archive_category_stream.dart';
 import 'package:dear_claire/ui/Categories/category_streams2.dart';
-import 'package:dear_claire/ui/featured/widget/status_stream.dart';
+import 'package:dear_claire/ui/create_session/sound/status_stream_audio_player.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/strings.dart';
@@ -338,7 +337,7 @@ class FeaturedStatusStreams extends StatelessWidget {
                         children: [
                           ..._sessionList!
                               .map((element) =>
-                              StatusStreamWidget(element: element))
+                              StatusSoundPlayWidget(element: element))
                               .toList(),
                         ],
                       ),

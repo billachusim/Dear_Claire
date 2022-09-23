@@ -159,7 +159,7 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                                 textAlign: TextAlign.start,
                                 maxLines: 1,
                                 style: GoogleFonts.lato(
-                                    fontSize: 13.0,
+                                    fontSize: 14.0,
                                     color: Pallet.colorBlack,
                                     fontWeight: FontWeight.w800)),
                           ),
@@ -171,7 +171,7 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                               textAlign: TextAlign.start,
                               maxLines: 1,
                               style: GoogleFonts.lato(
-                                  fontSize: 11.0,
+                                  fontSize: 12.0,
                                   color: Pallet.colorGrey,
                                   fontWeight: FontWeight.normal)),
                         ],
@@ -185,9 +185,9 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
           ),
           Text(
             widget.chatModel!.message!,
-            textAlign: TextAlign.start,
+            textAlign: TextAlign.justify,
             style: GoogleFonts.lato(
-                fontSize: 14.0,
+                fontSize: 15.0,
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),

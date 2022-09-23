@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
-import '../../utils/color.dart';
 import 'widget/chat_widget.dart';
 
 class Temp {
@@ -137,7 +136,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Pallet.colorSecondaryDark,
+      backgroundColor: HexColor.fromHex(chatRoomPodo!.hex!),
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: HexColor.fromHex(chatRoomPodo!.hex!),

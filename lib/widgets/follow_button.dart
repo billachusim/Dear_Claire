@@ -19,13 +19,13 @@ class FollowButton extends StatelessWidget {
           children: [
             Icon(
               Icons.add_circle,
-              size: 15,
+              size: 17,
               color: Pallet.colorWhite,
             ),
             Text(
               '$text $count',
               style: GoogleFonts.lato(
-                  fontSize: 13.0,
+                  fontSize: 15.0,
                   color: Pallet.colorWhite,
                   fontWeight: FontWeight.w900)
             ),
@@ -55,7 +55,7 @@ class FollowNoCountButton extends StatelessWidget {
               Text(
                   ' Follow',
                   style: GoogleFonts.lato(
-                      fontSize: 13.0,
+                      fontSize: 15.0,
                       color: Pallet.colorWhite,
                       fontWeight: FontWeight.w900)
               ),

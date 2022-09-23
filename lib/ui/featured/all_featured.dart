@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:dear_claire/ui/Search/search_page.dart';
 import 'package:dear_claire/ui/featured/featured_moods.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../utils/color.dart';
 import '../../widgets/toast.dart';
 import '../routes/routes.dart';
@@ -62,7 +63,19 @@ class _AllFeaturedPage extends State<AllFeaturedPage>
           return Future.value(false);
         },
         child: Scaffold(
-          backgroundColor: Pallet.colorSecondaryDark,
+          appBar: AppBar(
+            backgroundColor: Pallet.colorPrimary,
+            centerTitle: false,
+            automaticallyImplyLeading: true,
+            title: Text('Browse Sessions',
+                textAlign: TextAlign.start,
+                maxLines: 1,
+                style: GoogleFonts.lato(
+                    fontSize: 25.0,
+                    color: Pallet.colorWhite,
+                    fontWeight: FontWeight.w600)),
+          ),
+          backgroundColor: Pallet.colorWhite,
           body: Stack(fit: StackFit.expand, children: [
             /// The three Featured page tabs are here
             /// First tab is Sessions Tab

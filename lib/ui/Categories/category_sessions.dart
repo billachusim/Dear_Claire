@@ -82,7 +82,6 @@ class _CategorySessionsState extends State<CategorySessions> {
   Widget build(BuildContext context) {
     return Material(
       child: Scaffold(
-        backgroundColor: Pallet.colorSecondaryDark,
         appBar: AppBar(
           backgroundColor: Pallet.colorPrimaryDark,
           title: Row(

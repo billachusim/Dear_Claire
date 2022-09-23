@@ -19,20 +19,20 @@ class CommentsButton extends StatelessWidget {
             Text(
                 '$count ',
                 style: GoogleFonts.lato(
-                    fontSize: 13.0,
+                    fontSize: 15.0,
                     color: Pallet.colorWhite,
                     fontWeight: FontWeight.w900)
             ),
             Text(
                 'Advises',
                 style: GoogleFonts.lato(
-                    fontSize: 13.0,
+                    fontSize: 15.0,
                     color: Pallet.colorWhite,
                     fontWeight: FontWeight.w900)
             ),
             Icon(
               Icons.mark_unread_chat_alt_outlined,
-              size: 15,
+              size: 17,
               color: Pallet.colorWhite,
             ),
           ],

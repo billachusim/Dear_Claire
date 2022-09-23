@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/ui/followed/empty_followed_screen_widget.dart';
-import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:dear_claire/widgets/ego_mode_session_card.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/toast.dart';
 import '../routes/routes.dart';
 
 class FollowedPage extends StatefulWidget {
@@ -24,14 +24,12 @@ class _FollowedPageState extends State<FollowedPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: WillPopScope(
-
-        onWillPop: (){
-          Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.allFeaturedPage);
+        onWillPop: () {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          showToast("Press back again to exit.");
           return Future.value(false);
         },
         child: Scaffold(
-          backgroundColor: Pallet.colorSecondaryDark,
           body: Stack(
             children: [
 
@@ -84,7 +82,7 @@ class FollowedSessionNotice extends StatelessWidget {
           "Diary sessions you followed. You'll get notifications.\n"
               "Follow your own diary sessions too. Unfollow to stop notifications.",
           style: TextStyle(
-            color: Colors.white70,
+            color: Colors.black45,
             fontSize: 10,
             fontWeight: FontWeight.w600,
             fontStyle: FontStyle.italic,

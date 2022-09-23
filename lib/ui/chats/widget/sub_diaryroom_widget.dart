@@ -1,16 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/widget/diaryroom_online_users_stream.dart';
-import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/helper.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../utils/constant.dart';
-import '../inside_chatroom.dart';
 
 class SubDiaryRoomWidget extends StatelessWidget {
   ChatRoomPodo element;
@@ -48,7 +44,7 @@ class SubDiaryRoomWidget extends StatelessWidget {
                         textAlign: TextAlign.start,
                         maxLines: 1,
                         style: GoogleFonts.lato(
-                            fontSize: 16.0,
+                            fontSize: 18.0,
                             color: Pallet.colorWhite,
                             fontWeight: FontWeight.w700)),
                     SizedBox(
@@ -58,7 +54,7 @@ class SubDiaryRoomWidget extends StatelessWidget {
                         textAlign: TextAlign.start,
                         maxLines: 1,
                         style: GoogleFonts.lato(
-                            fontSize: 14.0,
+                            fontSize: 16.0,
                             color: Pallet.colorWhite,
                             fontWeight: FontWeight.normal)),
                   ],
@@ -95,7 +91,7 @@ class SubDiaryRoomWidget extends StatelessWidget {
                 textAlign: TextAlign.start,
                 maxLines: 1,
                 style: GoogleFonts.lato(
-                    fontSize: 19.0,
+                    fontSize: 24.0,
                     color: Pallet.colorWhite,
                     fontWeight: FontWeight.w800)),
           ),
@@ -106,7 +102,7 @@ class SubDiaryRoomWidget extends StatelessWidget {
             element.text!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
-                fontSize: 16.0,
+                fontSize: 18.0,
                 color: Pallet.colorWhite,
                 fontWeight: FontWeight.normal),
           ),
