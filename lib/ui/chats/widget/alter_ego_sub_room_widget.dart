@@ -45,7 +45,7 @@ class AlterEgoSubDiaryRoomWidget extends StatelessWidget {
                         textAlign: TextAlign.start,
                         maxLines: 1,
                         style: GoogleFonts.lato(
-                            fontSize: 16.0,
+                            fontSize: 18.0,
                             color: Pallet.colorWhite,
                             fontWeight: FontWeight.w700)),
                     SizedBox(
@@ -55,7 +55,7 @@ class AlterEgoSubDiaryRoomWidget extends StatelessWidget {
                         textAlign: TextAlign.start,
                         maxLines: 1,
                         style: GoogleFonts.lato(
-                            fontSize: 14.0,
+                            fontSize: 15.0,
                             color: Pallet.colorWhite,
                             fontWeight: FontWeight.normal)),
                   ],
@@ -92,7 +92,7 @@ class AlterEgoSubDiaryRoomWidget extends StatelessWidget {
                 textAlign: TextAlign.start,
                 maxLines: 1,
                 style: GoogleFonts.lato(
-                    fontSize: 19.0,
+                    fontSize: 29.0,
                     color: Pallet.colorWhite,
                     fontWeight: FontWeight.w800)),
           ),
@@ -103,7 +103,7 @@ class AlterEgoSubDiaryRoomWidget extends StatelessWidget {
             element.text!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
-                fontSize: 16.0,
+                fontSize: 24.0,
                 color: Pallet.colorWhite,
                 fontWeight: FontWeight.normal),
           ),

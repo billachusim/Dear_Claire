@@ -145,7 +145,7 @@ class AllActivitiesCard extends StatelessWidget {
                     placeholder: (context, url) =>
                         CircularProgressIndicator(),
                     errorWidget: (context, url, error) => Image.asset(
-                      "assets/images/brown_boy_mask.png",
+                      "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                       width: 30,
                       height: 30,
                     ),

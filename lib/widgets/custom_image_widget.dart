@@ -25,7 +25,7 @@ class CustomImageWidget extends StatelessWidget {
         placeholder: (context, url) =>
             Center(child: CircularProgressIndicator()),
         errorWidget: (context, url, error) => Image.asset(
-          "assets/images/brown_boy_mask.png",
+          "assets/images/Speak_No_Evil_Monkey_Emoji.png",
           width: 48,
           height: 48,
         ) //Icon(Icons.error),

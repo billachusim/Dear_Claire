@@ -71,7 +71,7 @@ class _AlterEgoChatRoomWidgetState extends State<AlterEgoChatRoomWidget> {
                   textAlign: TextAlign.start,
                   maxLines: 1,
                   style: GoogleFonts.lato(
-                      fontSize: 19.0,
+                      fontSize: 28.0,
                       color: Pallet.colorWhite,
                       fontWeight: FontWeight.w800)),
             ),
@@ -82,7 +82,7 @@ class _AlterEgoChatRoomWidgetState extends State<AlterEgoChatRoomWidget> {
               widget.element.text!,
               textAlign: TextAlign.start,
               style: GoogleFonts.lato(
-                  fontSize: 16.0,
+                  fontSize: 23.0,
                   color: Pallet.colorWhite,
                   fontWeight: FontWeight.normal),
             ),
@@ -145,7 +145,7 @@ class _AlterEgoChatRoomWidgetState extends State<AlterEgoChatRoomWidget> {
                       child: Center(
                         child: Text('O P E N',
                           style: GoogleFonts.lato(
-                              fontSize: 15.0,
+                              fontSize: 16.0,
                               color: Pallet.colorSecondaryDark,
                               fontWeight: FontWeight.w700),
                         ),

@@ -384,7 +384,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                 placeholder: (context, url) =>
                                     CircularProgressIndicator(),
                                 errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/brown_boy_mask.png",
+                                  "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                                   width: 50,
                                   height: 50,
                                 ) //Icon(Icons.error),
@@ -906,7 +906,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                             placeholder: (context, url) =>
                                                 CircularProgressIndicator(),
                                             errorWidget: (context, url, error) => Image.asset(
-                                              "assets/images/brown_boy_mask.png",
+                                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                                               width: 30,
                                               height: 30,
                                             ),

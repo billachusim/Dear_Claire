@@ -228,7 +228,7 @@ class AlterEgoChatWidget extends StatelessWidget {
                         placeholder: (context, url) =>
                             Center(child: CircularProgressIndicator()),
                         errorWidget: (context, url, error) => Image.asset(
-                          "assets/images/brown_boy_mask.png",
+                          "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                           width: 35,
                           height: 35,
                         ) //Icon(Icons.error),
@@ -294,7 +294,7 @@ class AlterEgoChatWidget extends StatelessWidget {
             chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
-                fontSize: 16.0,
+                fontSize: 18.0,
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
@@ -343,7 +343,7 @@ class AlterEgoChatWidget extends StatelessWidget {
                             placeholder: (context, url) =>
                                 Center(child: CircularProgressIndicator()),
                             errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/brown_boy_mask.png",
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                               width: 48,
                               height: 48,
                             ) //Icon(Icons.error),
@@ -374,7 +374,7 @@ class AlterEgoChatWidget extends StatelessWidget {
                             placeholder: (context, url) =>
                                 Center(child: CircularProgressIndicator()),
                             errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/brown_boy_mask.png",
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                               width: 48,
                               height: 48,
                             ) //Icon(Icons.error),
@@ -570,7 +570,7 @@ class AlterEgoChatWidget extends StatelessWidget {
                           child: Text(
                             'Continue',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 15,
                               fontWeight: FontWeight.w800,
                               color: Pallet.colorPrimaryDark,
                             ),
@@ -631,7 +631,7 @@ class AlterEgoChatWidget extends StatelessWidget {
                             child: Text(
                               '${chatModel!.members!.length} JOIN',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w800,
                                 color: _isCompleted(chatModel, chatRoomPodo)
                                     ? Pallet.blueGreyBgColor

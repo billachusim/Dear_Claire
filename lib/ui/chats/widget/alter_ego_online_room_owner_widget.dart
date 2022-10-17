@@ -22,8 +22,8 @@ class AlterEgoOnlineRoomOwnerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 40,
-      height: 40,
+      width: 45,
+      height: 45,
       margin: EdgeInsets.all(1),
       child: Center(
         child: Stack(
@@ -68,7 +68,7 @@ class AlterEgoOnlineRoomOwnerWidget extends StatelessWidget {
                               placeholder: (context, url) =>
                                   Center(child: CircularProgressIndicator()),
                               errorWidget: (context, url, error) => Image.asset(
-                                "assets/images/brown_boy_mask.png",
+                                "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                                 width: 35,
                                 height: 35,
                               ) //Icon(Icons.error),

@@ -98,8 +98,8 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                     print("Visited User ID::: $visitedUsersID");
                   },
                   child: CachedNetworkImage(
-                      width: 48,
-                      height: 48,
+                      width: 50,
+                      height: 50,
                       imageUrl: element.userAvatarUrl!,
                       imageBuilder: (context, imageProvider) => Container(
                         decoration: BoxDecoration(
@@ -111,7 +111,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                       ),
                       placeholder: (context, url) => CircularProgressIndicator(),
                       errorWidget: (context, url, error) => Image.asset(
-                        "assets/images/brown_boy_mask.png",
+                        "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                         width: 48,
                         height: 48,
                       ) //Icon(Icons.error),
@@ -140,7 +140,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                             textAlign: TextAlign.start,
                             maxLines: 1,
                             style: GoogleFonts.lato(
-                                fontSize: 18.0,
+                                fontSize: 20.0,
                                 color: Pallet.colorWhite,
                                 fontWeight: FontWeight.w800)),
                       ),
@@ -167,7 +167,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                           textAlign: TextAlign.end,
                           maxLines: 1,
                           style: GoogleFonts.lato(
-                              fontSize: 13.0,
+                              fontSize: 14.0,
                               color: Pallet.colorWhite,
                               fontWeight: FontWeight.w700)),
                       SizedBox(
@@ -186,19 +186,19 @@ class AlterEgoModeSessionCard extends StatelessWidget {
               ],
             ),
             SizedBox(
-              height: 6,
+              height: 7,
             ),
             Center(
               child: Text(element.title!,
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   style: GoogleFonts.lato(
-                      fontSize: 18.0,
+                      fontSize: 28.0,
                       color: Pallet.colorWhite,
                       fontWeight: FontWeight.w800)),
             ),
             SizedBox(
-              height: 5,
+              height: 6,
             ),
             Column(
               children: [
@@ -207,7 +207,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                   textAlign: TextAlign.start,
                   maxLines: element.imageUrls!.isNotEmpty ? 4 : 6,
                   style: GoogleFonts.lato(
-                      fontSize: 15.0,
+                      fontSize: 23.0,
                       color: Pallet.colorWhite,
                       fontWeight: FontWeight.normal),
                   overflow: TextOverflow.ellipsis,
@@ -246,8 +246,8 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                               PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
                             },
                             child: CachedNetworkImage(
-                                height: 100,
-                                width: 100,
+                                height: 400,
+                                width: 400,
                                 imageUrl: image,
                                 imageBuilder: (context, imageProvider) => Container(
                                   decoration: BoxDecoration(
@@ -262,7 +262,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                                 placeholder: (context, url) =>
                                     Center(child: CircularProgressIndicator()),
                                 errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/brown_boy_mask.png",
+                                  "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                                   width: 48,
                                   height: 48,
                                 ) //Icon(Icons.error),

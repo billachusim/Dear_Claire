@@ -323,7 +323,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                     placeholder: (context, url) =>
                         Center(child: CircularProgressIndicator()),
                     errorWidget: (context, url, error) => Image.asset(
-                          "assets/images/brown_boy_mask.png",
+                          "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                           width: 40,
                           height: 40,
                         ) //Icon(Icons.error),
@@ -464,75 +464,75 @@ class _CommentWidgetState extends State<CommentWidget> {
             ),
           ),
 
-          Container(
-            margin: EdgeInsets.only(top: 10),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Row(
-                children: [
-                  Visibility(
-                      visible: widget.commentSessionModel!.image1!.isNotEmpty,
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget
-                              .commentSessionModel!.image1!), context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 250,
-                            width: 250,
-                            imageUrl: widget
-                                    .commentSessionModel!.image1!,
-                            imageBuilder: (context, imageProvider) => Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                    ),
-                                  ),
+          SizedBox(
+            height: 8,
+          ),
+
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Visibility(
+                  visible: widget.commentSessionModel!.image1!.isNotEmpty,
+                  child: GestureDetector(
+                    onTap: () {
+                      PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget
+                          .commentSessionModel!.image1!), context);
+                    },
+                    child: CachedNetworkImage(
+                        height: 150,
+                        width: 150,
+                        imageUrl: widget
+                                .commentSessionModel!.image1!,
+                        imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
+                                  image: imageProvider,
                                 ),
-                            placeholder: (context, url) =>
-                                Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/brown_boy_mask.png",
-                                  width: 48,
-                                  height: 48,
-                                ) //Icon(Icons.error),
+                              ),
                             ),
-                      )),
-                  SizedBox(
-                    width: 5,
-                  ),
-                  Visibility(
-                      visible: widget.commentSessionModel!.image2!.isNotEmpty,
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget
-                              .commentSessionModel!.image2!), context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 250,
-                            width: 250,
-                            imageUrl: widget.commentSessionModel!.image2!,
-                            imageBuilder: (context, imageProvider) => Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                    ),
-                                  ),
-                                ),
-                            placeholder: (context, url) =>
-                                Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/brown_boy_mask.png",
-                                  width: 48,
-                                  height: 48,
-                                ) //Icon(Icons.error),
-                            ),
-                      )),
-                ],
+                        placeholder: (context, url) =>
+                            Center(child: CircularProgressIndicator()),
+                        errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
+                        ),
+                  )),
+              SizedBox(
+                width: 12,
               ),
-            ),
+              Visibility(
+                  visible: widget.commentSessionModel!.image2!.isNotEmpty,
+                  child: GestureDetector(
+                    onTap: () {
+                      PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget
+                          .commentSessionModel!.image2!), context);
+                    },
+                    child: CachedNetworkImage(
+                        height: 150,
+                        width: 150,
+                        imageUrl: widget.commentSessionModel!.image2!,
+                        imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                ),
+                              ),
+                            ),
+                        placeholder: (context, url) =>
+                            Center(child: CircularProgressIndicator()),
+                        errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
+                        ),
+                  )),
+            ],
           ),
 
 

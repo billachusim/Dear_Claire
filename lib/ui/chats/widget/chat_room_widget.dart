@@ -110,9 +110,9 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
               widget.element.text!,
               textAlign: TextAlign.justify,
               style: GoogleFonts.lato(
-                  fontSize: 18.0,
+                  fontSize: 20.0,
                   color: Pallet.colorWhite,
-                  fontWeight: FontWeight.normal),
+                  fontWeight: FontWeight.w600),
             ),
 
             SizedBox(height: 8,),
@@ -156,7 +156,7 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
                       child: Container(
                         margin: EdgeInsets.only(bottom: 6),
                         padding: EdgeInsets.all(5),
-                        width: 120,
+                        width: 115,
                         height: 40,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.0),

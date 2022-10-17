@@ -70,7 +70,7 @@ class InsideInsideAlterEgoChatWidget extends StatelessWidget {
                         placeholder: (context, url) =>
                             Center(child: CircularProgressIndicator()),
                         errorWidget: (context, url, error) => Image.asset(
-                          "assets/images/brown_boy_mask.png",
+                          "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                           width: 35,
                           height: 35,
                         ) //Icon(Icons.error),
@@ -87,7 +87,7 @@ class InsideInsideAlterEgoChatWidget extends StatelessWidget {
                               textAlign: TextAlign.start,
                               maxLines: 1,
                               style: GoogleFonts.lato(
-                                  fontSize: 17.0,
+                                  fontSize: 18.0,
                                   color: Pallet.colorBlack,
                                   fontWeight: FontWeight.w800)),
                           SizedBox(
@@ -163,7 +163,7 @@ class InsideInsideAlterEgoChatWidget extends StatelessWidget {
                             placeholder: (context, url) =>
                                 Center(child: CircularProgressIndicator()),
                             errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/brown_boy_mask.png",
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                               width: 48,
                               height: 48,
                             ) //Icon(Icons.error),
@@ -194,7 +194,7 @@ class InsideInsideAlterEgoChatWidget extends StatelessWidget {
                             placeholder: (context, url) =>
                                 Center(child: CircularProgressIndicator()),
                             errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/brown_boy_mask.png",
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                               width: 48,
                               height: 48,
                             ) //Icon(Icons.error),

@@ -94,7 +94,7 @@ class _InsideInsideInsideAlterEgoChatWidgetState extends State<InsideInsideInsid
                         placeholder: (context, url) =>
                             Center(child: CircularProgressIndicator()),
                         errorWidget: (context, url, error) => Image.asset(
-                          "assets/images/brown_boy_mask.png",
+                          "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                           width: 35,
                           height: 35,
                         ) //Icon(Icons.error),
@@ -138,7 +138,7 @@ class _InsideInsideInsideAlterEgoChatWidgetState extends State<InsideInsideInsid
             widget.chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
-                fontSize: 14.0,
+                fontSize: 15.0,
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
           ),
@@ -186,7 +186,7 @@ class _InsideInsideInsideAlterEgoChatWidgetState extends State<InsideInsideInsid
                             placeholder: (context, url) =>
                                 Center(child: CircularProgressIndicator()),
                             errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/brown_boy_mask.png",
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                               width: 48,
                               height: 48,
                             ) //Icon(Icons.error),
@@ -217,7 +217,7 @@ class _InsideInsideInsideAlterEgoChatWidgetState extends State<InsideInsideInsid
                             placeholder: (context, url) =>
                                 Center(child: CircularProgressIndicator()),
                             errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/brown_boy_mask.png",
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                               width: 48,
                               height: 48,
                             ) //Icon(Icons.error),
