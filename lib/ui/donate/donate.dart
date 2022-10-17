@@ -286,7 +286,7 @@ class _DonatePageState extends State<DonatePage> {
             child: Text(message!),
           ),
           actions: [
-            FlatButton(
+            ElevatedButton(
               child: Text('Dismiss'),
               onPressed: () => Navigator.of(context).pop(),
             )
