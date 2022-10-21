@@ -9,7 +9,6 @@ import 'package:dear_claire/ui/bottom_nav/stack_index_home.dart';
 import 'package:dear_claire/ui/chats/chatrooms.dart';
 import 'package:dear_claire/ui/create_session/create_session_page.dart';
 import 'package:dear_claire/ui/dairy/diary.dart';
-import 'package:dear_claire/ui/donate/donate.dart';
 import 'package:dear_claire/ui/ego-profile/clairevatar.dart';
 import 'package:dear_claire/ui/ego-profile/profile.dart';
 import 'package:dear_claire/ui/ego-profile/request_claire_love_form.dart';
@@ -134,13 +133,6 @@ class AppRouter {
           settings: settings,
           fullscreenDialog: true,
         );
-      case AppRoutes.donate:
-        return MaterialPageRoute<dynamic>(
-          builder: (_) => DonatePage(title: "Donate",),
-          settings: settings,
-          fullscreenDialog: true,
-        );
-
 
       case AppRoutes.createSessionPage:
         return MaterialPageRoute<dynamic>(

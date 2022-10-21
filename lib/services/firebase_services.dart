@@ -515,24 +515,6 @@ class FirebaseServices extends ChangeNotifier {
 
 
 
-  ///get AlterEgo details to enable donation
-  Future<UserModel> getUserAlterEgoToDonate(BuildContext context,
-      String alterEgoId, String alterEgoAccessCode) async {
-    final _value = await _firebaseFirestore
-        .collection(AppString.users)
-        //.doc(id)
-        .where("alterEgoId", isEqualTo: alterEgoId)
-        .where("alterEgoAccessCode", isEqualTo: alterEgoAccessCode)
-        .get()
-        .whenComplete(() => {
-              setAlterEgoId(alterEgoId),
-              setAlterEgoAccessCode(alterEgoAccessCode),
-              print("AlterEgo value...: $alterEgoId , $alterEgoAccessCode"),
-              Navigator.of(context).pushReplacementNamed(AppRoutes.donate)
-            });
-    //.then((value) => print("value...: ${_value.}"));
-    return UserModel.fromJson(_value.docs);
-  }
 
   Future<UserModel> getUserWithId({String? id}) async {
     final _info =

@@ -51,7 +51,7 @@ dependencies:
   # geocoder: ^0.2.1
   geocoding:
   geolocator:
-  flutterwave: ^1.0.0
+  flutterwave_standard: ^1.0.4
   #rave_flutter: ^0.0.9-alpha+2
   url_launcher: ^6.0.9
   swipedetector: ^1.2.0
@@ -82,6 +82,7 @@ dependencies:
   animated_text_kit:
   firebase_in_app_messaging: ^0.6.0+19
   workmanager: ^0.5.0
+  webview_flutter: ^3.0.4
 
 
 dev_dependencies:
