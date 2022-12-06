@@ -58,9 +58,14 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
 
   /// Set and show current withdrawal available to the user.
 
-  void setWithdrawalAmount() {
+  void setWithdrawalAmount() async {
+    final user = await firebaseServices.getUserWithId(id: widget.visitedUsersID);
+    final rate = user.userType == 'REGULAR'? 1.5 :
+    user.userType == 'ADMIN'? 2 :
+    user.userType == 'SUPER_ADMIN'? 3 :
+    1.5;
     final currentWithdrawal = int.parse(_amountController.text);
-    _toRequest = currentWithdrawal * int.parse(_rate.toString());
+    _toRequest = currentWithdrawal * rate;
     _currentWithdrawal = _toRequest;
 
     logger.d('Got the request love count');
@@ -108,76 +113,31 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
               child: Column(
                 children: [
                   Container(
+                    alignment: Alignment.center,
                     child: Text(
-                      "Love Wallet 🌺",
+                      "${widget.visitedEgoName}\'s Love Wallet 🌺",
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 23,
                         fontWeight: FontWeight.w600,
                         color: Pallet.colorWhite,
                       ),
                     ),
                   ),
 
-                  SizedBox(height: 4,),
-
-                  Container(
-                    alignment: Alignment.topLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          widget.visitedEgoName + '\'s',
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Pallet.colorWhite,
-                          ),
-                        ),
-
-                        SizedBox(width: 4,),
-
-                        Text(
-                        "Loves",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                          color: Pallet.colorWhite,
-                        ),
-                      ),
-                    ]
-                    ),
-                  ),
-
-
                   SizedBox(height: 2,),
 
                   Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: Container(
-                            width: getDeviceWidth(context),
-                            alignment: Alignment.topCenter,
-                            padding: EdgeInsets.only(left: 2, right: 2),
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10)
-                            ),
-                            child: Text(
-                              "Claire converts your data to Loves for sharing time with her and positive vibes around the app.",
-                              textAlign: TextAlign.justify,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontStyle: FontStyle.italic,
-                                fontSize: 11,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    width: getDeviceWidth(context),
+                    margin: EdgeInsets.all(6),
+                    child: Text(
+                      "Total loves might include earnings from playing games with Claire.",
+                      textAlign: TextAlign.justify,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontStyle: FontStyle.italic,
+                        fontSize: 11,
+                        color: Colors.white70,
+                      ),
                     ),
 
                   ),
@@ -408,12 +368,12 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
 
 
                   Container(
-                    alignment: Alignment.topLeft,
+                    alignment: Alignment.center,
                     child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            "Send Love",
+                            "Send Love to ${widget.visitedEgoName}",
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
@@ -426,33 +386,18 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
 
 
                   Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: Container(
-                            width: getDeviceWidth(context),
-                            alignment: Alignment.topCenter,
-                            padding: EdgeInsets.only(left: 2, right: 2, top: 2),
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10)
-                            ),
-                            child: Text(
-                              "Claire allows you to send some love anonymously to whomever your ego desires. "
-                                  "Note: Only Alter and Super Egos can send loves for now.",
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 11,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    width: getDeviceWidth(context),
+                    margin: EdgeInsets.only(left: 6),
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      "Note: Only Alter and Super Egos can send loves for now.",
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.white70,
+                      ),
                     ),
 
                   ),
@@ -797,9 +742,6 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
                           alignment: Alignment.center,
                           child: OutlinedButton(
                             onPressed: () {
-                              setState(() {
-
-                              });
                               if (_amountController.text.isNotEmpty) {
                                 setState(() {
                                   setWithdrawalAmount();

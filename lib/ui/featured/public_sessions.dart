@@ -163,7 +163,7 @@ class TrendingCategories extends StatelessWidget {
 
                   return Scrollbar(
                     child: SizedBox(
-                      height: 40,
+                      height: 50,
                       child: ListView(
                         shrinkWrap: true,
                         scrollDirection: Axis.horizontal,

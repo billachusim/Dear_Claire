@@ -40,13 +40,13 @@ class _CategoryStreams2State extends State<CategoryStreams2> {
                     borderRadius: BorderRadius.circular(15)
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(5.0),
+                  padding: const EdgeInsets.all(6.0),
                   child: Text(widget.element.category1.toString(),
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontStyle: FontStyle.italic,
-                      fontSize: 18,
+                      fontSize: 20,
                     ),
                   ),
                 ),

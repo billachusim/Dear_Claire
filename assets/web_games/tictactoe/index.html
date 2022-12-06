@@ -193,14 +193,7 @@
         </div>
         <div class="flex-center flex-column">
             <div class="margin no-margin-horizontal no-margin-bottom">
-                <input
-                        id="checkFirstMove"
-                        type="checkbox"
-                        class="checkbox"
-                        checked
-                /><span class="margin-left-small" style="color: white;"
-            >Check to make the first move</span
-            >
+
             </div>
             <button id="btnPlay" class="margin-small">
                 <svg height="24" width="24">
@@ -817,7 +810,7 @@
             }
           }
 
-          var hardLevel = 10;
+          var hardLevel = 1;
           if (attentionRequired.length == 2) {
             return attentionRequired[
               _getRandomInt(0, attentionRequired.length - 1)
@@ -997,7 +990,7 @@
               return $(this).hasClass("active");
             })
             .attr("id");
-          var hasCheckedFirstMove = $checkFirstMove.is(":checked");
+          var hasCheckedFirstMove = false;
           $divUserInputs.hide();
           var playBoard = new PlayBoard();
           var user = new User(+chosenSymbol, playBoard, "You");

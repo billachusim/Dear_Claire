@@ -52,10 +52,11 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
   /// Set and show current withdrawal available to the user.
 
-  void setWithdrawalAmount() {
-    final rate = _rateBadge == 'Ego Rate'? 1.5 :
-    _rateBadge == 'Alter Ego Rate'? 2 :
-    _rateBadge == 'Super Ego Rate'? 3 :
+  void setWithdrawalAmount() async {
+    final user = await firebaseServices.getUserInfo();
+    final rate = user.userType == 'REGULAR'? 1.5 :
+    user.userType == 'ADMIN'? 2 :
+    user.userType == 'SUPER_ADMIN'? 3 :
     1.5;
     final currentWithdrawal = int.parse(_amountController.text);
     final totalWithdrawal = _withdrawnLoveCount! + currentWithdrawal;
@@ -64,7 +65,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
     _toRequest = currentWithdrawal * rate;
     _currentWithdrawal = _toRequest;
 
-    logger.d('Got the request love count');
+    logger.d('Got the request love count: $_currentWithdrawal');
     print('Withdrawn love Count is: $withdrawnLoveCount');
     print('Current love Count is: $_currentLoveCount');
 
@@ -141,53 +142,33 @@ class _ClaireLovesState extends State<ClaireLoves> {
                     SizedBox(height: 4,),
 
                     Container(
+                      width: getDeviceWidth(context),
+                      margin: EdgeInsets.only(left: 6),
                       alignment: Alignment.topLeft,
-                      child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-
-                            Text(
-                              "Convert",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600,
-                                color: Pallet.colorWhite,
-                              ),
-                            ),
-                          ]
+                      child: Text(
+                        "Convert",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w600,
+                          color: Pallet.colorWhite,
+                        ),
                       ),
                     ),
 
 
-                    SizedBox(height: 2,),
-
                     Container(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Align(
-                            alignment: Alignment.topCenter,
-                            child: Container(
-                              width: getDeviceWidth(context),
-                              alignment: Alignment.topCenter,
-                              padding: EdgeInsets.only(left: 2, right: 2),
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10)
-                              ),
-                              child: Text(
-                              "Claire converts your data to Loves for sharing time with her and positive vibes around the app.",
-                                textAlign: TextAlign.justify,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 11,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                      width: getDeviceWidth(context),
+                      margin: EdgeInsets.only(left: 6, right: 6),
+                      child: Text(
+                      "You earn loves by sharing new diary sessions, sending positive advises, playing games with Claire "
+                          "and anonymous tips from other egos.",
+                        textAlign: TextAlign.justify,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontStyle: FontStyle.italic,
+                          fontSize: 11,
+                          color: Colors.white70,
+                        ),
                       ),
 
                     ),
@@ -432,6 +413,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
 
                     Container(
+                      width: getDeviceWidth(context),
+                      margin: EdgeInsets.only(left: 6),
                       alignment: Alignment.topLeft,
                       child: Text(
                         "Withdraw",
@@ -446,33 +429,18 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
 
                     Container(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Align(
-                            alignment: Alignment.topCenter,
-                            child: Container(
-                              width: getDeviceWidth(context),
-                              alignment: Alignment.topCenter,
-                              padding: EdgeInsets.only(left: 2, right: 2, top: 2),
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10)
-                              ),
-                              child: Text(
-                                "Claire pays you back the cost of vibes and times you spent on the app. "
-                                    "Note: Only Alter and Super Egos can request cash for now.",
-                                textAlign: TextAlign.left,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 11,
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                      width: getDeviceWidth(context),
+                      margin: EdgeInsets.only(left: 6, right: 6),
+                      child: Text(
+                        "Claire pays you back the cost of vibes and times you spent on the app.\n"
+                            "Note: Only Alter and Super Egos can request cash for now.",
+                        textAlign: TextAlign.left,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.white70,
+                        ),
                       ),
 
                     ),
@@ -774,37 +742,21 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
                           Column(
                             children: [
-                              Align(
-                                alignment: Alignment.topLeft,
-                                child: Container(
-                                  padding: EdgeInsets.only(top: 7),
-                                  height: 40,
-                                  width: 90,
-                                  decoration: BoxDecoration(
-                                      color: Pallet.colorWhite,
-                                      borderRadius: BorderRadius.circular(5)
-                                  ),
-                                  child: TextField(
-                                    cursorColor: Pallet.colorSecondary,
-                                    keyboardType: TextInputType.number,
-                                    maxLines: 1,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      contentPadding:
-                                      EdgeInsets.only(left: 22.0, bottom: 13, right: 2.0),
-                                      hintText: _currentWithdrawal ?? "0000",
-                                      hintStyle: TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        color: Pallet.colorBlack,
-                                        fontSize: 20,
-                                      ),
-                                      counterText: '',
-                                    ),
-                                    maxLength: 5,
-                                  ),
+                              Container(
+                                padding: EdgeInsets.only(top: 7),
+                                height: 40,
+                                width: 90,
+                                decoration: BoxDecoration(
+                                    color: Pallet.colorWhite,
+                                    borderRadius: BorderRadius.circular(5)
                                 ),
+                                child: Text(
+                                  "$_currentWithdrawal"
+                                )
                               ),
+
                               SizedBox(height: 2,),
+
                               Text(
                                 "Cash Out",
                                 textAlign: TextAlign.center,

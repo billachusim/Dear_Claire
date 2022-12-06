@@ -48,21 +48,27 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                   color: Pallet.colorPrimary,
                                 ),
                                 child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text(AppString.read_how_claire_works,
-                                          style: GoogleFonts.lato(
-                                              fontSize: 17.0,
-                                              color: Pallet.colorWhite,
-                                              fontWeight: FontWeight.w700)),
-                                      SizedBox(
-                                        height: 10,
+                                      Row(
+                                        children: [
+                                          Align(
+                                              alignment: Alignment.topLeft,
+                                              child: Image.asset(
+                                                  "assets/images/how_claire_works_icon.png")),
+
+                                          SizedBox(
+                                            width: 15,
+                                          ),
+
+                                          Text(AppString.read_how_claire_works,
+                                              style: GoogleFonts.lato(
+                                                  fontSize: 22.0,
+                                                  color: Pallet.colorWhite,
+                                                  fontWeight: FontWeight.w700,
+                                              )),
+                                        ],
                                       ),
-                                      Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Image.asset(
-                                              "assets/images/how_claire_works_icon.png")),
+
                                       SizedBox(
                                         height: 5,
                                       ),
@@ -72,11 +78,18 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                                               fontSize: 17.0,
                                               color: Pallet.colorWhite,
                                               fontWeight: FontWeight.w700)),
-                                      Text(AppString.what_is_claire,
-                                          style: GoogleFonts.lato(
-                                              fontSize: 15.0,
-                                              color: Pallet.colorWhite,
-                                              fontWeight: FontWeight.w700)),
+
+                                      Align(
+                                        alignment: Alignment.topLeft,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(4.0),
+                                          child: Text(AppString.what_is_claire,
+                                              style: GoogleFonts.lato(
+                                                  fontSize: 15.0,
+                                                  color: Pallet.colorWhite,
+                                                  fontWeight: FontWeight.w700)),
+                                        ),
+                                      ),
                                       Text(
                                         AppString.how_claire_works_paragraph1,
                                         style: GoogleFonts.lato(
@@ -208,7 +221,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
   }
 
   Widget _alterEgo(BuildContext context) {
-    
+
     return InkWell(
         onTap: () {
           context.read<HowClaireWorksProvider>().resetImageSlider();
@@ -225,17 +238,19 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
               color: Pallet.colorSecondary,
             ),
             child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Column(
+                    children: [
               Text("Read How Alter Ego Works",
                   style: GoogleFonts.lato(
-                      fontSize: 17.0,
+                      fontSize: 22.0,
                       color: Pallet.colorWhite,
                       fontWeight: FontWeight.w700)),
               SizedBox(
-                height: 10,
+                height: 2,
               ),
-              
-              Center(
+
+              Align(
+                alignment: Alignment.topLeft,
                 child: Text(" \n 🌺 What Is Alter-Ego?\n",
                     style: GoogleFonts.lato(
                         fontSize: 16.0,
@@ -309,7 +324,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
               Center(
                 child: Text("Top Up Your Loves",
                     style: GoogleFonts.lato(
-                        fontSize: 17.0,
+                        fontSize: 22.0,
                         color: Pallet.colorWhite,
                         fontWeight: FontWeight.w700)),
               ),
@@ -345,7 +360,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                 Center(
                     child: Text("Send Feedback",
                     style: GoogleFonts.lato(
-                        fontSize: 17.0,
+                        fontSize: 22.0,
                         color: Pallet.colorWhite,
                         fontWeight: FontWeight.w700)
                     )

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/menu_items/view_model.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
+import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -24,6 +25,7 @@ class SetupClaireminder extends StatefulWidget {
 }
 
 class _SetupClaireminderState extends State<SetupClaireminder> {
+  late int theClaireminderDelay;
   static List<String> imageSliderList = [
     "assets/images/alter_ego_slide_1.png",
     "assets/images/alter_ego_slide_2.png",
@@ -131,132 +133,172 @@ class _SetupClaireminderState extends State<SetupClaireminder> {
                           )),
                     ),
                     SizedBox(height: 30),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-
-                        OutlinedButton(
-                          onPressed: () async {
-                           await addClaireminderData();
-                           _showCardDialog();
-                          },
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: Pallet.colorSecondary,
-                            padding: EdgeInsets.all(20),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25)),
+                    Container(
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: TextField(
+                          controller: claireminderTitleController,
+                          decoration: InputDecoration(
+                            //border: InputBorder,
+                            hintText: "Reminder",
+                            labelText: "Title"
                           ),
-                          child: Text("ONCE A DAY",
-                              style: GoogleFonts.lato(
-                                  fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
-
-
-                        OutlinedButton(
-                          onPressed: () async {
-                            final _user = await firebaseServices.getUserInfo();
-                            final String uniqueName = DateTime.now().second.toString();
-                            final String taskName = "claireminder";
-                            if (_user.currentLoveCount > 200) {
-                              await Workmanager().registerPeriodicTask(uniqueName, taskName,
-                                  tag: taskName,
-                                  frequency: Duration(days: _user.claireminderDelay!),
-                                  initialDelay: Duration(seconds: 15),
-                                  constraints: Constraints(networkType: NetworkType.connected)
-                              );
-                              Navigator.of(context).pop();
-                              showToast("Claireminder Scheduled... thrice a week");
-                            }
-                            else showToast("You need up to 2000 Loves.");
-                          },
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: Pallet.colorSecondary,
-                            padding: EdgeInsets.all(20),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25)),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Container(
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: TextField(
+                          controller: claireminderMessageController,
+                          decoration: InputDecoration(
+                            //border: InputBorder,
+                            hintText: "Remind me to start a new diary session.",
+                            labelText: "Message (Optional)"
                           ),
-                          child: Text("THRICE A WEEK",
-                              style: GoogleFonts.lato(
-                                  fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Container(
+                      width: getDeviceWidth(context),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
 
-
-                        OutlinedButton(
-                          onPressed: () async {
-                            final _user = await firebaseServices.getUserInfo();
-                            final String uniqueName = DateTime.now().second.toString();
-                            final String taskName = "claireminder";
-                            if (_user.currentLoveCount > 200) {
-                              await Workmanager().registerPeriodicTask(uniqueName, taskName,
-                                  tag: taskName,
-                                  frequency: Duration(days: _user.claireminderDelay!),
-                                  initialDelay: Duration(seconds: 15),
-                                  constraints: Constraints(networkType: NetworkType.connected)
-                              );
-                              Navigator.of(context).pop();
-                              showToast("Claireminder Scheduled...once a week");
-                            }
-                            else showToast("You need up to 2000 Loves.");
-                          },
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: Pallet.colorSecondary,
-                            padding: EdgeInsets.all(20),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25)),
+                          OutlinedButton(
+                            onPressed: () async {
+                              final _claireminderDelay = 18;
+                              theClaireminderDelay = _claireminderDelay;
+                              await addClaireminderData();
+                              _showCardDialog();
+                            },
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Pallet.colorBlue,
+                              padding: EdgeInsets.all(20),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25)),
+                            ),
+                            child: Text("DAY",
+                                style: GoogleFonts.lato(
+                                    fontSize: 18.0, fontWeight: FontWeight.w700, color: Colors.green)),
                           ),
-                          child: Text("ONCE A WEEK",
-                              style: GoogleFonts.lato(
-                                  fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
-                        ),
 
-                      ],
+
+                          OutlinedButton(
+                            onPressed: () async {
+                              final _user = await firebaseServices.getUserInfo();
+                              final String uniqueName = DateTime.now().second.toString();
+                              final String taskName = "claireminder";
+                              if (_user.currentLoveCount > 200) {
+                                await Workmanager().registerPeriodicTask(uniqueName, taskName,
+                                    tag: taskName,
+                                    frequency: Duration(days: _user.claireminderDelay!),
+                                    initialDelay: Duration(seconds: 15),
+                                    constraints: Constraints(networkType: NetworkType.connected)
+                                );
+                                Navigator.of(context).pop();
+                                showToast("Claireminder Scheduled... thrice a week");
+                              }
+                              else showToast("You need up to 2000 Loves.");
+                            },
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Pallet.colorSecondary,
+                              padding: EdgeInsets.all(20),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25)),
+                            ),
+                            child: Text("THRICE A WEEK",
+                                style: GoogleFonts.lato(
+                                    fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
+                          ),
+
+                        ],
+                      ),
                     ),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        OutlinedButton(
-                          onPressed: () async {
-                            final _user = await firebaseServices.getUserInfo();
-                            //final String taskName = "autoDiary";
-                            if (_user.currentLoveCount > 200) {
-                              await Workmanager().cancelAll();
-                            }
-                            else showToast("You need up to 2000 Loves.");
-                          },
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: Pallet.colorSecondary,
-                            padding: EdgeInsets.all(20),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25)),
-                          ),
-                          child: Text("STOP ALL",
-                              style: GoogleFonts.lato(
-                                  fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
-                        ),
+                    SizedBox(height: 12,),
 
-                        InkWell(
-                            onTap: onDonateClicked,
-                            child: Container(
-                                padding: EdgeInsets.all(12),
-                                width: 150,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(25),
-                                  color: Pallet.colorPrimary,
-                                ),
-                                child: Center(
-                                    child: Text(AppString.donate,
-                                        style: GoogleFonts.lato(
-                                            fontSize: 17.0,
-                                            color: Pallet.colorWhite,
-                                            fontWeight: FontWeight.w700)
-                                    )
+                    Container(
+                      width: getDeviceWidth(context),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+
+                          OutlinedButton(
+                            onPressed: () async {
+                              final _user = await firebaseServices.getUserInfo();
+                              final String uniqueName = DateTime.now().second.toString();
+                              final String taskName = "claireminder";
+                              if (_user.currentLoveCount > 200) {
+                                await Workmanager().registerPeriodicTask(uniqueName, taskName,
+                                    tag: taskName,
+                                    frequency: Duration(days: _user.claireminderDelay!),
+                                    initialDelay: Duration(seconds: 15),
+                                    constraints: Constraints(networkType: NetworkType.connected)
+                                );
+                                Navigator.of(context).pop();
+                                showToast("Claireminder Scheduled...once a week");
+                              }
+                              else showToast("You need up to 2000 Loves.");
+                            },
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Pallet.colorSecondary,
+                              padding: EdgeInsets.all(20),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25)),
+                            ),
+                            child: Text("ONCE A WEEK",
+                                style: GoogleFonts.lato(
+                                    fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
+                          ),
+
+                          OutlinedButton(
+                            onPressed: () async {
+                              final _user = await firebaseServices.getUserInfo();
+                              //final String taskName = "autoDiary";
+                              if (_user.currentLoveCount > 200) {
+                                await Workmanager().cancelAll();
+                              }
+                              else showToast("You need up to 2000 Loves.");
+                            },
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Pallet.colorSecondary,
+                              padding: EdgeInsets.all(20),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25)),
+                            ),
+                            child: Text("STOP ALL",
+                                style: GoogleFonts.lato(
+                                    fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 8,),
+
+                    InkWell(
+                        onTap: onDonateClicked,
+                        child: Container(
+                            padding: EdgeInsets.all(12),
+                            width: 150,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(25),
+                              color: Pallet.colorPrimary,
+                            ),
+                            child: Center(
+                                child: Text(AppString.donate,
+                                    style: GoogleFonts.lato(
+                                        fontSize: 17.0,
+                                        color: Pallet.colorWhite,
+                                        fontWeight: FontWeight.w700)
                                 )
                             )
-                        ),
-                      ],
+                        )
                     ),
                   ],
                 )
@@ -308,7 +350,7 @@ class _SetupClaireminderState extends State<SetupClaireminder> {
   /// Add claireminder info to user's firestore.
 
   Future<void> addClaireminderData() async {
-    final int claireminderDelay = 1;
+    final int claireminderDelay = theClaireminderDelay;
     final String claireminderTitle = claireminderTitleController.text;
     final String claireminderMessage = claireminderMessageController.text;
     FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).set(
@@ -339,18 +381,6 @@ class _SetupClaireminderState extends State<SetupClaireminder> {
               child: Text(claireminderTitleController.text,
                   textAlign: TextAlign.center),
             ),
-            content: Container(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: TextField(
-                  controller: claireminderTitleController,
-                  decoration: InputDecoration(
-                    //border: InputBorder,
-                    hintText: AppString.whats_this_session_about,
-                  ),
-                ),
-              ),
-            ),
             actions: <Widget>[
               TextButton(
                 child: Text(
@@ -365,12 +395,13 @@ class _SetupClaireminderState extends State<SetupClaireminder> {
                 child: Text("ACTIVATE", style: TextStyle(color: Pallet.colorSecondary, fontSize: 18)),
                 onPressed: () async {
                   final _user = await firebaseServices.getUserInfo();
+                  final int claireminderFrequency = _user.claireminderDelay!;
                   final String uniqueName = DateTime.now().second.toString();
                   final String taskName = "claireminder";
                   if (_user.currentLoveCount > 200) {
                     await Workmanager().registerPeriodicTask(uniqueName, taskName,
                         tag: taskName,
-                        frequency: Duration(days: _user.claireminderDelay!),
+                        frequency: Duration(seconds: claireminderFrequency),
                         initialDelay: Duration(seconds: 15),
                         constraints: Constraints(networkType: NetworkType.connected)
                     );

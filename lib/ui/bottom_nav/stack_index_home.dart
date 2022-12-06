@@ -25,6 +25,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../services/firebase_services.dart';
 import '../../services/user_model.dart';
 import '../../utils/helper.dart';
+import '../../widgets/toast.dart';
 import '../routes/page_router_animation.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'destination.dart';
@@ -202,6 +203,7 @@ class _HomeDashboardPageState extends State<HomePage>
                 color: Pallet.colorWhite,
               ),
               onPressed: () {
+                getEgoInfo();
                 _openEndDrawer();
               }),
         ),
@@ -316,7 +318,7 @@ class _HomeDashboardPageState extends State<HomePage>
                                       placeholder: (context, url) =>
                                           CircularProgressIndicator(),
                                       errorWidget: (context, url, error) => Image.asset(
-                                        "assets/images/brown_boy_mask.png",
+                                        "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                                         width: 50,
                                         height: 50,
                                       ) //Icon(Icons.error),
@@ -389,11 +391,12 @@ class _HomeDashboardPageState extends State<HomePage>
                   ),
                   SizedBox(height: 18,),
                   ListTile(
-                    title: Text("Start Or Stop Auto Diary",
+                    title: Text("Claireminder",
                         style: TextStyle(color: Pallet.colorWhite)),
                     onTap: () async {
-                      if (await firebaseServices.isUserSignIn(context))
-                      Navigator.of(context).pushNamed(AppRoutes.setupAutoDiary);
+                      //if (await firebaseServices.isUserSignIn(context))
+                      //Navigator.of(context).pushNamed(AppRoutes.setupClaireminder);
+                      showToast("Coming Soon...");
                     },
                     leading: Icon(Icons.auto_awesome_motion_rounded, color: Pallet.colorWhite),
                   ),
