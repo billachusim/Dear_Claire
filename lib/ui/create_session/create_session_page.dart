@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
@@ -25,8 +26,12 @@ import 'package:hive/hive.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:uuid/uuid.dart';
+import '../featured/model/comment_session_model.dart';
+import '../featured/model/session.dart';
 import 'create_session_controller.dart';
 import 'sound/sound_widget.dart';
+import 'package:http/http.dart' as http;
+
 
 class CreateSessionPage extends StatefulWidget {
   const CreateSessionPage({Key? key}) : super(key: key);
@@ -41,6 +46,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   TextEditingController sessionTitleController = TextEditingController();
   final FirebaseServices _firebaseServices = FirebaseServices();
   final c = Get.find<CreateSessionController>();
+
+  Session? featuredSessionModel;
+
+  final apiKey = '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';
+  final endpoint = 'https://api.openai.com/v1/engines/davinci/completions';
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
@@ -64,6 +74,10 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   final sessionTextEditingController = TextEditingController();
   late FocusNode sessionTextFocusNode;
 
+  void setStateIfMounted(f) {
+    if (mounted) setState(f);
+  }
+
   ///this function is triggered when user clicks on any emoji
   appendEmojiToText(EmojiData emoji) {
     var newText = sessionTextEditingController.text + emoji.char;
@@ -72,6 +86,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
 //initialize the audio record file that stores user audio record. null by default
   File? recordFile;
+  String? videoFile;
+  String? videoThumbnail;
+
 
 //initialize the image list stores user selected images.
   List<Asset> imageList = <Asset>[];
@@ -1586,6 +1603,140 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   }
 
 
+  Future<String> startAiChat(CreateSessionModel session, String input) async {
+    try {
+      final body = jsonEncode({
+        'prompt': input,
+      });
+
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $apiKey',
+      };
+
+      final uri = Uri.https('api.openai.com', '/v1/engines/davinci/completions');
+      final response = await http.post(uri, headers: headers, body: body);
+      print('Response body: ${response.body}');
+      print('Response headers: ${response.headers}');
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        print("RESPONSE BODY IS: ${response.body}");
+        print(response.statusCode);
+        sendAiAdvise(session, response.body);
+
+        return response.body;
+      } else {
+        throw Exception('Failed to get advice. Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print(e);
+      throw Exception('Failed to get advice. Please check your internet connection');
+    }
+  }
+
+
+
+  void sendAiAdvise(CreateSessionModel session, String response) async {
+    if (!await firebaseServices.isUserSignIn(context)) return;
+
+
+    CollectionReference ref =
+    FirebaseFirestore.instance
+        .collection("sessions")
+        .doc(session.sessionId!)
+        .collection("comments");
+
+    String docId = ref.doc().id;
+
+    final _userModel = await firebaseServices.getUserInfo();
+    final _commentModel = CommentSessionModel(
+        alterEgoId: 'ClaireAI',
+        audioUrl: '',
+        commentId: docId,
+        flagged: session.flagged!,
+        imageUrls: [],
+        image1: '',
+        image2: '',
+        thanks: [],
+        numberOfThanks: 0,
+        isUserAdmin: true,
+        message: response,
+        timeCreated: Timestamp.now(),
+        userAvatarUrl: _userModel.avatarUrl,
+        userId: 'ClaireAi',
+        userNickname: 'ClaireAi',
+        originalAdviseCategory: session.category1);
+
+    await ref.doc(docId).set(_commentModel.toJson());
+
+
+    firebaseServices.addCommentNotification(
+      title: session.title ?? '',
+      docId: session.sessionId!,
+      sender: 'ClaireAI',
+    );
+
+    updateSessionTimeLastActivity(session);
+    saveAlterEgoCommentActivity();
+  }
+
+
+  /// Save alter ego comment activity
+
+  Future<void> saveAlterEgoCommentActivity() async {
+    final Session? theSession = featuredSessionModel;
+    final dateCreated = FieldValue.serverTimestamp();
+    final sessionId = theSession?.sessionId;
+    final sessionOwnerId = theSession?.userId;
+    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
+    final sessionOwnerNickname = theSession?.userNickname.toString();
+    final sessionVisitorId = 'ClaireAI';
+    final sessionVisitorNickname = 'ClaireAI';
+    final sessionVisitorAvatar = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691";
+    final activityMessage = "$sessionVisitorNickname commented on $sessionOwnerNickname's session.";
+    final activityType = "comment";
+    final userActivityId = "";
+    FirebaseFirestore.instance
+        .collection('user_activity')
+        .add({
+      "activityMessage": activityMessage,
+      "activityType": activityType,
+      "clientAvatarUrl": sessionVisitorAvatar,
+      "clientId": sessionVisitorId,
+      "clientNickname": sessionVisitorNickname,
+      "dateCreated": dateCreated,
+      "sessionId": sessionId,
+      "userActivityId": userActivityId,
+      "userId": sessionOwnerId,
+      "userNickname": sessionOwnerNickname,
+      "userAvatarUrl": sessionOwnerAvatar,
+
+    },
+    );
+    logger.d('Successfully saved your comment activity');
+    print('Activity Message: $activityMessage');
+
+  }
+
+
+
+  /// Update a session's timeLastActivity when new comment is made.
+
+  Future<void> updateSessionTimeLastActivity(CreateSessionModel? session) async {
+    FirebaseFirestore.instance
+        .collection("sessions")
+        .doc(session?.sessionId)
+        .update({
+      'timeLastActivity': FieldValue.serverTimestamp(),
+      'respondentUserId': 'ClaireAI',
+    },
+    );
+    logger.d('Successfully updated time of last activity');
+
+  }
+
+
 
   /// Create quick sessions.
 
@@ -1632,6 +1783,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
 
+    startAiChat(sessionObject, sessionTextEditingController.text);
+
   }
 
 
@@ -1659,6 +1812,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
       }
       sessionObject.imageUrls = imageDownloadUrls;
+    }
+
+    if (videoFile != null) {
+      sessionObject.videoUrl = videoFile;
+      sessionObject.containsVideo = true;
     }
 
     /// Adding a category tag to every session created.

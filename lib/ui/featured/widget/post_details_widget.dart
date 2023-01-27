@@ -225,7 +225,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                         Row(
                           children: [
                             Expanded(
-                              child: Text(
+                              child: SelectableText(
                                 _session.message!,
                                 textAlign: TextAlign.justify,
                                 style: GoogleFonts.lato(
@@ -375,6 +375,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                             session: _session);
 
                                         saveUserFollowActivity();
+                                        await firebaseServices.updateSessionLastTimeActivity(_session.sessionId.toString());
                                       }
                                     },
                                     count: _session.followers!.length,

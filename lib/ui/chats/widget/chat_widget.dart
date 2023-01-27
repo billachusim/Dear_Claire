@@ -312,25 +312,44 @@ class ChatWidget extends StatelessWidget {
                       ),
                     ),
 
-                    StreamBuilder(
-                        stream: firebaseServices
-                            .getSubMessages(documentID!, chatRoomPodo!, chatModel!),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
-                          if (snapShot.hasError) {
-                            return Container();
-                          }
-                          if (snapShot.hasData) {
-                            return Text(
-                              snapShot.data!.docs.length.toString() + " Online 🟢",
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600
-                              ),
-                            );
-                          }
-                          return Container();
-                        }),
+                    Column(
+                      children: [
+                        Text(
+                          chatModel!.members!.length.toString() + " Joined",
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+
+                              color: _isCompleted(chatModel, chatRoomPodo)
+                                  ? Pallet.colorPrimaryDark
+                                  : Pallet.colorSplashScreen),
+                        ),
+
+                        SizedBox(height: 4,),
+
+                        StreamBuilder(
+                            stream: firebaseServices
+                                .getSubMessages(documentID!, chatRoomPodo!, chatModel!),
+                            builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                              if (snapShot.hasError) {
+                                return Container();
+                              }
+                              if (snapShot.hasData) {
+                                return Text(
+                                    snapShot.data!.docs.length <1?
+                                  snapShot.data!.docs.length.toString() + " Online":
+                                    snapShot.data!.docs.length.toString() + " Online 🟢",
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600
+                                  ),
+                                );
+                              }
+                              return Container();
+                            }),
+                      ],
+                    ),
 
                   ],
                 );
@@ -483,8 +502,8 @@ class ChatWidget extends StatelessWidget {
 
                   },
                   child: Container(
-                      padding: EdgeInsets.all(5),
-                      width: 65,
+                      padding: EdgeInsets.all(3),
+                      width: 60,
                       height: 22,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20.0),
@@ -502,7 +521,7 @@ class ChatWidget extends StatelessWidget {
                       ),
                       child: Center(
                         child: Text(
-                          '${chatModel!.members!.length} LEAVE',
+                          'LEAVE',
                           style: TextStyle(
                             fontSize: 13,
                               fontWeight: FontWeight.w800,

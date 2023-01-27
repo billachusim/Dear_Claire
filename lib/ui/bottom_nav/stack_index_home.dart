@@ -194,7 +194,7 @@ class _HomeDashboardPageState extends State<HomePage>
                 ),
                 onPressed: () {
                   Navigator.of(context)
-                      .pushNamed(AppRoutes.allFeaturedPage);
+                      .pushNamed(AppRoutes.aiChat);
                 })
           ],
           leading: IconButton(

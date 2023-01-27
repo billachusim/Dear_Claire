@@ -28,6 +28,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../Automations/ai_chat.dart';
 import '../../widgets/updates/announcements_widget.dart';
 import '../Search/search_page.dart';
 import '../featured/widget/custom_post_details_screen.dart';
@@ -72,6 +73,8 @@ class AppRoutes {
   static const games = '/games';
   static const updatesAndAnnouncements = '/updatesAndAnnouncements';
   static const setupClaireminder = '/setupClaireminder';
+  static const aiChat = '/aiChat';
+
 
 
 
@@ -288,6 +291,13 @@ class AppRouter {
       case AppRoutes.updatesAndAnnouncements:
         return MaterialPageRoute<dynamic>(
           builder: (_) => UpdatesAndAnnouncements(),
+          settings: settings,
+          fullscreenDialog: true,
+        );
+
+      case AppRoutes.aiChat:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => AIChat(),
           settings: settings,
           fullscreenDialog: true,
         );

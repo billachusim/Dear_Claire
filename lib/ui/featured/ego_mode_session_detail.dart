@@ -478,7 +478,7 @@ class _EgoModeSessionDetailState
     final Session? theSession = widget.featuredSessionModel;
     final CommentSessionModel? theComment = commentSessionModel;
     final dateCreated = FieldValue.serverTimestamp();
-    final commentOwnerNickname = theComment?.userNickname.toString();
+    final commentOwnerNickname = theComment?.isUserAdmin == true? "Claire" : theComment?.userNickname.toString();
     final sessionId = theSession?.sessionId;
     final sessionOwnerId = theSession?.userId;
     final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
