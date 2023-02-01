@@ -3,10 +3,10 @@ description: A secret diary chat.
 
 publish_to: 'none'
 
-version: 10.9.0+109
+version: 11.0.0+110
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=2.18.6 <3.0.0"
 
 dependencies:
   flutter:
@@ -85,6 +85,10 @@ dependencies:
   webview_flutter: ^3.0.4
   path: ^1.8.2
   firebase_core_platform_interface: 4.5.1
+  velocity_x: ^3.6.0
+  chat_gpt_sdk:
+    git:
+      url: https://github.com/iampawan/Flutter-ChatGPT.git
 
 dev_dependencies:
   flutter_test:
@@ -97,20 +101,9 @@ flutter_icons:
   remove_alpha_ios: true
   image_path: "assets/images/iconWhitePetal.jpeg"
 
-#flutter_icons:
-#  android: "launcher_icon"
-#  ios: true
-#  image_path: "assets/images/launch_image.png"
-
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter.
 flutter:
-
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
+import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/user_model.dart';
@@ -51,6 +53,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   final apiKey = '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';
   final endpoint = 'https://api.openai.com/v1/engines/davinci/completions';
+  ChatGPT? chatGPT;
+  StreamSubscription? _subscription;
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
@@ -155,6 +159,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   @override
   void initState() {
     super.initState();
+    chatGPT = ChatGPT.instance.builder(
+      "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",
+    );
     _createInterstitialAd();
     _createQuickInterstitialAd();
     randomizeBackgroundColor();
@@ -629,7 +636,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                           borderRadius: BorderRadius.circular(20)
                                       ),
                                       child: Text(
-                                        "Share A Quick Session",
+                                        "Start A Quick AI Session",
                                         style: TextStyle(
                                           fontWeight: FontWeight.w500,
                                           fontSize: 14,
@@ -1133,8 +1140,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
                                         GestureDetector(
                                           onTap: (){
-                                            String quickSessionMessage = "Dear Claire, I'm feeling so fly today!\n"
-                                                " Flamboyance is a state of mind";
+                                            String quickSessionMessage = "Dear Claire, I'm feeling so embarrassed right now!\n"
+                                                " I feel like the ground should open up beneath me and let me in.";
                                             String quickSessionTitle = "I'm So Embarrassed";
                                             mood = 14;
                                             sessionTitleController.text = quickSessionTitle;
@@ -1603,43 +1610,23 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   }
 
 
-  Future<String> startAiChat(CreateSessionModel session, String input) async {
-    try {
-      final body = jsonEncode({
-        'prompt': input,
-      });
 
-      final headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $apiKey',
-      };
+  void startAiChat(CreateSessionModel session, String input) async {
+    final request = CompleteReq(
+      prompt: input, model: kTranslateModelV3, max_tokens: 200);
 
-      final uri = Uri.https('api.openai.com', '/v1/engines/davinci/completions');
-      final response = await http.post(uri, headers: headers, body: body);
-      print('Response body: ${response.body}');
-      print('Response headers: ${response.headers}');
-
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
-        print("RESPONSE BODY IS: ${response.body}");
-        print(response.statusCode);
-        sendAiAdvise(session, response.body);
-
-        return response.body;
-      } else {
-        throw Exception('Failed to get advice. Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      print(e);
-      throw Exception('Failed to get advice. Please check your internet connection');
-    }
+  _subscription = chatGPT!
+      .onCompleteStream(request: request)
+      .asBroadcastStream()
+      .listen((response) {
+    print("ADVISE IS : ${response!.choices[0].text}");
+    sendAiAdvise(session, response.choices[0].text);
+  });
   }
 
 
 
   void sendAiAdvise(CreateSessionModel session, String response) async {
-    if (!await firebaseServices.isUserSignIn(context)) return;
-
 
     CollectionReference ref =
     FirebaseFirestore.instance
@@ -1649,9 +1636,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     String docId = ref.doc().id;
 
-    final _userModel = await firebaseServices.getUserInfo();
     final _commentModel = CommentSessionModel(
-        alterEgoId: 'ClaireAI',
+        alterEgoId: 'CLaiRE',
         audioUrl: '',
         commentId: docId,
         flagged: session.flagged!,
@@ -1663,9 +1649,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         isUserAdmin: true,
         message: response,
         timeCreated: Timestamp.now(),
-        userAvatarUrl: _userModel.avatarUrl,
-        userId: 'ClaireAi',
-        userNickname: 'ClaireAi',
+        userAvatarUrl: '',
+        userId: 'CLaiRE',
+        userNickname: 'CLaiRE',
         originalAdviseCategory: session.category1);
 
     await ref.doc(docId).set(_commentModel.toJson());
@@ -1674,25 +1660,25 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     firebaseServices.addCommentNotification(
       title: session.title ?? '',
       docId: session.sessionId!,
-      sender: 'ClaireAI',
+      sender: 'CLaiRE',
     );
 
     updateSessionTimeLastActivity(session);
-    saveAlterEgoCommentActivity();
+    saveAIAlterEgoCommentActivity();
   }
 
 
   /// Save alter ego comment activity
 
-  Future<void> saveAlterEgoCommentActivity() async {
+  Future<void> saveAIAlterEgoCommentActivity() async {
     final Session? theSession = featuredSessionModel;
     final dateCreated = FieldValue.serverTimestamp();
     final sessionId = theSession?.sessionId;
     final sessionOwnerId = theSession?.userId;
     final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
     final sessionOwnerNickname = theSession?.userNickname.toString();
-    final sessionVisitorId = 'ClaireAI';
-    final sessionVisitorNickname = 'ClaireAI';
+    final sessionVisitorId = 'CLaiRE';
+    final sessionVisitorNickname = 'CLaiRE';
     final sessionVisitorAvatar = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691";
     final activityMessage = "$sessionVisitorNickname commented on $sessionOwnerNickname's session.";
     final activityType = "comment";
@@ -1777,13 +1763,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     bool isSuccessfull =
     await _firebaseServices.createSession(session: sessionObject);
 
+    startAiChat(sessionObject, sessionTextEditingController.text);
+
     Future.delayed(Duration(seconds: 4), () {
       _showQuickInterstitialAd();
     });
 
     _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
-
-    startAiChat(sessionObject, sessionTextEditingController.text);
 
   }
 
@@ -2583,6 +2569,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     bool isSuccessfull =
         await _firebaseServices.createSession(session: sessionObject);
+
+    startAiChat(sessionObject, sessionTextEditingController.text);
 
     Hive.box("draft").clear();
 

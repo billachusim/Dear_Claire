@@ -1,6 +1,8 @@
+import 'dart:async';
+import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
+import 'package:dear_claire/Automations/threedots.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'chatmessage.dart';
 
 class AIChat extends StatefulWidget {
   @override
@@ -8,85 +10,117 @@ class AIChat extends StatefulWidget {
 }
 
 class _AIChat extends State<AIChat> {
-  final apiKey = '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';
-  final endpoint = 'https://api.openai.com/v1/engines/davinci/completions';
-  final _textController = TextEditingController();
-  late String _advice = '';
+  final TextEditingController _controller = TextEditingController();
+  final List<ChatMessage> _messages = [];
+  ChatGPT? chatGPT;
+
+  StreamSubscription? _subscription;
+  bool _isTyping = false;
+
+  @override
+  void initState() {
+    super.initState();
+    chatGPT = ChatGPT.instance.builder(
+      "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",
+    );
+  }
+
+  @override
+  void dispose() {
+    chatGPT!.genImgClose();
+    _subscription?.cancel();
+    super.dispose();
+  }
+
+  // Link for api - https://beta.openai.com/account/api-keys
+
+  void _sendMessage() {
+    if (_controller.text.isEmpty) return;
+    ChatMessage message = ChatMessage(
+      text: _controller.text,
+      sender: "A Darling",
+    );
+
+    setState(() {
+      _messages.insert(0, message);
+      _isTyping = true;
+    });
+
+    _controller.clear();
+
+      final request = CompleteReq(
+          prompt: message.text, model: kTranslateModelV3, max_tokens: 200);
+
+      _subscription = chatGPT!
+          .onCompleteStream(request: request)
+          .asBroadcastStream()
+          .listen((response) {
+        print(response!.choices[0].text);
+        insertNewData(response.choices[0].text, isImage: false);
+      });
+  }
+
+  void insertNewData(String response, {bool isImage = false}) {
+    ChatMessage botMessage = ChatMessage(
+      text: response,
+      sender: "Cl(ai)re",
+    );
+
+    setState(() {
+      _isTyping = false;
+      _messages.insert(0, botMessage);
+    });
+  }
+
+  Widget _buildTextComposer() {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _controller,
+            onSubmitted: (value) => _sendMessage(),
+            decoration: const InputDecoration.collapsed(
+                hintText: "Question/description"),
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.send),
+          onPressed: () {
+            _sendMessage();
+          },
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Dear Claire'),
-      ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(8.0),
-              child: TextField(
-                controller: _textController,
-                decoration: InputDecoration(
-                  hintText: 'Enter your session',
-                ),
+        appBar: AppBar(title: const Text("Claire Chat")),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Flexible(
+                  child: ListView.builder(
+                    reverse: true,
+                    padding: EdgeInsets.all(8),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      return _messages[index];
+                    },
+                  )),
+              if (_isTyping) const ThreeDots(),
+              const Divider(
+                height: 1.0,
               ),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              // Send user input to OpenAI API and get advice
-              _advice = await _getAdvice(_textController.text);
-              setState(() {});
-            },
-            child: Text('Get advice'),
-          ),
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(8.0),
-              child: Text(_advice.toString(),
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.green,
                 ),
-              ),
-            ),
+                child: _buildTextComposer(),
+              )
+            ],
           ),
-        ],
-      ),
-    );
+        ));
   }
-
-  Future<String> _getAdvice(String input) async {
-    try {
-      final body = jsonEncode({
-        'prompt': input,
-      });
-
-      final headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $apiKey',
-      };
-
-      final uri = Uri.https('api.openai.com', '/v1/engines/davinci/completions');
-      final response = await http.post(uri, headers: headers, body: body);
-      print('Response body: ${response.body}');
-      print('Response headers: ${response.headers}');
-
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
-        print("RESPONSE BODY IS: ${response.body}");
-        print(response.statusCode);
-
-        return response.body;
-      } else {
-        throw Exception('Failed to get advice. Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      print(e);
-      throw Exception('Failed to get advice. Please check your internet connection');
-    }
-  }
-
-
 }

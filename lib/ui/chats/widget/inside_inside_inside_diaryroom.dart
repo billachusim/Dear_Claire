@@ -83,8 +83,8 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        visitedUsersID = _user?.userId ?? '';
-                        visitedEgoName = _user?.nickname ?? 'Chatter';
+                        visitedUsersID = _user.userId ?? '';
+                        visitedEgoName = _user.nickname ?? 'Chatter';
                         String thisEgoName = visitedEgoName;
                         String thisUser = visitedUsersID;
 

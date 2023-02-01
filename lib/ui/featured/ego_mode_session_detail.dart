@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/Admob/ad_state.dart';
 import 'package:dear_claire/services/firebase_services.dart';
@@ -58,12 +60,18 @@ class _EgoModeSessionDetailState
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
 
+  ChatGPT? chatGPT;
+  StreamSubscription? _subscription;
+
 
 
 
   @override
   void initState() {
     super.initState();
+    chatGPT = ChatGPT.instance.builder(
+      "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",
+    );
     _createAdviseInterstitialAd();
   }
 
@@ -294,6 +302,9 @@ class _EgoModeSessionDetailState
   }
 
   void _sendComment(String comment, String voiceNote, Session session, String image1, String image2) async {
+    if (session.location == "#QuickSession") {
+      startAiChat(session, comment);
+    } else
     if (!await firebaseServices.isUserSignIn(context)) return;
 
 
@@ -336,6 +347,63 @@ class _EgoModeSessionDetailState
     isOriginalAdvise(context, comment, session);
     saveUserCommentActivity();
     firebaseServices.followAdvisedSessionImmediately(session);
+  }
+
+
+  void startAiChat(Session session, String input) async {
+    final request = CompleteReq(
+        prompt: input, model: kTranslateModelV3, max_tokens: 200);
+
+    _subscription = chatGPT!
+        .onCompleteStream(request: request)
+        .asBroadcastStream()
+        .listen((response) {
+      print("ADVISE IS : ${response!.choices[0].text}");
+      sendAiAdvise(session, response.choices[0].text);
+    });
+  }
+
+
+
+  void sendAiAdvise(Session session, String response) async {
+
+    CollectionReference ref =
+    FirebaseFirestore.instance
+        .collection("sessions")
+        .doc(session.sessionId!)
+        .collection("comments");
+
+    String docId = ref.doc().id;
+
+    final _commentModel = CommentSessionModel(
+        alterEgoId: 'CLaiRE',
+        audioUrl: '',
+        commentId: docId,
+        flagged: session.flagged!,
+        imageUrls: [],
+        image1: '',
+        image2: '',
+        thanks: [],
+        numberOfThanks: 0,
+        isUserAdmin: true,
+        message: response,
+        timeCreated: Timestamp.now(),
+        userAvatarUrl: '',
+        userId: 'CLaiRE',
+        userNickname: 'CLaiRE',
+        originalAdviseCategory: session.category1);
+
+    await ref.doc(docId).set(_commentModel.toJson());
+
+
+    firebaseServices.addCommentNotification(
+      title: session.title ?? '',
+      docId: session.sessionId!,
+      sender: 'clAIre',
+    );
+
+    updateSessionTimeLastActivity(session);
+    saveAICommentActivity();
   }
 
 
@@ -444,6 +512,43 @@ class _EgoModeSessionDetailState
     final sessionVisitorAvatar =  _user.userType != "REGULAR"
         ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
         : _user.avatarUrl.toString();
+    final activityMessage = "$sessionVisitorNickname commented on $sessionOwnerNickname's session.";
+    final activityType = "comment";
+    final userActivityId = "";
+    FirebaseFirestore.instance
+        .collection('user_activity')
+        .add({
+      "activityMessage": activityMessage,
+      "activityType": activityType,
+      "clientAvatarUrl": sessionVisitorAvatar,
+      "clientId": sessionVisitorId,
+      "clientNickname": sessionVisitorNickname,
+      "dateCreated": dateCreated,
+      "sessionId": sessionId,
+      "userActivityId": userActivityId,
+      "userId": sessionOwnerId,
+      "userNickname": sessionOwnerNickname,
+      "userAvatarUrl": sessionOwnerAvatar,
+
+    },
+    );
+    logger.d('Successfully saved your comment activity');
+    print('Activity Message: $activityMessage');
+
+  }
+
+  /// Save AI Comment
+
+  Future<void> saveAICommentActivity() async {
+    final Session? theSession = featuredSessionModel;
+    final dateCreated = FieldValue.serverTimestamp();
+    final sessionId = theSession?.sessionId;
+    final sessionOwnerId = theSession?.userId;
+    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
+    final sessionOwnerNickname = theSession?.userNickname.toString();
+    final sessionVisitorId = "CLaiRE";
+    final sessionVisitorNickname = "CLaiRE";
+    final sessionVisitorAvatar = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691";
     final activityMessage = "$sessionVisitorNickname commented on $sessionOwnerNickname's session.";
     final activityType = "comment";
     final userActivityId = "";
