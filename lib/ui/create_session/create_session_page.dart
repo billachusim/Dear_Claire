@@ -1610,14 +1610,14 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   void startAiChat(CreateSessionModel session, String input) async {
     final request = CompleteReq(
-      prompt: input, model: kTranslateModelV3, max_tokens: 200);
+      prompt: input, model: kTranslateModelV3, max_tokens: 700);
 
   _subscription = chatGPT!
       .onCompleteStream(request: request)
       .asBroadcastStream()
       .listen((response) async {
     print("ADVISE IS : ${response!.choices[0].text}");
-    await sendAiAdvise(session, response.choices[0].text);
+    await sendAiAdvise(session, response.choices[0].text.trim());
   });
   }
 

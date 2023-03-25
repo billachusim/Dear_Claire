@@ -356,7 +356,7 @@ class _EgoModeSessionDetailState
         .asBroadcastStream()
         .listen((response) async {
       print("ADVISE IS : ${response!.choices[0].text}");
-      await sendAiAdvise(session, response.choices[0].text);
+      await sendAiAdvise(session, response.choices[0].text.trim());
     });
   }
 
