@@ -10,7 +10,7 @@
 .buildlog/
 .history
 .svn/
-
+lib/services/api_consts.dart
 # IntelliJ related
 *.iml
 *.ipr

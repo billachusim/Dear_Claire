@@ -3,6 +3,7 @@ import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:dear_claire/Automations/threedots.dart';
 import 'package:flutter/material.dart';
 import 'package:velocity_x/velocity_x.dart';
+import '../services/api_consts.dart';
 import 'chatmessage.dart';
 
 class AIChat extends StatefulWidget {
@@ -22,9 +23,7 @@ class _AIChat extends State<AIChat> {
   @override
   void initState() {
     super.initState();
-    chatGPT = ChatGPT.instance.builder(
-      "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",
-    );
+    chatGPT = ChatGPT.instance.builder(API_KEY);
   }
 
   @override

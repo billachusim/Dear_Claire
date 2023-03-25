@@ -17,6 +17,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import '../../services/api_consts.dart';
 import '../../utils/color.dart';
 import '../../utils/strings.dart';
 import '../../widgets/comment_widget.dart';
@@ -69,9 +70,7 @@ class _EgoModeSessionDetailState
   @override
   void initState() {
     super.initState();
-    chatGPT = ChatGPT.instance.builder(
-      "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",
-    );
+    chatGPT = ChatGPT.instance.builder(API_KEY);
     _createAdviseInterstitialAd();
   }
 

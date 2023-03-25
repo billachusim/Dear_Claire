@@ -28,6 +28,7 @@ import 'package:hive/hive.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:uuid/uuid.dart';
+import '../../services/api_consts.dart';
 import '../featured/model/comment_session_model.dart';
 import '../featured/model/session.dart';
 import 'create_session_controller.dart';
@@ -51,8 +52,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   Session? featuredSessionModel;
 
-  final apiKey = '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';
-  final endpoint = 'https://api.openai.com/v1/engines/davinci/completions';
   ChatGPT? chatGPT;
   StreamSubscription? _subscription;
 
@@ -159,9 +158,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   @override
   void initState() {
     super.initState();
-    chatGPT = ChatGPT.instance.builder(
-      "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",
-    );
+    chatGPT = ChatGPT.instance.builder(API_KEY);
     _createInterstitialAd();
     _createQuickInterstitialAd();
     randomizeBackgroundColor();
