@@ -302,9 +302,6 @@ class _EgoModeSessionDetailState
   }
 
   void _sendComment(String comment, String voiceNote, Session session, String image1, String image2) async {
-    if (session.location == "#QuickSession") {
-      startAiChat(session, comment);
-    } else
     if (!await firebaseServices.isUserSignIn(context)) return;
 
 
@@ -347,25 +344,27 @@ class _EgoModeSessionDetailState
     isOriginalAdvise(context, comment, session);
     saveUserCommentActivity();
     firebaseServices.followAdvisedSessionImmediately(session);
+    startAiChat(session, comment);
   }
 
 
   void startAiChat(Session session, String input) async {
     final request = CompleteReq(
-        prompt: input, model: kTranslateModelV3, max_tokens: 200);
+        prompt: input, model: kTranslateModelV3, max_tokens: 800);
 
     _subscription = chatGPT!
         .onCompleteStream(request: request)
         .asBroadcastStream()
-        .listen((response) {
+        .listen((response) async {
       print("ADVISE IS : ${response!.choices[0].text}");
-      sendAiAdvise(session, response.choices[0].text);
+      await sendAiAdvise(session, response.choices[0].text);
     });
   }
 
 
 
-  void sendAiAdvise(Session session, String response) async {
+  Future <void> sendAiAdvise(Session session, String response) async {
+    final advise = response.toString();
 
     CollectionReference ref =
     FirebaseFirestore.instance
@@ -386,7 +385,7 @@ class _EgoModeSessionDetailState
         thanks: [],
         numberOfThanks: 0,
         isUserAdmin: true,
-        message: response,
+        message: advise,
         timeCreated: Timestamp.now(),
         userAvatarUrl: '',
         userId: 'CLaiRE',

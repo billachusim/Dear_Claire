@@ -246,6 +246,7 @@ class _SearchPageState extends State<SearchPage> {
 
 
     // Implement a top location banner ad unit.
+    super.didChangeDependencies();
     adState.initialization.then((status) {
       setState(() {
         searchPageMiddleBanner2 = BannerAd(

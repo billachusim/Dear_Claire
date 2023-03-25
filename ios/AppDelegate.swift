@@ -7,6 +7,7 @@ import Flutter
 import Firebase
 import FirebaseMessaging
 import workmanager
+import AppTrackingTransparency
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate, MessagingDelegate {
@@ -14,6 +15,29 @@ import workmanager
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+  func applicationDidBecomeActive(_ application: UIApplication) {
+      class MyViewController: UIViewController {
+
+        override func viewDidAppear(_ animated: Bool) {
+          super.viewDidAppear(animated)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            if #available(iOS 14, *) {
+                ATTrackingManager.requestTrackingAuthorization(completionHandler: { status in
+                    switch status {
+                        case .authorized:
+                            print("enable tracking")
+                        case .denied:
+                            print("disable tracking")
+                        default:
+                            print("disable tracking")
+                    }
+                })
+            }
+          }
+        }
+      }
+  }
     FirebaseApp.configure()
     Messaging.messaging().delegate = self
     GeneratedPluginRegistrant.register(with: self)

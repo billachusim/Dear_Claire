@@ -51,7 +51,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   Session? featuredSessionModel;
 
-  final apiKey = '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';
+  final apiKey = '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';
   final endpoint = 'https://api.openai.com/v1/engines/davinci/completions';
   ChatGPT? chatGPT;
   StreamSubscription? _subscription;
@@ -1618,15 +1618,16 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   _subscription = chatGPT!
       .onCompleteStream(request: request)
       .asBroadcastStream()
-      .listen((response) {
+      .listen((response) async {
     print("ADVISE IS : ${response!.choices[0].text}");
-    sendAiAdvise(session, response.choices[0].text);
+    await sendAiAdvise(session, response.choices[0].text);
   });
   }
 
 
 
-  void sendAiAdvise(CreateSessionModel session, String response) async {
+  Future <void> sendAiAdvise(CreateSessionModel session, String response) async {
+    final advise = response.toString();
 
     CollectionReference ref =
     FirebaseFirestore.instance
@@ -1647,7 +1648,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         thanks: [],
         numberOfThanks: 0,
         isUserAdmin: true,
-        message: response,
+        message: advise,
         timeCreated: Timestamp.now(),
         userAvatarUrl: '',
         userId: 'CLaiRE',

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:dear_claire/Automations/threedots.dart';
 import 'package:flutter/material.dart';
+import 'package:velocity_x/velocity_x.dart';
 import 'chatmessage.dart';
 
 class AIChat extends StatefulWidget {
@@ -13,6 +14,7 @@ class _AIChat extends State<AIChat> {
   final TextEditingController _controller = TextEditingController();
   final List<ChatMessage> _messages = [];
   ChatGPT? chatGPT;
+  bool _isImageSearch = false;
 
   StreamSubscription? _subscription;
   bool _isTyping = false;
@@ -21,7 +23,7 @@ class _AIChat extends State<AIChat> {
   void initState() {
     super.initState();
     chatGPT = ChatGPT.instance.builder(
-      "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",
+      "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",
     );
   }
 
@@ -48,6 +50,17 @@ class _AIChat extends State<AIChat> {
 
     _controller.clear();
 
+    if (_isImageSearch) {
+      final request = GenerateImage(message.text, 1, size: "512x512");
+
+      _subscription = chatGPT!
+          .generateImageStream(request)
+          .asBroadcastStream()
+          .listen((response) {
+        Vx.log(response.data!.last!.url!);
+        insertNewData(response.data!.last!.url!, isImage: true);
+      });
+    } else {
       final request = CompleteReq(
           prompt: message.text, model: kTranslateModelV3, max_tokens: 200);
 
@@ -58,12 +71,14 @@ class _AIChat extends State<AIChat> {
         print(response!.choices[0].text);
         insertNewData(response.choices[0].text, isImage: false);
       });
+   }
   }
 
   void insertNewData(String response, {bool isImage = false}) {
     ChatMessage botMessage = ChatMessage(
       text: response,
       sender: "Cl(ai)re",
+      isImage: isImage,
     );
 
     setState(() {
@@ -86,9 +101,17 @@ class _AIChat extends State<AIChat> {
         IconButton(
           icon: const Icon(Icons.send),
           onPressed: () {
+            _isImageSearch = false;
             _sendMessage();
           },
         ),
+
+        TextButton(
+            onPressed: () {
+              _isImageSearch = true;
+              _sendMessage();
+            },
+            child: const Text("Generate Image"))
       ],
     );
   }
@@ -96,7 +119,7 @@ class _AIChat extends State<AIChat> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text("Claire Chat")),
+        appBar: AppBar(title: const Text("AI Chat")),
         body: SafeArea(
           child: Column(
             children: [

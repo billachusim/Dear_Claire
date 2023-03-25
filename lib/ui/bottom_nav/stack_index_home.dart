@@ -62,9 +62,10 @@ class _HomeDashboardPageState extends State<HomePage>
 
   /// Get the Ego User info
   Future<UserModel> getEgoInfo() async {
+    final String? userId = currentUser?.uid.toString();
     DocumentSnapshot response = await FirebaseFirestore.instance
         .collection(AppString.users)
-        .doc(currentUser?.uid)
+        .doc(userId)
         .get();
 
     var egoInfo = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
@@ -194,7 +195,7 @@ class _HomeDashboardPageState extends State<HomePage>
                 ),
                 onPressed: () {
                   Navigator.of(context)
-                      .pushNamed(AppRoutes.aiChat);
+                      .pushNamed(AppRoutes.searchPage);
                 })
           ],
           leading: IconButton(

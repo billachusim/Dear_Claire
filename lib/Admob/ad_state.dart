@@ -187,7 +187,7 @@ class AdState {
     if (Platform.isAndroid) {
       return "ca-app-pub-2404156870680632/7208052352";
     } else if (Platform.isIOS) {
-      return "ca-app-pub-2404156870680632/5597804828";
+      return "ca-app-pub-2404156870680632/3238400649";
     } else {
       throw new UnsupportedError("Unsupported platform");
     }

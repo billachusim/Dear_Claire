@@ -311,15 +311,18 @@ class EgoModeSessionCard extends StatelessWidget {
                               PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
                             },
                             child: CachedNetworkImage(
+                                height: 400,
+                                width: 400,
                                 imageUrl: image,
                                 imageBuilder: (context, imageProvider) => Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(25),
                                     image: DecorationImage(
                                       image: imageProvider,
-                                      //fit: BoxFit.fill,
+                                        fit: BoxFit.cover
                                     ),
                                   ),
+                                  margin: EdgeInsets.all(3),
                                 ),
                                 placeholder: (context, url) =>
                                     Center(child: CircularProgressIndicator()),
