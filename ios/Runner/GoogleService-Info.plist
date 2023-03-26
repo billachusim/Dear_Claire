@@ -34,5 +34,7 @@
 	<string>1:635604110866:ios:9dfcfe653ced6229a192cb</string>
 	<key>DATABASE_URL</key>
 	<string>https://clair-52652.firebaseio.com</string>
+	<key>ADMOB_APP_ID</key>
+	<string>ca-app-pub-2404156870680632~8436014363</string>
 </dict>
 </plist>
