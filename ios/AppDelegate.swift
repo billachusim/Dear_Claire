@@ -6,6 +6,7 @@ import AppTrackingTransparency
 
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate, MessagingDelegate {
+
     override func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -13,7 +14,7 @@ import AppTrackingTransparency
         FirebaseApp.configure()
         Messaging.messaging().delegate = self
         GeneratedPluginRegistrant.register(with: self)
-        
+
         if #available(iOS 14, *) {
             ATTrackingManager.requestTrackingAuthorization(completionHandler: { status in
                 switch status {
@@ -26,7 +27,7 @@ import AppTrackingTransparency
                 }
             })
         }
-        
+
         if #available(iOS 10.0, *) {
             // For iOS 10 display notification (sent via APNS)
             UNUserNotificationCenter.current().delegate = self
@@ -34,27 +35,37 @@ import AppTrackingTransparency
             let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
             UNUserNotificationCenter.current().requestAuthorization(
                 options: authOptions,
-                completionHandler: { _, _ in }
+                completionHandler: { granted, error in
+                    if let error = error {
+                        print("Error requesting authorization for user notifications: \(error.localizedDescription)")
+                    }
+                }
             )
         } else {
             let settings: UIUserNotificationSettings =
                 UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: nil)
             application.registerUserNotificationSettings(settings)
         }
-        
+
         application.registerForRemoteNotifications()
         UIApplication.shared.setMinimumBackgroundFetchInterval(TimeInterval(60*15))
-        
+
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
-    
-    override func application(_ application: UIApplication,
-                              didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+
+    override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        // Set the APNS device token
         Messaging.messaging().apnsToken = deviceToken
-        super.application(application,
-                          didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+        // Retrieve the FCM token
+        Messaging.messaging().token { token, error in
+            if let error = error {
+                print("Error retrieving FCM token: \(error.localizedDescription)")
+            } else if let token = token {
+                print("FCM token: \(token)")
+            }
+        }
     }
-    
+
     // Receive displayed notifications for iOS 10 devices.
     override func userNotificationCenter(_ center: UNUserNotificationCenter,
                                          willPresent notification: UNNotification,
@@ -87,5 +98,12 @@ import AppTrackingTransparency
         print(userInfo)
 
         completionHandler()
+    }
+
+    // MARK: - MessagingDelegate
+
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        print("FCM Token: \(String(describing: fcmToken))")
+        // TODO: Send the FCM token to your server, if necessary.
     }
 }
