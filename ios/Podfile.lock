@@ -596,6 +596,8 @@ PODS:
     - abseil/base/base_internal
     - abseil/base/config
     - abseil/meta/type_traits
+  - app_tracking_transparency (0.0.1):
+    - Flutter
   - audioplayers (0.0.1):
     - Flutter
   - BoringSSL-GRPC (0.0.24):
@@ -950,6 +952,7 @@ PODS:
     - Flutter
 
 DEPENDENCIES:
+  - app_tracking_transparency (from `.symlinks/plugins/app_tracking_transparency/ios`)
   - audioplayers (from `.symlinks/plugins/audioplayers/ios`)
   - cloud_firestore (from `.symlinks/plugins/cloud_firestore/ios`)
   - emoji_picker_flutter (from `.symlinks/plugins/emoji_picker_flutter/ios`)
@@ -1029,6 +1032,8 @@ SPEC REPOS:
     - Toast
 
 EXTERNAL SOURCES:
+  app_tracking_transparency:
+    :path: ".symlinks/plugins/app_tracking_transparency/ios"
   audioplayers:
     :path: ".symlinks/plugins/audioplayers/ios"
   cloud_firestore:
@@ -1100,6 +1105,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   abseil: ebe5b5529fb05d93a8bdb7951607be08b7fa71bc
+  app_tracking_transparency: 5b1745ef9ade815f7455cb6a0848349589afb7c5
   audioplayers: 455322b54050b30ea4b1af7cd9e9d105f74efa8c
   BoringSSL-GRPC: 3175b25143e648463a56daeaaa499c6cb86dad33
   BSGridCollectionViewLayout: 333dcb457a5a3bdd9212607ab5756553dcfe06cb

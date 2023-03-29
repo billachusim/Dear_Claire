@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/chats/chatrooms.dart';
@@ -140,6 +141,7 @@ class _HomeDashboardPageState extends State<HomePage>
     getEgoInfo();
     _title = "Dear Claire";
     shakeDevice();
+    AppTrackingTransparency.requestTrackingAuthorization();
   }
 
   shakeDevice() async {

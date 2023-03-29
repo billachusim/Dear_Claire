@@ -89,6 +89,7 @@ dependencies:
   chat_gpt_sdk:
     git:
       url: https://github.com/iampawan/Flutter-ChatGPT.git
+  app_tracking_transparency: ^2.0.3
 
 dev_dependencies:
   flutter_test:
