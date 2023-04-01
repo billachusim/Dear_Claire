@@ -101,7 +101,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   bool acceptReplies = false;
   bool followClaire = true;
   String sessionMood = 'Current Mood';
-  String? _location = '';
+  String _location = '';
 
 
 
@@ -138,7 +138,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
       place = placemarks[0];
-      _location = ("in  ${place.administrativeArea}, ${place.country}");
+      _location = ("in  ${place.administrativeArea.toString()}, ${place.country.toString()}");
+      print("Location is: $_location");
       return place;
     } catch (e) {
       logger.e(e);
@@ -377,7 +378,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                       Container(
                           child: Row(
                         children: [
-                          Icon(Icons.lock),
+                          Obx(
+                                () => c.acceptReplies.value
+                                ? Icon(Icons.lock_open_outlined)
+                                : Icon(Icons.lock),
+                          ),
                           SizedBox(width: 8),
                           Flexible(
                             child: Text(AppString.do_you_want_other_users,
@@ -401,7 +406,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                       Container(
                           child: Row(
                         children: [
-                          Icon(Icons.lock),
+                          Obx(
+                                () => c.followClaire.value
+                                ? Icon(Icons.lock_open_outlined)
+                                : Icon(Icons.lock),
+                          ),
                           SizedBox(width: 10),
                           Flexible(
                             child: Text(
@@ -425,7 +434,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                       Container(
                           child: Row(
                             children: [
-                              Icon(Icons.location_on_sharp),
+                              Obx(
+                                    () => c.location.value
+                                    ? Icon(Icons.location_on)
+                                    : Icon(Icons.location_off),
+                              ),
                               SizedBox(width: 9),
                               Flexible(
                                 child: Text("Do you want to tag your location?",
@@ -543,7 +556,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                           child: Container(
                             alignment: Alignment.center,
                             child: AutoSizeTextField(
-                              textAlign: TextAlign.center,
                               style: Constant
                                   .DIARY_FONT_STYLES[c.selectedFontIndex.value],
                               maxLines: null,
@@ -1610,15 +1622,19 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   void startAiChat(CreateSessionModel session, String input) async {
     final request = CompleteReq(
-      prompt: input, model: kTranslateModelV3, max_tokens: 700);
+        prompt: input, model: kTranslateModelV3, max_tokens: 800);
 
-  _subscription = chatGPT!
-      .onCompleteStream(request: request)
-      .asBroadcastStream()
-      .listen((response) async {
-    print("ADVISE IS : ${response!.choices[0].text}");
-    await sendAiAdvise(session, response.choices[0].text.trim());
-  });
+    _subscription = chatGPT!
+        .onCompleteStream(request: request)
+        .distinct()
+        .first
+        .asStream()
+        .listen((response) async {
+      print("ADVISE IS : ${response!.choices.first.text}");
+      final String latestContext = "The context from our last conversation is: $input and then your response was: ${response.choices.first.text}";
+      await sendAiAdvise(session, response.choices.first.text.trim());
+      updateSessionForAI(session, latestContext);
+    });
   }
 
 
@@ -1663,6 +1679,23 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     updateSessionTimeLastActivity(session);
     saveAIAlterEgoCommentActivity();
+    updateSessionForAI(session, advise);
+  }
+
+
+  /// Update a session's conversation context for AI when new comment is made.
+
+  Future<void> updateSessionForAI(CreateSessionModel session, String theContext) async {
+    FirebaseFirestore.instance
+        .collection("sessions")
+        .doc(session.sessionId)
+        .set({
+      'timeLastActivity': FieldValue.serverTimestamp(),
+      'theContext': theContext,
+    },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully updated conversation context for AI');
   }
 
 

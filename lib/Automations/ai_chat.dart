@@ -65,10 +65,12 @@ class _AIChat extends State<AIChat> {
 
       _subscription = chatGPT!
           .onCompleteStream(request: request)
-          .asBroadcastStream()
+          .distinct()
+          .first
+          .asStream()
           .listen((response) {
-        print(response!.choices[0].text);
-        insertNewData(response.choices[0].text, isImage: false);
+        print(response!.choices.first.text.trim());
+        insertNewData(response.choices.first.text.trim(), isImage: false);
       });
    }
   }

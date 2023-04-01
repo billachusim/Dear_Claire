@@ -343,20 +343,29 @@ class _EgoModeSessionDetailState
     isOriginalAdvise(context, comment, session);
     saveUserCommentActivity();
     firebaseServices.followAdvisedSessionImmediately(session);
-    startAiChat(session, comment);
+    if (session.location == "#QuickSession") {
+      startAiChat(session, comment);
+    }
   }
 
 
   void startAiChat(Session session, String input) async {
+    String oldContext = session.theContext ?? '';
+    String newContext = oldContext + ' Based on this, '+ input ?? '';
+
     final request = CompleteReq(
-        prompt: input, model: kTranslateModelV3, max_tokens: 800);
+        prompt: newContext, model: kTranslateModelV3, max_tokens: 800);
 
     _subscription = chatGPT!
         .onCompleteStream(request: request)
-        .asBroadcastStream()
+        .distinct()
+        .first
+        .asStream()
         .listen((response) async {
-      print("ADVISE IS : ${response!.choices[0].text}");
-      await sendAiAdvise(session, response.choices[0].text.trim());
+      print("ADVISE IS : ${response!.choices.first.text}");
+      final String latestContext = "The context from our last conversation is: $newContext and then your response was: ${response.choices.first.text}";
+      await sendAiAdvise(session, response.choices.first.text.trim());
+      updateSessionForAI(session, latestContext);
     });
   }
 
@@ -364,6 +373,7 @@ class _EgoModeSessionDetailState
 
   Future <void> sendAiAdvise(Session session, String response) async {
     final advise = response.toString();
+    final String latestContext = session.theContext! + advise;
 
     CollectionReference ref =
     FirebaseFirestore.instance
@@ -402,6 +412,7 @@ class _EgoModeSessionDetailState
 
     updateSessionTimeLastActivity(session);
     saveAICommentActivity();
+    updateSessionForAI(session, latestContext);
   }
 
 
@@ -631,6 +642,22 @@ class _EgoModeSessionDetailState
     },
     );
     logger.d('Successfully updated time of last activity');
+  }
+
+
+  /// Update a session's conversation context for AI when new comment is made.
+
+  Future<void> updateSessionForAI(Session session, String theContext) async {
+    FirebaseFirestore.instance
+        .collection("sessions")
+        .doc(session.sessionId)
+        .set({
+      'timeLastActivity': FieldValue.serverTimestamp(),
+      'theContext': theContext,
+    },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully updated conversation context for AI');
   }
 
 

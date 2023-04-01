@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/services/firebase_services.dart';
 
 class Session {
   String? audioUrl;
@@ -10,6 +9,7 @@ class Session {
   List<dynamic>? imageUrls;
   String? message;
   String? respondentUserId;
+  String? theContext;
   String? sessionId;
   Timestamp? timeCreated;
   Timestamp? timeLastActivity;
@@ -39,6 +39,7 @@ class Session {
       this.imageUrls,
       this.message,
       this.respondentUserId,
+      this.theContext,
       this.sessionId,
       this.timeCreated,
       this.timeLastActivity,
@@ -69,6 +70,7 @@ class Session {
       repliesEnabled: json['repliesEnabled'] ?? false,
       timeLastActivity: json['timeLastActivity'],
       respondentUserId: json['respondentUserId'] ?? '',
+      theContext: json['theContext'] ?? '',
       featured: json['featured'] ?? false,
       sessionId: json['sessionId'] ?? '',
       message: json['message'] ?? '',
@@ -95,6 +97,6 @@ class Session {
 
   @override
   String toString() {
-    return 'Session{audioUrl: $audioUrl, location: $location, colorHex: $colorHex, archived: $archived, flagged: $flagged, featured: $featured, imageUrls: $imageUrls, message: $message, respondentUserId: $respondentUserId, sessionId: $sessionId, timeCreated: $timeCreated, timeLastActivity: $timeLastActivity, title: $title, userAvatarUrl: $userAvatarUrl, userId: $userId, userNickname: $userNickname, private: $private, repliesEnabled: $repliesEnabled, font: $font, meTooFollowCount: $meTooFollowCount, moodId: $moodId, followers: $followers, meToos: $meToos, meLove: $meLove, meHiFive: $meHiFive, meFlower: $meFlower, category1: $category1,}';
+    return 'Session{audioUrl: $audioUrl, location: $location, colorHex: $colorHex, archived: $archived, flagged: $flagged, featured: $featured, imageUrls: $imageUrls, message: $message, respondentUserId: $respondentUserId, theContext: $theContext,  sessionId: $sessionId, timeCreated: $timeCreated, timeLastActivity: $timeLastActivity, title: $title, userAvatarUrl: $userAvatarUrl, userId: $userId, userNickname: $userNickname, private: $private, repliesEnabled: $repliesEnabled, font: $font, meTooFollowCount: $meTooFollowCount, moodId: $moodId, followers: $followers, meToos: $meToos, meLove: $meLove, meHiFive: $meHiFive, meFlower: $meFlower, category1: $category1,}';
   }
 }

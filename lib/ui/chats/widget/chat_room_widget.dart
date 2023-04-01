@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dear_claire/Automations/ai_chat.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/widget/diaryroom_online_users_stream.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
@@ -23,12 +24,22 @@ class ChatRoomWidget extends StatefulWidget {
 }
 
 class _ChatRoomWidgetState extends State<ChatRoomWidget> {
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     return CupertinoButton(
       onPressed: () async {
+        isLoading = true;
+        setState(() {});
         UserModel user = await firebaseServices.getUserInfo();
-        if (widget.element.title != "One On One Room" && widget.element.title != "Five Aside Room") {
+        if (widget.element.id == -1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => AIChat()),
+          );
+        }
+        else if (widget.element.title != "One On One Room" && widget.element.title != "Five Aside Room") {
           PageRouter.gotoWidget(
               ChatScreen(chatRoomPodo: widget.element), context);
         }
@@ -152,35 +163,35 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
 
                     SizedBox(height: 4,),
 
-                    GestureDetector(
-                      child: Container(
-                        margin: EdgeInsets.only(bottom: 6),
-                        padding: EdgeInsets.all(5),
-                        width: 115,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20.0),
-                          gradient: LinearGradient(
-                            begin: Alignment(-0.37857140550652835, -1.9473685559777252),
-                            end: Alignment(1.2428571464417884, 2.526316110739735),
-                            stops: [0.0, 0.856177031993866, 1.0],
-                            colors: [
-                              Colors.white70,
-                              Pallet.colorPrimary,
-                              Pallet.colorSecondaryDark,
-                            ],
-                          ),
-                        ),
-                        child: Center(
-                          child: Text('O P E N',
-                            style: GoogleFonts.lato(
-                                fontSize: 15.0,
-                                color: Pallet.colorSecondaryDark,
-                                fontWeight: FontWeight.w700),
-                          ),
+                    isLoading != true?
+                    Container(
+                      margin: EdgeInsets.only(bottom: 6),
+                      padding: EdgeInsets.all(5),
+                      width: 115,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.0),
+                        gradient: LinearGradient(
+                          begin: Alignment(-0.37857140550652835, -1.9473685559777252),
+                          end: Alignment(1.2428571464417884, 2.526316110739735),
+                          stops: [0.0, 0.856177031993866, 1.0],
+                          colors: [
+                            Colors.white70,
+                            Pallet.colorPrimary,
+                            Pallet.colorSecondaryDark,
+                          ],
                         ),
                       ),
-                    ),
+                      child: Center(
+                        child: Text('O P E N',
+                          style: GoogleFonts.lato(
+                              fontSize: 15.0,
+                              color: Pallet.colorSecondaryDark,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ):
+                        CircularProgressIndicator()
                   ],
                 ),
               ],

@@ -4,7 +4,18 @@ class RoomData {
   static List<ChatRoomPodo> room() {
     List<ChatRoomPodo> chatRoomPojoList = [];
 
-    var chatRoomPojo = ChatRoomPodo(
+    var
+    chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/loveGif.gif",
+        id: -1,
+        title: "One On One With Claire AI",
+        font: "Default",
+        hex: "#68034D",
+        text: "Hello Gen Z,\n" +
+            "Want to have some fun and expand your horizons? Come chat with me, ChatGPT! Whether it's about your favorite hobbies, current events, or just random musings, I'm here to listen and chat. Let's connect and see where the conversation takes us! #ChatWithChatGPT #GenZ #Let'sChat");
+    chatRoomPojoList.add(chatRoomPojo);
+
+    chatRoomPojo = ChatRoomPodo(
         image: "assets/images/loveGif.gif",
         id: 0,
         title: "Love and Relationship Garden",

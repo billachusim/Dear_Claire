@@ -15,6 +15,7 @@ class CreateSessionModel {
   int? moodId;
   bool? private;
   bool? repliesEnabled;
+  String? theContext;
   String? respondentUserId;
   String? sessionId;
   Timestamp? timeCreated;
@@ -43,6 +44,7 @@ class CreateSessionModel {
       this.imageUrls,
       this.message,
       this.private,
+      this.theContext,
       this.repliesEnabled,
       this.respondentUserId,
       this.sessionId,
@@ -68,6 +70,9 @@ class CreateSessionModel {
     }
 
     repliesEnabled = json['repliesEnabled'];
+    if (json['theContext'] != null) {
+      theContext = json['theContext'];
+    }
     if (json['respondentUserId'] != null) {
       respondentUserId = json['respondentUserId'];
     }
@@ -134,6 +139,7 @@ class CreateSessionModel {
     }
 
     data['repliesEnabled'] = repliesEnabled;
+    data['theContext'] = theContext;
     data['respondentUserId'] = respondentUserId;
     data['sessionId'] = sessionId;
     data['timeCreated'] = Timestamp.now();
