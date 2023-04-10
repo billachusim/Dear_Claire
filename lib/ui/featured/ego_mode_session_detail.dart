@@ -129,8 +129,9 @@ class _EgoModeSessionDetailState
 
 
   // Admob Ad Units.
-  late BannerAd egoModeSessionDetailTopBanner;
-  late BannerAd egoModeSessionDetailBottomBanner;
+  BannerAd? egoModeSessionDetailTopBanner;
+  BannerAd? egoModeSessionDetailBottomBanner;
+  bool _bannerIsLoaded = false;
 
   @override
   void didChangeDependencies() {
@@ -143,13 +144,14 @@ class _EgoModeSessionDetailState
         egoModeSessionDetailTopBanner = BannerAd(
             size: AdSize.banner,
             adUnitId: adState.egoModeTopCommentBannerAdUnitId,
-            request: AdRequest(),
+            request: const AdRequest(),
             listener: BannerAdListener(
               onAdFailedToLoad: (ad, error) {
                 ad.dispose();
               },
             )
         )..load();
+        _bannerIsLoaded = true;
       });
     });
 
@@ -230,13 +232,14 @@ class _EgoModeSessionDetailState
                                     children: [
 
                                       // Top ad unit is here
-                                      if(egoModeSessionDetailTopBanner == null)
-                                        SizedBox(height: 70)
-                                      else
-                                        Container(
+                                      if (egoModeSessionDetailTopBanner != null && _bannerIsLoaded)
+                                        SizedBox(
                                           height: 60,
-                                          child: AdWidget(ad: egoModeSessionDetailTopBanner),
-                                        ),
+                                          child: AdWidget(ad: egoModeSessionDetailTopBanner!),
+                                        )
+                                      else
+                                        SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
+
 
                                       ..._commentList
                                           .map((element) => CommentWidget(
@@ -263,13 +266,14 @@ class _EgoModeSessionDetailState
                                       SizedBox(height: 4),
 
                                       // Bottom ad unit is here
-                                      if(egoModeSessionDetailBottomBanner == null)
-                                        SizedBox(height: 70)
-                                      else
-                                        Container(
+                                      if (egoModeSessionDetailBottomBanner != null && _bannerIsLoaded)
+                                        SizedBox(
                                           height: 60,
-                                          child: AdWidget(ad: egoModeSessionDetailBottomBanner),
-                                        ),
+                                          child: AdWidget(ad: egoModeSessionDetailBottomBanner!),
+                                        )
+                                      else
+                                        SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
+
                                     ],
                                   );
                                 }
@@ -343,15 +347,13 @@ class _EgoModeSessionDetailState
     isOriginalAdvise(context, comment, session);
     saveUserCommentActivity();
     firebaseServices.followAdvisedSessionImmediately(session);
-    if (session.location == "#QuickSession") {
-      startAiChat(session, comment);
-    }
+    startAiChat(session, comment);
   }
 
 
   void startAiChat(Session session, String input) async {
     String oldContext = session.theContext ?? '';
-    String newContext = oldContext + ' Based on this, '+ input ?? '';
+    String newContext = oldContext + ' Based on this, '+ input;
 
     final request = CompleteReq(
         prompt: newContext, model: kTranslateModelV3, max_tokens: 800);

@@ -437,7 +437,7 @@ class _CommentWidgetState extends State<CommentWidget> {
           SizedBox(
             height: 1,
           ),
-          Text(
+          SelectableText(
             widget.commentSessionModel!.message!,
             textAlign: TextAlign.justify,
             style: GoogleFonts.lato(

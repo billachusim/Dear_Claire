@@ -33,11 +33,7 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
         setState(() {});
         UserModel user = await firebaseServices.getUserInfo();
         if (widget.element.id == -1) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => AIChat()),
-          );
+          PageRouter.gotoWidget(AIChat(), context);
         }
         else if (widget.element.title != "One On One Room" && widget.element.title != "Five Aside Room") {
           PageRouter.gotoWidget(
@@ -50,6 +46,9 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
         else {
           showToast("You need up to 2000 Loves first");
         }
+        setState(() {
+          isLoading = false;
+        });
       },
       padding: EdgeInsets.zero,
       child: Container(

@@ -201,10 +201,12 @@ class _SearchPageState extends State<SearchPage> {
 
 
   // Admob Ad Units.
-  late BannerAd searchPageMiddleBanner;
-  late BannerAd searchPageBottomBanner;
-  late BannerAd searchPageMiddleBanner2;
-  late BannerAd searchPageBottomBanner2;
+  BannerAd? searchPageMiddleBanner;
+  BannerAd? searchPageBottomBanner;
+  BannerAd? searchPageMiddleBanner2;
+  BannerAd? searchPageBottomBanner2;
+  bool _bannerIsLoaded = false;
+
 
   @override
   void didChangeDependencies() {
@@ -217,13 +219,14 @@ class _SearchPageState extends State<SearchPage> {
         searchPageMiddleBanner = BannerAd(
             size: AdSize.banner,
             adUnitId: adState.searchPageMiddleBannerAdUnitId,
-            request: AdRequest(),
+            request: const AdRequest(),
             listener: BannerAdListener(
               onAdFailedToLoad: (ad, error) {
                 ad.dispose();
               },
             )
         )..load();
+        _bannerIsLoaded = true;
       });
     });
 
@@ -567,13 +570,14 @@ class _SearchPageState extends State<SearchPage> {
 
 
                 // Top ad unit is here
-                if(searchPageMiddleBanner == null)
-                  SizedBox(height: 70)
-                else
-                  Container(
+                if (searchPageMiddleBanner != null && _bannerIsLoaded)
+                  SizedBox(
                     height: 60,
-                    child: AdWidget(ad: searchPageMiddleBanner),
-                  ),
+                    child: AdWidget(ad: searchPageMiddleBanner!),
+                  )
+                else
+                  SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
+
                 SizedBox(height: 10,),
 
                 Column(
@@ -851,13 +855,14 @@ class _SearchPageState extends State<SearchPage> {
 
 
                 // Top ad unit is here
-                if(searchPageBottomBanner == null)
-                  SizedBox(height: 70)
-                else
-                  Container(
+                if (searchPageBottomBanner != null && _bannerIsLoaded)
+                  SizedBox(
                     height: 60,
-                    child: AdWidget(ad: searchPageBottomBanner),
-                  ),
+                    child: AdWidget(ad: searchPageBottomBanner!),
+                  )
+                else
+                  SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
+
 
 
 
@@ -1139,13 +1144,14 @@ class _SearchPageState extends State<SearchPage> {
                 SizedBox(height: 10,),
 
                 // Top ad unit is here
-                if(searchPageMiddleBanner2 == null)
-                  SizedBox(height: 70)
-                else
-                  Container(
+                if (searchPageMiddleBanner2 != null && _bannerIsLoaded)
+                  SizedBox(
                     height: 60,
-                    child: AdWidget(ad: searchPageMiddleBanner2),
-                  ),
+                    child: AdWidget(ad: searchPageMiddleBanner2!),
+                  )
+                else
+                  SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
+
                 SizedBox(height: 10,),
 
                 Column(
@@ -1422,13 +1428,14 @@ class _SearchPageState extends State<SearchPage> {
                 SizedBox(height: 10,),
 
                 // Top ad unit is here
-                if(searchPageBottomBanner2 == null)
-                  SizedBox(height: 70)
-                else
-                  Container(
+                if (searchPageBottomBanner2 != null && _bannerIsLoaded)
+                  SizedBox(
                     height: 60,
-                    child: AdWidget(ad: searchPageBottomBanner2),
-                  ),
+                    child: AdWidget(ad: searchPageBottomBanner2!),
+                  )
+                else
+                  SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
+
                 SizedBox(height: 10,),
 
               ],

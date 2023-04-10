@@ -2,7 +2,10 @@ import 'dart:async';
 import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:dear_claire/Automations/threedots.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:provider/provider.dart';
 import 'package:velocity_x/velocity_x.dart';
+import '../Admob/ad_state.dart';
 import '../services/api_consts.dart';
 import 'chatmessage.dart';
 
@@ -20,6 +23,9 @@ class _AIChat extends State<AIChat> {
   StreamSubscription? _subscription;
   bool _isTyping = false;
 
+  BannerAd? aiChatTopBanner;
+  bool _bannerIsLoaded = false;
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +38,32 @@ class _AIChat extends State<AIChat> {
     _subscription?.cancel();
     super.dispose();
   }
+
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final adState = Provider.of<AdState>(context);
+
+    // Implement a top location banner ad unit.
+    adState.initialization.then((status) {
+      setState(() {
+        aiChatTopBanner = BannerAd(
+            size: AdSize.banner,
+            adUnitId: adState.aiChatTopBanner,
+            request: const AdRequest(),
+            listener: BannerAdListener(
+              onAdFailedToLoad: (ad, error) {
+                ad.dispose();
+              },
+            )
+        )
+          ..load();
+        _bannerIsLoaded = true;
+      });
+    });
+  }
+
 
   // Link for api - https://beta.openai.com/account/api-keys
 
@@ -124,6 +156,15 @@ class _AIChat extends State<AIChat> {
         body: SafeArea(
           child: Column(
             children: [
+              // Top ad unit is here
+              if (aiChatTopBanner != null && _bannerIsLoaded)
+                SizedBox(
+                  height: 60,
+                  child: AdWidget(ad: aiChatTopBanner!),
+                )
+              else
+                SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
+
               Flexible(
                   child: ListView.builder(
                     reverse: true,

@@ -381,5 +381,16 @@ class AdState {
   }
 
 
+  String get aiChatTopBanner {
+    if (Platform.isAndroid) {
+      return "ca-app-pub-2404156870680632/1997588662";
+    } else if (Platform.isIOS) {
+      return "ca-app-pub-2404156870680632/5313731731";
+    } else {
+      throw new UnsupportedError("Unsupported platform");
+    }
+  }
+
+
 
 }

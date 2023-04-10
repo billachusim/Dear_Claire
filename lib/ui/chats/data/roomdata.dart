@@ -11,8 +11,8 @@ class RoomData {
         title: "One On One With Claire AI",
         font: "Default",
         hex: "#68034D",
-        text: "Hello Gen Z,\n" +
-            "Want to have some fun and expand your horizons? Come chat with me, ChatGPT! Whether it's about your favorite hobbies, current events, or just random musings, I'm here to listen and chat. Let's connect and see where the conversation takes us! #ChatWithChatGPT #GenZ #Let'sChat");
+        text: "Hello, Darlings,\n" +
+            "Want to have some fun and expand your horizons? Come chat with me, ChatGPT! Whether it's about your favorite hobbies, current events, or just random musings, I'm here to listen and chat.");
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
