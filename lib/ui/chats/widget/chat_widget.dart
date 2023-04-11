@@ -15,8 +15,10 @@ import 'package:dear_claire/utils/enums.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../utils/strings.dart';
 import '../../../widgets/custom_image_widget.dart';
@@ -357,8 +359,17 @@ class ChatWidget extends StatelessWidget {
           SizedBox(
             height: 6,
           ),
-          Text(
-            chatModel!.message!,
+          SelectableLinkify(
+            onOpen: (link) async {
+              final Uri url = Uri.parse("${link.url}");
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url);
+              } else {
+                throw 'Could not launch $link';
+              }
+            },
+            linkStyle: TextStyle(color: Colors.blue),
+            text: chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
                 fontSize: 18.0,

@@ -28,7 +28,6 @@ bool isSigningIn = false;
 class _SignUpPage extends State<SignUpPage> {
   TextEditingController _emailController = TextEditingController();
   TextEditingController _secretCodeController = TextEditingController();
-  TextEditingController _genderController = TextEditingController();
   TextEditingController _egoNameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final FirebaseServices _firebaseServices = FirebaseServices();
@@ -263,43 +262,6 @@ class _SignUpPage extends State<SignUpPage> {
                                 "******", _secretCodeController),
                           ),
 
-                          SizedBox(
-                            height: 25,
-                          ),
-
-                          Container(
-                            color: Pallet.colorWhite,
-                            child: TextFormField(
-                                onChanged: (value) {},
-                                validator: (value) {
-                                  if (value!.isEmpty) {
-                                    return "Enter a gender";
-                                  }
-                                  return null;
-                                },
-                                textInputAction: TextInputAction.done,
-                                controller: _genderController,
-                                decoration: new InputDecoration(
-                                  hintText: AppString.gender_hint_text,
-                                  labelText: AppString.gender_label_text,
-                                  labelStyle:
-                                  TextStyle(color: Pallet.colorTextGray),
-                                  focusedBorder: new OutlineInputBorder(
-                                      borderSide: new BorderSide(
-                                          color: Pallet.colorPrimary)),
-                                  enabledBorder: new OutlineInputBorder(
-                                      borderSide: new BorderSide(
-                                          color: Pallet.colorTextGray)),
-                                  contentPadding:
-                                  EdgeInsets.only(right: 15, left: 15),
-                                ),
-                                keyboardType: TextInputType.text,
-                                cursorColor: Pallet.colorBlack,
-                                style: GoogleFonts.lato(
-                                    fontSize: 12.0,
-                                    color: Pallet.colorBlack,
-                                    fontWeight: FontWeight.w400)),
-                          ),
 
                           SizedBox(height: 5,),
 
@@ -355,7 +317,6 @@ class _SignUpPage extends State<SignUpPage> {
                                     context,
                                     _emailController.text,
                                     _secretCodeController.text,
-                                    _genderController.text,
                                     _egoNameController.text);
                               }
                               else showToast(AppString.open_up_error);

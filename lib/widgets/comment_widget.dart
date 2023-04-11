@@ -9,7 +9,9 @@ import 'package:dear_claire/widgets/thanks_button.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/data/notification_model.dart' as pushNotification;
 import '../services/notification_service.dart';
 import '../services/user_model.dart';
@@ -437,8 +439,17 @@ class _CommentWidgetState extends State<CommentWidget> {
           SizedBox(
             height: 1,
           ),
-          SelectableText(
-            widget.commentSessionModel!.message!,
+          SelectableLinkify(
+            onOpen: (link) async {
+              final Uri url = Uri.parse("${link.url}");
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url);
+              } else {
+                throw 'Could not launch $link';
+              }
+            },
+            linkStyle: TextStyle(color: Colors.blue),
+            text: widget.commentSessionModel!.message!,
             textAlign: TextAlign.justify,
             style: GoogleFonts.lato(
                 fontSize: 16.0,

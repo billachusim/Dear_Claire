@@ -12,12 +12,14 @@ import 'package:dear_claire/widgets/metoo_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../services/firebase_services.dart';
 import '../../../services/user_model.dart';
@@ -225,8 +227,17 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                         Row(
                           children: [
                             Expanded(
-                              child: SelectableText(
-                                _session.message!,
+                              child: SelectableLinkify(
+                                onOpen: (link) async {
+                                  final Uri url = Uri.parse("${link.url}");
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url);
+                                  } else {
+                                    throw 'Could not launch $link';
+                                  }
+                                },
+                                linkStyle: TextStyle(color: Colors.blue),
+                                text: _session.message!,
                                 textAlign: TextAlign.justify,
                                 style: GoogleFonts.lato(
                                     fontSize: 22.0,

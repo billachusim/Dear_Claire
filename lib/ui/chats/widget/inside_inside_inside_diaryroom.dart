@@ -8,7 +8,9 @@ import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../services/firebase_services.dart';
 import '../../../utils/strings.dart';
 import '../../../widgets/custom_image_widget.dart';
@@ -183,8 +185,17 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
           SizedBox(
             height: 6,
           ),
-          Text(
-            widget.chatModel!.message!,
+          SelectableLinkify(
+            onOpen: (link) async {
+              final Uri url = Uri.parse("${link.url}");
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url);
+              } else {
+                throw 'Could not launch $link';
+              }
+            },
+            linkStyle: TextStyle(color: Colors.blue),
+            text: widget.chatModel!.message!,
             textAlign: TextAlign.justify,
             style: GoogleFonts.lato(
                 fontSize: 15.0,

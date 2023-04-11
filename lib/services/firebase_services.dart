@@ -25,7 +25,6 @@ import 'package:logger/logger.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'data/notification_model.dart' as pushNotification;
-import 'user_model.dart';
 
 Logger logger = Logger();
 SharedPreferences? prefs;
@@ -107,7 +106,6 @@ class FirebaseServices extends ChangeNotifier {
 
   /// cache user id
   void setUsersId(String id) async {
-    await getUserWithId(id: id);
     prefs = await SharedPreferences.getInstance();
     prefs!.setString(usersKey, id);
     notifyListeners();
@@ -464,7 +462,6 @@ class FirebaseServices extends ChangeNotifier {
           .signInWithEmailAndPassword(email: email, password: secretCode)
           .then((value) => {
                 setUsersId(value.user!.uid),
-                //showToast("Showing user UID ${value.user!.uid}")
               });
       showToast(AppString.open_up_toast);
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
@@ -525,12 +522,12 @@ class FirebaseServices extends ChangeNotifier {
 
   /// SignUp user
   Future<bool> register(
-      BuildContext context, String email, String secretCode, String gender, String nickname) async {
+      BuildContext context, String email, String secretCode, String nickname) async {
     final _user = await FirebaseAuth.instance
         .createUserWithEmailAndPassword(email: email, password: secretCode);
+    setUsersId(_user.user!.uid);
     final _email = email;
     final _secretCode = secretCode;
-    final _gender = gender;
     final _nickname = nickname;
     try {
       final alterEgoAccessCode = "";
@@ -544,7 +541,6 @@ class FirebaseServices extends ChangeNotifier {
       final nickname = _nickname;
       final avatarUrl = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2FSpeak_No_Evil_Monkey_Emoji.png?alt=media&token=88242e3b-ee93-4b76-9d91-a24c112ef4f2";
       final userId = _user.user?.uid;
-      final gender = _gender;
       final sessionCount = 0;
       final adviseCount = 0;
       final totalLoveCount = 0;
@@ -557,7 +553,6 @@ class FirebaseServices extends ChangeNotifier {
         "nickname": nickname,
         "avatarUrl": avatarUrl,
         "userId": userId,
-        "gender": gender,
         "alterEgoAccessCode": alterEgoAccessCode,
         "alterEgoId": alterEgoId,
         "email": email,
@@ -577,9 +572,6 @@ class FirebaseServices extends ChangeNotifier {
       print('Email: $email');
       print('User Id: $userId');
       print('Secret Code: $secretCode');
-      print('Gender: $gender');
-
-      setUsersId(_user.user!.uid);
 
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: secretCode)

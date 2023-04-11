@@ -522,13 +522,10 @@ class EgoModeSessionCard extends StatelessWidget {
   }
 
 
-  String? getDonateUrl(){
-    return AppString.donate_url;
-  }
 
   onDonateClicked() {
-    var donateUrl = getDonateUrl();
-    launch(donateUrl!);
+    var donateUrl = Uri.parse(AppString.donate_url);
+    launchUrl(donateUrl);
   }
 
 
