@@ -6,7 +6,7 @@ import 'package:flutter_audio_recorder2/flutter_audio_recorder2.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:swipedetector/swipedetector.dart';
+import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:workmanager/workmanager.dart';
@@ -98,21 +98,14 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary> {
                                 child:
                                 widgetsList[provider.imageSliderIndex],
                               )),
-                          onSwipeLeft: () {
+                          onSwipeLeft: (offset) {
                             provider
                                 .increaseIndex(provider.imageSliderIndex);
                           },
-                          onSwipeRight: () {
+                          onSwipeRight: (offset) {
                             provider
                                 .decreaseIndex(provider.imageSliderIndex);
                           },
-                          swipeConfiguration: SwipeConfiguration(
-                              verticalSwipeMinVelocity: 100.0,
-                              verticalSwipeMinDisplacement: 50.0,
-                              verticalSwipeMaxWidthThreshold: 100.0,
-                              horizontalSwipeMaxHeightThreshold: 50.0,
-                              horizontalSwipeMinDisplacement: 50.0,
-                              horizontalSwipeMinVelocity: 200.0),
                         )),
                     // imageSliderWidget(),
                     SizedBox(height: 20),

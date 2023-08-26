@@ -189,7 +189,7 @@ class EgoModeSessionCard extends StatelessWidget {
                                 VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
                                 context);
                           }
-                          else if (user.currentLoveCount > 500) {
+                          else if (user.currentLoveCount > 50) {
                             PageRouter.gotoWidget(
                                 VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
                                 context);

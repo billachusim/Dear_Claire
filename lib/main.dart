@@ -1,4 +1,3 @@
-// @dart=2.9
 import 'dart:io';
 import 'dart:ui';
 import 'package:dear_claire/Automations/claireminder.dart';
@@ -50,7 +49,7 @@ void callbackDispatcher() {
 /// Receive message when the app is closed and in background.
 Future<void> backgroundHandler(RemoteMessage message) async{
 print(message.data.toString());
-print(message.notification.title);
+print(message.notification?.title);
 }
 
 Future<void> main() async {
@@ -75,7 +74,7 @@ Future<void> main() async {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key key}) : super(key: key);
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   _MyAppState createState() => _MyAppState();
@@ -86,7 +85,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-  User currentUser = FirebaseAuth.instance.currentUser;
+  User? currentUser = FirebaseAuth.instance.currentUser;
 
   //initialize controller for create session interactions
   final c = Get.put(CreateSessionController());
@@ -166,8 +165,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             showDialog(
               context: context,
               builder: (BuildContext context) => CupertinoAlertDialog(
-                title: Text(title),
-                content: Text(body),
+                title: Text(title!),
+                content: Text(body!),
                 actions: [
                   CupertinoDialogAction(
                     isDefaultAction: true,
@@ -194,11 +193,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                       else if(payload == null) {
                       navService.pushNamed('/createSession', args: payload);
                       }
-                      else if(payload != null) {
-                      navService.pushNamed('/notifiedSessionDetails', args: payload);
+                      else                    navService.pushNamed('/notifiedSessionDetails', args: payload);
+
                       }
-                      }
-                      else navService.pushNamed('/egoPage', args: payload);
+                      else navService.pushNamed('/egoPage', args: payload!);
                     },
                   )
                 ],
@@ -237,8 +235,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               showDialog(
                 context: context,
                 builder: (BuildContext context) => CupertinoAlertDialog(
-                  title: Text(title),
-                  content: Text(body),
+                  title: Text(title!),
+                  content: Text(body!),
                   actions: [
                     CupertinoDialogAction(
                       isDefaultAction: true,
@@ -265,11 +263,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                           else if(payload == null) {
                             navService.pushNamed('/createSession', args: payload);
                           }
-                          else if(payload != null) {
+                          else
                             navService.pushNamed('/notifiedSessionDetails', args: payload);
-                          }
+
                         }
-                        else navService.pushNamed('/egoPage', args: payload);
+                        else navService.pushNamed('/egoPage', args: payload!);
                       },
                     )
                   ],
@@ -280,7 +278,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
 
 
-    flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (String payload) async {
+    flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (String? payload) async {
       if (payload != null){
         print(payload);
         if(payload == 'room') {
@@ -301,19 +299,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         else if(payload == null) {
           navService.pushNamed('/createSession', args: payload);
         }
-        else if(payload != null) {
-          navService.pushNamed('/notifiedSessionDetails', args: payload);
-        }
+        else        navService.pushNamed('/notifiedSessionDetails', args: payload);
+
       }
-      else navService.pushNamed('/egoPage', args: payload);
+      else navService.pushNamed('/egoPage', args: payload!);
     });
 
 
 
     ///Get the message user is going to tap when app is closed
     FirebaseMessaging.instance.getInitialMessage().then((message) {
-      RemoteNotification notification = message.notification;
-      String route = message.data["route"];
+      RemoteNotification? notification = message?.notification;
+      String route = message?.data["route"];
       if (notification != null) {
         if(route == 'room') {
           navService.pushNamed('/diaryRooms', args: route);
@@ -333,9 +330,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         else if(route == null) {
           navService.pushNamed('/createSession', args: route);
         }
-        else if(route != null) {
-          navService.pushNamed('/notifiedSessionDetails', args: route);
-        }
+        else        navService.pushNamed('/notifiedSessionDetails', args: route);
+
       }
       else navService.pushNamed('/egoPage', args: route);
     });
@@ -345,13 +341,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     /// Foreground work for notifications
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      RemoteNotification notification = message.notification;
+      RemoteNotification? notification = message.notification;
       String route = message.data["route"];
-      if (notification != null)
-      {
-        flutterLocalNotificationsPlugin.show(notification.hashCode,
-            notification.title, notification.body, _notificationDetails(), payload: route);
-      }
+      flutterLocalNotificationsPlugin.show(notification.hashCode,
+          notification?.title, notification?.body, _notificationDetails(), payload: route);
     });
 
 
@@ -360,7 +353,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     /// When app is open in background and user taps on it.
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       logger.d('You tapped on a new notification');
-      RemoteNotification notification = message.notification;
+      RemoteNotification? notification = message.notification;
       final route = message.data["route"];
       if (notification != null) {
 
@@ -423,7 +416,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           onGenerateRoute: (RouteSettings settings) {
             switch (settings.name) {
               case '/notifiedSessionDetails':
-                return MaterialPageRoute(builder: (_) => NotifiedSessionDetails(sessionId: settings.arguments,));
+                return MaterialPageRoute(builder: (_) => NotifiedSessionDetails(sessionId: settings.arguments.toString(),));
               case '/egoPage':
                 return MaterialPageRoute(builder: (_) => EgoProfilePage(title: 'Dear Claire'));
               case '/diaryRooms':

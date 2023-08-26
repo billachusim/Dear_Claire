@@ -57,11 +57,12 @@ class _EgoModeSessionDetailState
 
   List<CommentSessionModel> _commentList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
+  List<String> imageUrls = [];
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
 
-  ChatGPT? chatGPT;
+  //ChatGPT? chatGPT;
   StreamSubscription? _subscription;
 
 
@@ -70,7 +71,7 @@ class _EgoModeSessionDetailState
   @override
   void initState() {
     super.initState();
-    chatGPT = ChatGPT.instance.builder(API_KEY);
+    //chatGPT = ChatGPT.instance.builder(API_KEY);
     _createAdviseInterstitialAd();
   }
 
@@ -306,6 +307,9 @@ class _EgoModeSessionDetailState
 
   void _sendComment(String comment, String voiceNote, Session session, String image1, String image2) async {
     if (!await firebaseServices.isUserSignIn(context)) return;
+    if (image1.isNotEmpty) {
+      imageUrls = [image1, image2];
+    }
 
 
     CollectionReference ref =
@@ -322,7 +326,7 @@ class _EgoModeSessionDetailState
         audioUrl: voiceNote,
         commentId: docId,
         flagged: session.flagged!,
-        imageUrls: [],
+        imageUrls: imageUrls,
         image1: image1,
         image2: image2,
         thanks: [],
@@ -347,13 +351,15 @@ class _EgoModeSessionDetailState
     isOriginalAdvise(context, comment, session);
     saveUserCommentActivity();
     firebaseServices.followAdvisedSessionImmediately(session);
-    startAiChat(session, comment);
+    if (session.featured != true) {
+      //startAiChat(session, comment);
+    }
   }
 
 
-  void startAiChat(Session session, String input) async {
-    String oldContext = session.theContext ?? '';
-    String newContext = oldContext + ' Based on this, '+ input;
+  /*void startAiChat(Session session, String input) async {
+    String oldContext = session.theContext!;
+    String newContext = oldContext + input;
 
     final request = CompleteReq(
         prompt: newContext, model: kTranslateModelV3, max_tokens: 800);
@@ -365,17 +371,18 @@ class _EgoModeSessionDetailState
         .asStream()
         .listen((response) async {
       print("ADVISE IS : ${response!.choices.first.text}");
-      final String latestContext = "The context from our last conversation is: $newContext and then your response was: ${response.choices.first.text}";
-      await sendAiAdvise(session, response.choices.first.text.trim());
-      updateSessionForAI(session, latestContext);
+      final theResponse = response.choices.first.text.trim();
+      updateSessionForAI(session, newContext);
+      await sendAiAdvise(session, theResponse);
     });
-  }
+  }*/
 
 
 
   Future <void> sendAiAdvise(Session session, String response) async {
-    final advise = response.toString();
-    final String latestContext = session.theContext! + advise;
+    final advise = response;
+    final theContext = session.theContext;
+    final String latestContext = "The following is from our last messages: $theContext + $advise";
 
     CollectionReference ref =
     FirebaseFirestore.instance

@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
@@ -831,7 +832,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     );
   }
 
-  Future<String> saveImage(Uint8List bytes) async {
+  Future saveImage(Uint8List bytes) async {
     await [Permission.storage].request();
     final time = DateTime.now()
         .toIso8601String()
@@ -846,8 +847,9 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     final directory = await getApplicationDocumentsDirectory();
     final image = File('${directory.path}/diary_session.png');
     image.writeAsBytesSync(bytes);
+    final xFile = XFile(image.path);
     final text = '${AppString.shareHeader}\n\n${AppString.shareLink}';
-    await Share.shareFiles([image.path], text: text);
+    await Share.shareXFiles([xFile], text: text);
   }
 
 

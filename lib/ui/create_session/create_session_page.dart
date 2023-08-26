@@ -52,7 +52,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   Session? featuredSessionModel;
 
-  ChatGPT? chatGPT;
+  //ChatGPT? chatGPT;
   StreamSubscription? _subscription;
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -159,7 +159,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   @override
   void initState() {
     super.initState();
-    chatGPT = ChatGPT.instance.builder(API_KEY);
+    //chatGPT = ChatGPT.instance.builder(API_KEY);
     _createInterstitialAd();
     _createQuickInterstitialAd();
     randomizeBackgroundColor();
@@ -622,9 +622,20 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
                         SizedBox(height: 20,),
 
+                        recordFile != null
+                            ? _recordFileWidget()
+                            : SizedBox.shrink(),
+
+                        Align(
+                            alignment: Alignment.center,
+                            child: _imagesGridView()
+                        ),
 
 
-                  /// Introducing Quick Sessions.
+                        SizedBox(height: 20,),
+
+
+                        /// Introducing Quick Sessions.
 
 
                         Visibility(
@@ -1374,17 +1385,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                               ),
                             ),
                         ),
-
-
-                        recordFile != null
-                            ? _recordFileWidget()
-                            : SizedBox.shrink(),
-
-                        Align(
-                            alignment: Alignment.center,
-                            child: _imagesGridView()
-                        ),
-
                       ],
                     ),
                   ),
@@ -1620,7 +1620,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
 
 
-  void startAiChat(CreateSessionModel session, String input) async {
+  /*void startAiChat(CreateSessionModel session, String input) async {
     final request = CompleteReq(
         prompt: input, model: kTranslateModelV3, max_tokens: 800);
 
@@ -1631,11 +1631,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         .asStream()
         .listen((response) async {
       print("ADVISE IS : ${response!.choices.first.text}");
-      final String latestContext = "The context from our last conversation is: $input and then your response was: ${response.choices.first.text}";
-      await sendAiAdvise(session, response.choices.first.text.trim());
+      final theResponse = response.choices.first.text.trim();
+      final String latestContext = "You are a sweet, smart and friendly AI Assistance called Claire and my first message to you says: $input. And then you responded: $theResponse";
       updateSessionForAI(session, latestContext);
+      await sendAiAdvise(session, theResponse);
     });
-  }
+  }*/
 
 
 
@@ -1679,7 +1680,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     updateSessionTimeLastActivity(session);
     saveAIAlterEgoCommentActivity();
-    updateSessionForAI(session, advise);
   }
 
 
@@ -1794,7 +1794,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     bool isSuccessfull =
     await _firebaseServices.createSession(session: sessionObject);
 
-    startAiChat(sessionObject, sessionTextEditingController.text);
+    //startAiChat(sessionObject, sessionTextEditingController.text);
 
     Future.delayed(Duration(seconds: 4), () {
       _showQuickInterstitialAd();
@@ -2601,7 +2601,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     bool isSuccessfull =
         await _firebaseServices.createSession(session: sessionObject);
 
-    startAiChat(sessionObject, sessionTextEditingController.text);
+    //startAiChat(sessionObject, sessionTextEditingController.text);
 
     Hive.box("draft").clear();
 

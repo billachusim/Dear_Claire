@@ -17,7 +17,7 @@ class AIChat extends StatefulWidget {
 class _AIChat extends State<AIChat> {
   final TextEditingController _controller = TextEditingController();
   final List<ChatMessage> _messages = [];
-  ChatGPT? chatGPT;
+  //ChatGPT? chatGPT;
   bool _isImageSearch = false;
 
   StreamSubscription? _subscription;
@@ -29,12 +29,12 @@ class _AIChat extends State<AIChat> {
   @override
   void initState() {
     super.initState();
-    chatGPT = ChatGPT.instance.builder(API_KEY);
+    //chatGPT = ChatGPT.instance.builder(API_KEY);
   }
 
   @override
   void dispose() {
-    chatGPT!.genImgClose();
+    //chatGPT!.genImgClose();
     _subscription?.cancel();
     super.dispose();
   }
@@ -67,7 +67,7 @@ class _AIChat extends State<AIChat> {
 
   // Link for api - https://beta.openai.com/account/api-keys
 
-  void _sendMessage() {
+  /*void _sendMessage() {
     if (_controller.text.isEmpty) return;
     ChatMessage message = ChatMessage(
       text: _controller.text,
@@ -105,7 +105,7 @@ class _AIChat extends State<AIChat> {
         insertNewData(response.choices.first.text.trim(), isImage: false);
       });
    }
-  }
+  }*/
 
   void insertNewData(String response, {bool isImage = false}) {
     ChatMessage botMessage = ChatMessage(
@@ -126,7 +126,7 @@ class _AIChat extends State<AIChat> {
         Expanded(
           child: TextField(
             controller: _controller,
-            onSubmitted: (value) => _sendMessage(),
+            //onSubmitted: (value) => _sendMessage(),
             decoration: const InputDecoration.collapsed(
                 hintText: "Question/description"),
           ),
@@ -135,14 +135,14 @@ class _AIChat extends State<AIChat> {
           icon: const Icon(Icons.send),
           onPressed: () {
             _isImageSearch = false;
-            _sendMessage();
+           // _sendMessage();
           },
         ),
 
         TextButton(
             onPressed: () {
               _isImageSearch = true;
-              _sendMessage();
+              //_sendMessage();
             },
             child: const Text("Generate Image"))
       ],
