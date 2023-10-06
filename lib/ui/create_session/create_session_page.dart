@@ -1385,6 +1385,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                               ),
                             ),
                         ),
+                        SizedBox(height: 80,),
                       ],
                     ),
                   ),
@@ -1801,6 +1802,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     });
 
     _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
+
+    _firebaseServices.notifyClaireForSession(userModel.nickname.toString(), sessionObject);
 
   }
 
@@ -2616,6 +2619,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     });
 
     _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
+
+    _firebaseServices.notifyClaireForSession(userModel.nickname.toString(), sessionObject);
 
     navigateToNewSession(await _firebaseServices.getSingleSession(
         sessionId: sessionObject.sessionId));

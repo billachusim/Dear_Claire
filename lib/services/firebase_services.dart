@@ -47,6 +47,25 @@ class FirebaseServices extends ChangeNotifier {
   UserModel userModel = UserModel();
 
 
+
+  /// Notify Claire for every session
+  Future<void> notifyClaireForSession(String sender, CreateSessionModel session) async {
+    _usersID = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
+
+    await _firebaseMessaging.subscribeToTopic(session.sessionId!);
+    final pushNotification.NotificationModel _notificationModel =
+    pushNotification.NotificationModel(
+      to: '/topics/${session.sessionId}',
+      collapseKey: 'type_a',
+      data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
+      notification: pushNotification.Notification(
+          title: session.title ?? '', body: '$sender started a new session'),
+    );
+    notificationService.sendNotification(_notificationModel.toJson());
+    logger.d('Notified for this session: ${session.title!}');
+  }
+
+
   /// subscribe user to a topic
   Future<void> _subscribeToSession(String sender, Session session) async {
     _usersID = currentUser?.uid.toString();
