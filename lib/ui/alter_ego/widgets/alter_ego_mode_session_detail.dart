@@ -212,13 +212,10 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                                     children: [
 
                                       // Top ad unit is here
-                                      if(alterEgoModeSessionDetailTopBanner == null)
-                                        SizedBox(height: 70)
-                                      else
-                                        Container(
-                                          height: 60,
-                                          child: AdWidget(ad: alterEgoModeSessionDetailTopBanner),
-                                        ),
+                                      Container(
+                                        height: 60,
+                                        child: AdWidget(ad: alterEgoModeSessionDetailTopBanner),
+                                      ),
                                       ..._commentSessionList
                                           .map((element) => CommentWidget(
                                         commentSessionModel: element,
@@ -241,13 +238,10 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                                       SizedBox(height: 4),
 
                                       // Bottom ad unit is here
-                                      if(alterEgoModeSessionDetailBottomBanner == null)
-                                        SizedBox(height: 70)
-                                      else
-                                        Container(
-                                          height: 60,
-                                          child: AdWidget(ad: alterEgoModeSessionDetailBottomBanner),
-                                        ),
+                                      Container(
+                                        height: 60,
+                                        child: AdWidget(ad: alterEgoModeSessionDetailBottomBanner),
+                                      ),
                                     ],
                                   );
                                 }

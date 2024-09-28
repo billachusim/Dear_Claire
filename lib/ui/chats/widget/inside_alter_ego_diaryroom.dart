@@ -186,13 +186,10 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
                                         AlterEgoSubDiaryRoomWidget(element: widget.chatRoomPodo),
 
                                         // Top ad unit is here
-                                        if(insideChatroomTopBanner == null)
-                                          SizedBox(height: 70)
-                                        else
-                                          Container(
-                                            height: 60,
-                                            child: AdWidget(ad: insideChatroomTopBanner),
-                                          ),
+                                        Container(
+                                          height: 60,
+                                          child: AdWidget(ad: insideChatroomTopBanner),
+                                        ),
 
 
                                         ..._chatList
@@ -205,13 +202,10 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
 
 
                                         // Bottom ad unit is here
-                                        if(insideChatroomBottomBanner == null)
-                                          SizedBox(height: 70)
-                                        else
-                                          Container(
-                                            height: 60,
-                                            child: AdWidget(ad: insideChatroomBottomBanner),
-                                          ),
+                                        Container(
+                                          height: 60,
+                                          child: AdWidget(ad: insideChatroomBottomBanner),
+                                        ),
                                       ],
                                     );
                                   }

@@ -1,7 +1,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/ui/chats/widget/online_room_owner_widget.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/constant.dart';
 import '../data/chatroompodo.dart';

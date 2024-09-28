@@ -185,13 +185,10 @@ class _TicTacToeState extends State<TicTacToe> {
         shrinkWrap: true,
         children: [
           // Top ad unit is here
-          if(tictactoeTopBanner == null)
-            SizedBox(height: 70)
-          else
-            Container(
-              height: 60,
-              child: AdWidget(ad: tictactoeTopBanner),
-            ),
+          Container(
+            height: 60,
+            child: AdWidget(ad: tictactoeTopBanner),
+          ),
 
           Container(
             height: 600,
@@ -203,14 +200,12 @@ class _TicTacToeState extends State<TicTacToe> {
                     name: 'Score',
                     onMessageReceived: (JavascriptMessage message){
                     Fluttertoast.showToast(msg: message.message);
-                    if (message.message != null) {
-                      isWon = true;
-                      Future.delayed(Duration(seconds: 5), () {
-                        _showTictactoeInterstitialAd();
-                        incrementTotalLoveCount();
-                      });
-                    }
-            })
+                    isWon = true;
+                    Future.delayed(Duration(seconds: 5), () {
+                      _showTictactoeInterstitialAd();
+                      incrementTotalLoveCount();
+                    });
+                              })
               ]),
               onWebViewCreated: (WebViewController webViewController) {
                 _webViewController = webViewController;

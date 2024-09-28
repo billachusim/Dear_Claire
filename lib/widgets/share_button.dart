@@ -1,7 +1,6 @@
 import 'package:dear_claire/utils/color.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ShareButton extends StatelessWidget {

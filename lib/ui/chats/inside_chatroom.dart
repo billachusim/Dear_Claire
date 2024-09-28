@@ -7,7 +7,6 @@ import 'package:dear_claire/ui/chats/widget/sub_diaryroom_widget.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/widgets/chat_edit_field.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -186,13 +185,10 @@ class _ChatScreenState extends State<ChatScreen> {
                                         SubDiaryRoomWidget(element: widget.chatRoomPodo),
 
                                         // Top ad unit is here
-                                        if(insideChatroomTopBanner == null)
-                                          SizedBox(height: 70)
-                                        else
-                                          Container(
-                                            height: 60,
-                                            child: AdWidget(ad: insideChatroomTopBanner),
-                                          ),
+                                        Container(
+                                          height: 60,
+                                          child: AdWidget(ad: insideChatroomTopBanner),
+                                        ),
 
 
                                         ..._chatList
@@ -205,13 +201,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
 
                                         // Bottom ad unit is here
-                                        if(insideChatroomBottomBanner == null)
-                                          SizedBox(height: 70)
-                                        else
-                                          Container(
-                                            height: 60,
-                                            child: AdWidget(ad: insideChatroomBottomBanner),
-                                          ),
+                                        Container(
+                                          height: 60,
+                                          child: AdWidget(ad: insideChatroomBottomBanner),
+                                        ),
                                       ],
                                     );
                                   }

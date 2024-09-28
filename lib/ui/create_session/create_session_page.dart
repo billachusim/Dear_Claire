@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
-import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/services/user_model.dart';
@@ -28,12 +26,10 @@ import 'package:hive/hive.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:uuid/uuid.dart';
-import '../../services/api_consts.dart';
 import '../featured/model/comment_session_model.dart';
 import '../featured/model/session.dart';
 import 'create_session_controller.dart';
 import 'sound/sound_widget.dart';
-import 'package:http/http.dart' as http;
 
 
 class CreateSessionPage extends StatefulWidget {
@@ -1770,14 +1766,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.containsAudio = true;
     }
 
-    if (imageList != null) {
-      List<String> imageDownloadUrls = <String>[];
-      for (var image in imageList) {
-        imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
-      }
-      sessionObject.imageUrls = imageDownloadUrls;
+    List<String> imageDownloadUrls = <String>[];
+    for (var image in imageList) {
+      imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
     }
-
+    sessionObject.imageUrls = imageDownloadUrls;
+  
     sessionObject.userAvatarUrl = userModel.avatarUrl;
     sessionObject.userNickname = userModel.nickname;
     sessionObject.title = sessionTitleController.text;
@@ -1826,14 +1820,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.containsAudio = true;
     }
 
-    if (imageList != null) {
-      List<String> imageDownloadUrls = <String>[];
-      for (var image in imageList) {
-        imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
-      }
-      sessionObject.imageUrls = imageDownloadUrls;
+    List<String> imageDownloadUrls = <String>[];
+    for (var image in imageList) {
+      imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
     }
-
+    sessionObject.imageUrls = imageDownloadUrls;
+  
     if (videoFile != null) {
       sessionObject.videoUrl = videoFile;
       sessionObject.containsVideo = true;

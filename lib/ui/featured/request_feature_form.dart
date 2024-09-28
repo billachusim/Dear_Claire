@@ -80,6 +80,7 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
                               if (value!.isEmpty) {
                                 return "Enter the Session Title";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _sessionTitleController,
@@ -114,6 +115,7 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
                               if (value!.isEmpty) {
                                 return "Enter the Session Ego Name";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _sessionEgoNameController,
@@ -148,6 +150,7 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
                               if (value!.isEmpty) {
                                 return "Explain Why Feature";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _whyFeatureController,

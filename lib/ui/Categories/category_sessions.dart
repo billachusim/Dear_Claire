@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -150,13 +149,10 @@ class _CategorySessionsState extends State<CategorySessions> {
                   children: [
 
                     // Top ad unit is here
-                    if(categorySessionsTopBanner == null)
-                      SizedBox(height: 70)
-                    else
-                      Container(
-                        height: 60,
-                        child: AdWidget(ad: categorySessionsTopBanner),
-                      ),
+                    Container(
+                      height: 60,
+                      child: AdWidget(ad: categorySessionsTopBanner),
+                    ),
 
                     ..._sessionList!
                         .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))

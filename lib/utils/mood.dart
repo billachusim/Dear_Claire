@@ -34,6 +34,7 @@ class Mood {
         return mood.name;
       }
     }
+    return null;
   }
 
   static int? getMoodId(int? moodId) {
@@ -43,6 +44,7 @@ class Mood {
         return mood.id;
       }
     }
+    return null;
   }
 
 }

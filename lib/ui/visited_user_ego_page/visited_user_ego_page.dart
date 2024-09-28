@@ -14,12 +14,10 @@ import 'package:flip_card/flip_card.dart';
 import 'package:flutter_svg/svg.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -30,7 +28,6 @@ import '../../services/notification_service.dart';
 import '/services/data/notification_model.dart' as pushNotification;
 import '../../services/user_activity_model.dart';
 import '../../services/user_model.dart';
-import '../../utils/constant.dart';
 import '../../widgets/ego_mode_session_card.dart';
 import '../featured/model/comment_session_model.dart';
 import '../featured/model/session.dart';
@@ -1558,13 +1555,10 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                   children: [
 
                                     // Top ad unit is here
-                                    if(visitedUserTopOfSessionsBanner == null)
-                                      SizedBox(height: 70)
-                                    else
-                                      Container(
-                                        height: 60,
-                                        child: AdWidget(ad: visitedUserTopOfSessionsBanner),
-                                      ),
+                                    Container(
+                                      height: 60,
+                                      child: AdWidget(ad: visitedUserTopOfSessionsBanner),
+                                    ),
 
 
                                     ..._sessionList!
@@ -1572,13 +1566,10 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                         .toList(),
 
                                     // Top ad unit is here
-                                    if(visitedUserBottomOfSessionsBanner == null)
-                                      SizedBox(height: 70)
-                                    else
-                                      Container(
-                                        height: 60,
-                                        child: AdWidget(ad: visitedUserBottomOfSessionsBanner),
-                                      ),
+                                    Container(
+                                      height: 60,
+                                      child: AdWidget(ad: visitedUserBottomOfSessionsBanner),
+                                    ),
 
                                   ],
                                 ),
@@ -1629,13 +1620,10 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                             children: [
 
                               // Top ad unit is here
-                              if(visitedUserTopOfActivitiesBanner == null)
-                                SizedBox(height: 70)
-                              else
-                                Container(
-                                  height: 60,
-                                  child: AdWidget(ad: visitedUserTopOfActivitiesBanner),
-                                ),
+                              Container(
+                                height: 60,
+                                child: AdWidget(ad: visitedUserTopOfActivitiesBanner),
+                              ),
 
 
                               ...userActivity.data!
@@ -1645,13 +1633,10 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
 
                               // Top ad unit is here
-                              if(visitedUserBottomOfActivitiesBanner == null)
-                                SizedBox(height: 70)
-                              else
-                                Container(
-                                  height: 60,
-                                  child: AdWidget(ad: visitedUserBottomOfActivitiesBanner),
-                                ),
+                              Container(
+                                height: 60,
+                                child: AdWidget(ad: visitedUserBottomOfActivitiesBanner),
+                              ),
 
                             ],
                           );

@@ -148,14 +148,12 @@ class _TicTacToeState extends State<TicTacToe> {
               name: 'Score',
               onMessageReceived: (JavascriptMessage message){
                 Fluttertoast.showToast(msg: message.message);
-                if (message.message != null) {
-                  isWon = true;
-                  Future.delayed(Duration(seconds: 5), () {
-                    _showTictactoeInterstitialAd();
-                    incrementTotalLoveCount();
-                  });
-                }
-              })
+                isWon = true;
+                Future.delayed(Duration(seconds: 5), () {
+                  _showTictactoeInterstitialAd();
+                  incrementTotalLoveCount();
+                });
+                            })
         ]),
         onWebViewCreated: (WebViewController webViewController) {
           _webViewController = webViewController;

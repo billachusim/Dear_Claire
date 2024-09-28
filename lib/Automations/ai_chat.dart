@@ -1,12 +1,9 @@
 import 'dart:async';
-import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:dear_claire/Automations/threedots.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
-import 'package:velocity_x/velocity_x.dart';
 import '../Admob/ad_state.dart';
-import '../services/api_consts.dart';
 import 'chatmessage.dart';
 
 class AIChat extends StatefulWidget {

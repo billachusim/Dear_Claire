@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/Automations/ai_chat.dart';
 import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/widget/diaryroom_online_users_stream.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';

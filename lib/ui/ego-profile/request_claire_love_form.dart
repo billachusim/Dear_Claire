@@ -1,7 +1,6 @@
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/strings.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -91,6 +90,7 @@ class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
                               if (value!.isEmpty) {
                                 return "Enter";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _accountNumberController,
@@ -125,6 +125,7 @@ class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
                               if (value!.isEmpty) {
                                 return "enter bank name";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _bankNameController,
@@ -160,6 +161,7 @@ class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
                               if (value!.isEmpty) {
                                 return "enter bank name";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _nameOnAccountController,
@@ -196,6 +198,7 @@ class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
                               if (value!.isEmpty) {
                                 return "What's the need?";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _whyRequestController,

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/Admob/ad_state.dart';
 import 'package:dear_claire/services/firebase_services.dart';
@@ -17,7 +16,6 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import '../../services/api_consts.dart';
 import '../../utils/color.dart';
 import '../../utils/strings.dart';
 import '../../widgets/comment_widget.dart';

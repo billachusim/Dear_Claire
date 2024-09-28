@@ -1,4 +1,3 @@
-import 'package:dear_claire/utils/color.dart';
 import 'package:flutter/material.dart';
 
 class EgoStream extends StatefulWidget {

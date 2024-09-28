@@ -10,7 +10,6 @@ import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
 import 'package:dear_claire/ui/chats/data/chats.dart';
 import 'package:dear_claire/ui/create_session/session_model.dart';
 import 'package:dear_claire/ui/routes/page_router_animation.dart';
-import 'package:dear_claire/ui/routes/routes.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/utils/constant.dart';

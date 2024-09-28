@@ -2,7 +2,6 @@ import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -118,6 +117,7 @@ class _SendClaireLoveFormState extends State<SendClaireLoveForm> {
                               if (value!.isEmpty) {
                                 return "Enter";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _accountNumberController,
@@ -154,6 +154,7 @@ class _SendClaireLoveFormState extends State<SendClaireLoveForm> {
                               if (value!.isEmpty) {
                                 return "What's the need?";
                               }
+                              return null;
                             },
                             textInputAction: TextInputAction.next,
                             controller: _whyRequestController,

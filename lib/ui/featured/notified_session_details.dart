@@ -710,13 +710,10 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                   children: [
 
                                     // Top ad unit is here
-                                    if(egoModeSessionDetailTopBanner == null)
-                                      SizedBox(height: 70)
-                                    else
-                                      Container(
-                                        height: 60,
-                                        child: AdWidget(ad: egoModeSessionDetailTopBanner),
-                                      ),
+                                    Container(
+                                      height: 60,
+                                      child: AdWidget(ad: egoModeSessionDetailTopBanner),
+                                    ),
 
                                     ..._commentList
                                         .map((element) => CommentWidget(
@@ -742,13 +739,10 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                     SimilarCategorySessions(element: theSession!,),
 
                                     // Bottom ad unit is here
-                                    if(egoModeSessionDetailBottomBanner == null)
-                                      SizedBox(height: 70)
-                                    else
-                                      Container(
-                                        height: 60,
-                                        child: AdWidget(ad: egoModeSessionDetailBottomBanner),
-                                      ),
+                                    Container(
+                                      height: 60,
+                                      child: AdWidget(ad: egoModeSessionDetailBottomBanner),
+                                    ),
                                   ],
                                 );
                               }

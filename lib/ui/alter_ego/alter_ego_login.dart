@@ -88,6 +88,7 @@ class _AlterEgoLoginPageState extends State<AlterEgoLoginPage> {
                               if (value!.isEmpty) {
                                 return "Enter a valid ClaireId";
                               }
+                              return null;
                             },
                             //onSaved: _emailController.text,
                             textInputAction: TextInputAction.next,

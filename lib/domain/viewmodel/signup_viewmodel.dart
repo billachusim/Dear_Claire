@@ -50,9 +50,7 @@ class SignUpViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  /**
-   * signup user
-   */
+  /// signup user
 
   Future<bool> registerUser(
       String email, String secretCode) async {

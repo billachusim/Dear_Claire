@@ -10,7 +10,6 @@ import '../../../utils/color.dart';
 import '../../../utils/constant.dart';
 import '../../../utils/helper.dart';
 import '../../routes/page_router_animation.dart';
-import '../../routes/routes.dart';
 import '../../splash_screen/custom_rotate_bacground.dart';
 import '../../splash_screen/rotate_logo.dart';
 

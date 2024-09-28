@@ -184,13 +184,10 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
                                         InsideInsideAlterEgoChatWidget(documentID: widget.documentID, chatModel: widget.chatModel, chatRoomPodo: widget.chatRoomPodo),
 
                                         // Top ad unit is here
-                                        if(insideInsideChatroomTopBanner == null)
-                                          SizedBox(height: 70)
-                                        else
-                                          Container(
-                                            height: 60,
-                                            child: AdWidget(ad: insideInsideChatroomTopBanner),
-                                          ),
+                                        Container(
+                                          height: 60,
+                                          child: AdWidget(ad: insideInsideChatroomTopBanner),
+                                        ),
 
 
                                         ..._chatList
@@ -203,13 +200,10 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
                                             .toList(),
 
                                         // Bottom ad unit is here
-                                        if(insideInsideChatroomBottomBanner == null)
-                                          SizedBox(height: 70)
-                                        else
-                                          Container(
-                                            height: 60,
-                                            child: AdWidget(ad: insideInsideChatroomBottomBanner),
-                                          ),
+                                        Container(
+                                          height: 60,
+                                          child: AdWidget(ad: insideInsideChatroomBottomBanner),
+                                        ),
                                       ],
                                     );
                                   }
