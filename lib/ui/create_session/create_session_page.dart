@@ -12,7 +12,7 @@ import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/strings.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
-import 'package:emoji_chooser/emoji_chooser.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -24,7 +24,7 @@ import 'package:get/get.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:hive/hive.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../featured/model/comment_session_model.dart';
 import '../featured/model/session.dart';
@@ -78,8 +78,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   }
 
   ///this function is triggered when user clicks on any emoji
-  appendEmojiToText(EmojiData emoji) {
-    var newText = sessionTextEditingController.text + emoji.char;
+  appendEmojiToText(Emoji emoji) {
+    var newText = sessionTextEditingController.text + emoji.emoji;  // Use 'emoji.emoji' instead of 'emoji.char'
     sessionTextEditingController.text = newText;
   }
 
@@ -90,7 +90,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
 
 //initialize the image list stores user selected images.
-  List<Asset> imageList = <Asset>[];
+  List<File> imageList = <File>[];
 
 //for showing loading indicator when uploading data;
   bool isLoading = false;
@@ -262,7 +262,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
             enableVibration: true,
             showWhen: true,
             channelShowBadge: true),
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
             presentAlert: true,
             presentBadge: true,
             presentSound: true));
@@ -1413,7 +1413,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         icon: Icon(Icons.emoji_emotions_outlined,
                             color: Pallet.colorWhite),
                         onPressed: () {
-                          showModalBottomSheet(
+                          /*showModalBottomSheet(
                             context: context,
                             builder: (BuildContext subcontext) {
                               return Container(
@@ -1421,7 +1421,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                 child: SingleChildScrollView(
                                   child: Padding(
                                     padding: EdgeInsets.only(bottom: 10),
-                                    child: EmojiChooser(
+                                    child: EmojiPicker(
                                       onSelected: (emoji) {
                                         appendEmojiToText(emoji);
                                       },
@@ -1430,7 +1430,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                 ),
                               );
                             },
-                          );
+                          );*/
                         },
                       )),
                   SizedBox(
@@ -1535,28 +1535,23 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   }
 
   Future<void> loadAssets() async {
-    String error = 'No Error Detected';
+    List<XFile>? pickedFiles;
     try {
-      imageList = await MultiImagePicker.pickImages(
-        maxImages: 10,
-        enableCamera: true,
-        selectedAssets: c.images,
-        cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
-        materialOptions: MaterialOptions(
-          actionBarColor: "#abcdef",
-          actionBarTitle: "To Dear Claire",
-          allViewTitle: "All Photos",
-          useDetailsView: false,
-          selectCircleStrokeColor: "#000000",
-        ),
-      );
-    } on Exception catch (e) {
-      error = e.toString();
+      // Pick multiple images (use ImageSource.camera for camera)
+      pickedFiles = await ImagePicker().pickMultiImage();
+    } catch (e) {
+      print('Error picking images: $e');
     }
 
     if (!mounted) return;
+
     setState(() {
-      c.images = imageList;
+      if (pickedFiles != null) {
+        // Convert the selected XFile objects to File objects
+        c.images = pickedFiles.map((file) => File(file.path)).toList();
+      } else {
+        c.images = imageList;
+      }
     });
   }
 
@@ -1587,33 +1582,37 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         physics: NeverScrollableScrollPhysics(),
         crossAxisCount: 5,
         children: List.generate(c.images.length, (index) {
-          Asset asset = c.images[index];
+          File imageFile = c.images[index];
           return Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              AssetThumb(
-                asset: asset,
+              Image.file(
+                imageFile,
                 width: 200,
                 height: 300,
+                fit: BoxFit.cover,
               ),
               Positioned(
-                  right: -2,
-                  top: -9,
-                  child: IconButton(
-                      icon: Icon(
-                        Icons.cancel,
-                        color: Colors.red,
-                        size: 18,
-                      ),
-                      onPressed: () => setState(() {
-                            c.images.removeAt(index);
-                          })))
+                right: -2,
+                top: -9,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.cancel,
+                    color: Colors.red,
+                    size: 18,
+                  ),
+                  onPressed: () => setState(() {
+                    c.images.removeAt(index);
+                  }),
+                ),
+              ),
             ],
           );
         }),
       ),
     );
   }
+
 
 
 

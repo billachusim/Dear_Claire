@@ -1,4 +1,3 @@
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,12 +13,11 @@ class CustomPlaySoundWidget extends StatefulWidget {
 
 class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
   late bool _isPlaying;
-
   late AudioPlayer _audioPlayer;
-
 
   var _time = 0;
   var _duration = 0;
+
   @override
   void initState() {
     super.initState();
@@ -72,33 +70,38 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
         ]));
   }
 
-  void _onPlayButtonPressed() {
+  void _onPlayButtonPressed() async {
     if (!_isPlaying) {
       _isPlaying = true;
 
       print("selected file path is: ${widget.filePath!}");
-      _audioPlayer.play(
-        widget.filePath!,
-        isLocal: false,
-      );
+
+      // Set the source of the audio based on the file path (local or remote)
+      await _audioPlayer.setSourceUrl(widget.filePath!);
+
+      // Start playing the audio
+      await _audioPlayer.resume();
+
+      // Update duration and position listeners
       _audioPlayer.onDurationChanged.listen((Duration d) {
         print('Max duration: $d');
         setState(() => _time = d.inSeconds);
       });
-      _audioPlayer.onAudioPositionChanged.listen((Duration p) {
+
+      _audioPlayer.onPositionChanged.listen((Duration p) {
         print('Current position: $p');
         setState(() => _duration = p.inSeconds);
       });
-      _audioPlayer.onPlayerCompletion.listen((duration) {
+
+      _audioPlayer.onPlayerComplete.listen((event) {
         setState(() {
           _isPlaying = false;
         });
       });
     } else {
-      _audioPlayer.pause();
+      await _audioPlayer.pause();
       _isPlaying = false;
     }
     setState(() {});
   }
-
 }

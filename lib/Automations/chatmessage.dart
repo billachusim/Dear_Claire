@@ -19,7 +19,7 @@ class ChatMessage extends StatelessWidget {
       children: [
         Text(sender)
             .text
-            .subtitle1(context)
+            //.subtitle1(context)
             .make()
             .box
             .color(sender == "A Darling" ? Vx.red200 : Vx.green200)
@@ -39,7 +39,7 @@ class ChatMessage extends StatelessWidget {
                             : const CircularProgressIndicator.adaptive(),
                   ),
                 )
-              : text.trim().text.bodyText1(context).make().px8(),
+              : text.trim().text.bodyMedium(context).make().px8(),
         ),
       ],
     ).py8();

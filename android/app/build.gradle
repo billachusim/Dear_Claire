@@ -37,7 +37,7 @@ if (keystorePropertiesFile.exists()) {
 
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -46,7 +46,7 @@ android {
     defaultConfig {
         applicationId "com.mobymagic.clairediary"
         minSdkVersion 24
-        targetSdkVersion 33
+        targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
@@ -81,8 +81,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics-ktx'
     implementation 'com.android.support:multidex:1.0.3'
     implementation 'com.google.firebase:firebase-perf-ktx'
-    implementation 'androidx.work:work-runtime-ktx:2.7.1'
-    implementation 'androidx.work:work-runtime:2.7.1'
+    implementation 'androidx.work:work-runtime-ktx:2.9.1'
+    implementation 'androidx.work:work-runtime:2.9.1'
     implementation 'com.facebook.android:facebook-android-sdk:4.42.0'
     implementation 'com.facebook.android:facebook-core:4.42.0'
     implementation 'com.facebook.android:facebook-marketing:4.42.0'

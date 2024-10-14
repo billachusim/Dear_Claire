@@ -21,7 +21,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'data/notification_model.dart' as pushNotification;
 
@@ -795,24 +794,32 @@ class FirebaseServices extends ChangeNotifier {
           });
   }
 
-  Future<String> uploadImage(Asset imageFile) async {
+  Future<String> uploadImage(File imageFile) async {
+    // Step 1: Generate a unique filename using the current timestamp
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-    // Create a Reference to the file
+
+    // Step 2: Create a Reference to the file in Firebase Storage
     firebase_storage.Reference reference = firebase_storage
         .FirebaseStorage.instance
         .ref()
-        .child(AppString.photos)
+        .child('photos')
         .child(fileName);
 
+    // Step 3: Set metadata for the file (optional, here specifying content type)
     final metaData = firebase_storage.SettableMetadata(
       contentType: 'image/jpeg',
     );
-    firebase_storage.UploadTask uploadTask = reference.putData(
-        (await imageFile.getByteData()).buffer.asUint8List(), metaData);
+
+    // Step 4: Upload the file using putFile() since we now have a File object
+    firebase_storage.UploadTask uploadTask = reference.putFile(imageFile, metaData);
+
+    // Step 5: Get the download URL for the uploaded image
     var imageUrl = await (await uploadTask).ref.getDownloadURL();
-    print("The image url is $imageUrl");
-    return imageUrl;
+
+    print("The image URL is $imageUrl");
+    return imageUrl;  // Return the image download URL
   }
+
 
   Future<String> uploadSound(File file) async {
     firebase_storage.UploadTask uploadTask;

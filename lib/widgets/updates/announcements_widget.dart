@@ -30,10 +30,10 @@ class UpdatesAndAnnouncements extends StatelessWidget {
               child: Container(
                 height: getDeviceHeight(context),
                 width: getDeviceWidth(context),
-                child: WebView(
-                  initialUrl: 'https://clairetweets.netlify.app',
-                  javascriptMode: JavascriptMode.unrestricted,
-                  onWebViewCreated: (WebViewController webViewController) {},
+                child: WebViewWidget(
+                  controller: WebViewController()
+                    ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                    ..loadRequest(Uri.parse('https://clairetweets.netlify.app')),
                 ),
               ),
             )

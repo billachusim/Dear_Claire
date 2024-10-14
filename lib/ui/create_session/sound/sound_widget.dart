@@ -217,22 +217,31 @@ class _SoundRecorderWidgetState extends State<SoundRecorderWidget> {
     setState(() {});
   }
 
-  void _onPlayButtonPressed() {
+  void _onPlayButtonPressed() async {
     if (!_isPlaying) {
       _isPlaying = true;
 
-      _audioPlayer.play(_filePath, isLocal: true);
-      _audioPlayer.onPlayerCompletion.listen((duration) {
+      // Use setSourceDeviceFile for local files instead of play()
+      await _audioPlayer.setSourceDeviceFile(_filePath);
+
+      // Start playing the audio
+      await _audioPlayer.resume();
+
+      // Listen for when the audio completes
+      _audioPlayer.onPlayerComplete.listen((event) {
         setState(() {
           _isPlaying = false;
         });
       });
     } else {
-      _audioPlayer.pause();
+      // Pause if already playing
+      await _audioPlayer.pause();
       _isPlaying = false;
     }
+
     setState(() {});
   }
+
 
   Future<void> _startRecording() async {
     final bool? hasRecordingPermission =

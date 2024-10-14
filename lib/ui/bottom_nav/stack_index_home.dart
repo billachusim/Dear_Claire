@@ -109,10 +109,18 @@ class _HomeDashboardPageState extends State<HomePage>
 
   _loadHtmlFromAssets() async {
     String fileHtmlContents = await rootBundle.loadString(filePath);
-    _webViewController.loadUrl(Uri.dataFromString(fileHtmlContents,
-        mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
-        .toString());
+
+    // Creating a Uri with the correct format for the loadRequest
+    final uri = Uri.dataFromString(
+      fileHtmlContents,
+      mimeType: 'text/html',
+      encoding: Encoding.getByName('utf-8'),
+    );
+
+    // Load the Uri directly
+    _webViewController.loadRequest(uri);
   }
+
 
 
   void setTabIndex(index) async {
@@ -412,7 +420,7 @@ class _HomeDashboardPageState extends State<HomePage>
                   ),
 
                   SizedBox(height: 10,),
-                  Container(
+                  /*Container(
                     height: 300,
                     child: WebView(
                       initialUrl: '',
@@ -422,7 +430,7 @@ class _HomeDashboardPageState extends State<HomePage>
                         _loadHtmlFromAssets();
                       },
                     ),
-                  ),
+                  ),*/
 
                   SizedBox(height: 18,),
                   ListTile(

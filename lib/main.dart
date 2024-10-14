@@ -111,7 +111,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             enableVibration: true,
             showWhen: true,
             channelShowBadge: true),
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
             presentAlert: true,
             presentBadge: true,
             presentSound: true));
@@ -156,7 +156,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final InitializationSettings initializationSettings =
     InitializationSettings(
       android: AndroidInitializationSettings("@drawable/claire_icon"),
-      iOS: IOSInitializationSettings(
+      iOS: DarwinInitializationSettings(
         requestSoundPermission: false,
         requestBadgePermission: false,
         requestAlertPermission: false,
@@ -229,7 +229,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     await flutterLocalNotificationsPlugin.initialize(
       InitializationSettings(
         android: AndroidInitializationSettings("@drawable/claire_icon"),
-        iOS: IOSInitializationSettings(
+        iOS: DarwinInitializationSettings(
             onDidReceiveLocalNotification: (id, title, body, payload) async {
               print('onDidReceiveLocalNotification: $id, $title, $body, $payload');
               showDialog(
@@ -278,32 +278,34 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
 
 
-    flutterLocalNotificationsPlugin.initialize(initializationSettings, onSelectNotification: (String? payload) async {
-      if (payload != null){
-        print(payload);
-        if(payload == 'room') {
-          navService.pushNamed('/diaryRooms', args: payload);
-        }
-        else if(payload == 'wallet') {
-          navService.pushNamed('/egoPage', args: payload);
-        }
-        else if(payload == 'claireminder') {
-          navService.pushNamed('/createSession', args: payload);
-        }
-        else if(payload == 'game') {
-          navService.pushNamed('/games', args: payload);
-        }
-        else if(payload == 'createSession') {
-          navService.pushNamed('/createSession', args: payload);
-        }
-        else if(payload == null) {
-          navService.pushNamed('/createSession', args: payload);
-        }
-        else        navService.pushNamed('/notifiedSessionDetails', args: payload);
+    flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) async {
+        String? payload = response.payload;
 
-      }
-      else navService.pushNamed('/egoPage', args: payload!);
-    });
+        if (payload != null) {
+          print(payload);
+          if (payload == 'room') {
+            navService.pushNamed('/diaryRooms', args: payload);
+          } else if (payload == 'wallet') {
+            navService.pushNamed('/egoPage', args: payload);
+          } else if (payload == 'claireminder') {
+            navService.pushNamed('/createSession', args: payload);
+          } else if (payload == 'game') {
+            navService.pushNamed('/games', args: payload);
+          } else if (payload == 'createSession') {
+            navService.pushNamed('/createSession', args: payload);
+          } else if (payload == null) {
+            navService.pushNamed('/createSession', args: payload);
+          } else {
+            navService.pushNamed('/notifiedSessionDetails', args: payload);
+          }
+        } else {
+          navService.pushNamed('/egoPage', args: payload.toString());
+        }
+      },
+    );
+
 
 
 

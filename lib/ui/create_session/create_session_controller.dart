@@ -1,6 +1,7 @@
+import 'dart:io';
+
 import 'package:dear_claire/utils/constant.dart';
 import 'package:get/get.dart';
-import 'package:multi_image_picker/multi_image_picker.dart';
 import 'dart:math';
 
 
@@ -26,7 +27,7 @@ class CreateSessionController extends GetxController {
     sessionMood.value = value;
   }
 
-  List<Asset> images = <Asset>[];
+  List<File> images = <File>[];
 
 
 

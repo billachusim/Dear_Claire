@@ -15,30 +15,39 @@ class SpaceShooter extends StatefulWidget {
 }
 
 class _SpaceShooterState extends State<SpaceShooter> {
-  late WebViewController _webViewController;
+  late final WebViewController _webViewController; // Updated initialization
   String filePath = 'assets/web_games/space/index.html';
 
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize WebViewController with JavaScript mode
+    _webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted);
+
+    // Load the HTML content from assets
+    _loadHtmlFromAssets();
+  }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        body: WebView(
-          initialUrl: '',
-          javascriptMode: JavascriptMode.unrestricted,
-          onWebViewCreated: (WebViewController webViewController) {
-            _webViewController = webViewController;
-            _loadHtmlFromAssets();
-          },
+        body: WebViewWidget(
+          controller: _webViewController, // Use the updated controller
         ),
       ),
     );
   }
 
-  _loadHtmlFromAssets() async {
+  Future<void> _loadHtmlFromAssets() async {
     String fileHtmlContents = await rootBundle.loadString(filePath);
-    _webViewController.loadUrl(Uri.dataFromString(fileHtmlContents,
-        mimeType: 'text/html', encoding: Encoding.getByName('utf-8'))
-        .toString());
+    final uri = Uri.dataFromString(
+      fileHtmlContents,
+      mimeType: 'text/html',
+      encoding: Encoding.getByName('utf-8'),
+    );
+    _webViewController.loadRequest(uri); // Updated to use loadRequest
   }
 }

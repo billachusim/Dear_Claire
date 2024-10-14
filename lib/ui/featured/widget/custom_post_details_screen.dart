@@ -876,7 +876,7 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
             enableVibration: true,
             showWhen: true,
             channelShowBadge: true),
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
             presentAlert: true,
             presentBadge: true,
             presentSound: true));
@@ -1260,7 +1260,7 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
     final image = File('${directory.path}/diary_session.png');
     image.writeAsBytesSync(bytes);
     final text = '${AppString.shareHeader}\n\n${AppString.shareLink}';
-    await Share.shareFiles([image.path], text: text);
+    await Share.shareXFiles([XFile(image.path)], text: text,);
   }
 
 

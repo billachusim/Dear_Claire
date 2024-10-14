@@ -11,8 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:multi_image_picker/multi_image_picker.dart';
 import '../services/firebase_services.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../ui/create_session/sound/sound_widget.dart';
@@ -44,7 +44,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
   File? _recordFile;
 
   //initialize the image list stores user selected images.
-  List<Asset> imageList = <Asset>[];
+  List<File> imageList = <File>[];
 
   String _audioUrl = '';
   String _image1 = '';
@@ -69,30 +69,35 @@ class _ChatEditFieldState extends State<ChatEditField> {
     return audioUrl;
   }
 
-  Future<List> loadAssets() async {
-      imageList = await MultiImagePicker.pickImages(
-        maxImages: 2,
-        enableCamera: true,
-        selectedAssets: imageList,
-        cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
-        materialOptions: MaterialOptions(
-          actionBarColor: "#abcdef",
-          actionBarTitle: "To Dear Claire",
-          allViewTitle: "All Photos",
-          useDetailsView: false,
-          selectCircleStrokeColor: "#000000",
-        ),
-      );
-        List<String> imageDownloadUrls = <String>[];
-        for (var image in imageList) {
-          imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
-        }
-        setState(() {
-          _image1 = imageDownloadUrls.first;
-          _image2 = imageDownloadUrls.last;
-        });
-      return imageDownloadUrls;
+  Future<List<String>> loadAssets() async {
+    // Step 1: Pick multiple images using image_picker
+    List<XFile>? pickedFiles = await ImagePicker().pickMultiImage();
+
+    // Step 2: Initialize an empty list for the download URLs
+    List<String> imageDownloadUrls = <String>[];
+
+    // Step 3: Check if any files were picked
+    if (pickedFiles != null) {
+      // Step 4: Convert XFile to File and upload them
+      List<File> imageFiles = pickedFiles.map((file) => File(file.path)).toList();
+
+      for (var imageFile in imageFiles) {
+        // Assuming _firebaseServices.uploadImage() can take a File and return a download URL
+        String downloadUrl = await _firebaseServices.uploadImage(imageFile);
+        imageDownloadUrls.add(downloadUrl);
+      }
+
+      // Step 5: Update the state with the first and last image URLs
+      setState(() {
+        _image1 = imageDownloadUrls.isNotEmpty ? imageDownloadUrls.first : '';
+        _image2 = imageDownloadUrls.length > 1 ? imageDownloadUrls.last : '';
+      });
+    }
+
+    // Step 6: Return the list of image download URLs
+    return imageDownloadUrls;
   }
+
 
 
 

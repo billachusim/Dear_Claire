@@ -366,7 +366,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
             enableVibration: true,
             showWhen: true,
             channelShowBadge: true),
-        iOS: IOSNotificationDetails(
+        iOS: DarwinNotificationDetails(
             presentAlert: true,
             presentBadge: true,
             presentSound: true));
