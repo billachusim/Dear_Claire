@@ -1,15 +1,14 @@
+import 'dart:math';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:get/get.dart';
-import 'package:multi_image_picker/multi_image_picker.dart';
-import 'dart:math';
-
+import 'package:image_picker/image_picker.dart';
 
 
 class CreateSessionController extends GetxController {
 
   randomizeBackgroundColor(){
     Random random = new Random();
-    int randomNumber = random.nextInt(Constant.DIARY_COLORS.length+1);
+    int randomNumber = random.nextInt(Constant.DIARY_COLORS.length);
     selectedBackgroundColor = randomNumber.obs;
   }
   var selectedBackgroundColor;
@@ -26,7 +25,7 @@ class CreateSessionController extends GetxController {
     sessionMood.value = value;
   }
 
-  List<Asset> images = <Asset>[];
+  List<XFile> images = <XFile>[];
 
 
 
