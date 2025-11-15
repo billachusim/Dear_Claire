@@ -1,39 +1,39 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/routes/page_router_animation.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
 import 'package:dear_claire/ui/visited_user_ego_page/visited_user_ego_page.dart';
-import 'package:dear_claire/ui/visited_user_ego_page/visited_user_model.dart';
 import 'package:dear_claire/utils/color.dart';
 import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/utils/helper.dart';
 import 'package:dear_claire/utils/mood.dart';
 import 'package:dear_claire/widgets/comments_button.dart';
 import 'package:dear_claire/widgets/metoo_button.dart';
-import 'package:dear_claire/widgets/toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../utils/strings.dart';
-
 class EgoModeSessionCard extends StatelessWidget {
-  Session element;
+  final Session element;
+  final String visitedUsersID;
 
-  EgoModeSessionCard({Key? key, required this.element, required this.visitedUsersID}) : super(key: key);
-  late String visitedUsersID;
+  const EgoModeSessionCard({super.key, required this.element, required this.visitedUsersID});
 
   @override
   Widget build(BuildContext context) {
     return CupertinoButton(
-      onPressed: () => PageRouter.gotoWidget(
-          EgoModeSessionDetail(featuredSessionModel: element),
-          context),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EgoModeSessionDetail(featuredSessionModel: element),
+          ),
+        );
+      },
       padding: EdgeInsets.zero,
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
+        margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
@@ -48,12 +48,12 @@ class EgoModeSessionCard extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: () {
-                    visitedUsersID = element.userId!;
-                    PageRouter.gotoWidget(
-                        VisitedUserEgoProfilePage(visitedUserModel: visitedUsersID,),
-                        context);
-                    print("Visited User ID::: $visitedUsersID");
-
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => VisitedUserEgoProfilePage(visitedUserModel: element.userId!),
+                      ),
+                    );
                   },
                   child: CachedNetworkImage(
                       width: 48,
@@ -67,7 +67,7 @@ class EgoModeSessionCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                      placeholder: (context, url) => CircularProgressIndicator(),
+                      placeholder: (context, url) => const CircularProgressIndicator(),
                       errorWidget: (context, url, error) => Image.asset(
                             "assets/images/brown_boy_mask.png",
                             width: 48,
@@ -75,7 +75,7 @@ class EgoModeSessionCard extends StatelessWidget {
                           ) //Icon(Icons.error),
                       ),
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 8,
                 ),
                 Expanded(
@@ -90,7 +90,7 @@ class EgoModeSessionCard extends StatelessWidget {
                               fontSize: 18.0,
                               color: Pallet.colorWhite,
                               fontWeight: FontWeight.w800)),
-                      SizedBox(
+                      const SizedBox(
                         height: 4,
                       ),
                       Text(timeConverter(element.timeCreated!),
@@ -116,7 +116,7 @@ class EgoModeSessionCard extends StatelessWidget {
                               fontSize: 13.0,
                               color: Pallet.colorWhite,
                               fontWeight: FontWeight.w700)),
-                      SizedBox(
+                      const SizedBox(
                         height: 3,
                       ),
                       FutureBuilder<Widget>(
@@ -141,7 +141,7 @@ class EgoModeSessionCard extends StatelessWidget {
                 )
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 6,
             ),
             Center(
@@ -153,7 +153,7 @@ class EgoModeSessionCard extends StatelessWidget {
                       color: Pallet.colorWhite,
                       fontWeight: FontWeight.w800)),
             ),
-            SizedBox(
+            const SizedBox(
               height: 5,
             ),
             Column(
@@ -168,7 +168,7 @@ class EgoModeSessionCard extends StatelessWidget {
                         fontWeight: FontWeight.w500),
                     overflow: TextOverflow.ellipsis,
                   ),
-                SizedBox(
+                const SizedBox(
                   height: 6,
                 ),
                 Container(
@@ -194,7 +194,7 @@ class EgoModeSessionCard extends StatelessWidget {
                                       ),
                                     ),
                                 placeholder: (context, url) =>
-                                    Center(child: CircularProgressIndicator()),
+                                    const Center(child: CircularProgressIndicator()),
                                 errorWidget: (context, url, error) => Image.asset(
                                       "assets/images/brown_boy_mask.png",
                                       width: 48,
@@ -222,7 +222,7 @@ class EgoModeSessionCard extends StatelessWidget {
                           context, index,
                           session: element, sender: _userModel.nickname ?? '');
                     }),
-                new Spacer(),
+                const Spacer(),
                 StreamBuilder(
                     stream: firebaseServices
                         .getFeaturedSessionsComments(element.sessionId!),
@@ -233,9 +233,14 @@ class EgoModeSessionCard extends StatelessWidget {
                       if (snapShot.hasData) {
                         return CommentsButton(
                             count: snapShot.data!.docs.length,
-                          onPressed: () => PageRouter.gotoWidget(
-                              EgoModeSessionDetail(featuredSessionModel: element),
-                              context),);
+                          onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                            builder: (context) => EgoModeSessionDetail(featuredSessionModel: element),
+                          ),
+                         );
+                        },);
                       }
                       return Container();
                     }),

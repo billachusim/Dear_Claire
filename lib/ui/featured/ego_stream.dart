@@ -1,65 +1,46 @@
-import 'package:dear_claire/utils/color.dart';
 import 'package:flutter/material.dart';
 
-class EgoStream extends StatefulWidget {
-  @override
-  _EgoStreamState createState() => _EgoStreamState();
-}
-
-class _EgoStreamState extends State<EgoStream> {
+class EgoStream extends StatelessWidget {
+  const EgoStream({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return
-      Container(
-          margin: const EdgeInsets.symmetric(vertical: 10.0),
-          height: 90,
-          child: ListView(
-            // This next line does the trick.
-            scrollDirection: Axis.horizontal,
-            children: <Widget>[
-              Container(
-                width: 160.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(35)
-                ),
-              ),
-              Container(
-                width: 160.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.blueAccent,
-                    borderRadius: BorderRadius.circular(35)
-                ),
-              ),
-              Container(
-                width: 160.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(35)
-                ),
-              ),
-              Container(
-                width: 160.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.yellow,
-                    borderRadius: BorderRadius.circular(35)
-                ),
-              ),
-              Container(
-                width: 160.0,
-                margin: EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                    color: Colors.orange,
-                    borderRadius: BorderRadius.circular(35)
-                ),
-              ),
-            ],
-          ),
-        );
+    final List<Color> colors = [
+      Colors.red,
+      Colors.blueAccent,
+      Colors.green,
+      Colors.yellow,
+      Colors.orange,
+    ];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10.0),
+      height: 90,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: colors.length,
+        itemBuilder: (context, index) {
+          return _EgoStreamItem(color: colors[index]);
+        },
+      ),
+    );
+  }
+}
+
+class _EgoStreamItem extends StatelessWidget {
+  final Color color;
+
+  const _EgoStreamItem({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 160.0,
+      margin: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(35),
+      ),
+    );
   }
 }

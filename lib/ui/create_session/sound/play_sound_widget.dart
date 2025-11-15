@@ -1,157 +1,99 @@
 import 'dart:io';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_audio_recorder2/flutter_audio_recorder2.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:wave/config.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:wave/wave.dart';
 import 'package:dear_claire/utils/color.dart';
 
 class PlaySoundWidget extends StatefulWidget {
   final String? filePath;
-  ValueChanged<String>? onRecordComplete;
-  PlaySoundWidget({Key? key, this.filePath, this.onRecordComplete})
-      : super(key: key);
+  final ValueChanged<String>? onRecordComplete;
+
+  const PlaySoundWidget({super.key, this.filePath, this.onRecordComplete});
 
   @override
   _PlaySoundWidgetState createState() => _PlaySoundWidgetState();
 }
 
 class _PlaySoundWidgetState extends State<PlaySoundWidget> {
-  late bool _isPlaying;
-  late bool _isUploading;
-  late bool _isRecorded;
-  late bool _isRecording;
+  bool _isPlaying = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
 
-  late AudioPlayer _audioPlayer;
-
-  late FlutterAudioRecorder2 _audioRecorder;
-
-   var _time = 0;
-  var _duration= 0;
   @override
   void initState() {
     super.initState();
-    _isPlaying = false;
-    _isUploading = false;
-    _isRecorded = false;
-    _isRecording = false;
-    
-    _audioPlayer = AudioPlayer();
+    _initAudioPlayer();
+  }
+
+  void _initAudioPlayer() {
+    _audioPlayer.onDurationChanged.listen((d) => setState(() => _duration = d));
+    _audioPlayer.onPositionChanged.listen((p) => setState(() => _position = p));
+    _audioPlayer.onPlayerComplete.listen((_) => setState(() => _isPlaying = false));
   }
 
   @override
-void dispose(){
-super.dispose();
-_audioPlayer.stop();
-_audioPlayer.dispose();
-}
+  void dispose() {
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  void _onPlayButtonPressed() {
+    if (widget.filePath != null) {
+      if (_isPlaying) {
+        _audioPlayer.pause();
+      } else {
+        _audioPlayer.play(DeviceFileSource(widget.filePath!));
+      }
+      setState(() => _isPlaying = !_isPlaying);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-        height: 80,
-        color: Pallet.colorWhite,
-        child: Column(
-          children:[
-            Align(
-              alignment:Alignment.topRight,
-              child: GestureDetector(
-                onTap:(){
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  child: Icon(Icons.close, size: 18.r),
-                  decoration:
-                      BoxDecoration(shape: BoxShape.circle, color: Colors.grey),
+      height: 80,
+      color: Pallet.colorWhite,
+      child: Column(
+        children: [
+          Align(
+            alignment: Alignment.topRight,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.grey),
+                child: const Icon(Icons.close, size: 18),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                icon: Icon(
+                  _isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: Colors.red,
+                  size: 30,
                 ),
+                onPressed: _onPlayButtonPressed,
               ),
-            
-            ),
-            SizedBox(height:8.h),
-            Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            IconButton(
-              icon: Icon(
-                _isPlaying ? Icons.pause : Icons.play_arrow,
-                color: Colors.red,
-                size: 30.r,
+              const SizedBox(width: 5),
+              Slider(
+                min: 0,
+                max: _duration.inSeconds.toDouble(),
+                value: _position.inSeconds.toDouble(),
+                onChanged: (value) async {
+                  final position = Duration(seconds: value.toInt());
+                  await _audioPlayer.seek(position);
+                  await _audioPlayer.resume();
+                },
               ),
-              onPressed: _onPlayButtonPressed,
-            ),
-            SizedBox(width: 5.w),
-            Slider(
-              min: 0,
-              max: _time.toDouble(),
-              value: _duration.toDouble(),
-              
-              onChanged: (value) {
-                setState(() {
-                  print("on change value is $value");
-                  _audioPlayer.pause();
-                  _duration = value.toInt();
-                  _audioPlayer.seek(Duration(seconds: _duration));
-                  _audioPlayer.resume();
-                  // _audioPlayer.seek(Duration(milliseconds: _duration));
-
-                });
-              },
-            ),
-          ],
-        )
-          ]
-        ));
-  }
-
-  void _onPlayButtonPressed() {
-    if (!_isPlaying) {
-      _isPlaying = true;
-
-      print("selected file path is: ${widget.filePath!}");
-      _audioPlayer.play(widget.filePath!, isLocal: true,);
-      _audioPlayer.onDurationChanged.listen((Duration d) {
-        print('Max duration: $d');
-        setState(() => _time = d.inSeconds);
-      });
-      _audioPlayer.onAudioPositionChanged.listen((Duration p) {
-        print('Current position: $p');
-        setState(() => _duration = p.inSeconds);
-      });
-      _audioPlayer.onPlayerCompletion.listen((duration) {
-        setState(() {
-          _isPlaying = false;
-        });
-      });
-    } else {
-      _audioPlayer.pause();
-      _isPlaying = false;
-    }
-    setState(() {});
-  }
-
-  Future<void> _startRecording() async {
-    final bool? hasRecordingPermission =
-        await FlutterAudioRecorder2.hasPermissions;
-
-    if (hasRecordingPermission ?? false) {
-      Directory directory = await getApplicationDocumentsDirectory();
-      String filepath = directory.path +
-          '/' +
-          DateTime.now().millisecondsSinceEpoch.toString() +
-          '.aac';
-      _audioRecorder =
-          FlutterAudioRecorder2(filepath, audioFormat: AudioFormat.AAC);
-      await _audioRecorder.initialized;
-      _audioRecorder.start();
-      widget.onRecordComplete!(filepath);
-      setState(() {});
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Center(child: Text('Please enable recording permission'))));
-    }
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

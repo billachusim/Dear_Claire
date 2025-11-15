@@ -1,12 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dear_claire/services/firebase_services.dart';
 import 'package:dear_claire/ui/Categories/category_streams.dart';
-import 'package:dear_claire/ui/featured/ego_stream.dart';
-import 'package:dear_claire/ui/featured/model/featured_session_model.dart';
 import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
 import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -14,7 +10,7 @@ import 'model/session.dart';
 import '../../widgets/ego_mode_session_card.dart';
 
 class FeaturedPage extends StatefulWidget {
-  FeaturedPage({Key? key, required this.title}) : super(key: key);
+  const FeaturedPage({super.key, required this.title});
 
   final String title;
 
@@ -23,49 +19,44 @@ class FeaturedPage extends StatefulWidget {
 }
 
 class _FeaturedPageState extends State<FeaturedPage> {
-  List<Session>? _sessionList = [];
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: firebaseServices.getFeaturedSession(),
-      builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-        if (session.connectionState == ConnectionState.waiting) {
-          return RotateImage(70, 70);
+      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const RotateImage(70, 70);
         }
-        if (!session.hasData) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(
-            child: Text("No Session data",
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.lato(
-                    fontSize: 15.0,
-                    color: Pallet.colorBlack,
-                    //fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.w600)),
-          );
-        }
-        if (session.hasData) {
-          // clear list
-          _sessionList!.clear();
-
-          session.data!.docs.map((e) {
-            _sessionList!.add(Session.fromJson(e.data()));
-          }).toList();
-
-          return Scrollbar(
-            child: ListView(
-              children: [
-                CategoryStreams(),
-                ..._sessionList!
-                    .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '',))
-                    .toList(),
-                CategoryStreams(),
-              ],
+            child: Text(
+              "No Session data",
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.lato(
+                fontSize: 15.0,
+                color: Pallet.colorBlack,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           );
         }
-        return Container();
+
+        final sessionList = snapshot.data!.docs.map((doc) => Session.fromJson(doc.data())).toList();
+
+        return Scrollbar(
+          child: ListView.builder(
+            itemCount: sessionList.length + 2, // +2 for CategoryStreams
+            itemBuilder: (context, index) {
+              if (index == 0 || index == sessionList.length + 1) {
+                return const CategoryStreams();
+              }
+              final session = sessionList[index - 1];
+              return EgoModeSessionCard(element: session, visitedUsersID: '');
+            },
+          ),
+        );
       },
     );
   }

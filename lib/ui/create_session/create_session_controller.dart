@@ -1,45 +1,77 @@
 import 'dart:math';
+import 'package:flutter/material.dart';
 import 'package:dear_claire/utils/constant.dart';
-import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
-
-class CreateSessionController extends GetxController {
-
-  randomizeBackgroundColor(){
-    Random random = new Random();
-    int randomNumber = random.nextInt(Constant.DIARY_COLORS.length);
-    selectedBackgroundColor = randomNumber.obs;
-  }
-  var selectedBackgroundColor;
-
-  var isShowSticker = false.obs;
-  var selectedFontIndex = 0.obs;
-
-  var acceptReplies = false.obs;
-  var followClaire = true.obs;
-  var location = false.obs;
-  var sessionMood = 'Current Mood'.obs;
-
-  changeMood(String value) {
-    sessionMood.value = value;
+class CreateSessionController extends ChangeNotifier {
+  int _selectedBackgroundColor = 0;
+  int get selectedBackgroundColor => _selectedBackgroundColor;
+  set selectedBackgroundColor(int value) {
+    _selectedBackgroundColor = value;
+    notifyListeners();
   }
 
-  List<XFile> images = <XFile>[];
+  bool _isShowSticker = false;
+  bool get isShowSticker => _isShowSticker;
+  set isShowSticker(bool value) {
+    _isShowSticker = value;
+    notifyListeners();
+  }
 
+  int _selectedFontIndex = 0;
+  int get selectedFontIndex => _selectedFontIndex;
+  void selectFont(int index) {
+    _selectedFontIndex = index;
+    notifyListeners();
+  }
 
+  bool _acceptReplies = false;
+  bool get acceptReplies => _acceptReplies;
+  set acceptReplies(bool value) {
+    _acceptReplies = value;
+    notifyListeners();
+  }
+
+  bool _followClaire = true;
+  bool get followClaire => _followClaire;
+  set followClaire(bool value) {
+    _followClaire = value;
+    notifyListeners();
+  }
+
+  bool _location = false;
+  bool get location => _location;
+  set location(bool value) {
+    _location = value;
+    notifyListeners();
+  }
+
+  String _sessionMood = 'Current Mood';
+  String get sessionMood => _sessionMood;
+  void changeMood(String value) {
+    _sessionMood = value;
+    notifyListeners();
+  }
+
+  List<XFile> _images = <XFile>[];
+  List<XFile> get images => _images;
+  set images(List<XFile> value) {
+    _images = value;
+    notifyListeners();
+  }
+
+  void randomizeBackgroundColor() {
+    final random = Random();
+    _selectedBackgroundColor = random.nextInt(Constant.DIARY_COLORS.length);
+    notifyListeners();
+  }
 
   void changeColor() {
-    print(selectedBackgroundColor.value);
-    if (selectedBackgroundColor.value < 21) {
-      selectedBackgroundColor++;
+    if (_selectedBackgroundColor < 21) {
+      _selectedBackgroundColor++;
     } else {
-      selectedBackgroundColor.value = 0;
+      _selectedBackgroundColor = 0;
     }
-  }
-
-  void selectFont(int index) {
-    print(index);
-    selectedFontIndex.value = index;
+    notifyListeners();
   }
 }

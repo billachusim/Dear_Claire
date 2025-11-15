@@ -15,19 +15,17 @@ import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
 import 'package:emoji_chooser/emoji_chooser.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:hive/hive.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'create_session_controller.dart';
 import 'sound/sound_widget.dart';
 
 class CreateSessionPage extends StatefulWidget {
-  const CreateSessionPage({Key? key}) : super(key: key);
+  const CreateSessionPage({super.key});
 
   @override
   _CreateSessionPageState createState() => _CreateSessionPageState();
@@ -35,244 +33,206 @@ class CreateSessionPage extends StatefulWidget {
 
 const int maxFailedLoadAttempts = 3;
 
-
 class _CreateSessionPageState extends State<CreateSessionPage> {
-  TextEditingController sessionTitleController = TextEditingController();
+  final TextEditingController _sessionTitleController = TextEditingController();
   final FirebaseServices _firebaseServices = FirebaseServices();
-  final c = Get.find<CreateSessionController>();
 
+  late final Box _box;
 
-  //object for hive database
-  late final box;
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
+  UserModel _userModel = UserModel();
 
+  final Uuid _uuid = const Uuid();
 
+  final _sessionTextEditingController = TextEditingController();
+  late FocusNode _sessionTextFocusNode;
 
-//obtain user id, nickname and avatarUrl linked to this user
-  var currentUser = FirebaseAuth.instance.currentUser;
-
-  UserModel userModel = UserModel();
-
-//used for generating randon id for each session
-  var uuid = Uuid();
-
-  //input controller to access session message from user
-  final sessionTextEditingController = TextEditingController();
-  late FocusNode sessionTextFocusNode;
-
-  ///this function is trigggered when user clicks on any emoji
-  appendEmojiToText(EmojiData emoji) {
-    var newText = sessionTextEditingController.text + emoji.char;
-    sessionTextEditingController.text = newText;
+  void _appendEmojiToText(EmojiData emoji) {
+    final newText = _sessionTextEditingController.text + emoji.char;
+    _sessionTextEditingController.text = newText;
   }
 
-//initialize the audio record file that stores user audio record. null by default
-  File? recordFile;
+  File? _recordFile;
+  final List<XFile> _imageList = <XFile>[];
 
-//initialize the image list stores user selected images.
-  List<Asset> imageList = <Asset>[];
-
-//for showing loading indicator when uploading data;
-  bool isLoading = false;
-  bool acceptReplies = false;
-  bool followClaire = true;
-  String sessionMood = 'Current Mood';
+  bool _isLoading = false;
   String? _location = '';
 
-
-  randomizeBackgroundColor(){
-    Random random = new Random();
-    int randomNumber = random.nextInt(Constant.DIARY_COLORS.length);
-    c.selectedBackgroundColor = randomNumber.obs;
+  void _randomizeBackgroundColor() {
+    final random = Random();
+    final randomNumber = random.nextInt(Constant.DIARY_COLORS.length);
+    context.read<CreateSessionController>().selectedBackgroundColor = randomNumber;
   }
-
-  //controller.text = someString;
-  // controller.selection = TextSelection.fromPosition(TextPosition(offset: controller.text.length));
 
   @override
   void initState() {
     super.initState();
-    randomizeBackgroundColor();
-    initializeDatabaseObject();
-    sessionTextFocusNode = FocusNode();
+    _randomizeBackgroundColor();
+    _initializeDatabaseObject();
+    _sessionTextFocusNode = FocusNode();
     _createInterstitialAd();
   }
 
-  void initializeDatabaseObject()async{
-   box = await Hive.openBox('draft');
-    String text = box.get("text");
-    print("text is:$text");
-    if(text.isNotEmpty){
-      sessionTextEditingController.text=text;
+  void _initializeDatabaseObject() async {
+    _box = await Hive.openBox('draft');
+    final text = _box.get("text");
+    if (text != null && text.isNotEmpty) {
+      _sessionTextEditingController.text = text;
     }
   }
 
   @override
   void dispose() {
-    // Clean up the focus node when the Form is disposed.
-    sessionTextFocusNode.dispose();
-    sessionTextEditingController.dispose();
-    sessionTitleController.dispose();
-    super.dispose();
+    _sessionTextFocusNode.dispose();
+    _sessionTextEditingController.dispose();
+    _sessionTitleController.dispose();
     _interstitialAd?.dispose();
+    super.dispose();
   }
 
-//show up when user clicks on the FAB to create a session
   Future<void> _showCardDialog() async {
+    final createSessionController = context.read<CreateSessionController>();
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // user must tap button!
+      barrierDismissible: false,
       builder: (BuildContext context) {
-        return Center(
-          child: AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30.0)
-            ),
-            title: Container(
-              child: Text('Enter Title', textAlign: TextAlign.center),
-            ),
-            content: SingleChildScrollView(
-              child: Container(
-                child: Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
+          title: const Text('Enter Title', textAlign: TextAlign.center),
+          content: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _sessionTitleController,
+                    decoration: const InputDecoration(
+                      hintText: 'What\'s this session about?     ️   💌',
+                    ),
+                  ),
+                  Consumer<CreateSessionController>(
+                    builder: (context, controller, child) {
+                      return DropdownButton(
+                        borderRadius: BorderRadius.circular(30.0),
+                        isExpanded: true,
+                        value: controller.sessionMood,
+                        icon: const Icon(Icons.arrow_circle_down_rounded, color: Colors.pink),
+                        items: Constant.USER_SESSION_MOODS.map((String items) {
+                          return DropdownMenuItem(value: items, child: Text(items));
+                        }).toList(),
+                        onChanged: (val) => controller.changeMood(val.toString()),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
                     children: [
-                      TextField(
-                        controller: sessionTitleController,
-                        decoration: InputDecoration(
-                          //border: InputBorder,
-                          hintText: 'What\'s this session about?     ️   💌',
+                      const Icon(Icons.lock),
+                      const SizedBox(width: 8),
+                      const Flexible(
+                        child: Text(
+                          "Do you want other users to reply and follow this diary session?",
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                         ),
                       ),
-                      Obx(
-                        () => DropdownButton(
-                          borderRadius: BorderRadius.circular(30.0),
-                          isExpanded: true,
-                          value: c.sessionMood.value,
-                          icon: Icon(Icons.arrow_circle_down_rounded, color: Colors.pink,),
-                          items: Constant.USER_SESSION_MOODS.map((String items) {
-                            return DropdownMenuItem(
-                                value: items, child: Text(items));
-                          }).toList(),
-                          onChanged: (val) => c.changeMood(val.toString()),
-                        ),
+                      Consumer<CreateSessionController>(
+                        builder: (context, controller, child) {
+                          return Switch(
+                            value: controller.acceptReplies,
+                            onChanged: (value) => controller.acceptReplies = value,
+                          );
+                        },
                       ),
-                      SizedBox(
-                        height: 8,
-                      ),
-                      Container(
-                          child: Row(
-                            children: [
-                          Icon(Icons.lock),
-                          SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                                "Do you want other users to reply and follow this diary session?",
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                          ),
-                          Obx(() => Switch(
-                                value: c.acceptReplies.value,
-                                onChanged: (value) {
-                                  c.acceptReplies.value = value;
-                                },
-                                // activeTrackColor: Colors.lightGreenAccent,
-                                // activeColor: Colors.green,
-                              ))
-                        ],
-                      )
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Container(
-                          child: Row(
-                        children: [
-                          Icon(Icons.lock),
-                          SizedBox(width: 10),
-                          Flexible(
-                            child: Text(
-                                "Do you want Claire to reply and follow this diary session?",
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                          ),
-                          Obx(()=>Switch(
-                            value: c.followClaire.value,
-                            onChanged: (value) {
-                              c.followClaire.value = value;
-},
-                                 activeTrackColor: Colors.purpleAccent,
-                                 activeColor: Pallet.colorSecondary,
-                              ))
-                        ],
-                      )),
-                      SizedBox(
-                        height: 9,
-                      ),
-                      Container(
-                          child: Row(
-                        children: [
-                          Icon(Icons.location_on_sharp),
-                          SizedBox(width: 9),
-                          Flexible(
-                            child: Text("Do you want to tag your location?",
-                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                          ),
-                          Obx(() => Switch(
-                                value: c.location.value,
-                                onChanged: (value) async {
-                                  c.location.value = value;
-
-                                  if (value) {
-                                    await firebaseServices
-                                        .determinePosition();
-                                    _location =
-                                        await firebaseServices.getUsersLocation();
-                                    setState(() {});
-                                  }
-                                },
-                                // activeTrackColor: Colors.lightGreenAccent,
-                                // activeColor: Colors.green,
-                              ))
-                        ],
-                      ))
                     ],
                   ),
-                ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Icon(Icons.lock),
+                      const SizedBox(width: 10),
+                      const Flexible(
+                        child: Text(
+                          "Do you want Claire to reply and follow this diary session?",
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Consumer<CreateSessionController>(
+                        builder: (context, controller, child) {
+                          return Switch(
+                            value: controller.followClaire,
+                            onChanged: (value) => controller.followClaire = value,
+                            activeTrackColor: Colors.purpleAccent,
+                            activeColor: Pallet.colorSecondary,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 9),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_sharp),
+                      const SizedBox(width: 9),
+                      const Flexible(
+                        child: Text(
+                          "Do you want to tag your location?",
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Consumer<CreateSessionController>(
+                        builder: (context, controller, child) {
+                          return Switch(
+                            value: controller.location,
+                            onChanged: (value) async {
+                              controller.location = value;
+                              if (value) {
+                                await _firebaseServices.determinePosition();
+                                _location = await _firebaseServices.getUsersLocation();
+                                setState(() {});
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            actions: <Widget>[
-              TextButton(
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.red),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              TextButton(
-                child: Obx(()=>
-        c.acceptReplies.value ? Text("Share and Save",
-          style: TextStyle(color: Pallet.colorSecondary))
-            :Text('Save', style: TextStyle(color: Pallet.colorSecondary)),
-        ),
-                onPressed: () {
-                  if (sessionTextEditingController.text.isNotEmpty &&
-                      sessionTitleController.text.isNotEmpty) {
-                    Navigator.of(context).pop();
-                    createSession();
-                    showToast(AppString.started_new_session);
-                    Future.delayed(Duration(seconds: 1), () {
-                      _showInterstitialAd();
-                    });
-                  } else {
-                    _interstitialAd?.dispose();
-                    showToast(AppString.new_session_error);
-                  }
-                },
-              ),
-            ],
           ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Consumer<CreateSessionController>(
+                builder: (context, controller, child) {
+                  return Text(
+                    controller.acceptReplies ? "Share and Save" : 'Save',
+                    style: const TextStyle(color: Pallet.colorSecondary),
+                  );
+                },
+              ),
+              onPressed: () {
+                if (_sessionTextEditingController.text.isNotEmpty && _sessionTitleController.text.isNotEmpty) {
+                  Navigator.of(context).pop();
+                  _createSession();
+                  showToast(AppString.started_new_session);
+                  Future.delayed(const Duration(seconds: 1), () {
+                    _showInterstitialAd();
+                  });
+                } else {
+                  _interstitialAd?.dispose();
+                  showToast(AppString.new_session_error);
+                }
+              },
+            ),
+          ],
         );
       },
     );
@@ -280,314 +240,281 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   @override
   Widget build(BuildContext context) {
-    // onTap: () => sessionTextFocusNode.requestFocus(),
-    return Obx(
-      () => SafeArea(
-        child: Scaffold(
-          resizeToAvoidBottomInset: false,
-          backgroundColor:
-              Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
-          body: isLoading
-              ? Center(
-                  child: Container(
-                      height: 200,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          RotateImage(70, 70),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          Text("Please Wait",
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white))
-                        ],
-                      )))
-              : Container(
-                  height: MediaQuery.of(context).size.height,
-                  padding: EdgeInsets.all(10),
+    final createSessionController = context.watch<CreateSessionController>();
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return SafeArea(
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor: Constant.DIARY_COLORS[createSessionController.selectedBackgroundColor],
+        body: _isLoading
+            ? Center(
+                child: SizedBox(
+                  height: 200,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: const [
+                      RotateImage(70, 70),
+                      SizedBox(height: 10),
+                      Text(
+                        "Please Wait",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            : SizedBox(
+                height: screenHeight,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
                   child: Column(
                     children: [
                       Expanded(
                         child: Container(
                           alignment: Alignment.center,
                           child: AutoSizeTextField(
-                            style: Constant
-                                .DIARY_FONT_STYLES[c.selectedFontIndex.value],
+                            style: Constant.DIARY_FONT_STYLES[createSessionController.selectedFontIndex],
                             maxLines: null,
                             minLines: 1,
-                            onChanged: (value){
-                              if(value!=null){
-                                box.put("text", value);
+                            onChanged: (value) {
+                              if (value.isNotEmpty) {
+                                _box.put("text", value);
                               }
-
                             },
-                            scrollPadding: EdgeInsets.all(20.0),
-                            controller: sessionTextEditingController,
-                            focusNode: sessionTextFocusNode,
+                            scrollPadding: const EdgeInsets.all(20.0),
+                            controller: _sessionTextEditingController,
+                            focusNode: _sessionTextFocusNode,
                             decoration: InputDecoration(
-
-                              contentPadding: EdgeInsets.all(10),
+                              contentPadding: const EdgeInsets.all(10),
                               focusedBorder: InputBorder.none,
                               disabledBorder: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               border: InputBorder.none,
                               focusedErrorBorder: InputBorder.none,
                               errorBorder: InputBorder.none,
-                              hintText:
-                                  "Start your text or voice note with Dear Claire",
-                              hintStyle: TextStyle(
-                                  color: Pallet.colorWhite, fontSize: 12.sp),
+                              hintText: "Start your text or voice note with Dear Claire",
+                              hintStyle: TextStyle(color: Pallet.colorWhite, fontSize: 12),
                             ),
                           ),
                         ),
                       ),
-                      recordFile != null
-                          ? _recordFileWidget()
-                          : SizedBox.shrink(),
+                      if (_recordFile != null) _recordFileWidget(),
                       Align(
-                          alignment: Alignment.bottomCenter,
-                          child: _imagesGridView()),
-                      SizedBox(
-                        height: 30.h,
-                      )
+                        alignment: Alignment.bottomCenter,
+                        child: _imagesGridView(),
+                      ),
+                      SizedBox(height: 30),
                     ],
                   ),
                 ),
-          bottomSheet: Container(
-              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
-              decoration: BoxDecoration(
-                color: Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Container(
-                      height: 20.h,
-                      width: 25.w,
-                      child: IconButton(
-                        alignment: Alignment.topCenter,
-                        icon: Icon(Icons.camera_enhance_rounded,
-                            size: 35,
-                            color: Pallet.colorWhite),
-                        onPressed: loadAssets,
-                      )),
-                  SizedBox(
-                    width: 30.w,
-                    height: 40,
-                  ),
-                  Container(
-                      height: 20.h,
-                      width: 25.w,
-                      child: IconButton(
-                        icon: Icon(Icons.emoji_emotions_outlined,
-                            color: Pallet.colorWhite),
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (BuildContext subcontext) {
-                              return Container(
-                                // height: 250.h,
-                                child: SingleChildScrollView(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(bottom: 10),
-                                    child: EmojiChooser(
-                                      onSelected: (emoji) {
-                                        appendEmojiToText(emoji);
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      )),
-                  SizedBox(
-                    width: 20.w,
-                  ),
-                  Container(
-                      height: 20.h,
-                      width: 25.w,
-                      child: IconButton(
-                        icon: Icon(Icons.text_fields, color: Pallet.colorWhite),
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: Text('Select Font'),
-                                  content: showFontSelectionDialog(context),
-                                );
-                              });
-                        },
-                      )),
-                  SizedBox(
-                    width: 20.w,
-                  ),
-                  Container(
-                      height: 20.h,
-                      width: 25.w,
-                      child: IconButton(
-                        icon: Icon(Icons.color_lens_rounded,
-                            color: Pallet.colorWhite),
-                        onPressed: () => c.changeColor(),
-                      )),
-                  SizedBox(
-                    width: 15.w,
-                  ),
-                  Container(
-                      height: 20.h,
-                      width: 25.w,
-                      child: IconButton(
-                        icon: Icon(Icons.mic_rounded, size: 35, color: Pallet.colorWhite,),
-                        onPressed: () async {
-                          var data = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => SoundRecorderWidget(
-                                        onRecordComplete: (recordFile) {},
-                                      )));
-                          if (data != null) {
-                            recordFile = data;
-                            setState(() {});
-                          }
-                        },
-                      )),
-                  SizedBox(
-                    width: 10.w,
-                  ),
-                ],
-              )),
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: Pallet.colorSplashScreen,
-            onPressed: () {
-              _showCardDialog();
-            },
-            tooltip: 'Send or Save',
-            child: RotateImage(45, 45),
+        bottomSheet: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          decoration: BoxDecoration(
+            color: Constant.DIARY_COLORS[createSessionController.selectedBackgroundColor],
           ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 20,
+                width: 25,
+                child: IconButton(
+                  alignment: Alignment.topCenter,
+                  icon: const Icon(Icons.camera_enhance_rounded, size: 35, color: Pallet.colorWhite),
+                  onPressed: _loadAssets,
+                ),
+              ),
+              const SizedBox(width: 30, height: 40),
+              SizedBox(
+                height: 20,
+                width: 25,
+                child: IconButton(
+                  icon: const Icon(Icons.emoji_emotions_outlined, color: Pallet.colorWhite),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (BuildContext subcontext) {
+                        return SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: EmojiChooser(
+                              onSelected: (emoji) {
+                                _appendEmojiToText(emoji);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 20),
+              SizedBox(
+                height: 20,
+                width: 25,
+                child: IconButton(
+                  icon: const Icon(Icons.text_fields, color: Pallet.colorWhite),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text('Select Font'),
+                          content: _showFontSelectionDialog(context),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 20),
+              SizedBox(
+                height: 20,
+                width: 25,
+                child: IconButton(
+                  icon: const Icon(Icons.color_lens_rounded, color: Pallet.colorWhite),
+                  onPressed: () => createSessionController.changeColor(),
+                ),
+              ),
+              const SizedBox(width: 15),
+              SizedBox(
+                height: 20,
+                width: 25,
+                child: IconButton(
+                  icon: const Icon(Icons.mic_rounded, size: 35, color: Pallet.colorWhite),
+                  onPressed: () async {
+                    final data = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SoundRecorderWidget(
+                          onRecordComplete: (recordFile) {},
+                        ),
+                      ),
+                    );
+                    if (data != null) {
+                      _recordFile = data;
+                      setState(() {});
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 10),
+            ],
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: Pallet.colorSplashScreen,
+          onPressed: () {
+            _showCardDialog();
+          },
+          tooltip: 'Send or Save',
+          child: const RotateImage(45, 45),
         ),
       ),
     );
   }
 
   Widget _recordFileWidget() {
-    return Container(
-      height: 60.h,
-      width: 60.w,
+    return SizedBox(
+      height: 60,
+      width: 60,
       child: Stack(
         fit: StackFit.expand,
         children: <Widget>[
           Center(
-              child: IconButton(
-                  icon: Icon(Icons.play_circle_fill_outlined,
-                      color: Colors.white, size: 40.r),
-                  onPressed: () {
-                    showDialog<void>(
-                      context: context,
-                      barrierDismissible: false, // user must tap button!
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          content: PlaySoundWidget(
-                            filePath: recordFile?.path,
-                          ),
-                        );
-                      },
+            child: IconButton(
+              icon: const Icon(Icons.play_circle_fill_outlined, color: Colors.white, size: 40),
+              onPressed: () {
+                showDialog<void>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      content: PlaySoundWidget(
+                        filePath: _recordFile?.path,
+                      ),
                     );
-                  })),
+                  },
+                );
+              },
+            ),
+          ),
           Positioned(
-              right: -5,
-              top: -9,
-              child: IconButton(
-                  icon: Icon(
-                    Icons.cancel,
-                    color: Colors.red,
-                    size: 24.r,
-                  ),
-                  onPressed: () => setState(() {
-                        recordFile = null;
-                      })))
+            right: -5,
+            top: -9,
+            child: IconButton(
+              icon: const Icon(Icons.cancel, color: Colors.red, size: 24),
+              onPressed: () => setState(() {
+                _recordFile = null;
+              }),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Future<void> loadAssets() async {
-    String error = 'No Error Detected';
-    try {
-      imageList = await MultiImagePicker.pickImages(
-        maxImages: 3,
-        enableCamera: true,
-        selectedAssets: c.images,
-        cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
-        materialOptions: MaterialOptions(
-          actionBarColor: "#abcdef",
-          actionBarTitle: "Dear Claire",
-          allViewTitle: "All Photos",
-          useDetailsView: false,
-          selectCircleStrokeColor: "#000000",
-        ),
-      );
-    } on Exception catch (e) {
-      error = e.toString();
-    }
+  Future<void> _loadAssets() async {
+    final imagePicker = ImagePicker();
+    final pickedFiles = await imagePicker.pickMultiImage();
 
     if (!mounted) return;
+
     setState(() {
-      c.images = imageList;
+      context.read<CreateSessionController>().images = pickedFiles;
     });
   }
 
-  Widget showFontSelectionDialog(BuildContext context) {
+  Widget _showFontSelectionDialog(BuildContext context) {
+    final createSessionController = context.read<CreateSessionController>();
     return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: Constant.ALTER_EGO_FONT_STYLES
-            .map((e) => ListTile(
-                  title: e,
-                  onTap: () {
-                    var index = Constant.ALTER_EGO_FONT_STYLES.indexOf(e);
-                    c.selectFont(index);
-                    Navigator.pop(context);
-                  },
-                ))
-            .toList());
+      mainAxisSize: MainAxisSize.min,
+      children: Constant.ALTER_EGO_FONT_STYLES.map((e) => ListTile(
+        title: e,
+        onTap: () {
+          final index = Constant.ALTER_EGO_FONT_STYLES.indexOf(e);
+          createSessionController.selectFont(index);
+          Navigator.pop(context);
+        },
+      )).toList(),
+    );
   }
 
   Widget _imagesGridView() {
+    final createSessionController = context.watch<CreateSessionController>();
     return Container(
       width: 500,
       alignment: Alignment.center,
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       child: GridView.count(
         shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 2,
-        children: List.generate(c.images.length, (index) {
-          Asset asset = c.images[index];
+        children: List.generate(createSessionController.images.length, (index) {
+          final image = createSessionController.images[index];
           return Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              AssetThumb(
-                asset: asset,
-                width: 300,
-                height: 400,
-              ),
+              Image.file(File(image.path)),
               Positioned(
-                  right: -2,
-                  top: -9,
-                  child: IconButton(
-                      icon: Icon(
-                        Icons.cancel,
-                        color: Colors.red,
-                        size: 18,
-                      ),
-                      onPressed: () => setState(() {
-                            c.images.removeAt(index);
-                          })))
+                right: -2,
+                top: -9,
+                child: IconButton(
+                  icon: const Icon(Icons.cancel, color: Colors.red, size: 18),
+                  onPressed: () => setState(() {
+                    createSessionController.images.removeAt(index);
+                  }),
+                ),
+              ),
             ],
           );
         }),
@@ -595,307 +522,59 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     );
   }
 
-  createSession() async {
+  Future<void> _createSession() async {
+    final createSessionController = context.read<CreateSessionController>();
     setState(() {
-      isLoading = true;
+      _isLoading = true;
     });
 
-    userModel = await _firebaseServices.getUserInfo();
-    CreateSessionModel sessionObject = CreateSessionModel();
-    if (recordFile != null) {
-      sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile!);
+    _userModel = await _firebaseServices.getUserInfo();
+    final sessionObject = CreateSessionModel();
+    if (_recordFile != null) {
+      sessionObject.audioUrl = await _firebaseServices.uploadSound(_recordFile!);
     }
 
-    List<String> imageDownloadUrls = <String>[];
-    for (var image in imageList) {
+    final imageDownloadUrls = <String>[];
+    for (final image in _imageList) {
       imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
     }
     sessionObject.imageUrls = imageDownloadUrls;
-  
-    /// Adding a category tag to every session created.
 
-    if (sessionTextEditingController.text.contains('love') &
-        sessionTextEditingController.text.contains('relationship')) {
+    if (_sessionTextEditingController.text.contains('love') && _sessionTextEditingController.text.contains('relationship')) {
       sessionObject.category1 = 'love and relationship';
       sessionObject.category2 = 'sex and dating';
       sessionObject.category3 = 'boyfriend and girlfriend';
       sessionObject.category4 = 'birthdays and anniversary';
-
-
     }
 
-    if (sessionTextEditingController.text.contains('marriage') &
-        sessionTextEditingController.text.contains('family')) {
-      sessionObject.category1 = 'marriage and family';
-      sessionObject.category2 = 'husband and wife';
-      sessionObject.category3 = 'birthdays and anniversary';
-
-    }
-
-    if (sessionTextEditingController.text.contains('sex') &
-        sessionTextEditingController.text.contains('dating')) {
-      sessionObject.category1 = 'sex and dating';
-      sessionObject.category2 = 'love and relationship';
-      sessionObject.category3 = 'boyfriend and girlfriend';
-
-
-    }
-
-    if (sessionTextEditingController.text.contains('school') &
-        sessionTextEditingController.text.contains('education')) {
-      sessionObject.category1 = 'school and education';
-      sessionObject.category2 = 'work and career';
-    }
-
-    if (sessionTextEditingController.text.contains('work') &
-        sessionTextEditingController.text.contains('career')) {
-      sessionObject.category1 = 'work and career';
-      sessionObject.category2 = 'business and entrepreneur';
-    }
-
-    if (sessionTextEditingController.text.contains('hate') &
-        sessionTextEditingController.text.contains('abuse')) {
-      sessionObject.category1 = 'hate and abuse';
-      sessionObject.category2 = 'depression and anxiety';
-      sessionObject.category3 = 'sad and depressed';
-
-    }
-
-    if (sessionTextEditingController.text.contains('friends') &
-        sessionTextEditingController.text.contains('fun')) {
-      sessionObject.category1 = 'friends and fun';
-      sessionObject.category2 = 'life and living';
-
-    }
-
-    if (sessionTextEditingController.text.contains('depression') &
-        sessionTextEditingController.text.contains('anxiety')) {
-      sessionObject.category1 = 'depression and anxiety';
-      sessionObject.category2 = 'sad and depressed';
-      sessionObject.category3 = 'single and lonely';
-
-    }
-
-    if (sessionTextEditingController.text.contains('help') &
-        sessionTextEditingController.text.contains('charity')) {
-      sessionObject.category1 = 'help and charity';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('sick') &
-        sessionTextEditingController.text.contains('health') &
-        sessionTextEditingController.text.contains('fitness')
-    ) {
-      sessionObject.category1 = 'health and fitness';
-      sessionObject.category2 = 'life and living';
-      sessionObject.category3 = 'food and drink';
-
-    }
-
-    if (sessionTextEditingController.text.contains('husband') &
-        sessionTextEditingController.text.contains('wife')) {
-      sessionObject.category1 = 'husband and wife';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'life and living';
-      sessionObject.category4 = 'birthdays and anniversary';
-
-
-    }
-
-    if (sessionTextEditingController.text.contains('boyfriend') &
-        sessionTextEditingController.text.contains('girlfriend')) {
-      sessionObject.category1 = 'love and relationship';
-      sessionObject.category2 = 'sex and dating';
-      sessionObject.category3 = 'birthdays and anniversary';
-      sessionObject.category4 = 'boyfriend and girlfriend';
-
-
-    }
-
-    if (sessionTextEditingController.text.contains('food') &
-        sessionTextEditingController.text.contains('drink')) {
-      sessionObject.category1 = 'food and drink';
-      sessionObject.category2 = 'health and fitness';
-      sessionObject.category3 = 'friends and fun';
-
-    }
-
-    if (sessionTextEditingController.text.contains('birthday') &
-        sessionTextEditingController.text.contains('anniversary')) {
-      sessionObject.category1 = 'birthday and anniversary';
-      sessionObject.category2 = 'love and relationship';
-      sessionObject.category3 = 'marriage and family';
-      sessionObject.category4 = 'friends and fun';
-
-
-    }
-
-    if (sessionTextEditingController.text.contains('prayer') &
-        sessionTextEditingController.text.contains('god')) {
-      sessionObject.category1 = 'prayer and thanksgiving';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('childhood') &
-        sessionTextEditingController.text.contains('memory')) {
-      sessionObject.category1 = 'childhood and memory';
-      sessionObject.category2 = 'life and living';
-      sessionObject.category3 = 'marriage and family';
-      sessionObject.category4 = 'parents and children';
-
-
-    }
-
-    if (sessionTextEditingController.text.contains('parents') &
-        sessionTextEditingController.text.contains('children')) {
-      sessionObject.category1 = 'parents and children';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-      sessionObject.category4 = 'childhood and memory';
-
-    }
-
-    if (sessionTextEditingController.text.contains('business') &
-        sessionTextEditingController.text.contains('entrepreneur')) {
-      sessionObject.category1 = 'business and entrepreneur';
-      sessionObject.category2 = 'work and career';
-      sessionObject.category3 = 'school and education';
-
-    }
-
-    if (sessionTextEditingController.text.contains('art') &
-        sessionTextEditingController.text.contains('photography')) {
-      sessionObject.category1 = 'arts and photography';
-      sessionObject.category2 = 'work and career';
-      sessionObject.category3 = 'business and entrepreneur';
-
-    }
-
-    if (sessionTextEditingController.text.contains('music') &
-        sessionTextEditingController.text.contains('video')) {
-      sessionObject.category1 = 'music and videos';
-      sessionObject.category2 = 'arts and photography';
-      sessionObject.category3 = 'work and career';
-      sessionObject.category4 = 'comedy and entertainment';
-
-
-    }
-
-    if (sessionTextEditingController.text.contains('riddles') &
-        sessionTextEditingController.text.contains('jokes')) {
-      sessionObject.category1 = 'riddles and jokes';
-      sessionObject.category2 = 'friends Aad fun';
-      sessionObject.category3 = 'comedy and entertainment';
-
-    }
-
-    if (sessionTextEditingController.text.contains('television') &
-        sessionTextEditingController.text.contains('movie')) {
-      sessionObject.category1 = 'television and movies';
-      sessionObject.category2 = 'music Aad videos';
-      sessionObject.category3 = 'arts and photography';
-      sessionObject.category4 = 'comedy and entertainment';
-
-
-
-    }
-
-    if (sessionTextEditingController.text.contains('puzzle') &
-        sessionTextEditingController.text.contains('game')) {
-      sessionObject.category1 = 'puzzles and games';
-      sessionObject.category2 = 'riddles Aad jokes';
-      sessionObject.category3 = 'comedy and entertainment';
-
-    }
-
-    if (sessionTextEditingController.text.contains('life') &
-        sessionTextEditingController.text.contains('living')) {
-      sessionObject.category1 = 'life and living';
-      sessionObject.category2 = 'happy and blessed';
-      sessionObject.category3 = 'childhood and memory';
-      sessionObject.category4 = 'work and career';
-
-
-    }
-
-    if (sessionTextEditingController.text.contains('single') &
-        sessionTextEditingController.text.contains('lonely')) {
-      sessionObject.category1 = 'single and lonely';
-      sessionObject.category2 = 'sad Aad depressed';
-      sessionObject.category3 = 'love and relationship';
-
-    }
-
-    if (sessionTextEditingController.text.contains('sad') &
-        sessionTextEditingController.text.contains('depressed')) {
-      sessionObject.category1 = 'sad and depressed';
-      sessionObject.category2 = 'single and lonely';
-      sessionObject.category3 = 'life and living';
-
-    }
-
-    if (sessionTextEditingController.text.contains('brother') &
-        sessionTextEditingController.text.contains('sister')) {
-      sessionObject.category1 = 'brothers and sisters';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-
-    }
-
-    if (sessionTextEditingController.text.contains('comedy') &
-        sessionTextEditingController.text.contains('entertainment')) {
-      sessionObject.category1 = 'comedy and entertainment';
-      sessionObject.category2 = 'music Aad videos';
-      sessionObject.category3 = 'riddles and jokes';
-
-    }
-
-    if (sessionTextEditingController.text.contains('happy') &
-        sessionTextEditingController.text.contains('blessed')) {
-      sessionObject.category1 = 'happy and blessed';
-      sessionObject.category2 = 'life Aad living';
-      sessionObject.category3 = 'love and relationship';
-      sessionObject.category4 = 'marriage and family';
-
-
-    }
-
-    sessionObject.userAvatarUrl = userModel.avatarUrl;
-    sessionObject.userNickname = userModel.nickname;
-    sessionObject.title = sessionTitleController.text;
-    sessionObject.private = c.acceptReplies.value;
-    sessionObject.repliesEnabled = c.acceptReplies.value;
-    sessionObject.message = sessionTextEditingController.text;
-    sessionObject.colorHex = Constant.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
-    sessionObject.sessionId = uuid.v1();
-    sessionObject.userId = currentUser!.uid;
-    sessionObject.moodId = Constant.USER_SESSION_MOODS.indexOf(c.sessionMood.value);
+    sessionObject.userAvatarUrl = _userModel.avatarUrl;
+    sessionObject.userNickname = _userModel.nickname;
+    sessionObject.title = _sessionTitleController.text;
+    sessionObject.private = createSessionController.acceptReplies;
+    sessionObject.repliesEnabled = createSessionController.acceptReplies;
+    sessionObject.message = _sessionTextEditingController.text;
+    sessionObject.colorHex = Constant.DIARY_COLORS_HEXCODE[createSessionController.selectedBackgroundColor];
+    sessionObject.sessionId = _uuid.v1();
+    sessionObject.userId = _currentUser!.uid;
+    sessionObject.moodId = Constant.USER_SESSION_MOODS.indexOf(createSessionController.sessionMood);
     sessionObject.location = _location;
 
-    bool isSuccessfull =
-        await _firebaseServices.createSession(session: sessionObject);
+    final isSuccessful = await _firebaseServices.createSession(session: sessionObject);
 
-    box.remove("draft");
-    categorize(sessionObject);
+    _box.remove("draft");
+    _categorize(sessionObject);
 
-
-    navigateToNewSession(await _firebaseServices.getSingleSession(
-        sessionId: sessionObject.sessionId));
-
-    // navigateToNewSession(await _firebaseServices.getSingleSession(
-    //     sessionId: sessionObject.sessionId));
+    final newSession = await _firebaseServices.getSingleSession(sessionId: sessionObject.sessionId);
+    _navigateToNewSession(newSession);
   }
 
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
-  CreateSessionModel sessionObject = CreateSessionModel();
-
-  // Create interstitial ad.
 
   void _createInterstitialAd() {
     InterstitialAd.load(
       adUnitId: "ca-app-pub-3940256099942544/1033173712",
-      request: AdRequest(),
+      request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
           _interstitialAd = ad;
@@ -929,149 +608,20 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     }
   }
 
-  void navigateToNewSession(CreateSessionModel? session) {
-    print('done');
+  void _navigateToNewSession(CreateSessionModel? session) {
     Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (_) => SessionPostDetailsScreen(
-                  sessionModel: session,
-                )
-        )
+      context,
+      MaterialPageRoute(
+        builder: (_) => SessionPostDetailsScreen(
+          sessionModel: session,
+        ),
+      ),
     );
   }
 
-  void categorize(CreateSessionModel createSessionModel) {
-    if (createSessionModel.message!.contains('love') &&
-        createSessionModel.message!.contains('relationship')) {
-      _firebaseServices.addToCategory(
-          AppString.loveAndRelationship, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('marriage') &&
-        createSessionModel.message!.contains('family')) {
-      _firebaseServices.addToCategory(
-          AppString.marriageAndFamily, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('sex') &&
-        createSessionModel.message!.contains('dating')) {
-      _firebaseServices.addToCategory(
-          AppString.sexAndDating, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('school') &&
-        createSessionModel.message!.contains('education')) {
-      _firebaseServices.addToCategory(
-          AppString.schoolAndEducation, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('work') &&
-        createSessionModel.message!.contains('career')) {
-      _firebaseServices.addToCategory(
-          AppString.workAndCareer, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('hate') &&
-        createSessionModel.message!.contains('abuse')) {
-      _firebaseServices.addToCategory(
-          AppString.hateAndAbuse, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('friends') &&
-        createSessionModel.message!.contains('fun')) {
-      _firebaseServices.addToCategory(
-          AppString.friendsAndFun, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('depression') &&
-        createSessionModel.message!.contains('anxiety')) {
-      _firebaseServices.addToCategory(
-          AppString.depressionAndAnxiety, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('help') &&
-        createSessionModel.message!.contains('charity')) {
-      _firebaseServices.addToCategory(
-          AppString.helpAndCharity, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('health') &&
-        createSessionModel.message!.contains('fitness')) {
-      _firebaseServices.addToCategory(
-          AppString.healthAndFitness, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('husband') &&
-        createSessionModel.message!.contains('wife')) {
-      _firebaseServices.addToCategory(
-          AppString.husbandAndWife, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('boyfriend') &&
-        createSessionModel.message!.contains('girlfriend')) {
-      _firebaseServices.addToCategory(
-          AppString.boyfriendAndGirlfriend, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('food') &&
-        createSessionModel.message!.contains('drink')) {
-      _firebaseServices.addToCategory(
-          AppString.foodAndDrink, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('birthday') &&
-        createSessionModel.message!.contains('anniversary')) {
-      _firebaseServices.addToCategory(
-          AppString.birthdayAndAnniversary, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('prayer') &&
-        createSessionModel.message!.contains('thanksgiving')) {
-      _firebaseServices.addToCategory(
-          AppString.prayerAndThanksgiving, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('childhood') &&
-        createSessionModel.message!.contains('memory')) {
-      _firebaseServices.addToCategory(
-          AppString.childhoodAndMemory, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('parents') &&
-        createSessionModel.message!.contains('children')) {
-      _firebaseServices.addToCategory(
-          AppString.parentsAndChildren, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('business') &&
-        createSessionModel.message!.contains('entrepreneur')) {
-      _firebaseServices.addToCategory(
-          AppString.businessAndEntrepreneur, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('art') &&
-        createSessionModel.message!.contains('photography')) {
-      _firebaseServices.addToCategory(
-          AppString.artsAndPhotography, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('music') &&
-        createSessionModel.message!.contains('videos')) {
-      _firebaseServices.addToCategory(
-          AppString.musicAndVideos, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('riddles') &&
-        createSessionModel.message!.contains('jokes')) {
-      _firebaseServices.addToCategory(
-          AppString.riddlesAndJokes, createSessionModel);
-    }
-
-    if (createSessionModel.message!.contains('television') &&
-        createSessionModel.message!.contains('movies')) {
-      _firebaseServices.addToCategory(
-          AppString.televisionAndMovies, createSessionModel);
+  void _categorize(CreateSessionModel createSessionModel) {
+    if (createSessionModel.message!.contains('love') && createSessionModel.message!.contains('relationship')) {
+      _firebaseServices.addToCategory(AppString.loveAndRelationship, createSessionModel);
     }
   }
 }

@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/Admob/ad_state.dart';
 import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
 import 'package:dear_claire/ui/featured/model/session.dart';
 import 'package:dear_claire/ui/featured/widget/post_details_widget.dart';
@@ -11,78 +10,27 @@ import 'package:dear_claire/widgets/chat_edit_field.dart';
 import 'package:dear_claire/widgets/comment_widget.dart';
 import 'package:dear_claire/widgets/toast.dart';
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:provider/provider.dart';
 
 class AlterEgoModeSessionDetail extends StatefulWidget {
-  var featuredSessionModel;
+  final Session featuredSessionModel;
 
-  AlterEgoModeSessionDetail({Key? key, required this.featuredSessionModel})
-      : super(key: key);
+  const AlterEgoModeSessionDetail({super.key, required this.featuredSessionModel});
 
   @override
   _AlterEgoModeSessionDetailState createState() =>
-      _AlterEgoModeSessionDetailState(featuredSessionModel);
+      _AlterEgoModeSessionDetailState();
 }
 
 class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
-  Session? featuredSessionModel;
-
-  _AlterEgoModeSessionDetailState(this.featuredSessionModel);
-
   List<CommentSessionModel> _commentSessionList = [];
-
-
-  // Admob Ad Units.
-  late BannerAd alterEgoModeSessionDetailTopBanner;
-  late BannerAd alterEgoModeSessionDetailBottomBanner;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final adState = Provider.of<AdState>(context);
-
-    // Implement a top location banner ad unit.
-    adState.initialization.then((status) {
-      setState(() {
-        alterEgoModeSessionDetailTopBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.alterEgoModeTopCommentBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdFailedToLoad: (ad, error) {
-                ad.dispose();
-              },
-            )
-        )..load();
-      });
-    });
-
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
-        alterEgoModeSessionDetailBottomBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.alterEgoModeBottomCommentBannerAdUnitId,
-            request: AdRequest(),
-          listener: BannerAdListener(
-            onAdFailedToLoad: (ad, error) {
-              ad.dispose();
-            },
-          )
-        )..load();
-      });
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: HexColor.fromHex(featuredSessionModel!.colorHex!),
-        title: Text(featuredSessionModel!.title!),
+        backgroundColor: HexColor.fromHex(widget.featuredSessionModel.colorHex!),
+        title: Text(widget.featuredSessionModel.title!),
         elevation: 0,
       ),
       body: Stack(
@@ -91,65 +39,43 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
           ListView(
             children: [
               PostDetailsWidget(
-                sessionId: featuredSessionModel!.sessionId,
+                sessionId: widget.featuredSessionModel.sessionId,
               ),
               StreamBuilder(
-                  stream: firebaseServices.getFeaturedSessionsComments(
-                      featuredSessionModel!.sessionId!),
-                  builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
-                    if (snapShot.hasError) {
-                      return Container();
-                    }
-
-                    if (snapShot.hasData) {
-                      /// clear list before adding now items
-                      _commentSessionList.clear();
-                      snapShot.data!.docs
-                          .map((e) => _commentSessionList
-                              .add(CommentSessionModel.fromJson(e.data())))
-                          .toList();
-                      return Column(
-
-                        children: [
-
-                          // Top ad unit is here
-                          if(alterEgoModeSessionDetailTopBanner == null)
-                            SizedBox(height: 70)
-                          else
-                            Container(
-                              height: 60,
-                              child: AdWidget(ad: alterEgoModeSessionDetailTopBanner),
-                            ),
-                          ..._commentSessionList
-                              .map((element) => CommentWidget(
-                                    commentSessionModel: element,
-                            onPressed: () => _updateReaction(
-                                element, featuredSessionModel!),
-                            onShare: () => _share(element.message),
-                                  ))
-                              .toList(),
-
-                          // Bottom ad unit is here
-                          if(alterEgoModeSessionDetailBottomBanner == null)
-                            SizedBox(height: 70)
-                          else
-                            Container(
-                              height: 60,
-                              child: AdWidget(ad: alterEgoModeSessionDetailBottomBanner),
-                            ),
-                        ],
-                      );
-                    }
+                stream: firebaseServices
+                    .getFeaturedSessionsComments(widget.featuredSessionModel.sessionId!),
+                builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                  if (snapShot.hasError) {
                     return Container();
-                  }),
-              SizedBox(
+                  }
+
+                  if (snapShot.hasData) {
+                    _commentSessionList = snapShot.data!.docs
+                        .map((e) => CommentSessionModel.fromJson(e.data() as Map<String, dynamic>))
+                        .toList();
+
+                    return Column(
+                      children: _commentSessionList
+                          .map((element) => CommentWidget(
+                                commentSessionModel: element,
+                                onPressed: () =>
+                                    _updateReaction(element, widget.featuredSessionModel),
+                                onShare: () => _share(element.message),
+                              ))
+                          .toList(),
+                    );
+                  }
+                  return Container();
+                },
+              ),
+              const SizedBox(
                 height: 70,
               )
             ],
           ),
           ChatEditField(
             onTap: (String comment) =>
-                _sendComment(comment, featuredSessionModel!),
+                _sendComment(comment, widget.featuredSessionModel),
           )
         ],
       ),
@@ -162,48 +88,50 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     final _userModel = await firebaseServices.getUserInfo();
 
     final _commentModel = CommentSessionModel(
-        alterEgoId: _userModel.alterEgoId,
-        audioUrl: '',
-        commentId: '',
-        flagged: session.flagged!,
-        imageUrls: [],
-        isUserAdmin: true,
-        message: comment,
-        timeCreated: Timestamp.now(),
-        userAvatarUrl: _userModel.avatarUrl,
-        userId: _userModel.userId,
-        userNickname: _userModel.nickname);
+      alterEgoId: _userModel.alterEgoId,
+      audioUrl: '',
+      commentId: '',
+      flagged: session.flagged!,
+      imageUrls: [],
+      isUserAdmin: true,
+      message: comment,
+      timeCreated: Timestamp.now(),
+      userAvatarUrl: _userModel.avatarUrl,
+      userId: _userModel.userId,
+      userNickname: _userModel.nickname,
+    );
 
     firebaseServices.addComment(
-        title: session.title ?? '',
-        docId: session.sessionId!,
-        sender: _userModel.userType == 'ADMIN' ? 'Claire' : _userModel.nickname!,
-        map: _commentModel.toJson());
+      title: session.title ?? '',
+      docId: session.sessionId!,
+      sender: _userModel.userType == 'ADMIN' ? 'Claire' : _userModel.nickname!,
+      map: _commentModel.toJson(),
+    );
   }
 
-  void _updateReaction(
-      CommentSessionModel? commentSessionModel, Session session) async {
+  void _updateReaction(CommentSessionModel? commentSessionModel, Session session) async {
     if (commentSessionModel!.commentId!.isEmpty) {
-      showToast('You cann\'t react to this post at this time.');
+      showToast('You can\'t react to this post at this time.');
       return;
     }
     if (!await firebaseServices.isUserSignIn(context)) return;
 
     final _userModel = await firebaseServices.getUserInfo();
     firebaseServices.addThanksReaction(
-        commentID: commentSessionModel.commentId!,
-        docId: session.sessionId!,
-        map: commentSessionModel.thanks!.contains(_userModel.userId)
-            ? {
-          'thanks': FieldValue.arrayRemove([_userModel.userId])
-        }
-            : {
-          'thanks': FieldValue.arrayUnion([_userModel.userId])
-        });
+      commentID: commentSessionModel.commentId!,
+      docId: session.sessionId!,
+      map: commentSessionModel.thanks!.contains(_userModel.userId)
+          ? {
+              'thanks': FieldValue.arrayRemove([_userModel.userId])
+            }
+          : {
+              'thanks': FieldValue.arrayUnion([_userModel.userId])
+            },
+    );
   }
 
-  _share(String? message) {
-    String _message = '''
+  void _share(String? message) {
+    final _message = '''
     Here is an anonymous advise from Dear Claire - Secret Diary Chat:
     
      $message  

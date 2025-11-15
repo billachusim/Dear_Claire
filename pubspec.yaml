@@ -14,58 +14,33 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.10+1
   dio: ^5.4.3+1
-  cached_network_image: ^3.3.1
-  permission_handler: ^11.3.1
+  cached_network_image: ^3.4.1
+  permission_handler: ^12.0.1
   image_picker: ^1.1.2
-  firebase_core: ^3.1.0
-  firebase_crashlytics: ^4.0.1
-  firebase_analytics: ^11.0.1
-  firebase_messaging: ^15.0.1
-  cloud_firestore: ^5.0.1
-  flutter_local_notifications: ^17.1.2
+  firebase_core: ^4.2.1
+  firebase_crashlytics: ^5.0.4
+  firebase_analytics: ^12.0.4
+  firebase_messaging: ^16.0.4
+  cloud_firestore: ^6.1.0
+  flutter_local_notifications: ^19.5.0
   http: ^1.2.1
-  fluttertoast: ^8.2.6
-  share_plus: ^9.0.0
-  firebase_auth: ^5.1.0
+  fluttertoast: ^9.0.0
+  share_plus: ^12.0.1
+  firebase_auth: ^6.1.2
   provider: ^6.1.2
-  firebase_database: ^11.0.1
-  flutter_reaction_button: ^2.0.2
-  emoji_picker_flutter: ^2.2.0
+  firebase_database: ^12.0.4
   google_fonts: ^6.2.1
-  get: ^4.6.6
-  flutter_screenutil: ^5.9.3
-  flutter_sound: ^9.3.0
-  audioplayers: ^6.0.0
-  wave: ^0.2.2
-  page_transition: ^2.1.0
   logger: ^2.3.0
-  firebase_storage: ^12.0.1
+  firebase_storage: ^13.0.4
   uuid: ^4.4.0
   shared_preferences: ^2.2.3
-  geocoding: ^3.0.0
-  geolocator: ^12.0.0
-  flutterwave_standard: ^1.0.8
   url_launcher: ^6.3.0
-  smooth_page_indicator: ^1.1.0
-  timezone: ^0.9.3
-  table_calendar: ^3.1.1
-  auto_size_text_field: ^1.0.1
-  google_mobile_ads: ^5.1.0
-  universal_html: ^2.2.4
-  flip_card: ^0.7.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  algolia: ^1.2.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: "^0.13.1"
-
-flutter_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/images/icon.jpeg"
 
 flutter:
 
