@@ -33,6 +33,7 @@ class Mood {
         return mood.name;
       }
     }
+    return null;
   }
 
 }

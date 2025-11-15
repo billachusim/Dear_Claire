@@ -606,14 +606,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile!);
     }
 
-    if (imageList != null) {
-      List<String> imageDownloadUrls = <String>[];
-      for (var image in imageList) {
-        imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
-      }
-      sessionObject.imageUrls = imageDownloadUrls;
+    List<String> imageDownloadUrls = <String>[];
+    for (var image in imageList) {
+      imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
     }
-
+    sessionObject.imageUrls = imageDownloadUrls;
+  
     /// Adding a category tag to every session created.
 
     if (sessionTextEditingController.text.contains('love') &
