@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/helper.dart';
-import 'package:dear_claire/utils/strings.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/helper.dart';
+import 'package:clairediary/utils/strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';

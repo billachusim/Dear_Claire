@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/featured/model/session.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
 
 class ReactionHandler {
   /// use the index to retrieve what the users reaction was

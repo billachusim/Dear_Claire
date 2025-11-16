@@ -3,22 +3,21 @@ import 'dart:convert';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/chats/chatrooms.dart';
-import 'package:dear_claire/ui/dairy/diary.dart';
-import 'package:dear_claire/ui/ego-profile/profile.dart';
-import 'package:dear_claire/ui/featured/featured_session_screen.dart';
-import 'package:dear_claire/ui/followed/followed.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/utils/strings.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
+import 'package:clairediary/ui/chats/chatrooms.dart';
+import 'package:clairediary/ui/dairy/diary.dart';
+import 'package:clairediary/ui/ego-profile/profile.dart';
+import 'package:clairediary/ui/featured/featured_session_screen.dart';
+import 'package:clairediary/ui/followed/followed.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/utils/strings.dart';
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shake/shake.dart';
@@ -148,11 +147,11 @@ class _HomeDashboardPageState extends State<HomePage>
     super.initState();
     getEgoInfo();
     _title = "Dear Claire";
-    shakeDevice();
+    //shakeDevice();
     AppTrackingTransparency.requestTrackingAuthorization();
   }
 
-  shakeDevice() async {
+  /*shakeDevice() async {
     detector = ShakeDetector.waitForStart(
       onPhoneShake: () async {
         var _type = FeedbackType.error;
@@ -175,7 +174,7 @@ class _HomeDashboardPageState extends State<HomePage>
     await Future.delayed(Duration(seconds: 1), () {
       detector.startListening();
     });
-  }
+  }*/
 
   dispose() {
     super.dispose();

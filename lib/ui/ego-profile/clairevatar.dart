@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/services/user_model.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/strings.dart';
+import 'package:clairediary/services/firebase_services.dart';
+import 'package:clairediary/services/user_model.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';

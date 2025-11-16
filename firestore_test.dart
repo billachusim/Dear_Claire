@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/utils/color.dart';
+import 'package:clairediary/utils/color.dart';
 import 'package:flutter/material.dart';
 
 class FirstoreTest extends StatelessWidget {

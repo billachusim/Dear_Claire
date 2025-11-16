@@ -1,6 +1,6 @@
-import 'package:dear_claire/ui/featured/model/session.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/widgets/ego_mode_session_card.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/widgets/ego_mode_session_card.dart';
 import 'package:flutter/material.dart';
 import 'empty_session_widget.dart';
 

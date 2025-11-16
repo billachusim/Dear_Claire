@@ -1,17 +1,18 @@
 import 'dart:io';
 import 'dart:ui';
-import 'package:dear_claire/Automations/claireminder.dart';
-import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/services/notification.dart';
-import 'package:dear_claire/ui/chats/chatrooms.dart';
-import 'package:dear_claire/ui/create_session/create_session_controller.dart';
-import 'package:dear_claire/ui/create_session/create_session_page.dart';
-import 'package:dear_claire/ui/ego-profile/profile.dart';
-import 'package:dear_claire/ui/featured/notified_session_details.dart';
-import 'package:dear_claire/ui/games/games_home.dart';
-import 'package:dear_claire/ui/routes/routes.dart';
-import 'package:dear_claire/ui/splash_screen/splash.dart';
-import 'package:dear_claire/utils/color.dart';
+import 'package:clairediary/ui/routes/routes.dart';
+import 'package:clairediary/Automations/claireminder.dart';
+import 'package:clairediary/services/firebase_services.dart';
+import 'package:clairediary/services/notification.dart';
+import 'package:clairediary/ui/chats/chatrooms.dart';
+import 'package:clairediary/ui/create_session/create_session_controller.dart';
+import 'package:clairediary/ui/create_session/create_session_page.dart';
+import 'package:clairediary/ui/ego-profile/profile.dart';
+import 'package:clairediary/ui/featured/notified_session_details.dart';
+import 'package:clairediary/ui/games/games_home.dart';
+import 'package:clairediary/ui/routes/routes.dart';
+import 'package:clairediary/ui/splash_screen/splash.dart';
+import 'package:clairediary/utils/color.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -102,20 +103,33 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   NotificationDetails _notificationDetails() {
     return NotificationDetails(
-        android: AndroidNotificationDetails(
-            channel.id, channel.name,
-            color: Pallet.colorPrimary,
-            playSound: true,
-            icon: '@drawable/claire_icon',
-            enableLights: true,
-            enableVibration: true,
-            showWhen: true,
-            channelShowBadge: true),
-        iOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true));
+      android: AndroidNotificationDetails(
+        channel.id,
+        channel.name,
+        channelDescription: 'Notifications for Dear Claire app',
+        importance: Importance.max,
+        priority: Priority.max,
+        playSound: true,
+        enableVibration: true,
+        enableLights: true,
+        ledColor: const Color(0xFFe91e63),
+        ledOnMs: 1000,
+        ledOffMs: 500,
+        showWhen: true,
+        channelShowBadge: true,
+        icon: '@drawable/claire_icon',
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        badgeNumber: 1, // you can manage this dynamically if needed
+        interruptionLevel: InterruptionLevel.active, // iOS 15+ important
+        // sound can be customized with: sound: 'custom_sound.aiff',
+      ),
+    );
   }
+
 
 
   @override
@@ -136,77 +150,62 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
 
 
-
   void triggerNotifications() async {
-
     FirebaseMessaging messaging = FirebaseMessaging.instance;
 
+    // Create Android notification channel
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
 
-    await FirebaseMessaging.instance
-        .setForegroundNotificationPresentationOptions(
+    // Request foreground notification permissions
+    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
 
-    final InitializationSettings initializationSettings =
-    InitializationSettings(
+    // Initialize notifications
+    final initializationSettings = InitializationSettings(
       android: AndroidInitializationSettings("@drawable/claire_icon"),
       iOS: DarwinInitializationSettings(
-        requestSoundPermission: false,
-        requestBadgePermission: false,
-        requestAlertPermission: false,
-          onDidReceiveLocalNotification: (id, title, body, payload) async {
-            print('onDidReceiveLocalNotification: $id, $title, $body, $payload');
-            showDialog(
-              context: context,
-              builder: (BuildContext context) => CupertinoAlertDialog(
-                title: Text(title!),
-                content: Text(body!),
-                actions: [
-                  CupertinoDialogAction(
-                    isDefaultAction: true,
-                    child: Text('Ok'),
-                    onPressed: () async {
-                      Navigator.of(context, rootNavigator: true).pop();
-                      if (payload != null){
-                      print(payload);
-                      if(payload == 'room') {
-                      navService.pushNamed('/diaryRooms', args: payload);
-                      }
-                      else if(payload == 'wallet') {
-                      navService.pushNamed('/egoPage', args: payload);
-                      }
-                      else if(payload == 'claireminder') {
-                      navService.pushNamed('/createSession', args: payload);
-                      }
-                      else if(payload == 'game') {
-                        navService.pushNamed('/games', args: payload);
-                      }
-                      else if(payload == 'createSession') {
-                      navService.pushNamed('/createSession', args: payload);
-                      }
-                      else if(payload == null) {
-                      navService.pushNamed('/createSession', args: payload);
-                      }
-                      else                    navService.pushNamed('/notifiedSessionDetails', args: payload);
-
-                      }
-                      else navService.pushNamed('/egoPage', args: payload!);
-                    },
-                  )
-                ],
-              ),
-            );
-          }
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
       ),
     );
 
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) async {
+        final payload = response.payload;
+        if (payload != null) {
+          print('Notification tapped: $payload');
+          switch (payload) {
+            case 'room':
+              navService.pushNamed('/diaryRooms', args: payload);
+              break;
+            case 'wallet':
+              navService.pushNamed('/egoPage', args: payload);
+              break;
+            case 'claireminder':
+            case 'createSession':
+              navService.pushNamed('/createSession', args: payload);
+              break;
+            case 'game':
+              navService.pushNamed('/games', args: payload);
+              break;
+            default:
+              navService.pushNamed('/notifiedSessionDetails', args: payload);
+          }
+        } else {
+          navService.pushNamed('/egoPage', args: payload.toString());
+        }
+      },
+    );
 
+    // Request iOS notification permissions
     NotificationSettings settings = await messaging.requestPermission(
       alert: true,
       announcement: true,
@@ -225,169 +224,38 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       print('User declined or has not accepted permission');
     }
 
-
-    await flutterLocalNotificationsPlugin.initialize(
-      InitializationSettings(
-        android: AndroidInitializationSettings("@drawable/claire_icon"),
-        iOS: DarwinInitializationSettings(
-            onDidReceiveLocalNotification: (id, title, body, payload) async {
-              print('onDidReceiveLocalNotification: $id, $title, $body, $payload');
-              showDialog(
-                context: context,
-                builder: (BuildContext context) => CupertinoAlertDialog(
-                  title: Text(title!),
-                  content: Text(body!),
-                  actions: [
-                    CupertinoDialogAction(
-                      isDefaultAction: true,
-                      child: Text('Ok'),
-                      onPressed: () async {
-                        Navigator.of(context, rootNavigator: true).pop();
-                        if (payload != null){
-                          print(payload);
-                          if(payload == 'room') {
-                            navService.pushNamed('/diaryRooms', args: payload);
-                          }
-                          else if(payload == 'wallet') {
-                            navService.pushNamed('/egoPage', args: payload);
-                          }
-                          else if(payload == 'claireminder') {
-                            navService.pushNamed('/createSession', args: payload);
-                          }
-                          else if(payload == 'game') {
-                            navService.pushNamed('/games', args: payload);
-                          }
-                          else if(payload == 'createSession') {
-                            navService.pushNamed('/createSession', args: payload);
-                          }
-                          else if(payload == null) {
-                            navService.pushNamed('/createSession', args: payload);
-                          }
-                          else
-                            navService.pushNamed('/notifiedSessionDetails', args: payload);
-
-                        }
-                        else navService.pushNamed('/egoPage', args: payload!);
-                      },
-                    )
-                  ],
-                ),
-              );
-            }),
-      ),
-    );
-
-
-    flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        String? payload = response.payload;
-
-        if (payload != null) {
-          print(payload);
-          if (payload == 'room') {
-            navService.pushNamed('/diaryRooms', args: payload);
-          } else if (payload == 'wallet') {
-            navService.pushNamed('/egoPage', args: payload);
-          } else if (payload == 'claireminder') {
-            navService.pushNamed('/createSession', args: payload);
-          } else if (payload == 'game') {
-            navService.pushNamed('/games', args: payload);
-          } else if (payload == 'createSession') {
-            navService.pushNamed('/createSession', args: payload);
-          } else if (payload == null) {
-            navService.pushNamed('/createSession', args: payload);
-          } else {
-            navService.pushNamed('/notifiedSessionDetails', args: payload);
-          }
-        } else {
-          navService.pushNamed('/egoPage', args: payload.toString());
-        }
-      },
-    );
-
-
-
-
-    ///Get the message user is going to tap when app is closed
+    // Handle notifications when app is closed
     FirebaseMessaging.instance.getInitialMessage().then((message) {
-      RemoteNotification? notification = message?.notification;
-      String route = message?.data["route"];
-      if (notification != null) {
-        if(route == 'room') {
-          navService.pushNamed('/diaryRooms', args: route);
-        }
-        else if(route == 'wallet') {
-          navService.pushNamed('/egoPage', args: route);
-        }
-        else if(route == 'claireminder') {
-          navService.pushNamed('/createSession', args: route);
-        }
-        else if(route == 'game') {
-          navService.pushNamed('/games', args: route);
-        }
-        else if(route == 'createSession') {
-          navService.pushNamed('/createSession', args: route);
-        }
-        else if(route == null) {
-          navService.pushNamed('/createSession', args: route);
-        }
-        else        navService.pushNamed('/notifiedSessionDetails', args: route);
-
+      final route = message?.data["route"];
+      if (route != null) {
+        navService.pushNamed('/' + route, args: route);
       }
-      else navService.pushNamed('/egoPage', args: route);
     });
 
-
-
-
-    /// Foreground work for notifications
+    // Foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      RemoteNotification? notification = message.notification;
-      String route = message.data["route"];
-      flutterLocalNotificationsPlugin.show(notification.hashCode,
-          notification?.title, notification?.body, _notificationDetails(), payload: route);
-    });
-
-
-
-
-    /// When app is open in background and user taps on it.
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      logger.d('You tapped on a new notification');
-      RemoteNotification? notification = message.notification;
+      final notification = message.notification;
       final route = message.data["route"];
       if (notification != null) {
-
-        logger.d(notification.toString());
-        print(route);
-
-        if(route == 'room') {
-          navService.pushNamed('/diaryRooms', args: route);
-        }
-        else if(route == 'wallet') {
-          navService.pushNamed('/egoPage', args: route);
-        }
-        else if(route == 'claireminder') {
-          navService.pushNamed('/createSession', args: route);
-        }
-        else if(route == 'game') {
-          navService.pushNamed('/games', args: route);
-        }
-        else if(route == 'createSession') {
-          navService.pushNamed('/createSession', args: route);
-        }
-        else if(route == null) {
-          navService.pushNamed('/createSession', args: route);
-        }
-        else if(route != null) {
-          navService.pushNamed('/notifiedSessionDetails', args: route);
-        }
+        flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          _notificationDetails(),
+          payload: route,
+        );
       }
-      else navService.pushNamed('/egoPage', args: route);
+    });
 
+    // When app is in background and user taps notification
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      final route = message.data["route"];
+      if (route != null) {
+        navService.pushNamed('/' + route, args: route);
+      }
     });
   }
+
 
 
 

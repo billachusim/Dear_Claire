@@ -1,4 +1,4 @@
-import 'package:dear_claire/ui/Categories/category_sessions.dart';
+import 'package:clairediary/ui/Categories/category_sessions.dart';
 import 'package:flutter/material.dart';
 import '../../utils/helper.dart';
 import '../featured/model/session.dart';

@@ -1,4 +1,4 @@
-import 'package:dear_claire/utils/helper.dart';
+import 'package:clairediary/utils/helper.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

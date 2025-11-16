@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_reaction_button/flutter_reaction_button.dart';
+import 'package:flutter_emoji_feedback/flutter_emoji_feedback.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../ui/featured/model/session.dart';
 
 class MetooButton extends StatelessWidget {
-  final Function(Reaction, int) onReactionChanged;
+  final Function(String, int) onReactionChanged;
   final int? cheers;
   final int? thanks;
   final int? sorry;
@@ -25,49 +25,31 @@ class MetooButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<Reaction> reactions = [
-      Reaction(
-        icon: Text('${cheers ?? 0} Cheers👍',
-            style: GoogleFonts.lato(
-                fontSize: 16.0,
-                color: Colors.amber,
-                fontWeight: FontWeight.w900)),
-        value: 'Cheers👍',
-      ),
-      Reaction(
-        icon: Text('${thanks ?? 0} Thanks💕',
-            style: GoogleFonts.lato(
-                fontSize: 16.0,
-                color: Colors.red,
-                fontWeight: FontWeight.w900)),
-        value: 'Thanks💕'
-      ),
-      Reaction(
-        icon: Text('${sorry ?? 0} Sorry🖐',
-            style: GoogleFonts.lato(
-                fontSize: 16.0,
-                color: Colors.deepPurple,
-                fontWeight: FontWeight.w900)),
-          value: 'Sorry🖐'
-      ),
-      Reaction(
-        icon: Text('${me2 ?? 0} Me2🌺',
-            style: GoogleFonts.lato(
-                fontSize: 16.0,
-                color: Colors.black,
-                fontWeight: FontWeight.w900)),
-          value: 'Me2🌺'
-      ),
-    ];
+    // Map your reactions to integer values
+    final emojiPreset = StaticEmojiPreset([
+      /*StaticEmoji(image: 'assets/images/cheers.svg', value: 1),
+      StaticEmoji(image: 'assets/images/thanks.svg', value: 2),
+      StaticEmoji(image: 'assets/images/sorry.svg', value: 3),
+      StaticEmoji(image: 'assets/images/me2.svg', value: 4),*/
+    ]);
 
+    // Map integers back to labels for callback
+    final valueToLabel = {
+      1: 'Cheers👍',
+      2: 'Thanks💕',
+      3: 'Sorry🖐',
+      4: 'Me2🌺',
+    };
 
+    // Determine default rating based on session.moodId
+    int defaultRating;
     switch (session.moodId) {
       case -1:
       case 0:
       case 1:
       case 11:
       case 17:
-// Me2
+        defaultRating = 4;
         break;
       case 2:
       case 5:
@@ -78,32 +60,46 @@ class MetooButton extends StatelessWidget {
       case 12:
       case 13:
       case 14:
-// Sorry
+        defaultRating = 3;
         break;
       case 3:
       case 4:
       case 7:
       case 16:
-// Cheers
+        defaultRating = 1;
         break;
       default:
-// Default to Me2
+        defaultRating = 4;
     }
 
-    void onReactionChanged(Reaction<dynamic>? reaction) {
-      if (reaction != null) {
-        reaction = reaction.value;
-      }
-    }
-
-    return ReactionButton(
-      onReactionChanged: onReactionChanged,
-      reactions: reactions,
-      boxColor: Colors.white,
-      boxRadius: 15,
-      boxPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      boxElevation: 12,
-      itemSize: const Size(40, 60),
+    return EmojiFeedback(
+      emojiPreset: emojiPreset,
+      initialRating: defaultRating,
+      elementSize: 50,
+      showLabel: true,
+      labelTextStyle: GoogleFonts.lato(fontSize: 16, fontWeight: FontWeight.bold),
+      onChanged: (value) {
+        // value is int from 1 to 4
+        final label = valueToLabel[value]!;
+        int count;
+        switch (value) {
+          case 1:
+            count = cheers ?? 0;
+            break;
+          case 2:
+            count = thanks ?? 0;
+            break;
+          case 3:
+            count = sorry ?? 0;
+            break;
+          case 4:
+            count = me2 ?? 0;
+            break;
+          default:
+            count = 0;
+        }
+        onReactionChanged(label, count);
+      },
     );
   }
 }

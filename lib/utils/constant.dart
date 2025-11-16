@@ -1,8 +1,8 @@
-import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/services/user_model.dart';
-import 'package:dear_claire/ui/visited_user_ego_page/visited_user_model.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/sharedpreferences.dart';
+import 'package:clairediary/services/firebase_services.dart';
+import 'package:clairediary/services/user_model.dart';
+import 'package:clairediary/ui/visited_user_ego_page/visited_user_model.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/sharedpreferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

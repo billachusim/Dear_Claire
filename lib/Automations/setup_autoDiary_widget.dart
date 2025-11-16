@@ -1,8 +1,8 @@
-import 'package:dear_claire/ui/menu_items/view_model.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/utils/strings.dart';
-import 'package:flutter_audio_recorder2/flutter_audio_recorder2.dart';
+import 'package:clairediary/ui/menu_items/view_model.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/utils/strings.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -43,13 +43,20 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary> {
     singleImageWidget(index: 3),
   ];
 
-  void checkMicPermissions() async {
-    final bool? hasRecordingPermission =
-        await FlutterAudioRecorder2.hasPermissions;
-    if (hasRecordingPermission ?? false) {
-      await FlutterAudioRecorder2.hasPermissions;
+
+  Future<void> checkMicPermissions() async {
+    PermissionStatus micStatus = await Permission.microphone.status;
+
+    if (!micStatus.isGranted) {
+      micStatus = await Permission.microphone.request();
+    }
+
+    if (!micStatus.isGranted) {
+      // permission permanently denied
+      openAppSettings();
     }
   }
+
 
 
 

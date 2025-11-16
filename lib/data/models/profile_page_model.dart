@@ -1,4 +1,4 @@
-import 'package:dear_claire/services/user_model.dart';
+import 'package:clairediary/services/user_model.dart';
 
 class EgoProfileInfo{
 

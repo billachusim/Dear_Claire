@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:dear_claire/ui/Search/search_page.dart';
-import 'package:dear_claire/ui/featured/featured_moods.dart';
+import 'package:clairediary/ui/Search/search_page.dart';
+import 'package:clairediary/ui/featured/featured_moods.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../utils/color.dart';

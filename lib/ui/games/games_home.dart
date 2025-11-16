@@ -1,4 +1,4 @@
-import 'package:dear_claire/ui/routes/page_router_animation.dart';
+import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

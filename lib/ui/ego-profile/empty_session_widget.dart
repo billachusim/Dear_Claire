@@ -1,5 +1,5 @@
-import 'package:dear_claire/ui/routes/routes.dart';
-import 'package:dear_claire/utils/color.dart';
+import 'package:clairediary/ui/routes/routes.dart';
+import 'package:clairediary/utils/color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 

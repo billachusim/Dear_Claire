@@ -1,5 +1,5 @@
 
-import 'package:dear_claire/data/core/network_config.dart';
+import 'package:clairediary/data/core/network_config.dart';
 
 enum Flavor {
   DEVELOPMENT,

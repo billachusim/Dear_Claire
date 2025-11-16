@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:math';
-import 'package:dear_claire/utils/constant.dart';
+import 'package:clairediary/utils/constant.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';

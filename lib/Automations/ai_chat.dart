@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:dear_claire/Automations/threedots.dart';
+import 'package:clairediary/Automations/threedots.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';

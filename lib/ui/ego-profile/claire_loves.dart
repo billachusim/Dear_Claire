@@ -1,10 +1,10 @@
 import 'dart:core';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/ego-profile/request_claire_love_form.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/utils/helper.dart';
+import 'package:clairediary/ui/ego-profile/request_claire_love_form.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

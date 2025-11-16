@@ -1,4 +1,4 @@
-import 'package:dear_claire/ui/visited_user_ego_page/visited_user_model.dart';
+import 'package:clairediary/ui/visited_user_ego_page/visited_user_model.dart';
 
 class VisitedEgoProfileInfo{
 

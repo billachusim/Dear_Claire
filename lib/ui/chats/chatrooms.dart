@@ -1,4 +1,4 @@
-import 'package:dear_claire/ui/chats/widget/chat_room_widget.dart';
+import 'package:clairediary/ui/chats/widget/chat_room_widget.dart';
 import 'package:flutter/material.dart';
 
 import '../../widgets/toast.dart';

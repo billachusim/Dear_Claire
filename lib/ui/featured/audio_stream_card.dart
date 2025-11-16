@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dear_claire/ui/routes/page_router_animation.dart';
-import 'package:dear_claire/ui/featured/model/session.dart';
-import 'package:dear_claire/ui/featured/ego_mode_session_detail.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/helper.dart';
-import 'package:dear_claire/utils/mood.dart';
+import 'package:clairediary/ui/routes/page_router_animation.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
+import 'package:clairediary/ui/featured/ego_mode_session_detail.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/helper.dart';
+import 'package:clairediary/utils/mood.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

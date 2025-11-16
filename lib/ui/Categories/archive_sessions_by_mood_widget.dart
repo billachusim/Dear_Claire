@@ -1,4 +1,4 @@
-import 'package:dear_claire/ui/Categories/archive_mood_sessions.dart';
+import 'package:clairediary/ui/Categories/archive_mood_sessions.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/color.dart';

@@ -1,12 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dear_claire/services/user_model.dart';
-import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
-import 'package:dear_claire/ui/chats/data/chats.dart';
-import 'package:dear_claire/ui/routes/page_router_animation.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/utils/enums.dart';
-import 'package:dear_claire/utils/helper.dart';
+import 'package:clairediary/services/user_model.dart';
+import 'package:clairediary/ui/chats/data/chatroompodo.dart';
+import 'package:clairediary/ui/chats/data/chats.dart';
+import 'package:clairediary/ui/routes/page_router_animation.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/utils/enums.dart';
+import 'package:clairediary/utils/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

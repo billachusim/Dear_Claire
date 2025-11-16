@@ -1,9 +1,9 @@
-import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/ui/login/login_screen.dart';
-import 'package:dear_claire/ui/routes/routes.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/utils/strings.dart';
+import 'package:clairediary/services/firebase_services.dart';
+import 'package:clairediary/ui/login/login_screen.dart';
+import 'package:clairediary/ui/routes/routes.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/utils/strings.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

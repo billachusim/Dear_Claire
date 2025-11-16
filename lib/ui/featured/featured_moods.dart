@@ -1,6 +1,6 @@
-import 'package:dear_claire/ui/Categories/mood_sessions.dart';
-import 'package:dear_claire/ui/routes/page_router_animation.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
+import 'package:clairediary/ui/Categories/mood_sessions.dart';
+import 'package:clairediary/ui/routes/page_router_animation.dart';
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 

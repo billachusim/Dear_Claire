@@ -3,10 +3,10 @@ import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/featured/model/session.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/utils/helper.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +14,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +22,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../Admob/ad_state.dart';
 import '../../../services/firebase_services.dart';
+import '../../../services/native_gallery_saver.dart';
 import '../../../services/user_model.dart';
 import '../../../utils/mood.dart';
 import '../../../utils/strings.dart';
@@ -1244,15 +1244,26 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
     );
   }
 
-  Future<String> saveImage(Uint8List bytes) async {
+  Future<String?> saveImage(Uint8List bytes) async {
+    // Request storage permission
     await [Permission.storage].request();
+
+    // Create a temporary file from bytes
+    final tempDir = await getTemporaryDirectory();
     final time = DateTime.now()
         .toIso8601String()
         .replaceAll('.', '-')
         .replaceAll(':', '-');
-    final name = 'ClaireShot_$time';
-    final result = await ImageGallerySaver.saveImage(bytes, name: name);
-    return result['filepath'];
+    final file = File('${tempDir.path}/ClaireShot_$time.png');
+    await file.writeAsBytes(bytes);
+
+    // Save using NativeGallerySaver
+    final success = await NativeGallerySaver.saveImage(file);
+    if (success) {
+      return file.path; // return saved file path
+    } else {
+      return null; // saving failed
+    }
   }
 
   Future saveAndShare(Uint8List bytes) async {

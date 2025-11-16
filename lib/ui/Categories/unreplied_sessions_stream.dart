@@ -1,4 +1,4 @@
-import 'package:dear_claire/ui/alter_ego/widgets/alter_ego_mode_session_detail.dart';
+import 'package:clairediary/ui/alter_ego/widgets/alter_ego_mode_session_detail.dart';
 import 'package:flutter/material.dart';
 import '../../utils/helper.dart';
 import '../featured/model/session.dart';

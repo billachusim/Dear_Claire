@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/featured/model/session.dart';
-import 'package:dear_claire/ui/followed/empty_followed_screen_widget.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
-import 'package:dear_claire/widgets/ego_mode_session_card.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
+import 'package:clairediary/ui/followed/empty_followed_screen_widget.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
+import 'package:clairediary/widgets/ego_mode_session_card.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/toast.dart';
 import '../routes/routes.dart';

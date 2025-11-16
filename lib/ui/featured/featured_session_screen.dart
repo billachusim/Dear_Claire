@@ -1,5 +1,5 @@
-import 'package:dear_claire/ui/featured/public_sessions.dart';
-import 'package:dear_claire/utils/color.dart';
+import 'package:clairediary/ui/featured/public_sessions.dart';
+import 'package:clairediary/utils/color.dart';
 import 'package:flutter/material.dart';
 
 class FeaturedPage extends StatefulWidget {

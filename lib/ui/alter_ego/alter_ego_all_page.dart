@@ -1,6 +1,6 @@
-import 'package:dear_claire/ui/alter_ego/all_page.dart';
-import 'package:dear_claire/ui/alter_ego/widgets/all_activities_tab.dart';
-import 'package:dear_claire/ui/alter_ego/widgets/all_mantra_tab.dart';
+import 'package:clairediary/ui/alter_ego/all_page.dart';
+import 'package:clairediary/ui/alter_ego/widgets/all_activities_tab.dart';
+import 'package:clairediary/ui/alter_ego/widgets/all_mantra_tab.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/color.dart';
 import '../../../utils/helper.dart';

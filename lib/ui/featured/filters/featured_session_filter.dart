@@ -1,5 +1,5 @@
-import 'package:dear_claire/utils/filter.dart';
-import 'package:dear_claire/ui/featured/model/session.dart';
+import 'package:clairediary/utils/filter.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
 
 import '../../routes/routes.dart';
 

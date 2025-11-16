@@ -1,18 +1,18 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/alter_ego/advised_page.dart';
-import 'package:dear_claire/ui/alter_ego/alter_ego_all_page.dart';
-import 'package:dear_claire/ui/alter_ego/chatrooms.dart';
-import 'package:dear_claire/ui/routes/routes.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
+import 'package:clairediary/ui/alter_ego/advised_page.dart';
+import 'package:clairediary/ui/alter_ego/alter_ego_all_page.dart';
+import 'package:clairediary/ui/alter_ego/chatrooms.dart';
+import 'package:clairediary/ui/routes/routes.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shake/shake.dart';
-import 'package:flutter_vibrate/flutter_vibrate.dart';
+import 'package:vibration/vibration.dart';
 import '../../utils/constant.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
@@ -43,7 +43,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
     super.initState();
     _title = "Alter Ego Mode";
     _pageController = PageController(keepPage: true);
-    shakeDevice();
+    //shakeDevice();
   }
 
 
@@ -67,25 +67,37 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
     }
   }
 
-  shakeDevice() async {
+  /*shakeDevice() async {
     detector = ShakeDetector.waitForStart(
       onPhoneShake: () async {
-        var _type = FeedbackType.error;
-        Vibrate.feedback(_type);
+        // Trigger vibration
+        if (await Vibration.hasVibrator() ?? false) {
+          if (await Vibration.hasAmplitudeControl() ?? false) {
+            // Stronger haptic feedback
+            Vibration.vibrate(duration: 200, amplitude: 128);
+          } else {
+            Vibration.vibrate(duration: 200);
+          }
+        }
+
+        // Show toast
         Fluttertoast.showToast(
           toastLength: Toast.LENGTH_LONG,
           msg: "Switching Ego",
           textColor: Colors.white,
           backgroundColor: Pallet.colorSplashScreen,
         );
-       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+
+        // Navigate
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
       },
       minimumShakeCount: 1,
     );
+
     await Future.delayed(Duration(seconds: 1), () {
       detector.startListening();
     });
-  }
+  }*/
 
   dispose() {
     _pageController!.dispose();

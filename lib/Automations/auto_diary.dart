@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/utils/constant.dart';
+import 'package:clairediary/utils/constant.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_audio_recorder2/flutter_audio_recorder2.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:uuid/uuid.dart';
 
 import '../services/firebase_services.dart';
@@ -36,26 +38,47 @@ class AutoDiary {
 
   static void startRecording() async {
     print('RECORDING!!!');
+
+    // Request microphone permission
+    if (!(await Permission.microphone.request().isGranted)) {
+      print('Microphone permission denied');
+      return;
+    }
+
     Directory directory = await getApplicationDocumentsDirectory();
     print('SAVI');
-    String filepath = directory.path +
-        '/' +
-        DateTime.now().millisecondsSinceEpoch.toString() +
-        '.aac';
+
+    String filepath =
+        '${directory.path}/${DateTime.now().millisecondsSinceEpoch}.aac';
     print('SAVING');
-    FlutterAudioRecorder2 _audioRecorder =
-        FlutterAudioRecorder2(filepath, audioFormat: AudioFormat.AAC);
-    _audioRecorder.initialized;
+
+    final FlutterSoundRecorder _audioRecorder = FlutterSoundRecorder();
+    await _audioRecorder.openRecorder();
+
+    // Start recording
+    await _audioRecorder.startRecorder(
+      toFile: filepath,
+      codec: Codec.aacADTS,
+    );
+
     print('SAVE!!!');
-    _audioRecorder.start();
     print('SAVING!!!');
-    Future.delayed(Duration(seconds: 3), () {});
+
+    // Optional wait (if you need the delay)
+    await Future.delayed(Duration(seconds: 3));
     print('WAITED!!!');
+
+    // Stop recording
+    String? recordedFile = await _audioRecorder.stopRecorder();
+    print('Recording saved at: $recordedFile');
+
     saveAndSendAutoDiary();
     print('SAVED!!!');
+
     randomizeReminderNotes();
     print('SAVEDED!!!');
   }
+
 
   static void saveAndSendAutoDiary() async {
     print('SENDING!!!');

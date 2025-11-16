@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
-import 'package:dear_claire/ui/routes/page_router_animation.dart';
-import 'package:dear_claire/ui/visited_user_ego_page/visited_user_ego_page.dart';
+import 'package:clairediary/ui/chats/data/chatroompodo.dart';
+import 'package:clairediary/ui/routes/page_router_animation.dart';
+import 'package:clairediary/ui/visited_user_ego_page/visited_user_ego_page.dart';
 import 'package:flutter/material.dart';
 import '../../../services/user_model.dart';
 import '../../../utils/constant.dart';

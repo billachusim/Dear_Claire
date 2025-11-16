@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dear_claire/ui/create_session/session_model.dart';
-import 'package:dear_claire/ui/create_session/sound/custom_play_sound_widget.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/helper.dart';
-import 'package:dear_claire/utils/mood.dart';
+import 'package:clairediary/ui/create_session/session_model.dart';
+import 'package:clairediary/ui/create_session/sound/custom_play_sound_widget.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/helper.dart';
+import 'package:clairediary/utils/mood.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

@@ -1,7 +1,7 @@
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:dear_claire/ui/featured/widget/audio_status_playing_widget.dart';
-import 'package:dear_claire/ui/featured/widget/status_stream.dart';
+import 'package:clairediary/ui/featured/widget/audio_status_playing_widget.dart';
+import 'package:clairediary/ui/featured/widget/status_stream.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 

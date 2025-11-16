@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/chats/data/chatroompodo.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/helper.dart';
+import 'package:clairediary/ui/chats/data/chatroompodo.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/helper.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

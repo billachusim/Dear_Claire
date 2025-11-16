@@ -1,12 +1,12 @@
 import 'dart:collection';
-import 'package:dear_claire/ui/Categories/archive_mood_stream.dart';
-import 'package:dear_claire/ui/ego-profile/archived_sessions.dart';
-import 'package:dear_claire/ui/ego-profile/utils.dart';
-import 'package:dear_claire/ui/featured/model/session.dart';
-import 'package:dear_claire/ui/featured/public_sessions.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
+import 'package:clairediary/ui/Categories/archive_mood_stream.dart';
+import 'package:clairediary/ui/ego-profile/archived_sessions.dart';
+import 'package:clairediary/ui/ego-profile/utils.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
+import 'package:clairediary/ui/featured/public_sessions.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -42,7 +42,7 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
   );
 
   List<Session> _getSessionForDay(DateTime day) {
-    // Implementation example
+    // Implementation mobymagic
     return kEvents[day] ?? [];
   }
 

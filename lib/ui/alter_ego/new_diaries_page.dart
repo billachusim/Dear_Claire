@@ -1,9 +1,9 @@
-import 'package:dear_claire/ui/Categories/category_streams.dart';
-import 'package:dear_claire/ui/alter_ego/widgets/alter_ego_session_card.dart';
-import 'package:dear_claire/ui/featured/model/session.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
+import 'package:clairediary/ui/Categories/category_streams.dart';
+import 'package:clairediary/ui/alter_ego/widgets/alter_ego_session_card.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

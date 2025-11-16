@@ -1,5 +1,5 @@
-import 'package:dear_claire/ui/Categories/category_sessions.dart';
-import 'package:dear_claire/ui/Categories/users_category_sessions.dart';
+import 'package:clairediary/ui/Categories/category_sessions.dart';
+import 'package:clairediary/ui/Categories/users_category_sessions.dart';
 import 'package:flutter/material.dart';
 import '../routes/page_router_animation.dart';
 

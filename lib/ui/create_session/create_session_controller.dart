@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:dear_claire/utils/constant.dart';
+import 'package:clairediary/utils/constant.dart';
 import 'package:get/get.dart';
 import 'dart:math';
 

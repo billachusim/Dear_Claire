@@ -3,13 +3,13 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/create_session/session_details_widget.dart';
-import 'package:dear_claire/ui/create_session/session_model.dart';
-import 'package:dear_claire/ui/featured/model/comment_session_model.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/utils/helper.dart';
-import 'package:dear_claire/utils/strings.dart';
-import 'package:dear_claire/widgets/comment_widget.dart';
+import 'package:clairediary/ui/create_session/session_details_widget.dart';
+import 'package:clairediary/ui/create_session/session_model.dart';
+import 'package:clairediary/ui/featured/model/comment_session_model.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/utils/helper.dart';
+import 'package:clairediary/utils/strings.dart';
+import 'package:clairediary/widgets/comment_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
