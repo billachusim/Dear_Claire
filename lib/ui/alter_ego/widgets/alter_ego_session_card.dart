@@ -67,6 +67,10 @@ class AlterEgoModeSessionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color backgroundColor = HexColor.fromHex(element.colorHex!);
+    final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+    final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
+
     return CupertinoButton(
       onPressed: () => PageRouter.gotoWidget(
           AlterEgoModeSessionDetail(featuredSessionModel: element),
@@ -77,7 +81,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
-            color: HexColor.fromHex(element.colorHex!)),
+            color: backgroundColor),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -141,7 +145,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                             maxLines: 1,
                             style: GoogleFonts.lato(
                                 fontSize: 20.0,
-                                color: Pallet.colorWhite,
+                                color: textColor,
                                 fontWeight: FontWeight.w800)),
                       ),
                       SizedBox(
@@ -152,7 +156,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                           maxLines: 1,
                           style: GoogleFonts.lato(
                               fontSize: 12.0,
-                              color: Colors.white70,
+                              color: secondaryTextColor,
                               fontWeight: FontWeight.w700)),
                     ],
                   ),
@@ -168,7 +172,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                           maxLines: 1,
                           style: GoogleFonts.lato(
                               fontSize: 14.0,
-                              color: Pallet.colorWhite,
+                              color: textColor,
                               fontWeight: FontWeight.w700)),
                       SizedBox(
                         height: 3,
@@ -178,7 +182,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                           maxLines: 1,
                           style: GoogleFonts.lato(
                               fontSize: 12.0,
-                              color: Colors.white70,
+                              color: secondaryTextColor,
                               fontWeight: FontWeight.w700)),
                     ],
                   ),
@@ -194,7 +198,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                   maxLines: 2,
                   style: GoogleFonts.lato(
                       fontSize: 28.0,
-                      color: Pallet.colorWhite,
+                      color: textColor,
                       fontWeight: FontWeight.w800)),
             ),
             SizedBox(
@@ -208,7 +212,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                   maxLines: element.imageUrls!.isNotEmpty ? 4 : 6,
                   style: GoogleFonts.lato(
                       fontSize: 23.0,
-                      color: Pallet.colorWhite,
+                      color: textColor,
                       fontWeight: FontWeight.normal),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -283,7 +287,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                     thanks: element.meLove!.length,
                     sorry: element.meHiFive!.length,
                     me2: element.meFlower!.length,
-                    color: Pallet.colorWhite,
+                    color: textColor,
                   onReactionChanged: (reaction, index) async {
 
                       firebaseServices.addUsersReactionToASession(
@@ -321,7 +325,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                                 visible: element.repliesEnabled == true,
                                 child: Icon(
                                   element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
-                                  color: Pallet.colorWhite,
+                                  color: textColor,
                                   size: 26,
                                 ),
                               ),
@@ -355,11 +359,11 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                     }),
               ],
             ),
-            const Divider(
+            Divider(
               thickness: 1,
               indent: 0,
               endIndent: 0,
-              color: Colors.white70,
+              color: secondaryTextColor,
               height: 3,
             ),
             StreamBuilder(
@@ -392,7 +396,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                           maxLines: 2,
                           style: GoogleFonts.lato(
                             fontSize: 12.0,
-                            color: Colors.white,
+                            color: textColor,
                             fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,

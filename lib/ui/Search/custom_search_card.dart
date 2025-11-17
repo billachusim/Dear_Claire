@@ -30,6 +30,10 @@ class CustomSearchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color backgroundColor = HexColor.fromHex(element.colorHex!);
+    final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+    final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
+
     return CupertinoButton(
       onPressed: () => PageRouter.gotoWidget(
           EgoModeSessionDetail(featuredSessionModel: element),
@@ -42,7 +46,7 @@ class CustomSearchCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            color: HexColor.fromHex(element.colorHex!)),
+            color: backgroundColor),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -131,7 +135,7 @@ class CustomSearchCard extends StatelessWidget {
                               maxLines: 1,
                               style: GoogleFonts.lato(
                                   fontSize: 15.0,
-                                  color: Pallet.colorWhite,
+                                  color: textColor,
                                   fontWeight: FontWeight.w700)),
                         ),
                         SizedBox(
@@ -142,7 +146,7 @@ class CustomSearchCard extends StatelessWidget {
                             maxLines: 1,
                             style: GoogleFonts.lato(
                                 fontSize: 10.0,
-                                color: Colors.white70,
+                                color: secondaryTextColor,
                                 fontWeight: FontWeight.w700)),
                       ],
                     ),
@@ -158,7 +162,7 @@ class CustomSearchCard extends StatelessWidget {
                             maxLines: 1,
                             style: GoogleFonts.lato(
                                 fontSize: 11.0,
-                                color: Pallet.colorWhite,
+                                color: textColor,
                                 fontWeight: FontWeight.w700)),
                         SizedBox(
                           height: 1,
@@ -168,7 +172,7 @@ class CustomSearchCard extends StatelessWidget {
                             maxLines: 1,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Colors.white70,
+                                color: secondaryTextColor,
                                 fontWeight: FontWeight.w700)
                         ),
                       ],
@@ -186,7 +190,7 @@ class CustomSearchCard extends StatelessWidget {
                   maxLines: 1,
                   style: GoogleFonts.lato(
                       fontSize: 15.0,
-                      color: Pallet.colorWhite,
+                      color: textColor,
                       fontWeight: FontWeight.w800)),
             ),
             SizedBox(
@@ -200,7 +204,7 @@ class CustomSearchCard extends StatelessWidget {
                   maxLines: element.imageUrls!.isNotEmpty ? 1 : 3,
                   style: GoogleFonts.lato(
                       fontSize: 14.0,
-                      color: Pallet.colorWhite,
+                      color: textColor,
                       fontWeight: FontWeight.w500),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -301,7 +305,7 @@ class CustomSearchCard extends StatelessWidget {
                   thanks: element.meLove!.length,
                   sorry: element.meHiFive!.length,
                   me2: element.meFlower!.length,
-                  color: Pallet.colorWhite,
+                  color: textColor,
                   onReactionChanged: (reaction, index) async {
                     if (await firebaseServices
                         .isUserSignIn(context)) {
@@ -338,11 +342,11 @@ class CustomSearchCard extends StatelessWidget {
                     }),
               ],
             ),
-            const Divider(
+            Divider(
               thickness: 1,
               indent: 0,
               endIndent: 0,
-              color: Colors.white70,
+              color: secondaryTextColor,
               height: 3,
             ),
 
@@ -376,7 +380,7 @@ class CustomSearchCard extends StatelessWidget {
                           maxLines: 1,
                           style: GoogleFonts.lato(
                             fontSize: 11.0,
-                            color: Colors.white,
+                            color: textColor,
                             fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,

@@ -107,6 +107,10 @@ class FeaturedSessionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color backgroundColor = HexColor.fromHex(element.colorHex!);
+    final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+    final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
+
     return CupertinoButton(
       onPressed: () => PageRouter.gotoWidget(
           EgoModeSessionDetail(featuredSessionModel: element),
@@ -119,7 +123,7 @@ class FeaturedSessionCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(25),
-            color: HexColor.fromHex(element.colorHex!)),
+            color: backgroundColor),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -206,7 +210,7 @@ class FeaturedSessionCard extends StatelessWidget {
                             maxLines: 1,
                             style: GoogleFonts.lato(
                                 fontSize: 18.0,
-                                color: Pallet.colorWhite,
+                                color: textColor,
                                 fontWeight: FontWeight.w800)),
                       ),
                       SizedBox(
@@ -217,7 +221,7 @@ class FeaturedSessionCard extends StatelessWidget {
                           maxLines: 1,
                           style: GoogleFonts.lato(
                               fontSize: 12.0,
-                              color: Colors.white70,
+                              color: secondaryTextColor,
                               fontWeight: FontWeight.w700)),
                     ],
                   ),
@@ -233,7 +237,7 @@ class FeaturedSessionCard extends StatelessWidget {
                           maxLines: 1,
                           style: GoogleFonts.lato(
                               fontSize: 13.0,
-                              color: Pallet.colorWhite,
+                              color: textColor,
                               fontWeight: FontWeight.w700)),
                       SizedBox(
                         height: 3,
@@ -243,7 +247,7 @@ class FeaturedSessionCard extends StatelessWidget {
                         maxLines: 1,
                         style: GoogleFonts.lato(
                             fontSize: 12.0,
-                            color: Colors.white70,
+                            color: secondaryTextColor,
                             fontWeight: FontWeight.w700),
                       ),
                     ],
@@ -260,7 +264,7 @@ class FeaturedSessionCard extends StatelessWidget {
                   maxLines: 2,
                   style: GoogleFonts.lato(
                       fontSize: 28.0,
-                      color: Pallet.colorWhite,
+                      color: textColor,
                       fontWeight: FontWeight.w800)),
             ),
             SizedBox(
@@ -274,7 +278,7 @@ class FeaturedSessionCard extends StatelessWidget {
                   maxLines: element.imageUrls!.isNotEmpty ? 4 : 6,
                   style: GoogleFonts.lato(
                       fontSize: 25.0,
-                      color: Pallet.colorWhite,
+                      color: textColor,
                       fontWeight: FontWeight.w500),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -349,7 +353,7 @@ class FeaturedSessionCard extends StatelessWidget {
                   thanks: element.meLove!.length,
                   sorry: element.meHiFive!.length,
                   me2: element.meFlower!.length,
-                  color: Pallet.colorWhite,
+                  color: textColor,
                   onReactionChanged: (reaction, index) async {
                     if (await firebaseServices
                         .isUserSignIn(context)) {
@@ -383,7 +387,7 @@ class FeaturedSessionCard extends StatelessWidget {
                         visible: element.repliesEnabled == true,
                         child: Icon(
                           element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
-                          color: Pallet.colorWhite,
+                          color: textColor,
                           size: 26,
                         ),
                       ),
@@ -423,7 +427,7 @@ class FeaturedSessionCard extends StatelessWidget {
                         visible: element.userId == currentUser?.uid,
                         child: Icon(
                           element.archived == true ? Icons.archive_rounded : Icons.archive_outlined,
-                          color: Pallet.colorWhite,
+                          color: textColor,
                           size: 26,
                         ),
                       ),
@@ -452,11 +456,11 @@ class FeaturedSessionCard extends StatelessWidget {
                     }),
               ],
             ),
-            const Divider(
+            Divider(
               thickness: 1,
               indent: 0,
               endIndent: 0,
-              color: Colors.white70,
+              color: secondaryTextColor,
               height: 3,
             ),
 
@@ -490,7 +494,7 @@ class FeaturedSessionCard extends StatelessWidget {
                           maxLines: 2,
                           style: GoogleFonts.lato(
                             fontSize: 12.0,
-                            color: Colors.white,
+                            color: textColor,
                             fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,

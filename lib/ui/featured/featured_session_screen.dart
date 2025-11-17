@@ -1,5 +1,4 @@
 import 'package:clairediary/ui/featured/public_sessions.dart';
-import 'package:clairediary/utils/color.dart';
 import 'package:flutter/material.dart';
 
 class FeaturedPage extends StatefulWidget {
@@ -29,62 +28,47 @@ class _FeaturedPageState extends State<FeaturedPage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Pallet.colorWhite,
-        body: Stack(
+        body: Column(
           children: [
-            Column(
-            children: [
 
-              FeaturedStatusStreams(),
+            FeaturedStatusStreams(),
 
-              TheFeaturedSessions(),
+            TheFeaturedSessions(),
 
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.black
-                ),
-                child: Row(
-                  children: [
+            Container(
+              child: Row(
+                children: [
 
-                    Visibility(
-                      visible: !showFilter,
-                      child: TextButton(
-                        style: TextButton.styleFrom(fixedSize: Size.fromHeight(10)),
-                        onPressed: () {
-                          setState(() {
-                            showFilter = true;
-                          });
-                        },
-                        child: Text(
-                          showFilter == true? 'HIDE FILTER' :
-                          showFilter == false? 'SHOW FILTER' :
-                          "Show/Hide Filter",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 10,
-                          ),
-                        ),
+                  Visibility(
+                    visible: !showFilter,
+                    child: TextButton(
+                      style: TextButton.styleFrom(fixedSize: Size.fromHeight(10)),
+                      onPressed: () {
+                        setState(() {
+                          showFilter = true;
+                        });
+                      },
+                      child: Text(
+                        showFilter == true? 'HIDE FILTER' :
+                        showFilter == false? 'SHOW FILTER' :
+                        "Show/Hide Filter",
                       ),
                     ),
-                    FeaturedSessionNotice(),
-                  ],
-                ),
+                  ),
+                  FeaturedSessionNotice(),
+                ],
               ),
+            ),
 
 
-              Container(
-                decoration: BoxDecoration(
-                    color: Colors.black
-                ),
-                child: Visibility(
-                    visible: showFilter,
-                    child: TrendingCategories()
-                ),
+            Container(
+              child: Visibility(
+                  visible: showFilter,
+                  child: TrendingCategories()
               ),
+            ),
 
 
-      ],
-          ),
       ],
         ),
       ),

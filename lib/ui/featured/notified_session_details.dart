@@ -177,12 +177,17 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   @override
   Widget build(BuildContext context) {
     User? currentUser = FirebaseAuth.instance.currentUser;
+    final Color backgroundColor = Theme.of(context).cardColor;
+    final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+    final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
+
     return Scaffold(
-      backgroundColor: Pallet.colorSecondaryDark,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         centerTitle: true,
-        title: Text("Notified Session"),
+        title: Text("Notified Session", style: TextStyle(color: textColor)),
         elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
       ),
       body: Stack(
         children: [
@@ -295,7 +300,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                               maxLines: 1,
                                               style: GoogleFonts.lato(
                                                   fontSize: 18.0,
-                                                  color: Pallet.colorWhite,
+                                                  color: textColor,
                                                   fontWeight: FontWeight.w700)),
                                         ),
                                         SizedBox(
@@ -306,7 +311,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                             maxLines: 1,
                                             style: GoogleFonts.lato(
                                                 fontSize: 13.0,
-                                                color: Pallet.colorWhite,
+                                                color: textColor,
                                                 fontWeight: FontWeight.normal)),
                                       ],
                                     ),
@@ -321,7 +326,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                             maxLines: 1,
                                             style: GoogleFonts.lato(
                                                 fontSize: 13.0,
-                                                color: Pallet.colorWhite,
+                                                color: textColor,
                                                 fontWeight: FontWeight.w700)),
                                         SizedBox(
                                           height: 5,
@@ -331,7 +336,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                             maxLines: 1,
                                             style: GoogleFonts.lato(
                                                 fontSize: 12.0,
-                                                color: Colors.white70,
+                                                color: secondaryTextColor,
                                                 fontWeight: FontWeight.w700)),
                                       ],
                                     ),
@@ -347,7 +352,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                     maxLines: 3,
                                     style: GoogleFonts.lato(
                                         fontSize: 20.0,
-                                        color: Pallet.colorWhite,
+                                        color: textColor,
                                         fontWeight: FontWeight.w700)),
                               ),
                               SizedBox(
@@ -361,7 +366,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                       textAlign: TextAlign.left,
                                       style: GoogleFonts.lato(
                                           fontSize: 17.0,
-                                          color: Pallet.colorWhite,
+                                          color: textColor,
                                           fontWeight: FontWeight.normal),
                                     ),
                                   ),
@@ -455,7 +460,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                         saveUserMe2Activity();
                                       }
                                     },
-                                    color: Pallet.colorWhite,
+                                    color: textColor,
                                     session: _session,
                                   ),
                                   new SizedBox(
@@ -472,7 +477,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                       children: [
                                         Text(_session.followers!.length.toString(),
                                           style: TextStyle(
-                                            color: Colors.white,
+                                            color: textColor,
                                             fontSize: 13,
                                             fontWeight: FontWeight.w900,
                                           ),
@@ -483,7 +488,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                               .contains(currentUser?.uid)
                                               ? Icons.notifications_active_rounded
                                               : Icons.notifications_off_outlined,
-                                          color: Pallet.colorWhite,
+                                          color: textColor,
                                           size: 24,
                                         ),
                                       ],
@@ -557,14 +562,14 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                           decoration: BoxDecoration(
                                               borderRadius: BorderRadius.circular(10),
                                               border: Border.all(
-                                                color: Pallet.colorWhite,
+                                                color: textColor,
                                               )),
                                           child: Row(
                                             children: [
                                               Icon(
                                                 Icons.edit,
                                                 size: 15,
-                                                color: Pallet.colorWhite,
+                                                color: textColor,
                                               ),
                                               SizedBox(
                                                 width: 2,
@@ -573,7 +578,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                                 'Edit',
                                                 style: GoogleFonts.lato(
                                                     fontSize: 12.0,
-                                                    color: Pallet.colorWhite,
+                                                    color: textColor,
                                                     fontWeight: FontWeight.w800),
                                               ),
                                             ],
@@ -612,14 +617,14 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                                 _session.flagged == true
                                                     ? Icons.flag
                                                     : Icons.flag_outlined,
-                                                color: Pallet.colorWhite,
+                                                color: textColor,
                                                 size: 20,
                                               ),
                                               Text(
                                                 'Flag',
                                                 style: GoogleFonts.lato(
                                                     fontSize: 13.0,
-                                                    color: Pallet.colorWhite,
+                                                    color: textColor,
                                                     fontWeight: FontWeight.w800),
                                               ),
                                             ],
@@ -635,13 +640,13 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                               Icon(
                                                 Icons.share_rounded,
                                                 size: 15,
-                                                color: Pallet.colorWhite,
+                                                color: textColor,
                                               ),
                                               Text(
                                                 'Share',
                                                 style: GoogleFonts.lato(
                                                     fontSize: 13.0,
-                                                    color: Pallet.colorWhite,
+                                                    color: textColor,
                                                     fontWeight: FontWeight.w800),
                                               ),
                                             ],
@@ -731,7 +736,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                     Text(
                                       "Check the next sessions from same category - " + theSession!.category1.toString(),
                                       style: TextStyle(
-                                        color: Colors.white70,
+                                        color: secondaryTextColor,
                                         fontSize: 12,
                                       ),
                                     ),

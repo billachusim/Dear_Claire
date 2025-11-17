@@ -11,6 +11,7 @@ import 'package:clairediary/ui/ego-profile/profile.dart';
 import 'package:clairediary/ui/featured/notified_session_details.dart';
 import 'package:clairediary/ui/games/games_home.dart';
 import 'package:clairediary/ui/splash_screen/splash.dart';
+import 'package:clairediary/ui/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -264,13 +265,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       providers: [Provider(create: (_) => FirebaseServices())],
       child: ScreenUtilInit(
         designSize: Size(360, 640),
-        builder: (BuildContext context, child) => MaterialApp(
+        builder: (BuildContext context, child) => GetMaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Dear Claire',
           navigatorKey: NavigationService.navigationKey,
-          theme: ThemeData(
-            primarySwatch: Colors.pink,
-          ),
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: ThemeMode.system,
           home: SplashPage(),
           routes: {
             "createSession": (_) => CreateSessionPage(),

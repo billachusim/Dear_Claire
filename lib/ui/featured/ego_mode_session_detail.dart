@@ -174,13 +174,18 @@ class _EgoModeSessionDetailState
 
   @override
   Widget build(BuildContext context) {
+    final Color backgroundColor = HexColor.fromHex(featuredSessionModel!.colorHex!);
+    final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+    final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
+
     return Scaffold(
-      backgroundColor: HexColor.fromHex(featuredSessionModel!.colorHex!),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: HexColor.fromHex(featuredSessionModel!.colorHex!),
-        title: Text(featuredSessionModel!.title!),
+        backgroundColor: backgroundColor,
+        title: Text(featuredSessionModel!.title!, style: TextStyle(color: textColor)),
         elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
       ),
       body: Stack(
         children: [
@@ -237,7 +242,7 @@ class _EgoModeSessionDetailState
                                           child: AdWidget(ad: egoModeSessionDetailTopBanner!),
                                         )
                                       else
-                                        SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
+                                        SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: textColor),),),
 
 
                                       ..._commentList
@@ -256,7 +261,7 @@ class _EgoModeSessionDetailState
                                       Text(
                                         "Check the next sessions from same category - " + featuredSessionModel!.category1.toString(),
                                         style: TextStyle(
-                                          color: Colors.white70,
+                                          color: secondaryTextColor,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -271,7 +276,7 @@ class _EgoModeSessionDetailState
                                           child: AdWidget(ad: egoModeSessionDetailBottomBanner!),
                                         )
                                       else
-                                        SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
+                                        SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: textColor),),),
 
                                     ],
                                   );

@@ -155,12 +155,16 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
 
   @override
   Widget build(BuildContext context) {
+    final Color backgroundColor = HexColor.fromHex(featuredSessionModel!.colorHex!);
+    final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: HexColor.fromHex(featuredSessionModel!.colorHex!),
-        title: Text(featuredSessionModel!.title!),
+        backgroundColor: backgroundColor,
+        title: Text(featuredSessionModel!.title!, style: TextStyle(color: textColor)),
         elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
       ),
       body: Stack(
         children: [
@@ -229,7 +233,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                                       Text(
                                         "Earn more> Respond to more sessions from category - " + featuredSessionModel!.category1.toString(),
                                         style: TextStyle(
-                                          color: Colors.white70,
+                                          color: textColor,
                                           fontSize: 12,
                                         ),
                                       ),
