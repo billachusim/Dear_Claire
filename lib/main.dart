@@ -10,14 +10,11 @@ import 'package:clairediary/ui/create_session/create_session_page.dart';
 import 'package:clairediary/ui/ego-profile/profile.dart';
 import 'package:clairediary/ui/featured/notified_session_details.dart';
 import 'package:clairediary/ui/games/games_home.dart';
-import 'package:clairediary/ui/routes/routes.dart';
 import 'package:clairediary/ui/splash_screen/splash.dart';
-import 'package:clairediary/utils/color.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -117,7 +114,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ledOffMs: 500,
         showWhen: true,
         channelShowBadge: true,
-        icon: '@drawable/claire_icon',
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,
@@ -168,7 +164,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     // Initialize notifications
     final initializationSettings = InitializationSettings(
-      android: AndroidInitializationSettings("@drawable/claire_icon"),
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       iOS: DarwinInitializationSettings(
         requestAlertPermission: true,
         requestBadgePermission: true,
