@@ -4,104 +4,139 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CustomPlaySoundWidget extends StatefulWidget {
   final String? filePath;
-  CustomPlaySoundWidget({Key? key, this.filePath})
-      : super(key: key);
+  CustomPlaySoundWidget({Key? key, this.filePath}) : super(key: key);
 
   @override
   _CustomPlaySoundWidgetState createState() => _CustomPlaySoundWidgetState();
 }
 
 class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
-  late bool _isPlaying;
   late AudioPlayer _audioPlayer;
+  PlayerState _playerState = PlayerState.stopped;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
 
-  var _time = 0;
-  var _duration = 0;
+  bool get _isPlaying => _playerState == PlayerState.playing;
+  bool get _isPaused => _playerState == PlayerState.paused;
 
   @override
   void initState() {
     super.initState();
-    _isPlaying = false;
     _audioPlayer = AudioPlayer();
+
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          _playerState = state;
+        });
+      }
+    });
+
+    _audioPlayer.onDurationChanged.listen((newDuration) {
+      if (mounted) {
+        setState(() {
+          _duration = newDuration;
+        });
+      }
+    });
+
+    _audioPlayer.onPositionChanged.listen((newPosition) {
+      if (mounted) {
+        setState(() {
+          _position = newPosition;
+        });
+      }
+    });
+
+    // Reset position when playback completes
+    _audioPlayer.onPlayerComplete.listen((event) {
+      if (mounted) {
+        setState(() {
+          _position = Duration.zero;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
-    super.dispose();
-    _audioPlayer.stop();
     _audioPlayer.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-        height: 60,
-        child: Column(children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              IconButton(
-                icon: Icon(
-                  _isPlaying ? Icons.pause : Icons.play_circle_fill_rounded,
-                  color: Colors.white,
-                  size: 40.r,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(50),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            onPressed: () {
+              if (widget.filePath != null && widget.filePath!.isNotEmpty) {
+                if (_isPlaying) {
+                  _audioPlayer.pause();
+                } else if (_isPaused) {
+                  _audioPlayer.resume();
+                } else {
+                  _audioPlayer.play(UrlSource(widget.filePath!));
+                }
+              }
+            },
+            icon: Icon(
+              _isPlaying ? Icons.pause_circle_filled : Icons.play_arrow_rounded,
+              size: 40.r,
+              color: Colors.pink,
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Slider(
+                  min: 0,
+                  max: _duration.inSeconds.toDouble(),
+                  value: _position.inSeconds.toDouble().clamp(0.0, _duration.inSeconds.toDouble()),
+                  onChanged: (value) async {
+                    final position = Duration(seconds: value.toInt());
+                    await _audioPlayer.seek(position);
+                  },
+                  activeColor: Colors.pink,
+                  inactiveColor: Colors.grey,
                 ),
-                onPressed: _onPlayButtonPressed,
-              ),
-              Slider(
-                thumbColor: Colors.white,
-                inactiveColor: Colors.white,
-                min: 0,
-                max: _time.toDouble(),
-                value: _duration.toDouble(),
-                onChanged: (value) {
-                  setState(() {
-                    print("on change value is $value");
-                    _audioPlayer.pause();
-                    _duration = value.toInt();
-                    _audioPlayer.seek(Duration(seconds: _duration));
-                    _audioPlayer.resume();
-                  });
-                },
-              ),
-            ],
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _formatDuration(_position),
+                        style: TextStyle(color: Colors.pink, fontSize: 12.sp),
+                      ),
+                      Text(
+                        _formatDuration(_duration),
+                        style: TextStyle(color: Colors.white, fontSize: 12.sp),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
           )
-        ]));
+        ],
+      ),
+    );
   }
 
-  void _onPlayButtonPressed() async {
-    if (!_isPlaying) {
-      _isPlaying = true;
-
-      print("selected file path is: ${widget.filePath!}");
-
-      // Set the source of the audio based on the file path (local or remote)
-      await _audioPlayer.setSourceUrl(widget.filePath!);
-
-      // Start playing the audio
-      await _audioPlayer.resume();
-
-      // Update duration and position listeners
-      _audioPlayer.onDurationChanged.listen((Duration d) {
-        print('Max duration: $d');
-        setState(() => _time = d.inSeconds);
-      });
-
-      _audioPlayer.onPositionChanged.listen((Duration p) {
-        print('Current position: $p');
-        setState(() => _duration = p.inSeconds);
-      });
-
-      _audioPlayer.onPlayerComplete.listen((event) {
-        setState(() {
-          _isPlaying = false;
-        });
-      });
-    } else {
-      await _audioPlayer.pause();
-      _isPlaying = false;
-    }
-    setState(() {});
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+    return [minutes, seconds].map(twoDigits).join(':');
   }
 }

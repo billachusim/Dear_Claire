@@ -72,13 +72,14 @@ class _DiaryPageState extends State<DiaryPage> {
 class DiarySessionNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Container(
         child: Text(
-          "Only YOUR Diary Sessions appear here. Archived Sessions can be found on Ego page.\n"
-              "Open Up, write or record anything, share or save it and Claire will be there for you.",
+          "ONLY YOUR Diary Sessions appear here. Archive can be found on Ego page.\n"
+              "Open Up, write or record, share or save it and Claire will be there for you.",
           style: TextStyle(
-            color: Colors.black45,
+            color: isDarkMode ? Colors.white : Colors.black,
             fontSize: 10,
             fontWeight: FontWeight.w600,
             fontStyle: FontStyle.italic,

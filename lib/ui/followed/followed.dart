@@ -76,13 +76,14 @@ class _FollowedPageState extends State<FollowedPage> {
 class FollowedSessionNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Container(
         child: Text(
           "Diary sessions you followed. You'll get notifications.\n"
               "Follow your own diary sessions too. Unfollow to stop notifications.",
           style: TextStyle(
-            color: Colors.black45,
+            color: isDarkMode ? Colors.white : Colors.black,
             fontSize: 10,
             fontWeight: FontWeight.w600,
             fontStyle: FontStyle.italic,
