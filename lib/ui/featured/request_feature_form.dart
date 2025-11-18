@@ -1,461 +1,191 @@
+import 'package:clairediary/services/firebase_services.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
 import 'package:clairediary/utils/color.dart';
-import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/strings.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-import '../../widgets/toast.dart';
+import '../../helpers/toast_helper.dart';
+import '../../utils/constant.dart';
 
 class RequestFeatureForm extends StatefulWidget {
-  const RequestFeatureForm({Key? key}) : super(key: key);
+  final Session session;
+  const RequestFeatureForm({Key? key, required this.session}) : super(key: key);
 
   @override
   _RequestFeatureFormState createState() => _RequestFeatureFormState();
 }
 
 class _RequestFeatureFormState extends State<RequestFeatureForm> {
-  TextEditingController _sessionTitleController = TextEditingController();
-  TextEditingController _sessionEgoNameController = TextEditingController();
-  TextEditingController _whyFeatureController = TextEditingController();
-  TextEditingController _value4Controller = TextEditingController();
-  TextEditingController _value5Controller = TextEditingController();
-  TextEditingController _value6Controller = TextEditingController();
-  TextEditingController _value7Controller = TextEditingController();
+  final TextEditingController _whyFeatureController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool value4 = false;
-  bool value5 = false;
-  bool value6 = false;
-  bool value7 = false;
+  bool _isProcessing = false;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Pallet.colorPrimary,
+        backgroundColor: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary,
         centerTitle: true,
         title: Text('Request Feature',
-            textAlign: TextAlign.start,
-            maxLines: 1,
             style: GoogleFonts.lato(
                 fontSize: 26.0,
                 color: Pallet.colorWhite,
                 fontWeight: FontWeight.w600)),
       ),
       body: SafeArea(
-        child: Container(
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-
-                Container(
-                  color: Pallet.colorGrey.withOpacity(0.3),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Center(
-                      child: Text(AppString.request_feature_form_header,
-                          //textAlign: TextAlign.center,
-                          style: GoogleFonts.lato(
-                              fontSize: 13.0,
-                              color: Pallet.colorBlack,
-                              fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Container(
-                        color: Pallet.colorWhite,
-                        child: TextFormField(
-                            onChanged: (value) {},
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "Enter the Session Title";
-                              }
-                              return null;
-                            },
-                            textInputAction: TextInputAction.next,
-                            controller: _sessionTitleController,
-                            decoration: new InputDecoration(
-                              hintText: "title of session",
-                              labelText: "Session Title",
-                              labelStyle:
-                              TextStyle(color: Pallet.colorTextGray),
-                              focusedBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
-                              enabledBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorTextGray)),
-                              contentPadding:
-                              EdgeInsets.only(right: 15, left: 15),
-                            ),
-                            keyboardType: TextInputType.text,
-                            style: GoogleFonts.lato(
-                                fontSize: 12.0,
-                                color: Pallet.colorBlack,
-                                fontWeight: FontWeight.w400)),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Container(
-                        color: Pallet.colorWhite,
-                        child: TextFormField(
-                            onChanged: (value) {},
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "Enter the Session Ego Name";
-                              }
-                              return null;
-                            },
-                            textInputAction: TextInputAction.next,
-                            controller: _sessionEgoNameController,
-                            decoration: new InputDecoration(
-                              hintText: "ego name on the session",
-                              labelText: "Session Ego Name",
-                              labelStyle:
-                              TextStyle(color: Pallet.colorTextGray),
-                              focusedBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
-                              enabledBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorTextGray)),
-                              contentPadding:
-                              EdgeInsets.only(right: 15, left: 15),
-                            ),
-                            keyboardType: TextInputType.text,
-                            style: GoogleFonts.lato(
-                                fontSize: 12.0,
-                                color: Pallet.colorBlack,
-                                fontWeight: FontWeight.w400)),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Container(
-                        color: Pallet.colorWhite,
-                        child: TextFormField(
-                            onChanged: (value) {},
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "Explain Why Feature";
-                              }
-                              return null;
-                            },
-                            textInputAction: TextInputAction.next,
-                            controller: _whyFeatureController,
-                            decoration: new InputDecoration(
-                              hintText: "I will like to...",
-                              labelText: "Write A Short Explanation",
-                              labelStyle:
-                              TextStyle(color: Pallet.colorTextGray),
-                              focusedBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
-                              enabledBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorTextGray)),
-                              contentPadding:
-                              EdgeInsets.only(right: 15, left: 15),
-                            ),
-                            keyboardType: TextInputType.text,
-                            style: GoogleFonts.lato(
-                                fontSize: 12.0,
-                                color: Pallet.colorBlack,
-                                fontWeight: FontWeight.w400)),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  color: Pallet.colorGrey.withOpacity(0.3),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Center(
-                      child: Text(AppString.switchHeaderTwo,
-                          //textAlign: TextAlign.center,
-                          style: GoogleFonts.lato(
-                              fontSize: 13.0,
-                              color: Pallet.colorBlack,
-                              fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only( top: 10.0,left: 20.0, right: 20.0),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12.0, bottom: 12),
-                        child: Divider(height: 1, color: Pallet.grey,),
-                      ),
-                      customSwitch(AppString.switchText5,value5,onChangeFunction5),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12.0, bottom: 12),
-                        child: Divider(height: 1, color: Pallet.grey,),
-                      ),
-                      customSwitch(AppString.switchText6,value6,onChangeFunction6),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12.0, bottom: 12),
-                        child: Divider(height: 1, color: Pallet.grey,),
-                      ),
-                      customSwitch(AppString.request_feature_switchText7,value7,onChangeFunction7),
-
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: 12,
-                ),
-                Container(
-                  color: Pallet.colorGrey.withOpacity(0.3),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Center(
-                      child: Text(AppString.continue_feature_request_on_whatsapp,
-                          //textAlign: TextAlign.center,
-                          style: GoogleFonts.lato(
-                              fontSize: 13.0,
-                              color: Pallet.colorBlack,
-                              fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    final _user = await firebaseServices.getUserInfo();
-                    if (_user.currentLoveCount > 2000) {
-                      onContinueToWhatsAppClicked();
-                    } else showToast("Need at least 500 Loves in your wallet.");
-                  },
-                  child: Container(
-                    color: Pallet.green,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                        children: [
-                          Image.asset('assets/images/ic_whatsapp_white.png',
-                            height: 25, width: 25,),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 75.0),
-                            child: Text("CONTINUE VIA WHATSAPP",
-                                //textAlign: TextAlign.center,
-                                style: GoogleFonts.lato(
-                                    fontSize: 16.0,
-                                    color: Pallet.colorWhite,
-                                    fontWeight: FontWeight.w700)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 8,),
-                GestureDetector(
-                  onTap: () async {
-                    final _user = await firebaseServices.getUserInfo();
-                    if (_user.currentLoveCount > 2000) {
-                      launchEmailApp();
-                    } else showToast("Need at least 500 Loves in your wallet.");
-                  },
-                  child: Container(
-                    color: Colors.red,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                        children: [
-                          Icon(Icons.email, color:Colors.white, size:30),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 75.0),
-                            child: Text("CONTINUE VIA EMAIL",
-                                //textAlign: TextAlign.center,
-                                style: GoogleFonts.lato(
-                                    fontSize: 16.0,
-                                    color: Pallet.colorWhite,
-                                    fontWeight: FontWeight.w700)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(20.0),
+            children: [
+              _buildInfoSection(isDarkMode),
+              const SizedBox(height: 20),
+              _buildTextFormField(
+                controller: _whyFeatureController,
+                labelText: 'Write A Short Explanation',
+                hintText: 'I will like to...',
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Explain Why Feature';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 30),
+              _isProcessing
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildSubmitButton(isDarkMode),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget customSwitch(String text, bool value, Function onChange){
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Container(
-          width: 200,
-          child: Text(text,
-              //textAlign: TextAlign.center,
-              style: GoogleFonts.lato(
-                  fontSize: 13.0,
-                  color: Pallet.colorBlack,
-                  fontWeight: FontWeight.w600)
-          ),
-        ),
-        Spacer(),
-        Switch(
-            value: value,
-            inactiveTrackColor: Pallet.colorGrey,
-            activeTrackColor: Pallet.colorPink.withOpacity(0.3),
-            activeColor: Pallet.colorPink,
-            onChanged: (newValue) {
-              onChange(newValue);
-            })
-      ],
-    );
-
-  }
-
-  onChangeFunction4(bool newValue4){
-    setState(() {
-      if(!value4){
-        _value4Controller.text = "Yes";
-      } else{
-        _value4Controller.text = "No";
-      }
-      value4 = newValue4;
-      print("value4.. $value4, ${_value4Controller.text}");
-    });
-  }
-  onChangeFunction5(bool newValue5){
-    setState(() {
-      if(!value5){
-        _value5Controller.text = "Yes";
-      } else {
-        _value5Controller.text = "No";
-      }
-      value5 = newValue5;
-      print("value5.. $value5, ${_value5Controller.text}");
-    });
-  }
-  onChangeFunction6(bool newValue6){
-    setState(() {
-      if(!value6){
-        _value6Controller.text = "Yes";
-      } else {
-        _value6Controller.text = "No";
-      }
-      value6 = newValue6;
-      print("value6.. $value6, ${_value6Controller.text}");
-    });
-  }
-  onChangeFunction7(bool newValue7){
-    setState(() {
-      if(!value7) {
-        _value7Controller.text = "Agree";
-      } else {
-        _value7Controller.text = "No";
-      }
-      value7 = newValue7;
-      print("value7.. $value7, ${_value7Controller.text}");
-    });
-  }
-
-  String? getWhatsAppUrl(String payload ){
-    return AppString.WHATSAPP_URL + (payload);
-  }
-
-  onContinueToWhatsAppClicked() {
-    var whatsAppUrl = getWhatsAppUrl(getPayload() ?? "");
-    launch(whatsAppUrl!);
-  }
-
-  launchEmailApp() {
-    String? encodeQueryParameters(Map<String, String> params) {
-      return params.entries
-          .map((e) =>
-      '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
-          .join('&');
-    }
-
-    final String payload = getPayload().toString();
-    final Uri emailLaunchUri = Uri(
-      scheme: 'mailto',
-      path: 'dearclaireapp@gmail.com',
-      query: encodeQueryParameters(
-          <String, String>{
-            'subject': 'Requesting Alter Ego Mode',
-            'body': payload,
-          }),
-    );
-
-    launchUrl(emailLaunchUri);
-  }
-
-  String? getPayload(){
-    var userUid = firebaseServices.currentUser!.uid.isEmpty ? "null" : firebaseServices.currentUser!.uid;
-
-    var sessionTitle = _sessionTitleController.text.isEmpty ? "null" : _sessionTitleController.text;
-    var sessionEgoName = _sessionEgoNameController.text.isEmpty ? "null" : _sessionEgoNameController.text;
-    var whyFeature = _whyFeatureController.text.isEmpty ? "null" : _whyFeatureController.text;
-    var ratedOnPlaystore = _value5Controller.text.isEmpty ? "No" : _value5Controller.text;
-    var believeInClaire = _value6Controller.text.isEmpty ? "No" : _value6Controller.text;
-    var readyToBeClaire = _value7Controller.text.isEmpty ? "No" : _value7Controller.text;
-    var email = firebaseServices.currentUser!.email == null ? "null" : firebaseServices.currentUser!.email;
-
-
-    return """
-      Hi, Admin,
-      I'm requesting to feature a session. These are the details:
-
-      *UserId*: $userUid
-
-      *Email*: $email
-
-      *Session Title*: $sessionTitle
-
-      *Session Ego Name*: $sessionEgoName
-
-      *Write A Short Reason To Feature*: $whyFeature
-
-      *Have you rated Dear Claire five stars with a short sweet review?*: $ratedOnPlaystore
-
-      *Do you truly believe in the Claire Project? That everyone deserves a true friend in need and indeed?*: $believeInClaire
-
-      *This might cost nothing or up to 10,000 Claireloves?*: $readyToBeClaire
-    """.trim();
-  }
-}
-
-class MultiSwitchOptions extends StatefulWidget {
-  const MultiSwitchOptions({Key? key}) : super(key: key);
-
-  @override
-  _MultiSwitchOptionsState createState() => _MultiSwitchOptionsState();
-}
-
-class _MultiSwitchOptionsState extends State<MultiSwitchOptions> {
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildInfoSection(bool isDarkMode) {
     return Container(
-
+      color: isDarkMode ? Colors.grey[800] : Pallet.colorGrey.withOpacity(0.3),
+      padding: const EdgeInsets.all(20.0),
+      child: Text(AppString.request_feature_form_header,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.lato(
+              fontSize: 13.0,
+              color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
+              fontWeight: FontWeight.w600)),
     );
+  }
+
+  Widget _buildTextFormField({
+    required TextEditingController controller,
+    required String labelText,
+    required String hintText,
+    required FormFieldValidator<String> validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      textInputAction: TextInputAction.next,
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: hintText,
+        border: const OutlineInputBorder(),
+      ),
+      keyboardType: TextInputType.text,
+    );
+  }
+
+  Widget _buildSubmitButton(bool isDarkMode) {
+    return ElevatedButton(
+      onPressed: _submitRequest,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary,
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      child: Text(
+        'Submit Request',
+        style: GoogleFonts.lato(
+            fontSize: 18, color: Pallet.colorWhite, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Future<void> _submitRequest() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isProcessing = true;
+      });
+
+      final _user = await firebaseServices.getUserInfo();
+      if (_user.currentLoveCount < 1000) {
+        showToast(message: 'You need at least 1000 Loves to submit a feature request.');
+        setState(() {
+          _isProcessing = false;
+        });
+        return;
+      }
+
+      final title = widget.session.title!;
+      final message = _whyFeatureController.text;
+      final egoName = widget.session.userNickname!;
+
+      final isAbusive = await _checkForAbusiveLanguage(title, message, egoName);
+
+      if (isAbusive) {
+        showToast(message: 'Your request contains inappropriate language and cannot be submitted.');
+        setState(() {
+          _isProcessing = false;
+        });
+        return;
+      }
+
+      await firebaseServices.deductLoves(1000);
+      await firebaseServices.featureSession(widget.session.sessionId!);
+
+      showToast(message: 'Your session has been featured successfully!');
+      Navigator.pop(context);
+
+      setState(() {
+        _isProcessing = false;
+      });
+    }
+  }
+
+  Future<bool> _checkForAbusiveLanguage(String title, String message, String egoName) async {
+    const apiKey = 'AIzaSyA2Nh3m4lupDBewWT_Z0ZBkwpjXY9x6Fi4';
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey';
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'contents': [
+          {
+            'parts': [
+              {
+                'text': 'Is the following text abusive, illicit, or harmful in any way? Answer with only "true" or "false".\n\n$title. $message. $egoName'
+              }
+            ]
+          }
+        ]
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final result = data['candidates'][0]['content']['parts'][0]['text'];
+      return result.toLowerCase() == 'true';
+    } else {
+      // Safely assume not abusive if API fails
+      return false;
+    }
   }
 }

@@ -12,7 +12,7 @@ import 'package:clairediary/utils/mood.dart';
 import 'package:clairediary/widgets/comments_button.dart';
 import 'package:clairediary/widgets/custom_image_widget.dart';
 import 'package:clairediary/widgets/metoo_button.dart';
-import 'package:clairediary/widgets/toast.dart';
+import 'package:clairediary/helpers/toast_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +23,7 @@ import '../services/firebase_services.dart';
 import '../services/user_model.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../utils/strings.dart';
+import '../ui/routes/routes.dart';
 
 class FeaturedSessionCard extends StatelessWidget {
   Session element;
@@ -151,7 +152,7 @@ class FeaturedSessionCard extends StatelessWidget {
                           context);
                     }
                     else {
-                      showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                      showToast(message: "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
                     }
                     print("Visited User ID::: $visitedUsersID");
                   },
@@ -201,7 +202,7 @@ class FeaturedSessionCard extends StatelessWidget {
                                 context);
                           }
                           else {
-                            showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                            showToast(message: "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
                           }
                           print("Visited User ID::: $visitedUsersID");
                         },
@@ -544,7 +545,7 @@ class FeaturedSessionCard extends StatelessWidget {
           "Cost: 1,000+ Loves"),
       onPressed:  () {
         // setToFeatured();
-        Navigator.pushReplacementNamed(context, AppRoutes.requestFeatureForm);
+        Navigator.pushReplacementNamed(context, AppRoutes.requestFeatureForm, arguments: element);
       },
     );
 

@@ -13,6 +13,7 @@ import 'package:clairediary/ui/ego-profile/clairevatar.dart';
 import 'package:clairediary/ui/ego-profile/profile.dart';
 import 'package:clairediary/ui/ego-profile/request_claire_love_form.dart';
 import 'package:clairediary/ui/featured/all_featured.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
 import 'package:clairediary/ui/games/games_home.dart';
 import 'package:clairediary/ui/games/space_shooter.dart';
 import 'package:clairediary/ui/games/tic_tac_toe.dart';
@@ -199,7 +200,7 @@ class AppRouter {
 
       case AppRoutes.requestFeatureForm:
         return MaterialPageRoute<dynamic>(
-          builder: (_) => RequestFeatureForm(),
+          builder: (_) => RequestFeatureForm(session: settings.arguments as Session),
           settings: settings,
           fullscreenDialog: true,
         );

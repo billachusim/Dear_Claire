@@ -15,7 +15,7 @@ import 'package:clairediary/ui/featured/model/session.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/utils/strings.dart';
-import 'package:clairediary/widgets/toast.dart';
+import 'package:clairediary/helpers/toast_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
@@ -480,17 +480,17 @@ class FirebaseServices extends ChangeNotifier {
           .then((value) => {
                 setUsersId(value.user!.uid),
               });
-      showToast(AppString.open_up_toast);
+      showToast(message: AppString.open_up_toast);
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
       return true;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password') {
         showToast(
-            'The ego code is invalid or the ego does not have an ego code.');
+            message: 'The ego code is invalid or the ego does not have an ego code.');
       } else if (e.code == 'wrong-email') {
-        showToast('The email is invalid or the user does not have an email.');
+        showToast(message: 'The email is invalid or the user does not have an email.');
       }
-      showToast(AppString.open_up_error);
+      showToast(message: AppString.open_up_error);
       return false;
     } catch (e) {
       print(e);
@@ -522,7 +522,7 @@ class FirebaseServices extends ChangeNotifier {
       print("AlterEgo value...: $alterEgoId , $alterEgoAccessCode");
       Navigator.of(context).pushReplacementNamed(AppRoutes.alterEgoHomepage);
     } else {
-      showToast(AppString.get_alter_ego_error);
+      showToast(message: AppString.get_alter_ego_error);
       print("AlterEgo login fail...: $alterEgoId , $alterEgoAccessCode");
     }
   }
@@ -596,21 +596,21 @@ class FirebaseServices extends ChangeNotifier {
         setUsersId(value.user!.uid),
       });
 
-      showToast(AppString.create_ego_complete_toast);
+      showToast(message: AppString.create_ego_complete_toast);
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
       return true;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        showToast('The password provided is too weak.');
+        showToast(message: 'The password provided is too weak.');
       } else if (e.code.length < 4) {
-        showToast('secret code should be up to 4 digits');
+        showToast(message: 'secret code should be up to 4 digits');
       } else if (e.code == 'email-already-in-use') {
-        showToast('The account already exists for that email.');
+        showToast(message: 'The account already exists for that email.');
       } else if (!isValidEmail(email)) {
-        showToast('email is not invalid');
+        showToast(message: 'email is not invalid');
       }
       logger.e(e);
-      showToast(AppString.open_up_error);
+      showToast(message: AppString.open_up_error);
       return false;
     } catch (e) {
       logger.e(e);
@@ -730,8 +730,8 @@ class FirebaseServices extends ChangeNotifier {
       _subscribeToSession(_name, session);
 
       showToast(
-        AppString.followingYourDiarySessionMessage,
-        bgColor: Color(
+        message: AppString.followingYourDiarySessionMessage,
+        backgroundColor: Color(
           int.parse(
             session.colorHex!.replaceAll('#', '0xff'),
           ),
@@ -747,8 +747,8 @@ class FirebaseServices extends ChangeNotifier {
     }).whenComplete(() {
       _unSubscribeToSession(session.sessionId!);
 
-      showToast(AppString.unfollowingYourDiarySessionMessage,
-          bgColor: Color(
+      showToast(message: AppString.unfollowingYourDiarySessionMessage,
+          backgroundColor: Color(
               int.parse(session.colorHex!.replaceAll('#', '0xff'))));
     });
   }
@@ -771,8 +771,8 @@ class FirebaseServices extends ChangeNotifier {
             _subscribeToSession(_name, session);
 
             showToast(
-              AppString.followingDiarySessionMessage,
-              bgColor: Color(
+              message: AppString.followingDiarySessionMessage,
+              backgroundColor: Color(
                 int.parse(
                   session.colorHex!.replaceAll('#', '0xff'),
                 ),
@@ -788,8 +788,8 @@ class FirebaseServices extends ChangeNotifier {
           }).whenComplete(() {
             _unSubscribeToSession(session.sessionId!);
 
-            showToast(AppString.unfollowingDiarySessionMessage,
-                bgColor: Color(
+            showToast(message: AppString.unfollowingDiarySessionMessage,
+                backgroundColor: Color(
                     int.parse(session.colorHex!.replaceAll('#', '0xff'))));
           });
   }
@@ -1362,7 +1362,23 @@ class FirebaseServices extends ChangeNotifier {
 
   }
 
+  Future<void> deductLoves(int amount) async {
+    _usersID = await getUsersId();
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(_usersID)
+        .set({
+      'totalLoveCount': FieldValue.increment(-amount),
+    },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully decreased total love count from ${_usersID} for featured session');
+  }
 
-
-
+  Future<void> featureSession(String sessionId) async {
+    await _firebaseFirestore
+        .collection(AppString.appFeaturedSessions)
+        .doc(sessionId)
+        .update({'featured': true});
+  }
 }
