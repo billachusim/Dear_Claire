@@ -24,7 +24,7 @@ class CommentsButton extends StatelessWidget {
                     fontWeight: FontWeight.w900)
             ),
             Text(
-                'Advises',
+                'Advises ',
                 style: GoogleFonts.lato(
                     fontSize: 15.0,
                     color: Pallet.colorWhite,

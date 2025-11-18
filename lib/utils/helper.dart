@@ -52,83 +52,33 @@ double getDeviceWidth(BuildContext context) =>
 /// custom dialog box
 void showCustomDialog(BuildContext context,
     {required Function()? onPressed, required String message}) {
-  showGeneralDialog(
-    barrierLabel: "DearClaire",
-    barrierDismissible: true,
-    barrierColor: Colors.black.withOpacity(0.5),
-    transitionDuration: Duration(milliseconds: 700),
-    context: context,
-    pageBuilder: (_, __, ___) {
-      return Align(
-        alignment: Alignment.center,
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-          Material(
-            child: Text('Claire🌺',
-                textAlign: TextAlign.start,
-                maxLines: 1,
-                style: GoogleFonts.lato(
-                    fontSize: 18.0,
-                    color: Pallet.colorBlack,
-                    fontWeight: FontWeight.w700)),
-          ),
-          SizedBox(
-            height: 16,
-          ),
-          Material(
-            child: Text(
-              message,
-              textAlign: TextAlign.justify,
-              style: GoogleFonts.lato(
-                  fontSize: 16.0,
-                  color: Pallet.colorBlack,
-                  fontWeight: FontWeight.normal),
-            ),
-          ),
-          SizedBox(
-            height: 18,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              CupertinoButton(
-                  onPressed: () => PageRouter.goBack(context),
-                  child: Text('NO',
-                      textAlign: TextAlign.start,
-                      maxLines: 1,
-                      style: GoogleFonts.lato(
-                          fontSize: 16.0,
-                          color: Pallet.colorBottomNav,
-                          fontWeight: FontWeight.w700))),
-              CupertinoButton(
-                  onPressed: onPressed,
-                  child: Text('YES',
-                      textAlign: TextAlign.start,
-                      maxLines: 1,
-                      style: GoogleFonts.lato(
-                          fontSize: 16.0,
-                          color: Pallet.colorPink,
-                          fontWeight: FontWeight.w700))),
-            ],
-          )
-            ],
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
-          ),
-        ),
-      );
+  // set up the buttons
+  Widget cancelButton = TextButton(
+    child: Text("NO"),
+    onPressed: () {
+      Navigator.of(context).pop();
     },
-    transitionBuilder: (_, anim, __, child) {
-      return SlideTransition(
-        position: Tween(begin: Offset(0, 1), end: Offset(0, 0)).animate(anim),
-        child: child,
-      );
+  );
+  Widget continueButton = TextButton(
+    child: Text("YES"),
+    onPressed: onPressed,
+  );
+
+  // set up the AlertDialog
+  AlertDialog alert = AlertDialog(
+    title: Text("Claire🌺"),
+    content: Text(message),
+    actions: [
+      cancelButton,
+      continueButton,
+    ],
+  );
+
+  // show the dialog
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
     },
   );
 }
@@ -136,7 +86,7 @@ void showCustomDialog(BuildContext context,
 /// validate users email
 bool isValidEmail(String email) {
   String pattern =
-      r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+      r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))';
   RegExp regex = new RegExp(pattern);
   return regex.hasMatch(email);
 }

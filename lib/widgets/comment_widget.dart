@@ -81,17 +81,20 @@ class _CommentWidgetState extends State<CommentWidget> {
   //show up when user clicks on the FAB to edit an advise
   Future<void> _showCardDialog() async {
     editAdviseController.text = widget.commentSessionModel!.message.toString();
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return Center(
           child: AlertDialog(
+            backgroundColor: isDarkMode ? Pallet.colorSecondary : Pallet.colorWhite,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0)),
             title: Container(
               child: Text(AppString.edit_advise_dialog_header,
-                  textAlign: TextAlign.center),
+                  textAlign: TextAlign.center,
+              style: TextStyle(color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack),),
             ),
             content: SingleChildScrollView(
               child: Container(
@@ -105,6 +108,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                         controller: editAdviseController,
                         minLines: 4,
                         maxLines: 200,
+                        style: TextStyle(color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack),
                         decoration: InputDecoration(
                           //border: InputBorder,
                         ),

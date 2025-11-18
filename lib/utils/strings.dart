@@ -164,12 +164,12 @@ class AppString{
       "Unfollowed this Diary Session.(No more Notifications)";
 
   static const String search_bar_hint = ' Search Claire...';
-  static const String im_so_happy = '  " I\'m so happy... "';
-  static const String relationship_issues = '  " Relationship Issues "';
-  static const String sad_and_depressed = '  " Sad and depressed "';
-  static const String school_and_work = '  " School and work issues "';
-  static const String make_new_friends = '  " Make new friends "';
-  static const String sick_and_tired = '  " Sick and tired "';
+  static const String im_so_happy = 'I\'m so happy';
+  static const String relationship_issues = 'Relationship Issues';
+  static const String sad_and_depressed = 'Sad and depressed';
+  static const String school_and_work = 'School and work issues';
+  static const String make_new_friends = 'Make new friends';
+  static const String sick_and_tired = 'Sick and tired';
   static const String featured_searches = ' Featured Searches 🌺';
 
 

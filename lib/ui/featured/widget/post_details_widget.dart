@@ -770,17 +770,21 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   //show up when user clicks on the FAB to edit an advise
   Future<void> _showCardDialog() async {
     editSessionController.text = theSession!.message.toString();
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return Center(
           child: AlertDialog(
+            backgroundColor: isDarkMode ? Pallet.colorSecondary : Pallet.colorWhite,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0)),
             title: Container(
               child: Text(AppString.edit_session_dialog_header,
-                  textAlign: TextAlign.center),
+                  textAlign: TextAlign.center,
+              style: TextStyle(color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack),
+              ),
             ),
             content: SingleChildScrollView(
               child: Container(
@@ -794,9 +798,10 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                         controller: editSessionController,
                         minLines: 8,
                         maxLines: 2000,
+                        style: TextStyle(color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack),
                         decoration: InputDecoration(
-                            //border: InputBorder,
-                            ),
+                          //border: InputBorder,
+                        ),
                       ),
                       SizedBox(
                         height: 10,

@@ -18,10 +18,11 @@ class SessionDetailsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
       decoration:
-          BoxDecoration(color: HexColor.fromHex(singleSessionModel!.colorHex!)),
+          BoxDecoration(color: isDarkMode ? Pallet.colorSecondary : HexColor.fromHex(singleSessionModel!.colorHex!)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -63,7 +64,7 @@ class SessionDetailsWidget extends StatelessWidget {
                         maxLines: 1,
                         style: GoogleFonts.lato(
                             fontSize: 16.0,
-                            color: Pallet.colorWhite,
+                            color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                             fontWeight: FontWeight.w700)),
                     SizedBox(
                       height: 5,
@@ -73,7 +74,7 @@ class SessionDetailsWidget extends StatelessWidget {
                         maxLines: 1,
                         style: GoogleFonts.lato(
                             fontSize: 13.0,
-                            color: Pallet.colorWhite,
+                            color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                             fontWeight: FontWeight.normal)),
                   ],
                 ),
@@ -88,7 +89,7 @@ class SessionDetailsWidget extends StatelessWidget {
                         maxLines: 1,
                         style: GoogleFonts.lato(
                             fontSize: 15.0,
-                            color: Pallet.colorWhite,
+                            color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                             fontWeight: FontWeight.w700)),
                     SizedBox(
                       height: 5,
@@ -98,7 +99,7 @@ class SessionDetailsWidget extends StatelessWidget {
                         maxLines: 1,
                         style: GoogleFonts.lato(
                             fontSize: 13.0,
-                            color: Pallet.colorWhite,
+                            color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                             fontWeight: FontWeight.normal)),
                   ],
                 ),
@@ -114,7 +115,7 @@ class SessionDetailsWidget extends StatelessWidget {
                 maxLines: 1,
                 style: GoogleFonts.lato(
                     fontSize: 18.0,
-                    color: Pallet.colorWhite,
+                    color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                     fontWeight: FontWeight.w700)),
           ),
           SizedBox(
@@ -128,7 +129,7 @@ class SessionDetailsWidget extends StatelessWidget {
                   textAlign: TextAlign.justify,
                   style: GoogleFonts.lato(
                       fontSize: 16.0,
-                      color: Pallet.colorWhite,
+                      color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                       fontWeight: FontWeight.normal),
                 ),
               ),

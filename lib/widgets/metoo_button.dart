@@ -277,22 +277,15 @@ class _MetooButtonState extends State<MetooButton>
         mainAxisSize: MainAxisSize.min,
         children: [
           // count badge instead of smiley
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.pinkAccent,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              selectedCount.toString(),
-              style: GoogleFonts.lato(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+          Text(
+            selectedCount.toString(),
+            style: GoogleFonts.lato(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 3),
           Text(
             selectedReaction.value,
             style: GoogleFonts.lato(

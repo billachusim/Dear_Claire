@@ -74,7 +74,6 @@ class _AlterEgoLoginPageState extends State<AlterEgoLoginPage> {
                           style: GoogleFonts.lato(
                               height: 1.171875,
                               fontSize: 14.0,
-                              color: Pallet.colorSecondaryDark,
                               fontWeight: FontWeight.w600),
 
                         ),
