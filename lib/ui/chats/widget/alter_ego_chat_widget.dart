@@ -302,15 +302,7 @@ class AlterEgoChatWidget extends StatelessWidget {
           Visibility(
             visible: chatModel?.audioUrl != '',
             child: Container(
-              alignment: Alignment.topLeft,
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Row(
-                  children: [
-                    PlayAdviseVoiceNote(filePath: chatModel!.audioUrl)
-                  ],
-                ),
-              ),
+              child: PlayAdviseVoiceNote(filePath: chatModel!.audioUrl),
             ),
           ),
 

@@ -206,15 +206,7 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
           Visibility(
             visible: widget.chatModel?.audioUrl != '',
             child: Container(
-              alignment: Alignment.topLeft,
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Row(
-                  children: [
-                    PlayAdviseVoiceNote(filePath: widget.chatModel!.audioUrl)
-                  ],
-                ),
-              ),
+              child: PlayAdviseVoiceNote(filePath: widget.chatModel!.audioUrl),
             ),
           ),
 

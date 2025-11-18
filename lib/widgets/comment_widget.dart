@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:clairediary/ui/create_session/sound/custom_play_sound_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/ui/featured/model/comment_session_model.dart';
@@ -464,18 +465,10 @@ class _CommentWidgetState extends State<CommentWidget> {
           Visibility(
             visible: widget.commentSessionModel!.audioUrl! != 'null',
             child: Container(
-              alignment: Alignment.topLeft,
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Row(
-                  children: [
-                    widget.commentSessionModel!.audioUrl!.isNotEmpty
-                        ? PlayAdviseVoiceNote(
-                            filePath: widget.commentSessionModel!.audioUrl)
-                        : SizedBox.shrink(),
-                  ],
-                ),
-              ),
+              child: widget.commentSessionModel!.audioUrl!.isNotEmpty
+                  ? PlayAdviseVoiceNote(
+                      filePath: widget.commentSessionModel!.audioUrl)
+                  : SizedBox.shrink(),
             ),
           ),
 

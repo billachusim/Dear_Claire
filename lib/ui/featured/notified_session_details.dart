@@ -376,18 +376,10 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                               SizedBox(height: 5,),
 
                               Container(
-                                alignment: Alignment.centerLeft,
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Row(
-                                    children: [
-                                      _session.audioUrl!.isNotEmpty
-                                          ? CustomPlaySoundWidget(
-                                          filePath: _session.audioUrl)
-                                          : SizedBox.shrink(),
-                                    ],
-                                  ),
-                                ),
+                                child: _session.audioUrl!.isNotEmpty
+                                    ? CustomPlaySoundWidget(
+                                    filePath: _session.audioUrl)
+                                    : SizedBox.shrink(),
                               ),
 
                               Visibility(

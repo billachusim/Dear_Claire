@@ -186,15 +186,7 @@ class AudioStreamCard extends StatelessWidget {
               children: [
 
                 Container(
-                  alignment: Alignment.topLeft,
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Row(
-                      children: [
-                        CustomPlaySoundWidget(filePath: element.audioUrl)
-                      ],
-                    ),
-                  ),
+                  child: CustomPlaySoundWidget(filePath: element.audioUrl),
                 ),
 
               ],

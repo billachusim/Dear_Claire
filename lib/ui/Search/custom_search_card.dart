@@ -34,11 +34,10 @@ class CustomSearchCard extends StatelessWidget {
     final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
     final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
 
-    return CupertinoButton(
-      onPressed: () => PageRouter.gotoWidget(
+    return GestureDetector(
+      onTap: () => PageRouter.gotoWidget(
           EgoModeSessionDetail(featuredSessionModel: element),
           context),
-      padding: EdgeInsets.zero,
       child: Container(
         width: 270,
         height: 195,
@@ -199,7 +198,7 @@ class CustomSearchCard extends StatelessWidget {
             Column(
               children: [
                 Text(
-                  element.message!,
+                  element.audioUrl!.isNotEmpty ? "" : element.message!,
                   textAlign: TextAlign.start,
                   maxLines: element.imageUrls!.isNotEmpty ? 1 : 3,
                   style: GoogleFonts.lato(
@@ -212,17 +211,9 @@ class CustomSearchCard extends StatelessWidget {
                   height: 3,
                 ),
                 Container(
-                  alignment: Alignment.topLeft,
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Row(
-                      children: [
-                        element.audioUrl!.isNotEmpty
-                            ? CustomPlaySoundWidget(filePath: element.audioUrl)
-                            : SizedBox.shrink(),
-                      ],
-                    ),
-                  ),
+                  child: element.audioUrl!.isNotEmpty
+                      ? CustomPlaySoundWidget(filePath: element.audioUrl)
+                      : SizedBox.shrink(),
                 ),
 
                 Container(

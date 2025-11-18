@@ -68,7 +68,7 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(50),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0),
@@ -107,7 +107,7 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
                     await _audioPlayer.seek(position);
                   },
                   activeColor: Colors.pink,
-                  inactiveColor: Colors.grey,
+                  inactiveColor: Colors.white70,
                 ),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -120,7 +120,7 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
                       ),
                       Text(
                         _formatDuration(_duration),
-                        style: TextStyle(color: Colors.white, fontSize: 12.sp),
+                        style: TextStyle(color: Colors.white70, fontSize: 12.sp),
                       ),
                     ],
                   ),

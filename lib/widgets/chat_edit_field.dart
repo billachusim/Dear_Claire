@@ -160,25 +160,21 @@ class _ChatEditFieldState extends State<ChatEditField> {
             Visibility(
               visible: _recordFile != null,
               child: Container(
-                alignment: Alignment.topLeft,
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Row(
-                    children: [
-                      CustomPlaySoundWidget(
-                        filePath: _recordFile?.path,
-                      ),
-                      IconButton(
-                          icon: Icon(
-                            Icons.cancel,
-                            color: Colors.red,
-                            size: 24.r,
-                          ),
-                          onPressed: () => setState(() {
-                                _recordFile = null;
-                              }))
-                    ],
-                  ),
+                child: Row(
+                  children: [
+                    CustomPlaySoundWidget(
+                      filePath: _recordFile?.path,
+                    ),
+                    IconButton(
+                        icon: Icon(
+                          Icons.cancel,
+                          color: Colors.red,
+                          size: 24.r,
+                        ),
+                        onPressed: () => setState(() {
+                              _recordFile = null;
+                            }))
+                  ],
                 ),
               ),
             ),
@@ -369,45 +365,47 @@ class _ChatEditFieldState extends State<ChatEditField> {
                 ),
 
                 Flexible(
-                  child: new ConstrainedBox(
-                    constraints: new BoxConstraints(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
                       minWidth: getDeviceWidth(context),
                       maxWidth: getDeviceWidth(context),
                       minHeight: 20.0,
                       maxHeight: 135.0,
                     ),
-                    child: new Scrollbar(
+                    child: Scrollbar(
                       child: Container(
                         padding: EdgeInsets.zero,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(25),
-                          color: Pallet.colorWhite,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withOpacity(0.05)    // dark mode background
+                              : Colors.grey.shade200,              // light mode background
                         ),
-                        child: new TextField(
-                          cursorColor: Pallet.colorSplashScreen,
+                        child: TextField(
+                          cursorColor: Theme.of(context).colorScheme.primary,
                           keyboardType: TextInputType.multiline,
                           maxLines: null,
                           controller: _controller,
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : Colors.black87,
+                          ),
                           onChanged: (text) {
-                            if (text.length >= 2) {
-                              setState(() {
-                                isTyping = true;
-                              });
-                            } else {
-                              isTyping = false;
-                              setState(() {
-                                isTyping = false;
-                              });
-                            }
+                            setState(() {
+                              isTyping = text.length >= 2;
+                            });
                           },
                           decoration: InputDecoration(
                             border: InputBorder.none,
-                            contentPadding:
-                                EdgeInsets.only(left: 13.0, right: 13.0),
+                            contentPadding: EdgeInsets.only(left: 13.0, right: 13.0),
+
                             hintText: "Positive vibes only...",
                             hintStyle: TextStyle(
                               fontStyle: FontStyle.italic,
-                              color: Colors.grey,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white54   // dark mode hint
+                                  : Colors.black45,   // light mode hint
                             ),
                           ),
                         ),
@@ -415,6 +413,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                     ),
                   ),
                 ),
+
                 FloatingActionButton(
                   heroTag: "Write",
                     onPressed: () async {

@@ -256,18 +256,10 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                         SizedBox(height: 7,),
 
                         Container(
-                          alignment: Alignment.centerLeft,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              children: [
-                                _session.audioUrl!.isNotEmpty
-                                    ? CustomPlaySoundWidget(
-                                        filePath: _session.audioUrl)
-                                    : SizedBox.shrink(),
-                              ],
-                            ),
-                          ),
+                          child: _session.audioUrl!.isNotEmpty
+                              ? CustomPlaySoundWidget(
+                                  filePath: _session.audioUrl)
+                              : SizedBox.shrink(),
                         ),
 
                         Visibility(

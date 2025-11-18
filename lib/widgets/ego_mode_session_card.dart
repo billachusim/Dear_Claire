@@ -111,11 +111,10 @@ class EgoModeSessionCard extends StatelessWidget {
     final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
     final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
 
-    return CupertinoButton(
-      onPressed: () => PageRouter.gotoWidget(
+    return GestureDetector(
+      onTap: () => PageRouter.gotoWidget(
           EgoModeSessionDetail(featuredSessionModel: element),
           context),
-      padding: EdgeInsets.zero,
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 7, horizontal: 7),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -285,17 +284,9 @@ class EgoModeSessionCard extends StatelessWidget {
                 ),
 
                 Container(
-                  alignment: Alignment.topLeft,
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Row(
-                      children: [
-                        element.audioUrl!.isNotEmpty
-                            ? CustomPlaySoundWidget(filePath: element.audioUrl)
-                            : SizedBox.shrink(),
-                      ],
-                    ),
-                  ),
+                  child: element.audioUrl!.isNotEmpty
+                      ? CustomPlaySoundWidget(filePath: element.audioUrl)
+                      : SizedBox.shrink(),
                 ),
 
                 Visibility(
