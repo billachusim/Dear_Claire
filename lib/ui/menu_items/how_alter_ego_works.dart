@@ -20,32 +20,20 @@ class HowAlterEgoWorks extends StatefulWidget {
 }
 
 class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
-  static List<String> imageSliderList = [
-    "assets/images/alter_ego_slide_1.png",
-    "assets/images/alter_ego_slide_2.png",
-    "assets/images/alter_ego_slide_3.png",
-    "assets/images/alter_ego_slide_4.png",
-  ];
-
-  static List<String> imageSliderDescriptionList = [
-    AppString.about_alter_ego_slide1,
-    AppString.about_alter_ego_slide2,
-    AppString.about_alter_ego_slide3,
-    AppString.about_alter_ego_slide4,
-  ];
-
-  List<Widget> widgetsList = [
-    singleImageWidget(index: 0),
-    singleImageWidget(index: 1),
-    singleImageWidget(index: 2),
-    singleImageWidget(index: 3),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    List<Widget> widgetsList = [
+      singleImageWidget(index: 0, isDarkMode: isDarkMode),
+      singleImageWidget(index: 1, isDarkMode: isDarkMode),
+      singleImageWidget(index: 2, isDarkMode: isDarkMode),
+      singleImageWidget(index: 3, isDarkMode: isDarkMode),
+    ];
+
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: Pallet.colorSecondary,
+          backgroundColor: isDarkMode ? Pallet.colorSecondaryDark : Pallet.colorSecondary,
           centerTitle: false,
           automaticallyImplyLeading: true,
           title: Text('About Alter Ego Mode',
@@ -90,7 +78,7 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
                       alignment: Alignment.topLeft,
                       child: Text(AppString.what_is_alter_ego_header,
                           style: GoogleFonts.lato(
-                              fontSize: 15.0, fontWeight: FontWeight.w700, color: Pallet.colorSecondary)),
+                              fontSize: 15.0, fontWeight: FontWeight.w700, color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorSecondary)),
                     ),
                     Align(
                         alignment: Alignment.topLeft,
@@ -102,7 +90,7 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
                       alignment: Alignment.topLeft,
                       child: Text(AppString.what_is_alter_ego_mode_header,
                           style: GoogleFonts.lato(
-                              fontSize: 15.0, fontWeight: FontWeight.w700, color: Pallet.colorSecondary)),
+                              fontSize: 15.0, fontWeight: FontWeight.w700, color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorSecondary)),
                     ),
                     Align(
                         alignment: Alignment.topLeft,
@@ -114,7 +102,7 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
                       alignment: Alignment.topLeft,
                       child: Text(AppString.how_does_it_work,
                           style: GoogleFonts.lato(
-                              fontSize: 15.0, fontWeight: FontWeight.w700, color: Pallet.colorSecondary)),
+                              fontSize: 15.0, fontWeight: FontWeight.w700, color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorSecondary)),
                     ),
                     Align(
                         alignment: Alignment.topLeft,
@@ -146,7 +134,7 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
                             width: 150,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(25),
-                              color: Pallet.colorPrimary,
+                              color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary,
                             ),
                             child: Center(
                                 child: Text(AppString.donate,
@@ -165,7 +153,7 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
                         } else showToast("...but you need 2000 Loves.");
                       },
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: Pallet.colorSecondary,
+                        backgroundColor: isDarkMode ? Pallet.colorSecondaryDark : Pallet.colorSecondary,
                         padding: EdgeInsets.all(20),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(25)),
@@ -178,11 +166,25 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
                 ))));
   }
 
-  static singleImageWidget({int? index}) {
+  static List<String> imageSliderList = [
+    "assets/images/alter_ego_slide_1.png",
+    "assets/images/alter_ego_slide_2.png",
+    "assets/images/alter_ego_slide_3.png",
+    "assets/images/alter_ego_slide_4.png",
+  ];
+
+  static List<String> imageSliderDescriptionList = [
+    AppString.about_alter_ego_slide1,
+    AppString.about_alter_ego_slide2,
+    AppString.about_alter_ego_slide3,
+    AppString.about_alter_ego_slide4,
+  ];
+
+  static singleImageWidget({int? index, required bool isDarkMode}) {
     return Container(
       padding: EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Pallet.colorSecondary,
+        color: isDarkMode ? Pallet.colorSecondaryDark : Pallet.colorSecondary,
         borderRadius: BorderRadius.circular(30),
       ),
         child: Column(children: [
@@ -202,28 +204,10 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
             dotHeight: 10,
             paintStyle: PaintingStyle.fill,
             strokeWidth: 1.5,
-            dotColor: Pallet.colorPrimary,
+            dotColor: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary,
             activeDotColor: Pallet.colorWhite),
       )
     ]));
-  }
-
-  Widget imageSliderWidget() {
-    return Consumer<HowClaireWorksProvider>(
-        builder: (context, provider, child) => SwipeDetector(
-              child: AnimatedSwitcher(
-                duration: Duration(milliseconds: 1500),
-                transitionBuilder: (child, animation) => ScaleTransition(
-                    scale: animation, child: SizedBox.expand(child: child)),
-                child: singleImageWidget(index: provider.imageSliderIndex),
-              ),
-              onSwipeLeft: (offset) {
-                provider.decreaseIndex(provider.imageSliderIndex);
-              },
-              onSwipeRight: (offset) {
-                provider.increaseIndex(provider.imageSliderIndex);
-              },
-            ));
   }
 
   String getDonateUrl(){
@@ -234,5 +218,4 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
     Uri donateUrl = Uri.parse(getDonateUrl());
     launchUrl(donateUrl);
   }
-
 }

@@ -43,9 +43,10 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Pallet.colorSecondary,
+        backgroundColor: isDarkMode ? Pallet.colorSecondaryDark : Pallet.colorSecondary,
         centerTitle: true,
         title: Text('Alter Ego Reg',
             textAlign: TextAlign.start,
@@ -71,7 +72,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                           //textAlign: TextAlign.center,
                           style: GoogleFonts.lato(
                               fontSize: 13.0,
-                              color: Pallet.colorBlack,
+                              color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                               fontWeight: FontWeight.w600)),
                     ),
                   ),
@@ -82,7 +83,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -100,7 +101,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -110,14 +111,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.text,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -135,7 +136,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -145,14 +146,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.text,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -170,7 +171,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -180,14 +181,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.phone,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -205,7 +206,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -215,14 +216,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.number,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -240,7 +241,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -250,14 +251,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.text,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -275,7 +276,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -285,14 +286,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.text,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -310,7 +311,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -320,14 +321,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.phone,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -345,7 +346,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -355,14 +356,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.text,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -380,7 +381,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -390,14 +391,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.text,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -415,7 +416,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -425,14 +426,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.text,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -450,7 +451,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -460,14 +461,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.text,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
                         height: 20,
                       ),
                       Container(
-                        color: Pallet.colorWhite,
+                        color: isDarkMode ? Pallet.colorBlack : Pallet.colorWhite,
                         child: TextFormField(
                             onChanged: (value) {},
                             validator: (value) {
@@ -485,7 +486,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                               TextStyle(color: Pallet.colorTextGray),
                               focusedBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
+                                      color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary)),
                               enabledBorder: new OutlineInputBorder(
                                   borderSide: new BorderSide(
                                       color: Pallet.colorTextGray)),
@@ -495,7 +496,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                             keyboardType: TextInputType.text,
                             style: GoogleFonts.lato(
                                 fontSize: 12.0,
-                                color: Pallet.colorBlack,
+                                color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                                 fontWeight: FontWeight.w400)),
                       ),
                       SizedBox(
@@ -513,7 +514,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                           //textAlign: TextAlign.center,
                           style: GoogleFonts.lato(
                               fontSize: 13.0,
-                              color: Pallet.colorBlack,
+                              color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                               fontWeight: FontWeight.w600)),
                     ),
                   ),
@@ -522,37 +523,37 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                   padding: const EdgeInsets.only( top: 10.0,left: 20.0, right: 20.0),
                   child: Column(
                     children: [
-                      customSwitch(AppString.switchText1,value1,onChangeFunction1),
+                      customSwitch(AppString.switchText1,value1,onChangeFunction1, isDarkMode),
                       Padding(
                         padding: const EdgeInsets.only(top: 12.0, bottom: 12),
                         child: Divider(height: 1, color: Pallet.grey,),
                       ),
-                      customSwitch(AppString.switchText2,value2,onChangeFunction2),
+                      customSwitch(AppString.switchText2,value2,onChangeFunction2, isDarkMode),
                       Padding(
                         padding: const EdgeInsets.only(top: 12.0, bottom: 12),
                         child: Divider(height: 1, color: Pallet.grey,),
                       ),
-                      customSwitch(AppString.switchText3,value3,onChangeFunction3),
+                      customSwitch(AppString.switchText3,value3,onChangeFunction3, isDarkMode),
                       Padding(
                         padding: const EdgeInsets.only(top: 12.0, bottom: 12),
                         child: Divider(height: 1, color: Pallet.grey,),
                       ),
-                      customSwitch(AppString.switchText4,value4,onChangeFunction4),
+                      customSwitch(AppString.switchText4,value4,onChangeFunction4, isDarkMode),
                       Padding(
                         padding: const EdgeInsets.only(top: 12.0, bottom: 12),
                         child: Divider(height: 1, color: Pallet.grey,),
                       ),
-                      customSwitch(AppString.switchText5,value5,onChangeFunction5),
+                      customSwitch(AppString.switchText5,value5,onChangeFunction5, isDarkMode),
                       Padding(
                         padding: const EdgeInsets.only(top: 12.0, bottom: 12),
                         child: Divider(height: 1, color: Pallet.grey,),
                       ),
-                      customSwitch(AppString.switchText6,value6,onChangeFunction6),
+                      customSwitch(AppString.switchText6,value6,onChangeFunction6, isDarkMode),
                       Padding(
                         padding: const EdgeInsets.only(top: 12.0, bottom: 12),
                         child: Divider(height: 1, color: Pallet.grey,),
                       ),
-                      customSwitch(AppString.switchText7,value7,onChangeFunction7),
+                      customSwitch(AppString.switchText7,value7,onChangeFunction7, isDarkMode),
 
                     ],
                   ),
@@ -569,7 +570,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                           //textAlign: TextAlign.center,
                           style: GoogleFonts.lato(
                               fontSize: 13.0,
-                              color: Pallet.colorBlack,
+                              color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                               fontWeight: FontWeight.w600)),
                     ),
                   ),
@@ -634,7 +635,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
     );
   }
 
-  Widget customSwitch(String text, bool value, Function onChange){
+  Widget customSwitch(String text, bool value, Function onChange, bool isDarkMode){
     return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -644,7 +645,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
               //textAlign: TextAlign.center,
               style: GoogleFonts.lato(
                   fontSize: 13.0,
-                  color: Pallet.colorBlack,
+                  color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                   fontWeight: FontWeight.w600)
           ),
         ),
