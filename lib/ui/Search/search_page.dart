@@ -1,1448 +1,332 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/Search/custom_search_card.dart';
-import 'package:clairediary/utils/color.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+
 import '../../Admob/ad_state.dart';
 import '../../utils/strings.dart';
 import '../Categories/category_sessions.dart';
 import '../featured/model/session.dart';
 import '../routes/page_router_animation.dart';
 
-class SearchPage extends StatefulWidget {
-  SearchPage({Key? key, required this.title, this.record}) : super(key: key);
-
+// Data class to hold information for each keyword section
+class SearchKeyword {
   final String title;
-  final record;
+  final String category;
+  final Stream<QuerySnapshot<Map<String, dynamic>>> stream;
+
+  SearchKeyword({required this.title, required this.category, required this.stream});
+}
+
+class SearchPage extends StatefulWidget {
+  const SearchPage({Key? key, required String title}) : super(key: key);
 
   @override
   _SearchPageState createState() => _SearchPageState();
 }
 
 class _SearchPageState extends State<SearchPage> {
-  List<Session>? _sessionList = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
+  late final List<SearchKeyword> _keywords;
 
-  //final TextEditingController _searchController = TextEditingController();
-
-
-  /// Get Featured sessions for "I'm so happy" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showHappySearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "happy and blessed")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .orderBy('timeLastActivity', descending: true)
-        .limit(AppString.appSessionLength)
-        .snapshots();
-  }
-
-  /// Get Featured sessions for "Relationship Issues" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showRelationshipIssuesSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "love and relationship")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .orderBy('timeLastActivity', descending: true)
-        .limit(AppString.appSessionLength)
-        .snapshots();
-  }
-
-  /// Get Featured sessions for "Sad and depressed" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showSadAndDepressedSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "sad and depressed")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-        .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-  /// Get Featured sessions for "School and work" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showSchoolAndWorkSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "school and education")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-        .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-  /// Get Featured sessions for "Make new friends" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showMakeNewFriendsSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "friends and fun")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-        .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-
-  /// Get Featured sessions for "Sick and tired" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showSickAndTiredSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "health and fitness")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-        .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-
-  /// Get Featured sessions for "Comedy and entertainment" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showComedyAndEntertainmentSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "comedy and entertainment")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .orderBy('timeLastActivity', descending: true)
-        .limit(AppString.appSessionLength)
-        .snapshots();
-  }
-
-  /// Get Featured sessions for "Parents and children" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showParentsAndChildrenSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "parents and children")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .orderBy('timeLastActivity', descending: true)
-        .limit(AppString.appSessionLength)
-        .snapshots();
-  }
-
-  /// Get Featured sessions for "Single and lonely" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showSingleAndLonelySearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "single and lonely")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-        .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-  /// Get Featured sessions for "Prayer and thanksgiving" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showPrayerAndThanksgivingSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "prayer and thanksgiving")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-        .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-  /// Get Featured sessions for "marriage and family" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showMarriageAndFamilySearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "marriage and family")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-        .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-
-  /// Get Featured sessions for "Sex and dating" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showSexAndDatingSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "sex and dating")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-        .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-
-
-  // Admob Ad Units.
+  // --- Admob Ad Units ---
   BannerAd? searchPageMiddleBanner;
   BannerAd? searchPageBottomBanner;
   BannerAd? searchPageMiddleBanner2;
   BannerAd? searchPageBottomBanner2;
-  bool _bannerIsLoaded = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _keywords = _initializeKeywords();
+  }
+
+  // Centralized method to create the list of keywords to avoid repetition
+  List<SearchKeyword> _initializeKeywords() {
+    // Helper to reduce boilerplate
+    Stream<QuerySnapshot<Map<String, dynamic>>> createStream(String category) {
+      return FirebaseFirestore.instance
+          .collection(AppString.appFeaturedSessions)
+          .where("category1", isEqualTo: category)
+          .where("repliesEnabled", isEqualTo: true)
+          .where("archived", isEqualTo: false)
+          .where("flagged", isEqualTo: false)
+          .orderBy('timeLastActivity', descending: true)
+          .limit(AppString.appSessionLength)
+          .snapshots();
+    }
+
+    return [
+      SearchKeyword(title: AppString.im_so_happy, category: "happy and blessed", stream: createStream("happy and blessed")),
+      SearchKeyword(title: AppString.relationship_issues, category: "love and relationship", stream: createStream("love and relationship")),
+      SearchKeyword(title: AppString.sad_and_depressed, category: "sad and depressed", stream: createStream("sad and depressed")),
+      SearchKeyword(title: "School and Work", category: "school and education", stream: createStream("school and education")),
+      SearchKeyword(title: "Make New Friends", category: "friends and fun", stream: createStream("friends and fun")),
+      SearchKeyword(title: "Sick and Tired", category: "health and fitness", stream: createStream("health and fitness")),
+      SearchKeyword(title: "Marriage and Family", category: "marriage and family", stream: createStream("marriage and family")),
+      SearchKeyword(title: "Sex and Dating", category: "sex and dating", stream: createStream("sex and dating")),
+      SearchKeyword(title: "Comedy and Entertainment", category: "comedy and entertainment", stream: createStream("comedy and entertainment")),
+      SearchKeyword(title: "Single and Lonely", category: "single and lonely", stream: createStream("single and lonely")),
+      SearchKeyword(title: "Parents and Children", category: "parents and children", stream: createStream("parents and children")),
+      SearchKeyword(title: "Prayer and Thanksgiving", category: "prayer and thanksgiving", stream: createStream("prayer and thanksgiving")),
+    ];
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final adState = Provider.of<AdState>(context);
+    // Load ads only if they haven't been loaded yet
+    if (searchPageMiddleBanner == null) {
+      final adState = Provider.of<AdState>(context, listen: false);
+      _loadBannerAds(adState);
+    }
+  }
 
-    // Implement a top location banner ad unit.
+  void _loadBannerAds(AdState adState) {
     adState.initialization.then((status) {
+      if (!mounted) return; // Ensure widget is still in the tree
       setState(() {
-        searchPageMiddleBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.searchPageMiddleBannerAdUnitId,
-            request: const AdRequest(),
-            listener: BannerAdListener(
-              onAdFailedToLoad: (ad, error) {
-                ad.dispose();
-              },
-            )
-        )..load();
-        _bannerIsLoaded = true;
-      });
-    });
-
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
-        searchPageBottomBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.searchPageBottomBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdFailedToLoad: (ad, error) {
-                ad.dispose();
-              },
-            )
-        )..load();
-      });
-    });
-
-
-    // Implement a top location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
-        searchPageMiddleBanner2 = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.searchPageMiddleBannerAdUnitId2,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdFailedToLoad: (ad, error) {
-                ad.dispose();
-              },
-            )
-        )..load();
-      });
-    });
-
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
-        searchPageBottomBanner2 = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.searchPageBottomBannerAdUnitId2,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdFailedToLoad: (ad, error) {
-                ad.dispose();
-              },
-            )
-        )..load();
+        searchPageMiddleBanner = _createBannerAd(adState.searchPageMiddleBannerAdUnitId);
+        searchPageBottomBanner = _createBannerAd(adState.searchPageBottomBannerAdUnitId);
+        searchPageMiddleBanner2 = _createBannerAd(adState.searchPageMiddleBannerAdUnitId2);
+        searchPageBottomBanner2 = _createBannerAd(adState.searchPageBottomBannerAdUnitId2);
       });
     });
   }
 
+  BannerAd _createBannerAd(String adUnitId) {
+    return BannerAd(
+      size: AdSize.banner,
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
 
-
+  @override
+  void dispose() {
+    _searchController.dispose();
+    searchPageMiddleBanner?.dispose();
+    searchPageBottomBanner?.dispose();
+    searchPageMiddleBanner2?.dispose();
+    searchPageBottomBanner2?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: Scaffold(
-        body: Stack(
-           children: [
-             ListView(
-              children: [
-                SizedBox(height: 7,),
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          color: Pallet.colorPrimary,
-                          borderRadius: BorderRadius.circular(25)
-                        ),
-                        child: GestureDetector(onTap: (){
-                          setState(() {
-                            String featuredCategory1 = "happy and blessed";
-                            String thisCategory = featuredCategory1;
-                            PageRouter.gotoWidget(
-                                CategorySessions(visitedCategory: thisCategory,),
-                                context);
-                          });
-                        },
-                          child: Container(
-                            height: 18,
-                            width: 200,
-                            decoration: BoxDecoration(
-                              color: Pallet.colorWhite,
-                              borderRadius: BorderRadius.circular(20)
-                            ),
-                            child: Text(
-                              AppString.im_so_happy,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showHappySearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final searchBarColor = isDarkMode ? Colors.grey[800] : Colors.grey[200];
+    final searchBarTextColor = isDarkMode ? Colors.white : Colors.black;
 
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Search Sessions"),
+      ),
+      body: Column(
+        children: [
+          _buildSearchBar(searchBarColor, searchBarTextColor),
+          Expanded(
+            child: _searchQuery.isNotEmpty
+                ? _buildSearchResults()
+                : _buildKeywordSections(),
+          ),
+        ],
+      ),
+    );
+  }
 
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedEgoName: '', visitedUsersID: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-                Column(
-                  children: [
-                    Align(
-                    alignment: Alignment.topLeft,
-                    child: GestureDetector(onTap: (){
-                      setState(() {
-                        String featuredCategory1 = "love and relationship";
-                        String thisCategory = featuredCategory1;
-                        PageRouter.gotoWidget(
-                            CategorySessions(visitedCategory: thisCategory,),
-                            context);
-                      });
-                    },
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                            color: Pallet.colorPrimary,
-                            borderRadius: BorderRadius.circular(25)
-                        ),
-                        child: Container(
-                          height: 18,
-                          width: 200,
-                          decoration: BoxDecoration(
-                              color: Pallet.colorWhite,
-                              borderRadius: BorderRadius.circular(20)
-                          ),
-                          child: Text(
-                            AppString.relationship_issues,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showRelationshipIssuesSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: GestureDetector(onTap: (){
-                        setState(() {
-                          String featuredCategory1 = "sad and depressed";
-                          String thisCategory = featuredCategory1;
-                          PageRouter.gotoWidget(
-                              CategorySessions(visitedCategory: thisCategory,),
-                              context);
-                        });
-                      },
-                        child: Container(
-                          width: 200,
-                          alignment: Alignment.topLeft,
-                          padding: EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                              color: Pallet.colorPrimary,
-                              borderRadius: BorderRadius.circular(25)
-                          ),
-                          child: Container(
-                            height: 18,
-                            width: 200,
-                            decoration: BoxDecoration(
-                                color: Pallet.colorWhite,
-                                borderRadius: BorderRadius.circular(20)
-                            ),
-                            child: Text(
-                              AppString.sad_and_depressed,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showSadAndDepressedSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedEgoName: '', visitedUsersID: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-
-                // Top ad unit is here
-                if (searchPageMiddleBanner != null && _bannerIsLoaded)
-                  SizedBox(
-                    height: 60,
-                    child: AdWidget(ad: searchPageMiddleBanner!),
-                  )
-                else
-                  SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
-
-                SizedBox(height: 10,),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: GestureDetector(onTap: (){
-                        setState(() {
-                          String featuredCategory1 = "school and education";
-                          String thisCategory = featuredCategory1;
-                          PageRouter.gotoWidget(
-                              CategorySessions(visitedCategory: thisCategory,),
-                              context);
-                        });
-                      },
-                        child: Container(
-                          width: 200,
-                          alignment: Alignment.topLeft,
-                          padding: EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                              color: Pallet.colorPrimary,
-                              borderRadius: BorderRadius.circular(25)
-                          ),
-                          child: Container(
-                            height: 18,
-                            width: 200,
-                            decoration: BoxDecoration(
-                                color: Pallet.colorWhite,
-                                borderRadius: BorderRadius.circular(20)
-                            ),
-                            child: Text(
-                              AppString.school_and_work,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showSchoolAndWorkSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: GestureDetector(onTap: (){
-                        setState(() {
-                          String featuredCategory1 = "friends and fun";
-                          String thisCategory = featuredCategory1;
-                          PageRouter.gotoWidget(
-                              CategorySessions(visitedCategory: thisCategory,),
-                              context);
-                        });
-                      },
-                        child: Container(
-                          width: 200,
-                          alignment: Alignment.topLeft,
-                          padding: EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                              color: Pallet.colorPrimary,
-                              borderRadius: BorderRadius.circular(25)
-                          ),
-                          child: Container(
-                            height: 18,
-                            width: 200,
-                            decoration: BoxDecoration(
-                                color: Pallet.colorWhite,
-                                borderRadius: BorderRadius.circular(20)
-                            ),
-                            child: Text(
-                              AppString.make_new_friends,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showMakeNewFriendsSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: GestureDetector(onTap: (){
-                        setState(() {
-                          String featuredCategory1 = "health and fitness";
-                          String thisCategory = featuredCategory1;
-                          PageRouter.gotoWidget(
-                              CategorySessions(visitedCategory: thisCategory,),
-                              context);
-                        });
-                      },
-                        child: Container(
-                          width: 200,
-                          alignment: Alignment.topLeft,
-                          padding: EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                              color: Pallet.colorPrimary,
-                              borderRadius: BorderRadius.circular(25)
-                          ),
-                          child: Container(
-                            height: 18,
-                            width: 200,
-                            decoration: BoxDecoration(
-                                color: Pallet.colorWhite,
-                                borderRadius: BorderRadius.circular(20)
-                            ),
-                            child: Text(
-                              AppString.sick_and_tired,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showSickAndTiredSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-
-                // Top ad unit is here
-                if (searchPageBottomBanner != null && _bannerIsLoaded)
-                  SizedBox(
-                    height: 60,
-                    child: AdWidget(ad: searchPageBottomBanner!),
-                  )
-                else
-                  SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
-
-
-
-
-                SizedBox(height: 10,),
-
-
-                /// More Lists
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                            color: Pallet.colorPrimary,
-                            borderRadius: BorderRadius.circular(25)
-                        ),
-                        child: GestureDetector(onTap: (){
-                          setState(() {
-                            String featuredCategory1 = "marriage and family";
-                            String thisCategory = featuredCategory1;
-                            PageRouter.gotoWidget(
-                                CategorySessions(visitedCategory: thisCategory,),
-                                context);
-                          });
-                        },
-                          child: Container(
-                            height: 18,
-                            width: 200,
-                            decoration: BoxDecoration(
-                                color: Pallet.colorWhite,
-                                borderRadius: BorderRadius.circular(20)
-                            ),
-                            child: Text( "Marriage and Family",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showMarriageAndFamilySearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedEgoName: '', visitedUsersID: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: GestureDetector(onTap: (){
-                        setState(() {
-                          String featuredCategory1 = "sex and dating";
-                          String thisCategory = featuredCategory1;
-                          PageRouter.gotoWidget(
-                              CategorySessions(visitedCategory: thisCategory,),
-                              context);
-                        });
-                      },
-                        child: Container(
-                          width: 200,
-                          alignment: Alignment.topLeft,
-                          padding: EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                              color: Pallet.colorPrimary,
-                              borderRadius: BorderRadius.circular(25)
-                          ),
-                          child: Container(
-                            height: 18,
-                            width: 200,
-                            decoration: BoxDecoration(
-                                color: Pallet.colorWhite,
-                                borderRadius: BorderRadius.circular(20)
-                            ),
-                            child: Text(
-                              "Sex and dating sessions",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showSexAndDatingSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: GestureDetector(onTap: (){
-                        setState(() {
-                          String featuredCategory1 = "comedy and entertainment";
-                          String thisCategory = featuredCategory1;
-                          PageRouter.gotoWidget(
-                              CategorySessions(visitedCategory: thisCategory,),
-                              context);
-                        });
-                      },
-                        child: Container(
-                          width: 200,
-                          alignment: Alignment.topLeft,
-                          padding: EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                              color: Pallet.colorPrimary,
-                              borderRadius: BorderRadius.circular(25)
-                          ),
-                          child: Container(
-                            height: 18,
-                            width: 200,
-                            decoration: BoxDecoration(
-                                color: Pallet.colorWhite,
-                                borderRadius: BorderRadius.circular(20)
-                            ),
-                            child: Text(
-                              "Comedy and entertainment",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showComedyAndEntertainmentSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedEgoName: '', visitedUsersID: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-                // Top ad unit is here
-                if (searchPageMiddleBanner2 != null && _bannerIsLoaded)
-                  SizedBox(
-                    height: 60,
-                    child: AdWidget(ad: searchPageMiddleBanner2!),
-                  )
-                else
-                  SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
-
-                SizedBox(height: 10,),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: GestureDetector(onTap: (){
-                        setState(() {
-                          String featuredCategory1 = "single and lonely";
-                          String thisCategory = featuredCategory1;
-                          PageRouter.gotoWidget(
-                              CategorySessions(visitedCategory: thisCategory,),
-                              context);
-                        });
-                      },
-                        child: Container(
-                          width: 200,
-                          alignment: Alignment.topLeft,
-                          padding: EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                              color: Pallet.colorPrimary,
-                              borderRadius: BorderRadius.circular(25)
-                          ),
-                          child: Container(
-                            height: 18,
-                            width: 200,
-                            decoration: BoxDecoration(
-                                color: Pallet.colorWhite,
-                                borderRadius: BorderRadius.circular(20)
-                            ),
-                            child: Text(
-                              "Single and lonely",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showSingleAndLonelySearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: GestureDetector(onTap: (){
-                        setState(() {
-                          String featuredCategory1 = "parents and children";
-                          String thisCategory = featuredCategory1;
-                          PageRouter.gotoWidget(
-                              CategorySessions(visitedCategory: thisCategory,),
-                              context);
-                        });
-                      },
-                        child: Container(
-                          width: 200,
-                          alignment: Alignment.topLeft,
-                          padding: EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                              color: Pallet.colorPrimary,
-                              borderRadius: BorderRadius.circular(25)
-                          ),
-                          child: Container(
-                            height: 18,
-                            width: 200,
-                            decoration: BoxDecoration(
-                                color: Pallet.colorWhite,
-                                borderRadius: BorderRadius.circular(20)
-                            ),
-                            child: Text(
-                              "Parents and children",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showParentsAndChildrenSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: GestureDetector(onTap: (){
-                        setState(() {
-                          String featuredCategory1 = "prayer and thanksgiving";
-                          String thisCategory = featuredCategory1;
-                          PageRouter.gotoWidget(
-                              CategorySessions(visitedCategory: thisCategory,),
-                              context);
-                        });
-                      },
-                        child: Container(
-                          width: 200,
-                          alignment: Alignment.topLeft,
-                          padding: EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                              color: Pallet.colorPrimary,
-                              borderRadius: BorderRadius.circular(25)
-                          ),
-                          child: Container(
-                            height: 18,
-                            width: 200,
-                            decoration: BoxDecoration(
-                                color: Pallet.colorWhite,
-                                borderRadius: BorderRadius.circular(20)
-                            ),
-                            child: Text(
-                              "Prayer and thanksgiving",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showPrayerAndThanksgivingSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return Text('');
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10,),
-
-                // Top ad unit is here
-                if (searchPageBottomBanner2 != null && _bannerIsLoaded)
-                  SizedBox(
-                    height: 60,
-                    child: AdWidget(ad: searchPageBottomBanner2!),
-                  )
-                else
-                  SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: Colors.white),),),
-
-                SizedBox(height: 10,),
-
-              ],
-            ),
-          ],
+  // Widget for the search bar
+  Widget _buildSearchBar(Color? searchBarColor, Color searchBarTextColor) {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: TextField(
+        controller: _searchController,
+        style: TextStyle(color: searchBarTextColor),
+        onChanged: (value) => setState(() => _searchQuery = value),
+        decoration: InputDecoration(
+          hintText: "Search sessions by title...",
+          hintStyle: TextStyle(color: searchBarTextColor.withOpacity(0.6)),
+          prefixIcon: Icon(Icons.search, color: searchBarTextColor),
+          filled: true,
+          fillColor: searchBarColor,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30.0),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         ),
       ),
     );
+  }
+
+  // Widget for displaying the list of keyword sections
+  Widget _buildKeywordSections() {
+    return ListView.builder(
+      itemCount: _keywords.length,
+      padding: const EdgeInsets.only(bottom: 20),
+      itemBuilder: (context, index) {
+        final keyword = _keywords[index];
+        // --- AD INTEGRATION ---
+        // You can insert ads at specific intervals in the list
+        if (index == 3 && searchPageMiddleBanner != null) {
+          return Column(children: [_AdWidget(bannerAd: searchPageMiddleBanner), _KeywordSection(keyword: keyword)]);
+        }
+        if (index == 7 && searchPageBottomBanner != null) {
+          return Column(children: [_AdWidget(bannerAd: searchPageBottomBanner), _KeywordSection(keyword: keyword)]);
+        }
+        // ... add more ad rules here if needed ...
+
+        return _KeywordSection(keyword: keyword);
+      },
+    );
+  }
+
+  // Widget for displaying results when user is typing in the search bar
+  Widget _buildSearchResults() {
+    final stream = FirebaseFirestore.instance
+        .collection(AppString.appFeaturedSessions)
+        .where('title', isGreaterThanOrEqualTo: _searchQuery)
+        .where('title', isLessThan: _searchQuery + 'z')
+        .snapshots();
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text("No sessions found."));
+        }
+
+        final sessionList = snapshot.data!.docs
+            .map((doc) => Session.fromJson(doc.data() as Map<String, dynamic>))
+            .toList();
+
+        return ListView.builder(
+          itemCount: sessionList.length,
+          itemBuilder: (context, index) {
+            return CustomSearchCard(
+              element: sessionList[index],
+              visitedEgoName: '',
+              visitedUsersID: '',
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+// A reusable widget for each "keyword" section to keep the main build method clean
+class _KeywordSection extends StatelessWidget {
+  const _KeywordSection({Key? key, required this.keyword}) : super(key: key);
+
+  final SearchKeyword keyword;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0, top: 16.0, bottom: 8.0),
+          child: GestureDetector(
+            onTap: () {
+              PageRouter.gotoWidget(
+                  CategorySessions(visitedCategory: keyword.category), context);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+              decoration: BoxDecoration(
+                color: theme.chipTheme.backgroundColor ?? theme.colorScheme.secondary,
+                borderRadius: BorderRadius.circular(20.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 3,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                keyword.title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: theme.chipTheme.labelStyle?.color ??
+                      (isDarkMode ? Colors.black : Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 200,
+          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: keyword.stream,
+            builder: (context, session) {
+              if (session.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!session.hasData || session.data!.docs.isEmpty) {
+                return Center(
+                  child: Text("No sessions available.",
+                      style: GoogleFonts.lato(fontSize: 15.0, color: Colors.grey)),
+                );
+              }
+
+              final sessionList = session.data!.docs
+                  .map((e) => Session.fromJson(e.data()))
+                  .toList();
+
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: sessionList.length,
+                itemBuilder: (context, index) {
+                  return CustomSearchCard(
+                    element: sessionList[index],
+                    visitedEgoName: '',
+                    visitedUsersID: '',
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Helper widget to display an ad banner safely
+class _AdWidget extends StatelessWidget {
+  final BannerAd? bannerAd;
+  const _AdWidget({Key? key, this.bannerAd}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    if (bannerAd != null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        height: 60,
+        child: AdWidget(ad: bannerAd!),
+      );
+    }
+    return const SizedBox.shrink();
   }
 }

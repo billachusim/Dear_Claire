@@ -12,8 +12,6 @@ class FeaturedPage extends StatefulWidget {
 
 class _FeaturedPageState extends State<FeaturedPage> {
 
-  bool showFilter = false;
-
   @override
   void initState() {
     super.initState();
@@ -35,41 +33,7 @@ class _FeaturedPageState extends State<FeaturedPage> {
 
             TheFeaturedSessions(),
 
-            Container(
-              child: Row(
-                children: [
-
-                  Visibility(
-                    visible: !showFilter,
-                    child: TextButton(
-                      style: TextButton.styleFrom(fixedSize: Size.fromHeight(10)),
-                      onPressed: () {
-                        setState(() {
-                          showFilter = true;
-                        });
-                      },
-                      child: Text(
-                        showFilter == true? 'HIDE FILTER' :
-                        showFilter == false? 'SHOW FILTER' :
-                        "Show/Hide Filter",
-                      ),
-                    ),
-                  ),
-                  FeaturedSessionNotice(),
-                ],
-              ),
-            ),
-
-
-            Container(
-              child: Visibility(
-                  visible: showFilter,
-                  child: TrendingCategories()
-              ),
-            ),
-
-
-      ],
+          ],
         ),
       ),
     );
