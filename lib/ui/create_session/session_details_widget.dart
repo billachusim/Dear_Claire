@@ -146,76 +146,49 @@ class SessionDetailsWidget extends StatelessWidget {
             ),
           ),
 
-          Container(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Row(
-                children: [
-                  Visibility(
-                      visible: singleSessionModel!.imageUrls!.isNotEmpty,
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: singleSessionModel!.imageUrls!.first.toString()), context);
-                        },
+          Visibility(
+            visible: singleSessionModel!.imageUrls!.isNotEmpty,
+            child: GridView.count(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              crossAxisCount: 5,
+              children: List.generate(singleSessionModel!.imageUrls!.length, (index) {
+                String image = singleSessionModel!.imageUrls![index].toString();
+                return Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    GestureDetector(
+                      onTap: () {
+                        PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
+                      },
+                      child: Container(
                         child: CachedNetworkImage(
-                            height: 120,
-                            width: 100,
-                            imageUrl: singleSessionModel!.imageUrls!.isNotEmpty
-                                ? singleSessionModel!.imageUrls!.first
-                                : '',
-                            imageBuilder: (context, imageProvider) =>
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                    ),
-                                  ),
+                            height: 200,
+                            width: 200,
+                            imageUrl: image,
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
+                                    image: imageProvider,
+                                    fit: BoxFit.cover
                                 ),
-                            placeholder: (context, url) => Center(
-                                child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) =>
-                                Image.asset(
-                                  "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                  width: 48,
-                                  height: 48,
-                                ) //Icon(Icons.error),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
                         ),
-                      )),
-                  SizedBox(width: 5,),
-                  Visibility(
-                      visible: singleSessionModel!.imageUrls!.isNotEmpty,
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: singleSessionModel!.imageUrls!.last.toString()), context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 120,
-                            width: 100,
-                            imageUrl: singleSessionModel!.imageUrls!.isNotEmpty
-                                ? singleSessionModel!.imageUrls!.last
-                                : '',
-                            imageBuilder: (context, imageProvider) =>
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                    ),
-                                  ),
-                                ),
-                            placeholder: (context, url) => Center(
-                                child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) =>
-                                Image.asset(
-                                  "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                  width: 48,
-                                  height: 48,
-                                ) //Icon(Icons.error),
-                        ),
-                      )),
-                ],
-              ),
+                        margin: EdgeInsets.all(3),
+                      ),
+                    ),
+                  ],
+                );
+              }),
             ),
           ),
         ],

@@ -1534,10 +1534,10 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     );
   }
 
+  // This function is correct. It correctly picks files and updates the state.
   Future<void> loadAssets() async {
     List<XFile>? pickedFiles;
     try {
-      // Pick multiple images (use ImageSource.camera for camera)
       pickedFiles = await ImagePicker().pickMultiImage();
     } catch (e) {
       print('Error picking images: $e');
@@ -1547,13 +1547,17 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     setState(() {
       if (pickedFiles != null) {
-        // Convert the selected XFile objects to File objects
+        // This correctly converts XFile to File and updates the controller's list.
         c.images = pickedFiles.map((file) => File(file.path)).toList();
-      } else {
-        c.images = imageList;
       }
+      // The 'else' block seems to assign an old list back.
+      // You might want to remove it if the intention is just to add new images.
+      // else {
+      //   c.images = imageList;
+      // }
     });
   }
+
 
   Widget showFontSelectionDialog(BuildContext context) {
     return SingleChildScrollView(
@@ -1819,12 +1823,28 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.containsAudio = true;
     }
 
-    List<String> imageDownloadUrls = <String>[];
-    for (var image in imageList) {
-      imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
+    try {
+      // 1. Create a list of upload tasks (Futures) without awaiting them individually.
+      //    We use c.images, which holds the files the user picked.
+      List<Future<String>> uploadTasks = c.images.map((imageFile) {
+        return _firebaseServices.uploadImage(imageFile);
+      }).toList();
+
+      // 2. Run all the upload tasks in parallel and wait for them all to complete.
+      //    Future.wait returns a List<String> with all the download URLs.
+      List<String> imageDownloadUrls = await Future.wait(uploadTasks);
+
+      // 3. Assign the completed list of URLs to your session object.
+      sessionObject.imageUrls = imageDownloadUrls;
+
+      print('${imageDownloadUrls.length} images uploaded successfully.');
+
+    } catch (e) {
+      // Handle potential upload errors
+      print('Error uploading images: $e');
+      // Optionally, show an error message to the user here.
     }
-    sessionObject.imageUrls = imageDownloadUrls;
-  
+
     if (videoFile != null) {
       sessionObject.videoUrl = videoFile;
       sessionObject.containsVideo = true;
