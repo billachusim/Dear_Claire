@@ -40,7 +40,7 @@ class _HomeDashboardPageState extends State<HomePage>
     with TickerProviderStateMixin<HomePage> {
   var currentUser = FirebaseAuth.instance.currentUser;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late WebViewController _webViewController;
+  late final WebViewController _webViewController;  // Updated initialization
   late ShakeDetector detector;
   String filePath = 'assets/web_games/tictactoe/index2.html';
   String tweets = 'assets/tweet/index.html';
@@ -49,6 +49,7 @@ class _HomeDashboardPageState extends State<HomePage>
   String userName = "";
   String userType = "";
   String avatarUrl = "";
+  bool isWon = false;
 
   late final AnimationController _controller = AnimationController(
     duration: const Duration(seconds: 15),
@@ -159,6 +160,20 @@ class _HomeDashboardPageState extends State<HomePage>
     _title = "Dear Claire";
     //shakeDevice();
     AppTrackingTransparency.requestTrackingAuthorization();
+    // Initialize WebViewController
+    _webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel('Score', onMessageReceived: (JavaScriptMessage message) {
+        Fluttertoast.showToast(msg: message.message);
+        isWon = true;
+        Future.delayed(Duration(seconds: 5), () {
+          //_showTictactoeInterstitialAd();
+          //incrementTotalLoveCount();
+        });
+      });
+
+    // Load HTML after WebView creation
+    _loadHtmlFromAssets();
   }
 
   /*shakeDevice() async {
@@ -227,7 +242,7 @@ class _HomeDashboardPageState extends State<HomePage>
               icon: Icon(
                 Icons.menu,
                 color: Pallet.colorWhite,
-                size: 30
+                size: 25
               ),
               onPressed: () {
                 getEgoInfo();
@@ -421,8 +436,8 @@ class _HomeDashboardPageState extends State<HomePage>
                     title: Text("Claireminder",
                         style: TextStyle(color: Pallet.colorWhite)),
                     onTap: () async {
-                      //if (await firebaseServices.isUserSignIn(context))
-                      //Navigator.of(context).pushNamed(AppRoutes.setupClaireminder);
+                      if (await firebaseServices.isUserSignIn(context))
+                      Navigator.of(context).pushNamed(AppRoutes.setupClaireminder);
                       showToast("Coming Soon...");
                     },
                     leading: Icon(Icons.auto_awesome_motion_rounded, color: Pallet.colorWhite),
@@ -436,17 +451,13 @@ class _HomeDashboardPageState extends State<HomePage>
                   ),
 
                   SizedBox(height: 10,),
-                  /*Container(
+                  SizedBox(
                     height: 300,
-                    child: WebView(
-                      initialUrl: '',
-                      javascriptMode: JavascriptMode.unrestricted,
-                      onWebViewCreated: (WebViewController webViewController) {
-                        _webViewController = webViewController;
-                        _loadHtmlFromAssets();
-                      },
+                    child: WebViewWidget(
+
+                      controller: _webViewController, // Updated WebView widget
                     ),
-                  ),*/
+                  ),
 
                   SizedBox(height: 18,),
                   ListTile(
@@ -472,6 +483,16 @@ class _HomeDashboardPageState extends State<HomePage>
                     Navigator.of(context).pushNamed(AppRoutes.updatesAndAnnouncements);
                     },
                     leading: Icon(Icons.announcement_rounded, color: Pallet.colorWhite),
+                  ),
+                  SizedBox(height: 18,),
+
+                  Container(
+                    height: 450,
+                    child: WebViewWidget(
+                      controller: WebViewController()
+                        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+                        ..loadRequest(Uri.parse('https://x.com/dearclaireapp')),
+                    ),
                   ),
 
                   SizedBox(height: 18,),

@@ -33,7 +33,7 @@ class UpdatesAndAnnouncements extends StatelessWidget {
                 child: WebViewWidget(
                   controller: WebViewController()
                     ..setJavaScriptMode(JavaScriptMode.unrestricted)
-                    ..loadRequest(Uri.parse('https://clairetweets.netlify.app')),
+                    ..loadRequest(Uri.parse('https://x.com/dearclaireapp')),
                 ),
               ),
             )

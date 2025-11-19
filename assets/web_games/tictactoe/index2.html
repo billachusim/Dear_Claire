@@ -762,7 +762,7 @@
             }
           }
 
-          var hardLevel = 10;
+          var hardLevel = 1;
           if (attentionRequired.length == 2) {
             return attentionRequired[
               _getRandomInt(0, attentionRequired.length - 1)
@@ -803,8 +803,10 @@
             var _rs = this.getResult();
             if (_rs) {
               var _reset = function () {
-                location.reload(true);
-                };
+                $("#tic-tac-toe-board").empty();
+                $("#loss,#win,#draw").hide();
+                $("#divUserInputs").show();
+              };
               if (_rs.result === "win") {
                 _animate.call(this, _rs.pattern).done(
                   function () {
@@ -813,16 +815,16 @@
                       $("#tic-tac-toe-board").empty();
                       $("#win").show();
                       Score.postMessage("You won! Take 10 Loves after this Ad")
-                      setTimeout(_reset, 5000);
+                      setTimeout(_reset, 3000);
                     } else {
                       $("#loss").show();
-                      setTimeout(_reset, 3000);
+                      setTimeout(_reset, 1000);
                     }
                   }.bind(this)
                 );
               } else {
                 $("#draw").show();
-                setTimeout(_reset, 3000);
+                setTimeout(_reset, 1000);
               }
               return;
             }
