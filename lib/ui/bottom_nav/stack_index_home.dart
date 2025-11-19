@@ -50,6 +50,16 @@ class _HomeDashboardPageState extends State<HomePage>
   String userType = "";
   String avatarUrl = "";
 
+  late final AnimationController _controller = AnimationController(
+    duration: const Duration(seconds: 15),
+    vsync: this,
+  )..repeat(reverse: true);
+
+  late final Animation<double> _animation = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.elasticOut,
+  );
+
   PageController _pageController = PageController(initialPage: 0);
 
   List<Widget> _body = [
@@ -176,7 +186,9 @@ class _HomeDashboardPageState extends State<HomePage>
     });
   }*/
 
+  @override
   dispose() {
+    _controller.dispose();
     super.dispose();
     detector.stopListening();
   }
@@ -198,9 +210,13 @@ class _HomeDashboardPageState extends State<HomePage>
                   fontWeight: FontWeight.w600)),
           actions: [
             CupertinoButton(
-                child: Icon(
-                  Icons.search,
-                  color: Pallet.colorWhite,
+                child: RotationTransition(
+                  turns: _animation,
+                  child: Icon(
+                    Icons.travel_explore,
+                    color: Pallet.colorWhite,
+                    size: 35,
+                  ),
                 ),
                 onPressed: () {
                   Navigator.of(context)
@@ -211,6 +227,7 @@ class _HomeDashboardPageState extends State<HomePage>
               icon: Icon(
                 Icons.menu,
                 color: Pallet.colorWhite,
+                size: 30
               ),
               onPressed: () {
                 getEgoInfo();

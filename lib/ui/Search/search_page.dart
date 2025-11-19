@@ -6,8 +6,10 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 
 import '../../Admob/ad_state.dart';
+import '../../utils/mood.dart';
 import '../../utils/strings.dart';
 import '../Categories/category_sessions.dart';
+import '../Categories/mood_sessions.dart';
 import '../featured/model/session.dart';
 import '../routes/page_router_animation.dart';
 
@@ -27,10 +29,18 @@ class SearchPage extends StatefulWidget {
   _SearchPageState createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
   late final List<SearchKeyword> _keywords;
+
+  // --- Animation Controller for filter icon ---
+  late final AnimationController _filterIconController;
+  late final Animation<double> _filterIconAnimation;
+
+  // --- Filtering State ---
+  String? _selectedContinent;
+  int? _selectedMoodId;
 
   // --- Admob Ad Units ---
   BannerAd? searchPageMiddleBanner;
@@ -42,6 +52,14 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     _keywords = _initializeKeywords();
+    _filterIconController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _filterIconAnimation = Tween<double>(begin: 0.8, end: 1.1).animate(
+      CurvedAnimation(parent: _filterIconController, curve: Curves.easeInOut),
+    );
   }
 
   // Centralized method to create the list of keywords to avoid repetition
@@ -113,6 +131,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _filterIconController.dispose();
     searchPageMiddleBanner?.dispose();
     searchPageBottomBanner?.dispose();
     searchPageMiddleBanner2?.dispose();
@@ -129,18 +148,102 @@ class _SearchPageState extends State<SearchPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Search Sessions"),
+        title: Text("Explore Sessions",
+            style: GoogleFonts.lato(
+                fontSize: 25.0,
+                color: Colors.white,
+                fontWeight: FontWeight.w600)),
+        actions: [
+          IconButton(
+            onPressed: _showFilterDialog,
+            icon: ScaleTransition(
+              scale: _filterIconAnimation,
+              child: const Icon(
+                Icons.filter_list,
+                color: Colors.white,
+                size: 35,
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
           _buildSearchBar(searchBarColor, searchBarTextColor),
           Expanded(
-            child: _searchQuery.isNotEmpty
+            child: _searchQuery.isNotEmpty || _selectedContinent != null || _selectedMoodId != null
                 ? _buildSearchResults()
                 : _buildKeywordSections(),
           ),
         ],
       ),
+    );
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Filter Sessions'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              // --- Location Filter ---
+              ListTile(
+                leading: const Icon(Icons.location_on),
+                trailing: DropdownButton<String>(
+                  value: _selectedContinent,
+                  hint: const Text('By Continent'),
+                  items: ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Australia']
+                      .map((continent) => DropdownMenuItem(value: continent, child: Text(continent)))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedContinent = value;
+                      _selectedMoodId = null; // Clear other filter
+                    });
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              // --- Mood Filter ---
+              ListTile(
+                leading: const Icon(Icons.mood),
+                trailing: DropdownButton<int>(
+                  value: _selectedMoodId,
+                  hint: const Text('      By Mood'),
+                  items: Mood.MOODS.where((mood) => mood.id != -1 && mood.id != 0)
+                      .map((mood) => DropdownMenuItem(value: mood.id, child: Text(mood.name!)))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      // First, close the dialog
+                      Navigator.of(context).pop();
+                      // Then navigate to the MoodSessionsPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MoodSessions(sessionMood: value),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -151,9 +254,13 @@ class _SearchPageState extends State<SearchPage> {
       child: TextField(
         controller: _searchController,
         style: TextStyle(color: searchBarTextColor),
-        onChanged: (value) => setState(() => _searchQuery = value),
+        onChanged: (value) => setState(() {
+          _searchQuery = value;
+          _selectedContinent = null;
+          _selectedMoodId = null;
+        }),
         decoration: InputDecoration(
-          hintText: "Search sessions by title...",
+          hintText: "Search sessions...",
           hintStyle: TextStyle(color: searchBarTextColor.withOpacity(0.6)),
           prefixIcon: Icon(Icons.search, color: searchBarTextColor),
           filled: true,
@@ -176,30 +283,35 @@ class _SearchPageState extends State<SearchPage> {
       itemBuilder: (context, index) {
         final keyword = _keywords[index];
         // --- AD INTEGRATION ---
-        // You can insert ads at specific intervals in the list
         if (index == 3 && searchPageMiddleBanner != null) {
           return Column(children: [_AdWidget(bannerAd: searchPageMiddleBanner), _KeywordSection(keyword: keyword)]);
         }
         if (index == 7 && searchPageBottomBanner != null) {
           return Column(children: [_AdWidget(bannerAd: searchPageBottomBanner), _KeywordSection(keyword: keyword)]);
         }
-        // ... add more ad rules here if needed ...
-
         return _KeywordSection(keyword: keyword);
       },
     );
   }
 
-  // Widget for displaying results when user is typing in the search bar
+  // Widget for displaying results from search or filtering
   Widget _buildSearchResults() {
-    final stream = FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where('title', isGreaterThanOrEqualTo: _searchQuery)
-        .where('title', isLessThan: _searchQuery + 'z')
-        .snapshots();
+    Query query = FirebaseFirestore.instance.collection(AppString.appFeaturedSessions);
+
+    if (_searchQuery.isNotEmpty) {
+      query = query
+          .where('title', isGreaterThanOrEqualTo: _searchQuery)
+          .where('title', isLessThan: _searchQuery + 'z');
+    } else if (_selectedContinent != null) {
+      // This is disabled for now, pending data model changes
+      // final countries = _getCountriesForContinent(_selectedContinent!);
+       // query = query.where('location', whereIn: countries);
+    } else if (_selectedMoodId != null) {
+      query = query.where('moodId', isEqualTo: _selectedMoodId);
+    }
 
     return StreamBuilder<QuerySnapshot>(
-      stream: stream,
+      stream: query.snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -224,6 +336,25 @@ class _SearchPageState extends State<SearchPage> {
         );
       },
     );
+  }
+
+  List<String> _getCountriesForContinent(String continent) {
+    switch (continent) {
+      case 'Africa':
+        return ['Nigeria', 'Ghana', 'Kenya', 'South Africa'];
+      case 'Asia':
+        return ['India', 'China', 'Japan', 'South Korea'];
+      case 'Europe':
+        return ['United Kingdom', 'Germany', 'France', 'Italy'];
+      case 'North America':
+        return ['USA', 'Canada', 'Mexico'];
+      case 'South America':
+        return ['Brazil', 'Argentina', 'Colombia'];
+      case 'Australia':
+        return ['Australia', 'New Zealand'];
+      default:
+        return [];
+    }
   }
 }
 
