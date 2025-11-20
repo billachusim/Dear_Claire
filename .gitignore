@@ -201,3 +201,4 @@ ios/build/Pods.build/Release-iphonesimulator/shared_preferences.build/dgph
 ios/build/Pods.build/Release-iphonesimulator/sqflite.build/dgph
 ios/build/Pods.build/Release-iphonesimulator/tau_core.build/dgph~
 ios/build/Pods.build/Release-iphonesimulator/Toast.build/dgph
+secrets/

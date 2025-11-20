@@ -8,7 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/firebase_services.dart';
 import '../../services/notification_service.dart';
-import '/services/data/notification_model.dart' as pushNotification;
+import '../../services/data/notification_model.dart' as pushNotification;
 import '../../utils/constant.dart';
 
 class SendClaireLoveForm extends StatefulWidget {
@@ -384,8 +384,7 @@ class _SendClaireLoveFormState extends State<SendClaireLoveForm> {
 
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
-        to: '/topics/${userId.toString()}',
-        collapseKey: 'type_a',
+        topic: userId,
         data: pushNotification.Data(id: userId, route: 'wallet'),
         notification: pushNotification.Notification(
             title: "Love Transfer",

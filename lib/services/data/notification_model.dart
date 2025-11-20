@@ -1,19 +1,16 @@
 class NotificationModel {
-  String? to;
-  String? collapseKey;
+  String? topic;
   Notification? notification;
   Data? data;
 
   NotificationModel({
-    required this.to,
-    required this.collapseKey,
-    required this.notification,
+    this.topic,
+    this.notification,
     this.data,
   });
 
   NotificationModel.fromJson(Map<String, dynamic> json) {
-    if (json["to"] is String) this.to = json["to"];
-    if (json["collapse_key"] is String) this.collapseKey = json["collapse_key"];
+    if (json["topic"] is String) this.topic = json["topic"];
     if (json["notification"] is Map)
       this.notification = json["notification"] == null
           ? null
@@ -24,8 +21,7 @@ class NotificationModel {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data["to"] = this.to;
-    data["collapse_key"] = this.collapseKey;
+    data["topic"] = this.topic;
     if (this.notification != null)
       data["notification"] = this.notification?.toJson();
     if (this.data != null) data["data"] = this.data?.toJson();

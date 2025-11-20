@@ -205,8 +205,7 @@ class _CommentWidgetState extends State<CommentWidget> {
     final sessionId = widget.featuredSessionModel!.sessionId.toString();
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
-      to: '/topics/$sessionId',
-      collapseKey: 'type_a',
+      topic: sessionId,
       data: pushNotification.Data(id: userId, route: sessionId.toString()),
       notification: pushNotification.Notification(
           title: 'Please, Be Careful.', body: 'Your advise on the session: $sessionTitle was deleted. You lost 10 Loves.'),

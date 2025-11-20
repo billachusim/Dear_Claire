@@ -1,22 +1,22 @@
 import 'dart:math';
 
-import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/services/firebase_services.dart';
+import 'package:clairediary/ui/routes/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+import '../Automations/auto_diary_recorder_page.dart';
 import '../utils/color.dart';
-
-final ClairNotification clairNotification = ClairNotification();
-
-
 
 class ClairNotification {
   User? currentUser = FirebaseAuth.instance.currentUser;
 
-
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
       'socialFaculty', // id
@@ -24,14 +24,118 @@ class ClairNotification {
       importance: Importance.max,
       playSound: true);
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  Future<void> init() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
+    );
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
 
+    await flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        final payload = response.payload;
+        print('Notification Tapped with payload: $payload');
+
+        if (payload == 'auto_diary_record') {
+          NavigationService.navigationKey.currentState?.push(
+              MaterialPageRoute(builder: (context) => AutoDiaryRecorderPage()));
+        } else if (payload != null) {
+          // Your existing FCM logic
+          switch (payload) {
+            case 'room':
+              navService.pushNamed('/diaryRooms');
+              break;
+            case 'wallet':
+              navService.pushNamed('/egoPage');
+              break;
+            case 'claireminder':
+            case 'createSession':
+              navService.pushNamed('/createSession');
+              break;
+            case 'game':
+              navService.pushNamed('/games');
+              break;
+            default:
+              navService.pushNamed('/notifiedSessionDetails', args: payload);
+          }
+        }
+      },
+    );
+
+    // Foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      // Don't show notification if the sender is the current user.
+      if (message.data['id'] != null &&
+          message.data['id'] == FirebaseAuth.instance.currentUser?.uid) {
+        return;
+      }
+
+      final notification = message.notification;
+      final route = message.data["route"];
+      if (notification != null) {
+        flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              channel.id,
+              channel.name,
+              channelDescription: channel.description,
+              importance: Importance.max,
+              priority: Priority.max,
+              playSound: true,
+              enableVibration: true,
+            ),
+            iOS: const DarwinNotificationDetails(
+              presentAlert: true,
+              presentBadge: true,
+              presentSound: true,
+            ),
+          ),
+          payload: route,
+        );
+      }
+    });
+
+    // When app is in background and user taps FCM notification
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      final route = message.data["route"];
+      if (route != null) {
+          switch (route) {
+            case 'room':
+              navService.pushNamed('/diaryRooms');
+              break;
+            case 'wallet':
+              navService.pushNamed('/egoPage');
+              break;
+            case 'claireminder':
+            case 'createSession':
+              navService.pushNamed('/createSession');
+              break;
+            case 'game':
+              navService.pushNamed('/games');
+              break;
+            default:
+              navService.pushNamed('/notifiedSessionDetails', args: route);
+          }
+      }
+    });
+  }
 
   NotificationDetails? _notificationDetails() {
     return NotificationDetails(
-        android: AndroidNotificationDetails(
-            channel.id, channel.name,
+        android: AndroidNotificationDetails(channel.id, channel.name,
             color: Pallet.colorPrimary,
             playSound: true,
             icon: '@drawable/claire_icon',
@@ -40,79 +144,71 @@ class ClairNotification {
             showWhen: true,
             channelShowBadge: true),
         iOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true));
+            presentAlert: true, presentBadge: true, presentSound: true));
   }
-
-
 
   randomizeReminderNotes() async {
-    Random random = new Random();
-    int randomNumber = random.nextInt(Constant.TOAST_NUMBERS.length);
-    var message = randomNumber == 1 ? "Go on, Darling, talk to me..." :
-    randomNumber == 2 ? "I'm glad you are here" :
-    randomNumber == 3 ? "You have come to a safe place." :
-    randomNumber == 4 ? "Everything can be between us." :
-    randomNumber == 5 ? "I'll always be here for you." :
-    randomNumber == 5 ? "Let's have a heart to heart." :
-    randomNumber == 6 ? "Go ahead, type or record anything." :
-    randomNumber == 7 ? "Tell me what's happening, darling?" :
-    randomNumber == 8 ? "Where are you and what's going on?" :
-    randomNumber == 9 ? "Choose a game and let's play!" :
-    randomNumber == 10 ? "A problem shared is..." :
-    randomNumber == 11 ? "You are completely anonymous." :
-    randomNumber == 12 ? "Write or record anything." :
-    randomNumber == 13 ? "If you need some Loves just ask me." :
-    randomNumber == 14 ? "It's you and me time." :
-    randomNumber == 15 ? "I challenge you to a game of tic tac toe" :
-    randomNumber == 16 ? "Tap record and say Dear Claire" :
-    randomNumber == 17 ? "I'm ready to listen." :
-    randomNumber == 18 ? "I'm ready to read, listen and reply." :
-    randomNumber == 19 ? "If you don't tell me, I won't know." :
-
-    "Go on, Darling, talk to me...";
-    await  Future.delayed(Duration(minutes: 45), () {
+    const messages = [
+      "Go on, Darling, talk to me...",
+      "I'm glad you are here",
+      "You have come to a safe place.",
+      "Everything can be between us.",
+      "I'll always be here for you.",
+      "Let's have a heart to heart.",
+      "Go ahead, type or record anything.",
+      "Tell me what's happening, darling?",
+      "Where are you and what's going on?",
+      "Choose a game and let's play!",
+      "A problem shared is...",
+      "You are completely anonymous.",
+      "Write or record anything.",
+      "If you need some Loves just ask me.",
+      "It's you and me time.",
+      "I challenge you to a game of tic tac toe",
+      "Tap record and say Dear Claire",
+      "I'm ready to listen.",
+      "I'm ready to read, listen and reply.",
+      "If you don't tell me, I won't know.",
+    ];
+    final message = messages[Random().nextInt(messages.length)];
+    await Future.delayed(Duration(minutes: 45), () {
       flutterLocalNotificationsPlugin.show(0, 'Claireminder',
-          message.toString(), _notificationDetails(), payload:
-          message.contains("game") ? "game" : "claireminder");
-    }
-    );
+          message.toString(), _notificationDetails(),
+          payload: message.contains("game") ? "game" : "claireminder");
+    });
   }
 
-
   randomizeNewAppSessionToast() async {
-    Random random = new Random();
-    int randomNumber = random.nextInt(Constant.TOAST_NUMBERS.length);
-    var message = randomNumber == 1 ? "It's Claire O'clock!" :
-    randomNumber == 2 ? "I'm glad you are here" :
-    randomNumber == 3 ? "You have come to a safe place." :
-    randomNumber == 4 ? "Grow your ego." :
-    randomNumber == 5 ? "Shake your phone to switch ego.." :
-    randomNumber == 5 ? "Let's have a heart to heart." :
-    randomNumber == 6 ? "Go ahead, advise anonymously." :
-    randomNumber == 7 ? "Welcome to Featured Sessions" :
-    randomNumber == 8 ? "Different people, different situations." :
-    randomNumber == 9 ? "Shake device to switch ego." :
-    randomNumber == 10 ? "A problem shared is..." :
-    randomNumber == 11 ? "You are completely anonymous." :
-    randomNumber == 12 ? "Advise people positively." :
-    randomNumber == 13 ? "Tap the spinning flower anytime." :
-    randomNumber == 14 ? "It's you and me time." :
-    randomNumber == 15 ? "Bored? Check out Diary Rooms." :
-    randomNumber == 16 ? "Browse Love and other categories." :
-    randomNumber == 17 ? "Be ready to be nice." :
-    randomNumber == 18 ? "Ask Claire anything." :
-    randomNumber == 0 ? "Don't forget to show love." :
-
-    "It's Claire O'Clock!";
-    await  Future.delayed(Duration(seconds: 7), () {
+    const messages = [
+      "It's Claire O'clock!",
+      "I'm glad you are here",
+      "You have come to a safe place.",
+      "Grow your ego.",
+      "Shake your phone to switch ego..",
+      "Let's have a heart to heart.",
+      "Go ahead, advise anonymously.",
+      "Welcome to Featured Sessions",
+      "Different people, different situations.",
+      "Shake device to switch ego.",
+      "A problem shared is...",
+      "You are completely anonymous.",
+      "Advise people positively.",
+      "Tap the spinning flower anytime.",
+      "It's you and me time.",
+      "Bored? Check out Diary Rooms.",
+      "Browse Love and other categories.",
+      "Be ready to be nice.",
+      "Ask Claire anything.",
+      "Don't forget to show love.",
+    ];
+    final message = messages[Random().nextInt(messages.length)];
+    await Future.delayed(Duration(seconds: 7), () {
       Fluttertoast.showToast(
         toastLength: Toast.LENGTH_LONG,
         msg: message.toString(),
         textColor: Colors.white,
         backgroundColor: Pallet.colorSplashScreen,
-      );    });
+      );
+    });
   }
-
 }

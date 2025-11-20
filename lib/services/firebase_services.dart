@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/data/models/profile_page_model.dart';
@@ -18,11 +19,11 @@ import 'package:clairediary/utils/strings.dart';
 import 'package:clairediary/helpers/toast_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'data/notification_model.dart' as pushNotification;
+final firebase_storage.FirebaseStorage _storage = firebase_storage.FirebaseStorage.instance; // Add this line
 
 Logger logger = Logger();
 SharedPreferences? prefs;
@@ -53,8 +54,7 @@ class FirebaseServices extends ChangeNotifier {
     await _firebaseMessaging.subscribeToTopic(session.sessionId!);
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
-      to: '/topics/${session.sessionId}',
-      collapseKey: 'type_a',
+      topic: session.sessionId!,
       data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
       notification: pushNotification.Notification(
           title: session.title ?? '', body: '$sender started a new session'),
@@ -71,8 +71,7 @@ class FirebaseServices extends ChangeNotifier {
     await _firebaseMessaging.subscribeToTopic(session.sessionId!);
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
-      to: '/topics/${session.sessionId}',
-      collapseKey: 'type_a',
+      topic: session.sessionId!,
       data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
       notification: pushNotification.Notification(
           title: session.title ?? '', body: '$sender followed the session'),
@@ -91,8 +90,7 @@ class FirebaseServices extends ChangeNotifier {
     if(!session.respondentUserId!.contains(_usersID)) {
       final pushNotification.NotificationModel _notificationModel =
       pushNotification.NotificationModel(
-        to: '/topics/${session.sessionId}',
-        collapseKey: 'type_a',
+        topic: session.sessionId!,
         data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
         notification: pushNotification.Notification(
             title: session.title ?? '', body: 'You are now assigned to this session. Will get notifications.'),
@@ -437,8 +435,7 @@ class FirebaseServices extends ChangeNotifier {
       required String sender,}) {
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
-      to: '/topics/$docId',
-      collapseKey: 'type_a',
+      topic: docId,
       data: pushNotification.Data(id: sender, route: docId.toString()),
       notification: pushNotification.Notification(
           title: title, body: '$sender added comment to the session'),
@@ -643,8 +640,7 @@ class FirebaseServices extends ChangeNotifier {
     await _firebaseMessaging.subscribeToTopic(session.sessionId!);
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
-      to: '/topics/${session.sessionId}',
-      collapseKey: 'type_a',
+      topic: session.sessionId!,
       data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
       notification: pushNotification.Notification(
           title: session.title ?? '', body: 'You will be notified of new advises.'),
@@ -677,8 +673,7 @@ class FirebaseServices extends ChangeNotifier {
     if(!session.followers!.contains(_usersID)) {
       final pushNotification.NotificationModel _notificationModel =
       pushNotification.NotificationModel(
-        to: '/topics/${session.sessionId}',
-        collapseKey: 'type_a',
+        topic: session.sessionId!,
         data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
         notification: pushNotification.Notification(
             title: session.title ?? '', body: 'You are now following this session. Will get notifications.'),
@@ -793,6 +788,31 @@ class FirebaseServices extends ChangeNotifier {
                     int.parse(session.colorHex!.replaceAll('#', '0xff'))));
           });
   }
+
+  Future<String?> uploadAudioFile(File audioFile, String userId) async {
+    try {
+      // Create a reference to the location you want to upload to
+      final ref = _storage
+          .ref()
+          .child('auto_diary_audio')
+          .child(userId)
+          .child('${DateTime.now().millisecondsSinceEpoch}.aac');
+
+      // Upload the file
+      firebase_storage.UploadTask uploadTask = ref.putFile(audioFile);
+
+      // Wait for the upload to complete
+      final snapshot = await uploadTask.whenComplete(() => {});
+
+      // Get the download URL
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Error uploading audio file: $e');
+      return null;
+    }
+  }
+
 
   Future<String> uploadImage(File imageFile) async {
     // Step 1: Generate a unique filename using the current timestamp
@@ -943,8 +963,7 @@ class FirebaseServices extends ChangeNotifier {
     final roomTitle = chatRoomPodo!.title.toString();
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
-        to: '/topics/${chatRoomPodo.id.toString()}',
-        collapseKey: 'type_a',
+        topic: chatRoomPodo.id.toString(),
         data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
         notification: pushNotification.Notification(
             title: chatRoomPodo.title!,
@@ -985,8 +1004,7 @@ class FirebaseServices extends ChangeNotifier {
     final sender = _user.alterEgoId;
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
-        to: '/topics/${chatModel.userId!}',
-        collapseKey: 'type_a',
+        topic: chatModel.userId!,
         data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
         notification: pushNotification.Notification(
           title: chatRoomPodo!.title!,
@@ -1040,8 +1058,7 @@ class FirebaseServices extends ChangeNotifier {
     final roomTitle = chatRoomPodo!.title.toString();
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
-            to: '/topics/${chatRoomPodo.id.toString()}',
-            collapseKey: 'type_a',
+            topic: chatRoomPodo.id.toString(),
             data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
             notification: pushNotification.Notification(
                 title: chatRoomPodo.title!,
@@ -1082,8 +1099,7 @@ class FirebaseServices extends ChangeNotifier {
     final sender = _user.nickname;
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
-            to: '/topics/${chatModel.userId!}',
-            collapseKey: 'type_a',
+            topic: chatModel.userId!,
             data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
             notification: pushNotification.Notification(
               title: chatRoomPodo!.title!,
@@ -1136,8 +1152,7 @@ class FirebaseServices extends ChangeNotifier {
     _usersID = await getUsersId();
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
-      to: '/topics/${session.sessionId}',
-      collapseKey: 'type_a',
+      topic: session.sessionId!,
       data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
       notification: pushNotification.Notification(
           title: session.title ?? '', body: '$sender reacted to the session.'),
@@ -1168,8 +1183,7 @@ class FirebaseServices extends ChangeNotifier {
       required Map<String, dynamic> map}) {
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
-      to: '/topics/$docId',
-      collapseKey: 'type_a',
+      topic: docId,
       data: pushNotification.Data(id: sender, route: docId.toString()),
       notification: pushNotification.Notification(
           title: session.title, body: '$sender thanked a response on the session.'),

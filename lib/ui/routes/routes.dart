@@ -1,3 +1,4 @@
+import 'package:clairediary/Automations/auto_diary_settings_page.dart';
 import 'package:clairediary/Automations/setup_claireminder_widget.dart';
 import 'package:clairediary/ui/Categories/category_sessions.dart';
 import 'package:clairediary/ui/alter_ego/alter_ego_homepage.dart';
@@ -75,10 +76,6 @@ class AppRoutes {
   static const updatesAndAnnouncements = '/updatesAndAnnouncements';
   static const setupClaireminder = '/setupClaireminder';
   static const aiChat = '/aiChat';
-
-
-
-
 }
 
 class AppRouter {
@@ -178,7 +175,7 @@ class AppRouter {
       case AppRoutes.setupClaireminder:
         return MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider(
-              create: (_) => HowClaireWorksProvider(), child: SetupClaireminder()),
+              create: (_) => HowClaireWorksProvider(), child: AutoDiarySettingsPage()),
           settings: settings,
           fullscreenDialog: true,
         );
@@ -318,48 +315,36 @@ class AppRouter {
 
 final NavigationService navService = NavigationService();
 
-class NavigationService<T, U> {
+class NavigationService {
   static GlobalKey<NavigatorState> navigationKey = GlobalKey<NavigatorState>();
 
-  Future<Future<T?>> pushNamed(String routeName, {required Object args}) async =>
-      navigationKey.currentState!.pushNamed<T>(
-        routeName,
-        arguments: args,
-      );
+  void pushNamed(String routeName, {Object? args}) {
+    navigationKey.currentState?.pushNamed(
+      routeName,
+      arguments: args,
+    );
+  }
 
-  Future<Future<T?>> push(Route<T> route) async =>
-      navigationKey.currentState!.push<T>(route);
+  void pushReplacementNamed(String routeName, {Object? args}) {
+    navigationKey.currentState?.pushReplacementNamed(
+      routeName,
+      arguments: args,
+    );
+  }
 
-  Future<Future<T?>> pushReplacementNamed(String routeName, {required Object args}) async =>
-      navigationKey.currentState!.pushReplacementNamed<T, U>(
-        routeName,
-        arguments: args,
-      );
+  void push(Route route) {
+    navigationKey.currentState?.push(route);
+  }
 
-  Future<Future<T?>> pushNamedAndRemoveUntil(
-      String routeName, {
-        required Object args,
-        bool keepPreviousPages = false,
-      }) async =>
-      navigationKey.currentState!.pushNamedAndRemoveUntil<T>(
-        routeName,
-            (Route<dynamic> route) => keepPreviousPages,
-        arguments: args,
-      );
+  void pushNamedAndRemoveUntil(String routeName, {Object? args}) {
+    navigationKey.currentState?.pushNamedAndRemoveUntil(
+      routeName,
+          (Route<dynamic> route) => false,
+      arguments: args,
+    );
+  }
 
-  Future<Future<T?>> pushAndRemoveUntil(
-      Route<T> route, {
-        bool keepPreviousPages = false,
-      }) async =>
-      navigationKey.currentState!.pushAndRemoveUntil<T>(
-        route,
-            (Route<dynamic> route) => keepPreviousPages,
-      );
-
-  Future<bool> maybePop([Object? args]) async =>
-      navigationKey.currentState!.maybePop<bool>();
-
-  bool canPop() => navigationKey.currentState!.canPop();
-
-  void goBack({required T result}) => navigationKey.currentState!.pop<T>(result);
+  void goBack() {
+    navigationKey.currentState?.pop();
+  }
 }

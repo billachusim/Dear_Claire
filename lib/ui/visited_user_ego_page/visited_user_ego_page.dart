@@ -247,8 +247,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
-        to: '/topics/${userId.toString()}',
-        collapseKey: 'type_a',
+        topic: userId,
         data: pushNotification.Data(id: senderId, route: 'wallet'),
         notification: pushNotification.Notification(
             title: "Ego Mantra",

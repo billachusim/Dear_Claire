@@ -205,7 +205,7 @@ class _HomeDashboardPageState extends State<HomePage>
   dispose() {
     _controller.dispose();
     super.dispose();
-    detector.stopListening();
+    //detector.stopListening();
   }
 
   @override
@@ -433,12 +433,11 @@ class _HomeDashboardPageState extends State<HomePage>
                   ),
                   SizedBox(height: 18,),
                   ListTile(
-                    title: Text("Claireminder",
+                    title: Text("Auto Diary",
                         style: TextStyle(color: Pallet.colorWhite)),
                     onTap: () async {
                       if (await firebaseServices.isUserSignIn(context))
                       Navigator.of(context).pushNamed(AppRoutes.setupClaireminder);
-                      showToast("Coming Soon...");
                     },
                     leading: Icon(Icons.auto_awesome_motion_rounded, color: Pallet.colorWhite),
                   ),
