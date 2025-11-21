@@ -27,6 +27,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
 import '../../services/notification_service.dart';
+import '../create_session/sound/custom_play_sound_widget.dart';
 import '/services/data/notification_model.dart' as pushNotification;
 import '../../services/user_activity_model.dart';
 import '../../services/user_model.dart';
@@ -749,7 +750,25 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       {String? avatarUrl, String? userName, String? userType,
         var sessionCount, var totalLoveCount, var adviseCount})
   {
+    // Determine if the current theme is dark
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    // Define colors based on the theme
+    Color getCardBackgroundColor() {
+      if (userType == 'REGULAR') {
+        return isDarkMode ? Pallet.colorPrimary : Colors.white;
+      } else if (userType == 'ADMIN' || userType == 'SUPER_ADMIN') {
+        return isDarkMode ? Pallet.colorSecondary : Colors.white;
+      }
+      // Default fallback
+      return isDarkMode ? Color(0xFF2C2C2E) : Colors.white;
+    }
+
+    final cardBackgroundColor = getCardBackgroundColor();    final cardTextColor = isDarkMode ? Colors.white : Colors.black;
+    final hintTextColor = isDarkMode ? Colors.white54 : Colors.black54;
+
+
     return Material(
+      color: Colors.transparent, // Use transparent to show the container's decoration
       child: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -759,12 +778,14 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
             fit: BoxFit.fill,
           ),
         ),
+        width: getDeviceWidth(context),
         margin: EdgeInsets.only(bottom: 3),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(height: 4),
-            Center(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -836,71 +857,16 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                   ),
 
 
-                  // The count columns are here
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        sessionCount ?? "---",
-                        style: TextStyle(
-                            fontSize: 23,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black),
-                      ),
-
-                      Text(
-                        "Sessions",
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black),
-                      ),
-                    ],
-                  ),
-
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        adviseCount ?? "---",
-                        style: TextStyle(
-                            fontSize: 23,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black),
-                      ),
-
-                      Text(
-                        "Advises",
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black),
-                      ),
-                    ],
-                  ),
-
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        totalLoveCount ?? "---",
-                        style: TextStyle(
-                            fontSize: 23,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black),
-                      ),
-
-                      Text(
-                        "Loves",
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black),
-                      ),
-                    ],
+                  // The count columns (stats cards) are here
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildStatCard(sessionCount, "Sessions", userType, context),
+                        _buildStatCard(adviseCount, "Advises", userType, context),
+                        _buildStatCard(totalLoveCount, "Loves", userType, context),
+                      ],
+                    ),
                   ),
                   SizedBox(width: 6,),
                 ],
@@ -997,7 +963,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                 userType == 'REGULAR'? 'Ego' :
                                 userType == 'ADMIN'? 'Alter Ego' :
                                 userType == 'SUPER_ADMIN'? 'Super Ego' :
-                                '',
+                                'Ego',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -1086,7 +1052,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
             Container(
               width: getDeviceWidth(context),
               height: 100,
-              margin: EdgeInsets.only(left: 4, right: 4),
+              margin: EdgeInsets.only(left: 4, right: 4, bottom: 4), // Added bottom margin
               child: FlipCard(
                 key: cardKey,
                 direction: FlipDirection.HORIZONTAL, // default
@@ -1095,11 +1061,12 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(25),
+                        borderRadius: BorderRadius.circular(25),
                         color: userType == 'REGULAR'? Pallet.colorPrimary
                             : userType == 'ADMIN'? Pallet.colorSecondary
                             : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                            :Pallet.colorBlue,                      ),
+                            :Pallet.colorBlue,
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
@@ -1133,32 +1100,32 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                       minHeight: 50.0,
                                       maxHeight: 90.0,
                                     ),
-                                    child: GestureDetector(
-                                      onTap: _showCardDialog,
+                                    child: new Scrollbar(
                                       child: Container(
-                                        padding: EdgeInsets.all(5),
-                                        width: double.infinity,
-                                        height: 40,
+                                        padding: EdgeInsets.zero,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(20.0),
-                                          gradient: LinearGradient(
-                                            begin: Alignment(-0.37857140550652835, -1.9473685559777252),
-                                            end: Alignment(1.2428571464417884, 2.526316110739735),
-                                            stops: [0.0, 0.856177031993866, 1.0],
-                                            colors: [
-                                              Pallet.colorWhite,
-                                              Pallet.colorSecondary,
-                                              Pallet.colorSecondaryDark,
-                                            ],
-                                          ),
+                                          borderRadius: BorderRadius.circular(30),
+                                          color: cardBackgroundColor,
                                         ),
-                                        child: Center(
-                                          child: Text('Drop an anonymous message into this Ego\'s Stream.',
-                                            style: GoogleFonts.lato(
-                                                fontSize: 12.0,
-                                                color: Pallet.colorBlack,
-                                                fontWeight: FontWeight.w700),
+                                        child: TextField(
+                                          cursorColor: Pallet.colorSplashScreen,
+                                          keyboardType: TextInputType.multiline,
+                                          style: TextStyle(color: cardTextColor),
+                                          maxLines: 2,
+                                          controller: _visitorMantraController,
+                                          decoration: InputDecoration(
+                                            border: InputBorder.none,
+                                            contentPadding:
+                                            EdgeInsets.only(left: 13.0, right: 13.0, top: 10, bottom: 10), // Adjusted padding
+                                            hintText: "...write a new ego mantra...",
+                                            hintStyle: TextStyle(
+                                              fontStyle: FontStyle.italic,
+                                              color: hintTextColor,
+                                              fontSize: 14,
+                                            ),
+                                            counterText: '',
                                           ),
+                                          maxLength: 160,
                                         ),
                                       ),
                                     ),
@@ -1225,7 +1192,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                   return Text('Something went wrong');
                                 }
                                 if (!snapshot.hasData) {
-                                  return Text('Write a mantra that you wish to live by currently by tapping on this space',
+                                  return Text('Write a mantra by currently by tapping on this space',
                                     style: TextStyle(color: Colors.white),);
                                 }
 
@@ -1275,9 +1242,8 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                           fontSize: 12,
                                         ),
                                       ),
-                                      subtitle: data.containsKey('egoAudioMessage') ?
-                                        AudioPlayerWidget(audioPath: data['egoAudioMessage']) :
-                                        Text(data['egoMessage'] ?? '',
+                                      subtitle: data.containsKey('egoAudioMessage') ? CustomPlaySoundWidget(filePath: data['egoAudioMessage']) :
+                                      Text(data['egoMessage'] ?? '',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 15,
@@ -1321,6 +1287,58 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       ),
     );
   }
+
+// Helper widget for the stat cards
+  Widget _buildStatCard(var count, String label, String? userType, BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    Color getCardBackgroundColor() {
+      if (userType == 'REGULAR') {
+        return isDarkMode ? Pallet.colorPrimary : Colors.white;
+      } else if (userType == 'ADMIN' || userType == 'SUPER_ADMIN') {
+        return isDarkMode ? Pallet.colorSecondary : Colors.white;
+      }
+      // Default fallback
+      return isDarkMode ? Color(0xFF2C2C2E) : Colors.white;
+    }
+
+    final cardBackgroundColor = getCardBackgroundColor();
+    final cardTextColor = isDarkMode ? Colors.white : Colors.black;
+    final labelTextColor = isDarkMode ? Colors.white70 : Colors.black54;
+
+    return Card(
+      elevation: 4,
+      color: cardBackgroundColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Container(
+        width: (getDeviceWidth(context) / 4) - 16,
+        height: 60,
+        padding: const EdgeInsets.all(4),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              count ?? "---",
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: cardTextColor),
+            ),
+            SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: labelTextColor),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 
 
 
