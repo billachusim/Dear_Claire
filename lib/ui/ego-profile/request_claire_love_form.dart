@@ -1,513 +1,274 @@
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
-import 'package:clairediary/utils/strings.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class RequestClaireLoveForm extends StatefulWidget {
-  final String currentWithdrawal;
-  final String totalLoveCount;
+class RequestClaireLovesForm extends StatefulWidget {
+  final int loveAmount;
   final String userId;
-  final String currentWithdrawable;
-  final String totalWithdrawn;
 
-  const RequestClaireLoveForm({Key? key,
-    required this.currentWithdrawal,
-    required this.totalLoveCount,
-    required this.userId,
-    required this.currentWithdrawable,
-    required this.totalWithdrawn}) : super(key: key);
+  const RequestClaireLovesForm(
+      {Key? key, required this.loveAmount, required this.userId})
+      : super(key: key);
 
   @override
-  _RequestClaireLoveFormState createState() => _RequestClaireLoveFormState();
+  _RequestClaireLovesFormState createState() => _RequestClaireLovesFormState();
 }
 
-class _RequestClaireLoveFormState extends State<RequestClaireLoveForm> {
-  TextEditingController _accountNumberController = TextEditingController();
-  TextEditingController _bankNameController = TextEditingController();
-  TextEditingController _nameOnAccountController = TextEditingController();
-  TextEditingController _whyRequestController = TextEditingController();
-  TextEditingController _value4Controller = TextEditingController();
-  TextEditingController _value5Controller = TextEditingController();
-  TextEditingController _value6Controller = TextEditingController();
-  TextEditingController _value7Controller = TextEditingController();
+class _RequestClaireLovesFormState extends State<RequestClaireLovesForm> {
+  int _currentStep = 0;
   final _formKey = GlobalKey<FormState>();
-  bool value4 = false;
-  bool value5 = false;
-  bool value6 = false;
-  bool value7 = false;
+
+  final TextEditingController _accountNumberController = TextEditingController();
+  final TextEditingController _bankNameController = TextEditingController();
+  final TextEditingController _nameOnAccountController = TextEditingController();
+  final TextEditingController _whyRequestController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Pallet.colorSecondary,
+        backgroundColor: Pallet.colorPrimary,
+        elevation: 0,
+        title: Text('Request Conversion', style: GoogleFonts.lato(color: Colors.white)),
         centerTitle: true,
-        title: Text('Request Claire Love',
-            textAlign: TextAlign.start,
-            maxLines: 1,
-            style: GoogleFonts.lato(
-                fontSize: 26.0,
-                color: Pallet.colorWhite,
-                fontWeight: FontWeight.w600)),
       ),
-      body: SafeArea(
-        child: Container(
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-
-                Container(
-                  color: Pallet.colorGrey.withOpacity(0.3),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Center(
-                      child: Text(AppString.request_clairelove_form_header,
-                          //textAlign: TextAlign.center,
-                          style: GoogleFonts.lato(
-                              fontSize: 13.0,
-                              color: Pallet.colorBlack,
-                              fontWeight: FontWeight.w600)),
-                    ),
+      backgroundColor: Pallet.colorSecondaryDark,
+      body: Stepper(
+        type: StepperType.horizontal,
+        currentStep: _currentStep,
+        onStepContinue: () {
+          if (_currentStep == 0) {
+            if (_formKey.currentState!.validate()) {
+              setState(() => _currentStep += 1);
+            }
+          } else if (_currentStep == 1) {
+            _showConfirmationDialog();
+          }
+        },
+        onStepCancel: _currentStep == 0 ? null : () => setState(() => _currentStep -= 1),
+        steps: _getSteps(),
+        controlsBuilder: (BuildContext context, ControlsDetails details) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                if (_currentStep > 0)
+                  TextButton(
+                    onPressed: details.onStepCancel,
+                    child: const Text('BACK', style: TextStyle(color: Colors.white70)),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Container(
-                        color: Pallet.colorWhite,
-                        child: TextFormField(
-                            onChanged: (value) {},
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "Enter";
-                              }
-                              return null;
-                            },
-                            textInputAction: TextInputAction.next,
-                            controller: _accountNumberController,
-                            decoration: new InputDecoration(
-                              hintText: "enter bank account number",
-                              labelText: "Account Number",
-                              labelStyle:
-                              TextStyle(color: Pallet.colorTextGray),
-                              focusedBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
-                              enabledBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorTextGray)),
-                              contentPadding:
-                              EdgeInsets.only(right: 15, left: 15),
-                            ),
-                            keyboardType: TextInputType.number,
-                            style: GoogleFonts.lato(
-                                fontSize: 12.0,
-                                color: Pallet.colorBlack,
-                                fontWeight: FontWeight.w400)),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Container(
-                        color: Pallet.colorWhite,
-                        child: TextFormField(
-                            onChanged: (value) {},
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "enter bank name";
-                              }
-                              return null;
-                            },
-                            textInputAction: TextInputAction.next,
-                            controller: _bankNameController,
-                            decoration: new InputDecoration(
-                              hintText: "Bank Of The Rising Sun",
-                              labelText: "Bank Name",
-                              labelStyle:
-                              TextStyle(color: Pallet.colorTextGray),
-                              focusedBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
-                              enabledBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorTextGray)),
-                              contentPadding:
-                              EdgeInsets.only(right: 15, left: 15),
-                            ),
-                            keyboardType: TextInputType.text,
-                            style: GoogleFonts.lato(
-                                fontSize: 12.0,
-                                color: Pallet.colorBlack,
-                                fontWeight: FontWeight.w400)),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-
-                      Container(
-                        color: Pallet.colorWhite,
-                        child: TextFormField(
-                            onChanged: (value) {},
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "enter bank name";
-                              }
-                              return null;
-                            },
-                            textInputAction: TextInputAction.next,
-                            controller: _nameOnAccountController,
-                            decoration: new InputDecoration(
-                              hintText: "Clairechi Naomi Peperempe",
-                              labelText: "Name On Account",
-                              labelStyle:
-                              TextStyle(color: Pallet.colorTextGray),
-                              focusedBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
-                              enabledBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorTextGray)),
-                              contentPadding:
-                              EdgeInsets.only(right: 15, left: 15),
-                            ),
-                            keyboardType: TextInputType.text,
-                            style: GoogleFonts.lato(
-                                fontSize: 12.0,
-                                color: Pallet.colorBlack,
-                                fontWeight: FontWeight.w400)),
-                      ),
-
-                      SizedBox(
-                        height: 20,
-                      ),
-
-                      Container(
-                        color: Pallet.colorWhite,
-                        child: TextFormField(
-                            onChanged: (value) {},
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "What's the need?";
-                              }
-                              return null;
-                            },
-                            textInputAction: TextInputAction.next,
-                            controller: _whyRequestController,
-                            decoration: new InputDecoration(
-                              hintText: "I will like to...",
-                              labelText: "What will this cash be used for?",
-                              labelStyle:
-                              TextStyle(color: Pallet.colorTextGray),
-                              focusedBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorPrimary)),
-                              enabledBorder: new OutlineInputBorder(
-                                  borderSide: new BorderSide(
-                                      color: Pallet.colorTextGray)),
-                              contentPadding:
-                              EdgeInsets.only(right: 15, left: 15),
-                            ),
-                            keyboardType: TextInputType.text,
-                            style: GoogleFonts.lato(
-                                fontSize: 12.0,
-                                color: Pallet.colorBlack,
-                                fontWeight: FontWeight.w400)),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  color: Pallet.colorGrey.withOpacity(0.3),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Center(
-                      child: Text(AppString.switchHeaderTwo,
-                          //textAlign: TextAlign.center,
-                          style: GoogleFonts.lato(
-                              fontSize: 13.0,
-                              color: Pallet.colorBlack,
-                              fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only( top: 10.0,left: 20.0, right: 20.0),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12.0, bottom: 12),
-                        child: Divider(height: 1, color: Pallet.grey,),
-                      ),
-                      customSwitch(AppString.switchText5,value5,onChangeFunction5),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12.0, bottom: 12),
-                        child: Divider(height: 1, color: Pallet.grey,),
-                      ),
-                      customSwitch(AppString.switchText6,value6,onChangeFunction6),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12.0, bottom: 12),
-                        child: Divider(height: 1, color: Pallet.grey,),
-                      ),
-                      customSwitch(AppString.requestLoveSwitchText7,value7,onChangeFunction7),
-
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: 12,
-                ),
-                Container(
-                  color: Pallet.colorGrey.withOpacity(0.3),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Center(
-                      child: Text(AppString.request_clairelove_bottom_header,
-                          //textAlign: TextAlign.center,
-                          style: GoogleFonts.lato(
-                              fontSize: 13.0,
-                              color: Pallet.colorBlack,
-                              fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: onContinueToWhatsAppClicked,
-                  child: Container(
-                    color: Pallet.green,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                        children: [
-                          Image.asset('assets/images/ic_whatsapp_white.png',
-                            height: 25, width: 25,),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 75.0),
-                            child: Text("CONTINUE VIA WHATSAPP",
-                                //textAlign: TextAlign.center,
-                                style: GoogleFonts.lato(
-                                    fontSize: 16.0,
-                                    color: Pallet.colorWhite,
-                                    fontWeight: FontWeight.w700)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 8,),
-                GestureDetector(
-                  onTap: launchEmailApp,
-                  child: Container(
-                    color: Colors.red,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                        children: [
-                          Icon(Icons.email, color:Colors.white, size:30),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 75.0),
-                            child: Text("CONTINUE VIA EMAIL",
-                                //textAlign: TextAlign.center,
-                                style: GoogleFonts.lato(
-                                    fontSize: 16.0,
-                                    color: Pallet.colorWhite,
-                                    fontWeight: FontWeight.w700)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                ElevatedButton(
+                  onPressed: details.onStepContinue,
+                  style: ElevatedButton.styleFrom(backgroundColor: Pallet.colorPrimary),
+                  child: Text(_currentStep == 0 ? 'NEXT' : 'CONFIRM', style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  List<Step> _getSteps() {
+    return [
+      Step(
+        title: Text('Details', style: TextStyle(color: Colors.white)),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _buildTextField(
+                  controller: _accountNumberController, label: "Account Number"),
+              _buildTextField(controller: _bankNameController, label: "Bank Name"),
+              _buildTextField(
+                  controller: _nameOnAccountController, label: "Name on Account"),
+              _buildTextField(
+                  controller: _whyRequestController, label: "Reason for request"),
+            ],
           ),
+        ),
+        isActive: _currentStep >= 0,
+        state: _currentStep > 0 ? StepState.complete : StepState.indexed,
+      ),
+      Step(
+        title: Text('Confirm', style: TextStyle(color: Colors.white)),
+        content: _buildConfirmationStep(),
+        isActive: _currentStep >= 1,
+        state: _currentStep > 1 ? StepState.complete : StepState.indexed,
+      ),
+    ];
+  }
+
+  Widget _buildTextField({required TextEditingController controller, required String label}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        style: TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.white70),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.white24),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Pallet.colorPrimary),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.red),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.red),
+          ),
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter $label';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+  Widget _buildConfirmationStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("You are requesting to convert:", style: TextStyle(color: Colors.white70, fontSize: 16)),
+        SizedBox(height: 8),
+        Text("${widget.loveAmount} ❤️", style: GoogleFonts.lato(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+        SizedBox(height: 20),
+        _buildConfirmationDetail("Account Number", _accountNumberController.text),
+        _buildConfirmationDetail("Bank Name", _bankNameController.text),
+        _buildConfirmationDetail("Account Name", _nameOnAccountController.text),
+        _buildConfirmationDetail("Reason", _whyRequestController.text),
+      ],
+    );
+  }
+
+  Widget _buildConfirmationDetail(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: RichText(
+        text: TextSpan(
+          style: TextStyle(fontSize: 14, color: Colors.white70),
+          children: <TextSpan>[
+            TextSpan(text: "$title: ", style: TextStyle(fontWeight: FontWeight.bold)),
+            TextSpan(text: value, style: TextStyle(color: Colors.white)),
+          ],
         ),
       ),
     );
   }
 
-  Widget customSwitch(String text, bool value, Function onChange){
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Container(
-          width: 200,
-          child: Text(text,
-              //textAlign: TextAlign.center,
-              style: GoogleFonts.lato(
-                  fontSize: 13.0,
-                  color: Pallet.colorBlack,
-                  fontWeight: FontWeight.w600)
-          ),
-        ),
-        Spacer(),
-        Switch(
-            value: value,
-            inactiveTrackColor: Pallet.colorGrey,
-            activeTrackColor: Pallet.colorPink.withOpacity(0.3),
-            activeColor: Pallet.colorPink,
-            onChanged: (newValue) {
-              onChange(newValue);
-            })
-      ],
+  void _showConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Pallet.colorSecondary,
+          title: Text("Proceed with request?", style: TextStyle(color: Colors.white)),
+          content: Text(
+              "Your request will be sent for review. This action cannot be undone.", style: TextStyle(color: Colors.white70)),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Cancel", style: TextStyle(color: Colors.white70)),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            ElevatedButton(
+              child: Text("Proceed", style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(backgroundColor: Pallet.colorPrimary),
+              onPressed: () {
+                _sendRequest();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
-
   }
 
-  onChangeFunction4(bool newValue4){
-    setState(() {
-      if(!value4){
-        _value4Controller.text = "Yes";
-      } else{
-        _value4Controller.text = "No";
-      }
-      value4 = newValue4;
-      print("value4.. $value4, ${_value4Controller.text}");
-    });
-  }
-  onChangeFunction5(bool newValue5){
-    setState(() {
-      if(!value5){
-        _value5Controller.text = "Yes";
-      } else {
-        _value5Controller.text = "No";
-      }
-      value5 = newValue5;
-      print("value5.. $value5, ${_value5Controller.text}");
-    });
-  }
-  onChangeFunction6(bool newValue6){
-    setState(() {
-      if(!value6){
-        _value6Controller.text = "Yes";
-      } else {
-        _value6Controller.text = "No";
-      }
-      value6 = newValue6;
-      print("value6.. $value6, ${_value6Controller.text}");
-    });
-  }
-  onChangeFunction7(bool newValue7){
-    setState(() {
-      if(!value7) {
-        _value7Controller.text = "Agree";
-      } else {
-        _value7Controller.text = "No";
-      }
-      value7 = newValue7;
-      print("value7.. $value7, ${_value7Controller.text}");
-    });
-  }
-
-  String? getWhatsAppUrl(String payload ){
-    return AppString.WHATSAPP_URL + (payload);
-  }
-
-  onContinueToWhatsAppClicked() {
-    var whatsAppUrl = getWhatsAppUrl(getPayload() ?? "");
-    launch(whatsAppUrl!);
-  }
-
-  launchEmailApp() {
-    String? encodeQueryParameters(Map<String, String> params) {
-      return params.entries
-          .map((e) =>
-      '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
-          .join('&');
-    }
-
-    final String payload = getPayload().toString();
+  void _sendRequest() async {
+    final String payload = _getPayload();
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
       path: 'dearclaireapp@gmail.com',
-      query: encodeQueryParameters(
-          <String, String>{
-            'subject': 'Requesting Alter Ego Mode',
-            'body': payload,
-          }),
+      query: encodeQueryParameters(<String, String>{
+        'subject': 'Love Conversion Request from ${widget.userId}',
+        'body': payload,
+      }),
     );
 
-    launchUrl(emailLaunchUri);
+    try {
+      await launchUrl(emailLaunchUri);
+      AppToast.show("Request sent successfully! Check your email app.");
+      Navigator.pop(context); // Go back to the wallet
+    } catch (e) {
+      AppToast.showError("Could not launch email app.");
+    }
   }
 
-  String? getPayload(){
-    var userId = widget.userId.isEmpty ? "null" : widget.userId;
-    var totalLove = widget.totalLoveCount.isEmpty ? "null" : widget.totalLoveCount;
-    var currentRequest = widget.currentWithdrawal.isEmpty ? "null" : widget.currentWithdrawal;
-    var withdrawableLoves = widget.currentWithdrawable.isEmpty ? "null" : widget.currentWithdrawable;
-    var totalWithdrawn = widget.totalWithdrawn.isEmpty ? "null" : widget.totalWithdrawn;
-
-
-
-    var accountNumber = _accountNumberController.text.isEmpty ? "null" : _accountNumberController.text;
-    var bankName = _bankNameController.text.isEmpty ? "null" : _bankNameController.text;
-    var whyRequest = _whyRequestController.text.isEmpty ? "null" : _whyRequestController.text;
-    var ratedOnPlaystore = _value5Controller.text.isEmpty ? "No" : _value5Controller.text;
-    var believeInClaire = _value6Controller.text.isEmpty ? "No" : _value6Controller.text;
-    var agreeToTerms = _value7Controller.text.isEmpty ? "No" : _value7Controller.text;
-    var email = firebaseServices.currentUser!.email == null ? "null" : firebaseServices.currentUser!.email;
-
-
+  String _getPayload() {
     return """
-      Hi, Admin,
-      I'm requesting some cash for the month. These are the details:
+    Love Conversion Request Details:
+    --------------------------------
+    User ID: ${widget.userId}
+    Amount to Convert: ${widget.loveAmount} ❤️
+    
+    Bank Details:
+    - Account Number: ${_accountNumberController.text}
+    - Bank Name: ${_bankNameController.text}
+    - Account Name: ${_nameOnAccountController.text}
+    
+    Reason for Request:
+    ${_whyRequestController.text}
+    """
+        .trim();
+  }
 
-      *UserId*: $userId
+  String? encodeQueryParameters(Map<String, String> params) {
+    return params.entries
+        .map((e) =>
+            '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+        .join('&');
+  }
 
-      *Email*: $email
-      
-      *Total Love*: $totalLove
-      
-      *Current Withdrawable*: $withdrawableLoves
-      
-      *Total Withdrawn*: $totalWithdrawn
-      
-      *Current Request in Naira*: $currentRequest
-
-      *Account Number*: $accountNumber
-
-      *Bank Name*: $bankName
-
-      *Write A Short Need*: $whyRequest
-
-      *Have you rated Dear Claire five stars with a short sweet review?*: $ratedOnPlaystore
-
-      *Do you truly believe in the Claire Project? That everyone deserves a true friend in need and indeed?*: $believeInClaire
-
-      *Claire reserves all rights around the use of Claire Love?*: $agreeToTerms
-    """.trim();
+  @override
+  void dispose() {
+    _accountNumberController.dispose();
+    _bankNameController.dispose();
+    _nameOnAccountController.dispose();
+    _whyRequestController.dispose();
+    super.dispose();
   }
 }
 
-class MultiSwitchOptions extends StatefulWidget {
-  const MultiSwitchOptions({Key? key}) : super(key: key);
+class AppToast {
+  static void show(String message, {Color? bgColor}) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_LONG,
+      backgroundColor: bgColor ?? Pallet.colorSplashScreen,
+    );
+  }
 
-  @override
-  _MultiSwitchOptionsState createState() => _MultiSwitchOptionsState();
-}
-
-class _MultiSwitchOptionsState extends State<MultiSwitchOptions> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-
+  static void showError(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_LONG,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
     );
   }
 }

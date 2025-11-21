@@ -40,6 +40,9 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   final initFuture = MobileAds.instance.initialize();
   final adState = AdState(initFuture);
+  MobileAds.instance.updateRequestConfiguration(
+    RequestConfiguration(testDeviceIds: ['51F4CA28BB7EDD1F5E61C5F0F8EFFF00']),
+  );
 
   // --- GET INITIAL NOTIFICATION INFO ---
   final RemoteMessage? initialRemoteMessage =

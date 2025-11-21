@@ -76,6 +76,10 @@ dependencies:
   app_tracking_transparency: ^2.0.3
   flutter_linkify: ^6.0.0
   googleapis_auth: ^1.4.1
+  fl_chart: ^1.1.1
+  just_audio: ^0.9.36
+  audio_session: ^0.1.18
+  percent_indicator: ^4.2.5
 
 dev_dependencies:
   flutter_test:
@@ -99,4 +103,3 @@ flutter:
     - assets/web_games/tictactoe/index.html
     - assets/web_games/tictactoe/index2.html
     - assets/tweet/index.html
-    - secrets/

@@ -1,23 +1,25 @@
 import 'dart:core';
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:clairediary/services/firebase_services.dart';
+import 'package:clairediary/ui/ego-profile/love_history_chart.dart';
+import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/ui/visited_user_ego_page/send_clairelove_form.dart';
 import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/helper.dart';
-import 'package:clairediary/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../services/firebase_services.dart';
-import '../../utils/constant.dart';
-import '../routes/page_router_animation.dart';
 
 class VisitedUserClaireLoves extends StatefulWidget {
   final String visitedUsersID;
   final String visitedEgoName;
 
-  VisitedUserClaireLoves(
+  const VisitedUserClaireLoves(
       {Key? key, required this.visitedUsersID, required this.visitedEgoName})
       : super(key: key);
 
@@ -26,784 +28,321 @@ class VisitedUserClaireLoves extends StatefulWidget {
 }
 
 class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
-  var _withdrawnLoveCount;
-  var _currentLoveCount;
-  var _currentWithdrawal;
-  var _toRequest;
-  var _rate;
-  var _userType;
-  late String _userId;
-
-  bool _showRequestButton = false;
-
+  int _totalLoveCount = 0;
+  int _currentLoveCount = 0;
+  int _withdrawnLoveCount = 0;
+  int _sessionCount = 0;
+  int _adviseCount = 0;
+  String _rateBadge = 'Ego Rate';
+  double _rate = 1.5;
+  double _convertedAmount = 0.0;
+  bool _isLoading = true;
 
   final TextEditingController _amountController = TextEditingController();
-
   User? currentUser = FirebaseAuth.instance.currentUser;
-
-
 
   @override
   void initState() {
     super.initState();
+    _fetchUserData();
+    _amountController.addListener(_calculateConversion);
   }
 
-
-  @override
-  void dispose() {
-    super.dispose();
+  void _calculateConversion() {
+    final amount = int.tryParse(_amountController.text) ?? 0;
+    setState(() {
+      _convertedAmount = amount * _rate;
+    });
   }
 
+  Future<void> _fetchUserData() async {
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(widget.visitedUsersID)
+          .get();
 
-
-  /// Set and show current withdrawal available to the user.
-
-  void setWithdrawalAmount() async {
-    final user = await firebaseServices.getUserWithId(id: widget.visitedUsersID);
-    final rate = user.userType == 'REGULAR'? 1.5 :
-    user.userType == 'ADMIN'? 2 :
-    user.userType == 'SUPER_ADMIN'? 3 :
-    1.5;
-    final currentWithdrawal = int.parse(_amountController.text);
-    _toRequest = currentWithdrawal * rate;
-    _currentWithdrawal = _toRequest;
-
-    logger.d('Got the request love count');
-    print('Requested love Count is: $currentWithdrawal');
-    print('Current love Count is: $_currentLoveCount');
-
+      if (userDoc.exists) {
+        var data = userDoc.data()!;
+        final userType = data['userType'];
+        setState(() {
+          _totalLoveCount = data["totalLoveCount"] ?? 0;
+          _currentLoveCount = data["currentLoveCount"] ?? 0;
+          _withdrawnLoveCount = data["withdrawnLoveCount"] ?? 0;
+          _sessionCount = data["sessionCount"] ?? 0;
+          _adviseCount = data["adviseCount"] ?? 0;
+          _rate = userType == 'SUPER_ADMIN'
+              ? 3.0
+              : userType == 'ADMIN'
+                  ? 2.0
+                  : 1.5;
+          _rateBadge = userType == 'SUPER_ADMIN'
+              ? 'Super Ego Rate'
+              : userType == 'ADMIN'
+                  ? 'Alter Ego Rate'
+                  : 'Ego Rate';
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      AppToast.showError(e.toString());
+    }
   }
-
-
-  /// Ascertain withdrawn available love for the user.
-
-  void ascertainWithdrawnLoveCount() {
-    final currentWithdrawal = int.parse(_amountController.text);
-    final totalWithdrawal = _withdrawnLoveCount! + currentWithdrawal;
-    final withdrawnLoveCount = currentWithdrawal + totalWithdrawal;
-    _toRequest = currentWithdrawal * int.parse(_rate.toString());
-    _currentWithdrawal = _toRequest;
-    final visitedCurrentLoveCount = visitedUserModel.currentLoveCount;
-    final newVisitedCurrentLoveCount = visitedCurrentLoveCount + _toRequest;
-    FirebaseFirestore.instance
-        .collection("users")
-        .doc(widget.visitedUsersID)
-        .set({
-      "currentLoveCount": newVisitedCurrentLoveCount,
-    },
-      SetOptions(merge: true),
-    );
-    logger.d('Got the withdrawn love count');
-    print('Withdrawn love Count is: $withdrawnLoveCount');
-
-  }
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
-    return
-      SafeArea(
-        child: Material(
-          child: Scaffold(
-            backgroundColor: Pallet.colorSecondaryDark,
-            body: SingleChildScrollView(
+    return Scaffold(
+      backgroundColor: Pallet.colorSecondaryDark,
+      body: SafeArea(
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator(color: Pallet.colorWhite))
+            : CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: _buildHeader()),
+                  SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  _buildStatsSection(),
+                  SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  if (currentUser?.uid != widget.visitedUsersID)
+                    _buildSendLoveSection(),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16.0, 32.0, 16.0, 16.0),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Pallet.colorPrimary, Pallet.colorSecondaryDark],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+
+          Text(
+            "Total Love Earned",
+            style: GoogleFonts.lato(color: Colors.white70, fontSize: 16),
+          ),
+          Text(
+            '$_totalLoveCount ❤️',
+            style: GoogleFonts.lato(
+              color: Colors.white,
+              fontSize: 40,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 20),
+          SizedBox(
+            height: 100,
+            child: LoveHistoryChart(spots: _generateDummySpots()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsSection() {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      sliver: SliverGrid.count(
+        crossAxisCount: 2,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 2,
+        children: [
+          _buildStatCard("Current Loves", "$_currentLoveCount ❤️", Colors.green),
+          _buildStatCard(
+              "Withdrawn Loves", "$_withdrawnLoveCount ❤️", Colors.orange),
+          _buildStatCard("Sessions", "$_sessionCount 📝", Colors.blue),
+          _buildStatCard("Advises", "$_adviseCount 💡", Colors.purple),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, Color color) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Pallet.colorSecondary.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
+          ),
+          SizedBox(height: 5),
+          Text(
+            value,
+            style: GoogleFonts.lato(
+                fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSendLoveSection() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Send Love to ${widget.visitedEgoName}",
+              style: GoogleFonts.lato(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              "Brighten their day by sending some love! Your loves will be multiplied by their Ego Rate before it is sent. Only Alter and Super Egos can send loves for now.",
+              style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
+            ),
+            SizedBox(height: 20),
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Pallet.colorSecondary.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(15),
+              ),
               child: Column(
                 children: [
-                  Container(
-                    alignment: Alignment.center,
-                    child: Text(
-                      "${widget.visitedEgoName}\'s Love Wallet 🌺",
-                      style: TextStyle(
-                        fontSize: 23,
-                        fontWeight: FontWeight.w600,
-                        color: Pallet.colorWhite,
+                  TextField(
+                    controller: _amountController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: "Amount of love to send",
+                      labelStyle: TextStyle(color: Colors.white70),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Colors.white24),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: Pallet.colorPrimary),
                       ),
                     ),
                   ),
-
-                  SizedBox(height: 2,),
-
-                  Container(
-                    width: getDeviceWidth(context),
-                    margin: EdgeInsets.all(6),
-                    child: Text(
-                      "Total loves might include earnings from playing games with Claire.",
-                      textAlign: TextAlign.justify,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontStyle: FontStyle.italic,
-                        fontSize: 11,
-                        color: Colors.white70,
+                  SizedBox(height: 20),
+                  Text(
+                    '${_amountController.text.isEmpty ? '0' : _amountController.text} ❤️ x $_rate = ${_convertedAmount.toStringAsFixed(2)}',
+                    style: GoogleFonts.lato(
+                        color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Pallet.colorPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                     ),
-
+                    onPressed: _handleSendLove,
+                    child: Text("Send Love 🌺",
+                        style: TextStyle(color: Colors.white)),
                   ),
-
-                  SizedBox(height: 7,),
-
-                  Container(
-                    width: getDeviceWidth(context),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(width: 5,),
-                        Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Container(
-                                padding: EdgeInsets.only(top: 7),
-                                height: 45,
-                                width: 90,
-                                decoration: BoxDecoration(
-                                    color: Pallet.colorWhite,
-                                    borderRadius: BorderRadius.circular(5)
-                                ),
-                                child: FutureBuilder<
-                                    DocumentSnapshot<Map<String, dynamic>>>(
-                                  future: FirebaseFirestore.instance
-                                      .collection("users")
-                                      .doc(widget.visitedUsersID)
-                                      .get(),
-                                  builder: (_, snapshot) {
-                                    if (snapshot.hasData) {
-                                      var data = snapshot.data!.data();
-                                      var totalLoveCount = data?["totalLoveCount"] ?? "0";
-                                      String userId = data?["userId"] ?? "";
-                                      _userId = userId;
-                                      debugPrint(
-                                          " This is the Total number of LOVES earned by this user ${totalLoveCount.toString()}");
-                                      return Text(
-                                        totalLoveCount.toString(),
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.black,
-                                        ),
-                                      );
-                                    }
-
-                                    return Center(
-                                        child: CircularProgressIndicator());
-                                  },
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 2,),
-                            Text(
-                              "Total",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(width: 5,),
-
-                        Text(
-                          "-",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 40,
-                            color: Colors.white,
-                          ),
-                        ),
-
-                        SizedBox(width: 5,),
-
-                        Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Container(
-                                padding: EdgeInsets.only(top: 7),
-                                height: 37,
-                                width: 70,
-                                decoration: BoxDecoration(
-                                    color: Pallet.colorWhite,
-                                    borderRadius: BorderRadius.circular(5)
-                                ),
-                                child: FutureBuilder<
-                                    DocumentSnapshot<Map<String, dynamic>>>(
-                                  future: FirebaseFirestore.instance
-                                      .collection("users")
-                                      .doc(widget.visitedUsersID)
-                                      .get(),
-                                  builder: (_, snapshot) {
-                                    if (snapshot.hasData) {
-                                      var data = snapshot.data!.data();
-                                      var withdrawnLoveCount = data?["withdrawnLoveCount"] ?? "0";
-                                      _withdrawnLoveCount = withdrawnLoveCount;
-                                      debugPrint(
-                                          " This is the Total number of love withdrawals by this user ${withdrawnLoveCount.toString()}");
-                                      return Text(
-                                        withdrawnLoveCount.toString(),
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.black,
-                                        ),
-                                      );
-                                    }
-
-                                    return Center(
-                                        child: CircularProgressIndicator());
-                                  },
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 2,),
-                            Text(
-                              "Withdrawn",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(width: 5,),
-
-                        Text(
-                          "=",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 40,
-                            color: Colors.white,
-                          ),
-                        ),
-
-                        SizedBox(width: 4,),
-
-                        Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Container(
-                                padding: EdgeInsets.only(top: 7),
-                                height: 37,
-                                width: 80,
-                                decoration: BoxDecoration(
-                                    color: Pallet.colorWhite,
-                                    borderRadius: BorderRadius.circular(5)
-                                ),
-                                child: FutureBuilder<
-                                    DocumentSnapshot<Map<String, dynamic>>>(
-                                  future: FirebaseFirestore.instance
-                                      .collection("users")
-                                      .doc(widget.visitedUsersID)
-                                      .get(),
-                                  builder: (_, snapshot) {
-                                    if (snapshot.hasData) {
-                                      var data = snapshot.data!.data();
-                                      var currentLoveCount = data?["currentLoveCount"] ?? "0";
-                                      debugPrint(
-                                          " This is the CURRENT loves for this user ${currentLoveCount.toString()}");
-                                      return Text(
-                                        currentLoveCount.toString(),
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.black,
-                                        ),
-                                      );
-                                    }
-
-                                    return Center(
-                                        child: CircularProgressIndicator());
-                                  },
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 2,),
-                            Text(
-                              "Current",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(width: 8,)
-
-                      ],
-                    ),
-
-                  ),
-
-
-
-                  SizedBox(height: 25,),
-
-                  const Divider(
-                    thickness: 2,
-                    indent: 0,
-                    endIndent: 0,
-                    color: Colors.white70,
-                    height: 3,
-                  ),
-
-                  SizedBox(height: 5,),
-
-
-
-
-
-
-
-                  Container(
-                    alignment: Alignment.center,
-                    child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            "Send Love to ${widget.visitedEgoName}",
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              color: Pallet.colorWhite,
-                            ),
-                          ),
-                        ]
-                    ),
-                  ),
-
-
-                  Container(
-                    width: getDeviceWidth(context),
-                    margin: EdgeInsets.only(left: 6),
-                    alignment: Alignment.topLeft,
-                    child: Text(
-                      "Note: Only Alter and Super Egos can send loves for now.",
-                      textAlign: TextAlign.left,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 11,
-                        fontStyle: FontStyle.italic,
-                        color: Colors.white70,
-                      ),
-                    ),
-
-                  ),
-
-                  SizedBox(height: 6,),
-
-
-                  Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(width: 8,),
-                        Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Container(
-                                padding: EdgeInsets.only(top: 7),
-                                height: 40,
-                                width: 100,
-                                decoration: BoxDecoration(
-                                    color: Pallet.colorWhite,
-                                    borderRadius: BorderRadius.circular(5)
-                                ),
-                                child: FutureBuilder<
-                                    DocumentSnapshot<Map<String, dynamic>>>(
-                                  future: FirebaseFirestore.instance
-                                      .collection("users")
-                                      .doc(currentUser?.uid)
-                                      .get(),
-                                  builder: (_, snapshot) {
-                                    if (snapshot.hasData) {
-                                      var data = snapshot.data!.data();
-                                      var currentLoveCount = data?["currentLoveCount"] ?? "0";
-                                      debugPrint(
-                                          " This is the CURRENT loves for this user ${currentLoveCount.toString()}");
-                                      return Text(
-                                        currentLoveCount.toString(),
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.black,
-                                        ),
-                                      );
-                                    }
-
-                                    return Center(
-                                        child: CircularProgressIndicator());
-                                  },
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 2,),
-                            Text(
-                              "Current",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(width: 75,),
-
-
-                        Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Container(
-                                padding: EdgeInsets.only(top: 7),
-                                height: 40,
-                                width: 100,
-                                decoration: BoxDecoration(
-                                    color: Pallet.colorWhite,
-                                    borderRadius: BorderRadius.circular(5)
-                                ),
-
-                                child: FutureBuilder<
-                                    DocumentSnapshot<Map<String, dynamic>>>(
-                                  future: FirebaseFirestore.instance
-                                      .collection("users")
-                                      .doc(currentUser?.uid)
-                                      .get(),
-                                  builder: (_, snapshot) {
-                                    if (snapshot.hasData) {
-                                      var data = snapshot.data!.data();
-                                      var withdrawnLoveCount = data?["withdrawnLoveCount"] ?? "0";
-                                      _withdrawnLoveCount = withdrawnLoveCount;
-                                      debugPrint(
-                                          " This is the Total number of love withdrawals by this user ${withdrawnLoveCount.toString()}");
-                                      return Text(
-                                        withdrawnLoveCount.toString(),
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.black,
-                                        ),
-                                      );
-                                    }
-
-                                    return Center(
-                                        child: CircularProgressIndicator());
-                                  },
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 2,),
-                            Text(
-                              "Withdrawn",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                      ],
-                    ),
-
-                  ),
-
-
-
-
-
-
-
-                  SizedBox(height: 20,),
-
-
-
-
-                  Container(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(width: 8,),
-                        Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Container(
-                                padding: EdgeInsets.only(top: 7),
-                                height: 40,
-                                width: 100,
-                                decoration: BoxDecoration(
-                                    color: Pallet.colorWhite,
-                                    borderRadius: BorderRadius.circular(5)
-                                ),
-                                child: TextField(
-                                  cursorColor: Pallet.colorSecondary,
-                                  keyboardType: TextInputType.number,
-                                  maxLines: 1,
-                                  controller: _amountController,
-                                  decoration: InputDecoration(
-                                    border: InputBorder.none,
-                                    contentPadding:
-                                    EdgeInsets.only(left: 22.0, bottom: 13, right: 2.0),
-                                    hintText: "000",
-                                    hintStyle: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      color: Pallet.grey,
-                                      fontSize: 14,
-                                    ),
-                                    counterText: '',
-                                  ),
-                                  maxLength: 5,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 2,),
-                            Text(
-                              "Enter Amount",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-
-
-                        SizedBox(width: 5,),
-
-                        Text(
-                          "x",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 30,
-                            color: Colors.white,
-                          ),
-                        ),
-
-                        SizedBox(width: 4,),
-
-                        Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Container(
-                                padding: EdgeInsets.only(top: 7),
-                                height: 30,
-                                width: 60,
-                                decoration: BoxDecoration(
-                                    color: Pallet.colorWhite,
-                                    borderRadius: BorderRadius.circular(5)
-                                ),
-                                child: FutureBuilder<
-                                    DocumentSnapshot<Map<String, dynamic>>>(
-                                  future: FirebaseFirestore.instance
-                                      .collection("users")
-                                      .doc(widget.visitedUsersID)
-                                      .get(),
-                                  builder: (_, snapshot) {
-                                    if (snapshot.hasData) {
-                                      var data = snapshot.data!.data();
-                                      var userType = data?["userType"] ?? "REGULAR";
-                                      _rate = userType == 'REGULAR'? '1.5' :
-                                      userType == 'ADMIN'? '2' :
-                                      userType == 'SUPER_ADMIN'? '3' :
-                                      '2';
-                                      _userType = userType;
-                                      debugPrint(
-                                          " This is the ego rate used for conversion for this user ${_rate.toString()}");
-                                      return Text(
-                                        _rate.toString(),
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.black,
-                                        ),
-                                      );
-                                    }
-
-                                    return Center(
-                                        child: CircularProgressIndicator());
-                                  },
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 2,),
-                            Text(
-                              _userType == 'REGULAR'? 'Ego Rate' :
-                              _userType == 'ADMIN'? 'AlterEgo Rate' :
-                              _userType == 'SUPER_ADMIN'? 'SuperEgo Rate' :
-                              'Ego Rate',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(width: 4,),
-
-                        Text(
-                          "=",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 40,
-                            color: Colors.white,
-                          ),
-                        ),
-
-                        SizedBox(width: 4,),
-
-                        Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Container(
-                                padding: EdgeInsets.only(top: 7),
-                                height: 40,
-                                width: 100,
-                                decoration: BoxDecoration(
-                                    color: Pallet.colorWhite,
-                                    borderRadius: BorderRadius.circular(5)
-                                ),
-                                child: TextField(
-                                  cursorColor: Pallet.colorSecondary,
-                                  keyboardType: TextInputType.number,
-                                  maxLines: 1,
-                                  decoration: InputDecoration(
-                                    border: InputBorder.none,
-                                    contentPadding:
-                                    EdgeInsets.only(left: 22.0, bottom: 13, right: 2.0),
-                                    hintText: _currentWithdrawal.toString(),
-                                    hintStyle: TextStyle(
-                                      fontStyle: FontStyle.italic,
-                                      color: Pallet.colorBlack,
-                                      fontSize: 20,
-                                    ),
-                                    counterText: '',
-                                  ),
-                                  maxLength: 5,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 2,),
-                            Text(
-                              "Cash Out",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-
-
-                      ],
-                    ),
-
-                  ),
-
-                  SizedBox(height: 8,),
-
-                  Visibility(
-                    visible: currentUser?.uid != widget.visitedUsersID,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-
-                        Align(
-                          alignment: Alignment.center,
-                          child: OutlinedButton(
-                            onPressed: () {
-                              if (_amountController.text.isNotEmpty) {
-                                setState(() {
-                                  setWithdrawalAmount();
-                                  _showRequestButton = true;
-                                });
-                              }
-                            },
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: Pallet.colorSecondary,
-                              padding: EdgeInsets.all(8),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(25)),
-                            ),
-                            child: Text("Show Cash Out",
-                                style: GoogleFonts.lato(
-                                    fontSize: 12.0, fontWeight: FontWeight.w700, color: Colors.white)),
-                          ),
-                        ),
-
-                        SizedBox(width: 10,),
-
-                        Visibility(
-                          visible: _showRequestButton,
-                          child: OutlinedButton(
-                            onPressed: () async {
-                              final _user = await firebaseServices.getUserInfo();
-                              if (_user.currentLoveCount > _currentWithdrawal) {
-                                //ascertainWithdrawnLoveCount();
-                                PageRouter.gotoWidget(
-                                    SendClaireLoveForm(
-                                      amountToSend: _currentWithdrawal.toString(),
-                                      userId: _userId.toString(),
-                                      visitedUsersId: widget.visitedUsersID,
-                                      visitedUser: widget.visitedEgoName,
-                                    ), context);
-
-                                print("Requested Amount Is::: $_currentWithdrawal");
-                                print("Available Amount Is::: $_currentLoveCount");
-                              }
-                              else showToast("You can't request higher than current loves.");
-                            },
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: Pallet.colorSecondary,
-                              padding: EdgeInsets.all(17),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(25)),
-                            ),
-                            child: Text("Send Love  🌺",
-                                style: GoogleFonts.lato(
-                                    fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
-                          ),
-                        ),
-
-                      ],
-                    ),
-                  ),
-
                 ],
               ),
             ),
-          ),
+            SizedBox(height: 10),
+            Center(
+              child: Chip(
+                label: Text('Rate: $_rateBadge'),
+                backgroundColor: Pallet.colorPrimary,
+                labelStyle: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
         ),
-      );
+      ),
+    );
+  }
+
+  void _handleSendLove() async {
+    if (_amountController.text.isEmpty) {
+      AppToast.showError("Please enter an amount");
+      return;
+    }
+    final amount = int.tryParse(_amountController.text);
+    if (amount == null || amount <= 0) {
+      AppToast.showError("Please enter a valid amount");
+      return;
+    }
+
+    final sender = await firebaseServices.getUserInfo();
+    if (sender.currentLoveCount < amount) {
+      AppToast.showError("You don't have enough love to send.");
+      return;
+    }
+
+    PageRouter.gotoWidget(
+        SendClaireLoveForm(
+          amountToSend: _convertedAmount.toString(),
+          userId: widget.visitedUsersID,
+          visitedUsersId: widget.visitedUsersID,
+          visitedUser: widget.visitedEgoName,
+        ),
+        context);
+  }
+
+  List<FlSpot> _generateDummySpots() {
+    final Random random = Random();
+    List<FlSpot> spots = [];
+    double y = 50;
+    for (int i = 0; i < 12; i++) {
+      spots.add(FlSpot(i.toDouble(), y));
+      y += random.nextInt(20) - 10;
+      if (y < 0) y = 0;
+    }
+    return spots;
+  }
+
+  @override
+  void dispose() {
+    _amountController.removeListener(_calculateConversion);
+    _amountController.dispose();
+    super.dispose();
+  }
+}
+
+class AppToast {
+  static void show(String message, {Color? bgColor}) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_LONG,
+      backgroundColor: bgColor ?? Pallet.colorSplashScreen,
+    );
+  }
+
+  static void showError(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_LONG,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+    );
   }
 }

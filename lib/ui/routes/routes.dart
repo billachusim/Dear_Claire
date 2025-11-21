@@ -203,8 +203,9 @@ class AppRouter {
         );
 
       case AppRoutes.requestClaireLoveForm:
+        final args = settings.arguments as Map<String, dynamic>;
         return MaterialPageRoute<dynamic>(
-          builder: (_) => RequestClaireLoveForm(currentWithdrawal: '', totalLoveCount: '', userId: '', totalWithdrawn: '', currentWithdrawable: '',),
+          builder: (_) => RequestClaireLovesForm(loveAmount: args['loveAmount'], userId: args['userId']),
           settings: settings,
           fullscreenDialog: true,
         );

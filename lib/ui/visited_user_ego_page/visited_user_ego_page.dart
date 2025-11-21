@@ -1,5 +1,7 @@
 import 'dart:io';
-
+import 'package:clairediary/widgets/audio_recorder.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/ui/featured/notified_session_details.dart';
@@ -236,6 +238,30 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     print('Ego Message: $egoMessage');
   }
 
+  /// Save Ego audio mantra
+
+  Future<void> saveEgoAudioMessage(String audioPath) async {
+    final egoTime = FieldValue.serverTimestamp();
+    final egoName = _visitingUser?.nickname;
+    final egoImage = _visitingUser?.avatarUrl;
+    final userId = widget.visitedUsersID;
+    final senderId = currentUser?.uid;
+    FirebaseFirestore.instance
+        .collection('ego_stream')
+        .add({
+      "egoAudioMessage": audioPath,
+      "egoTime": egoTime,
+      "egoName": egoName,
+      "egoImage": egoImage,
+      "userId": userId,
+      "senderId": senderId,
+    },
+      //SetOptions(merge: true)
+    );
+    logger.d('Successfully sent an Ego audio message to $egoName');
+    print('Ego Audio Message: $audioPath');
+  }
+
 
   Future<void> pushMantraNotification() async {
     final egoMessage = _visitorMantraController.text;
@@ -256,6 +282,25 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
     logger.d('Successfully pushed an Ego message notification to $egoName');
     print('Ego Message: $egoMessage');
+  }
+
+  Future<void> pushAudioMantraNotification() async {
+    final egoName = _visitingUser?.nickname;
+    final userId = widget.visitedUsersID;
+    final senderId = currentUser?.uid;
+
+    await _firebaseMessaging.subscribeToTopic(userId);
+
+    final pushNotification.NotificationModel _notificationModel =
+    pushNotification.NotificationModel(
+        topic: userId,
+        data: pushNotification.Data(id: senderId, route: 'wallet'),
+        notification: pushNotification.Notification(
+            title: "Ego Mantra",
+            body: '$egoName sent a new audio mantra to your ego stream.'));
+    notificationService.sendNotification(_notificationModel.toJson());
+
+    logger.d('Successfully pushed an Ego audio message notification to $egoName');
   }
 
 
@@ -1076,15 +1121,10 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                             SizedBox(height: 3,),
                             Row(
                               children: [
-                                FloatingActionButton(
-                                  onPressed: () {},
-                                  mini: true,
-                                  backgroundColor: Pallet.colorWhite,
-                                  child: Icon(
-                                    Icons.mic_rounded,
-                                    size: 22,
-                                    color: Pallet.colorPrimary,
-                                  ),),
+                                AudioRecorder(onStop: (String path) {
+                                  saveEgoAudioMessage(path);
+                                  pushAudioMantraNotification();
+                                }),
                                 Expanded(
                                   child: new ConstrainedBox(
                                     constraints: new BoxConstraints(
@@ -1127,8 +1167,10 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                 FloatingActionButton(
                                     onPressed: () {
                                       if (userModel.nickname != null)
-                                        if (_visitorMantraController.text.isNotEmpty)
+                                        if (_visitorMantraController.text.isNotEmpty) {
                                           saveEgoMessage();
+                                          pushMantraNotification();
+                                        }
                                       _visitorMantraController.clear();
                                       if(cardKey.currentState != null) { //null safety
                                         cardKey.currentState!.toggleCard();
@@ -1139,7 +1181,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                     backgroundColor: Pallet.colorWhite,
                                     child: SvgPicture.asset(
                                       AppImages.appSend,
-                                      color: Pallet.colorPrimary,
+                                      colorFilter: ColorFilter.mode(Pallet.colorPrimary, BlendMode.srcIn),
                                       height: 20,
                                     )),
                               ],
@@ -1233,7 +1275,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                           fontSize: 12,
                                         ),
                                       ),
-                                      subtitle: Text(data['egoMessage'],
+                                      subtitle: data.containsKey('egoAudioMessage') ?
+                                        AudioPlayerWidget(audioPath: data['egoAudioMessage']) :
+                                        Text(data['egoMessage'] ?? '',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 15,
@@ -1489,7 +1533,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        "Loves",
+                                        "Wallet",
                                         style: TextStyle(
                                           color: currentTabIndex != 2
                                               ? Pallet.colorSecondary
@@ -1659,7 +1703,75 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   }
 }
 
+class AudioPlayerWidget extends StatefulWidget {
+  final String audioPath;
 
+  const AudioPlayerWidget({Key? key, required this.audioPath}) : super(key: key);
+
+  @override
+  _AudioPlayerWidgetState createState() => _AudioPlayerWidgetState();
+}
+
+class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
+  late AudioPlayer _audioPlayer;
+  bool _isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+    _audioPlayer.processingStateStream.listen((state) {
+      if (state == ProcessingState.completed) {
+        setState(() {
+          _isPlaying = false;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  Future<void> _play() async {
+    try {
+      await _audioPlayer.setFilePath(widget.audioPath);
+      _audioPlayer.play();
+      setState(() {
+        _isPlaying = true;
+      });
+    } catch (e) {
+      print("Error playing audio: $e");
+    }
+  }
+
+  void _pause() {
+    _audioPlayer.pause();
+    setState(() {
+      _isPlaying = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        if (_isPlaying) {
+          _pause();
+        } else {
+          _play();
+        }
+      },
+      child: Icon(
+        _isPlaying ? Icons.pause : Icons.play_arrow,
+        color: Colors.white,
+        size: 30,
+      ),
+    );
+  }
+}
 
 
 
