@@ -982,11 +982,32 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                           ),
                                         ),
                                       ),
-                                      title: Text(data['egoName'].toString(),
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                        ),
+                                      title: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            data['egoName'].toString(),
+                                            style: TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          // Display the formatted timestamp
+                                          Expanded(
+                                            child: Text(
+                                              // Check if egoTime exists and is a Timestamp
+                                              (data['egoTime'] is Timestamp)
+                                                  ? formatFirestoreTimestamp(data['egoTime'])
+                                                  : '', // Show nothing if data is invalid
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                color: Colors.white54,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                       subtitle: data.containsKey('egoAudioMessage') ? CustomPlaySoundWidget(filePath: data['egoAudioMessage']) :
                                       Text(data['egoMessage'] ?? '',

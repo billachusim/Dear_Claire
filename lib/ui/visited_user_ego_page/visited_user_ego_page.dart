@@ -1416,6 +1416,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       child: Scaffold(
         backgroundColor: Pallet.colorSecondaryDark,
         appBar: AppBar(
+          backgroundColor: visitedUser?.userType == 'REGULAR' ? Pallet.colorPrimary : Pallet.colorSecondary,
           centerTitle: true,
           title: Text(widget.visitedEgoName.toString(),
           style: TextStyle(
