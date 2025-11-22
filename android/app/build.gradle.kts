@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -19,14 +20,12 @@ android {
     }
 
     compileOptions {
-        // Upgrade to Java 11
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
         isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        // Kotlin JVM target aligned with Java 11
         jvmTarget = "17"
     }
 
@@ -46,8 +45,9 @@ android {
 dependencies {
     // Core library desugaring for Java 11 APIs
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
-    implementation("com.google.android.gms:play-services-ads:24.7.0")
-
+    implementation("com.google.android.gms:play-services-ads:24.8.0")
+    implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
+    implementation("com.google.firebase:firebase-analytics")
 }
 
 flutter {
