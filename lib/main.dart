@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/services/notification.dart';
@@ -22,39 +23,46 @@ import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:workmanager/workmanager.dart';
 import 'Admob/ad_state.dart';
 import 'Automations/auto_diary_service.dart';
+import 'Automations/claireminder.dart';
 import 'data/core/config.dart';
 import 'firebase_options.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
-/// Receive message when the app is in background/terminated.
-Future<void> backgroundHandler(RemoteMessage message) async {
-  print("Handling a background message: \${message.messageId}");
-}
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // --- WORK MANAGER INITIALIZATION ---
+  // It's good practice to initialize WorkManager early.
+  await Workmanager().initialize(
+    callbackDispatcher, // The top-level function from main.dart
+    isInDebugMode: true, // Set to false for production releases
+  );
+
+  // --- REGISTER THE PERIODIC TASK ---
+  // This schedules the task to run periodically.
+  // Note: Minimum frequency is 15 minutes.
+  Workmanager().registerPeriodicTask(
+    "1", // A unique ID for this task
+    "claireminder", // The task name we check for in callbackDispatcher
+    frequency: Duration(minutes: 15),
+    constraints: Constraints(
+      networkType: NetworkType.notRequired,
+    ),
+  );
 
   // --- INITIALIZATIONS ---
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // --- CORRECTED ADMOB INITIALIZATION ---
   // 1. Await the initialization Future to complete.
   final initFuture = MobileAds.instance.initialize();
   await initFuture; // Make sure the SDK is ready
 
-  // 2. Now that it's initialized, you can safely update the configuration.
   MobileAds.instance.updateRequestConfiguration(
     RequestConfiguration(testDeviceIds: ['51F4CA28BB7EDD1F5E61C5F0F8EFFF00']),
   );
-
-  // 3. Create your AdState *after* initialization.
   final adState = AdState(initFuture);
-
-  // ... (rest of your main function remains the same)
-
   final RemoteMessage? initialRemoteMessage =
   await FirebaseMessaging.instance.getInitialMessage();
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -90,6 +98,29 @@ Future<void> main() async {
   );
 }
 
+@pragma('vm:entry-point')
+const simplePeriodic1HourTask =
+    "be.tramckrijte.workmanagerExample.simplePeriodic1HourTask";
+void callbackDispatcher() {
+  DartPluginRegistrant.ensureInitialized();
+  Workmanager().executeTask((task, inputData) {
+    switch (task) {
+      case 'claireminder': Claireminder.randomizeReminderNotes();
+      break;
+      case Workmanager.iOSBackgroundTask: Claireminder.randomizeReminderNotes();
+      stderr.writeln("The iOS background fetch was triggered");
+      break;
+    }
+    return Future.value(true);
+  });
+}
+
+/// Receive message when the app is closed and in background.
+Future<void> backgroundHandler(RemoteMessage message) async{
+  print(message.data.toString());
+  print(message.notification?.title);
+}
+
 
 class MyApp extends StatefulWidget {
   final RemoteMessage? initialRemoteMessage;
@@ -116,7 +147,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     clairNotification.init();
     clairNotification.randomizeNewAppSessionToast();
-    // _handleInitialNotification is now handled by the SplashPage
   }
 
   @override

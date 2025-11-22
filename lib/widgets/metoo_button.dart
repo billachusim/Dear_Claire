@@ -276,12 +276,11 @@ class _MetooButtonState extends State<MetooButton>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // count badge instead of smiley
           Text(
             selectedCount.toString(),
             style: GoogleFonts.lato(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
               color: Colors.white,
             ),
           ),
@@ -289,8 +288,8 @@ class _MetooButtonState extends State<MetooButton>
           Text(
             selectedReaction.value,
             style: GoogleFonts.lato(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
               color: widget.color,
             ),
           ),

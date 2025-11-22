@@ -74,11 +74,11 @@ class ClairNotification {
 
     // Foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      // Don't show notification if the sender is the current user.
+      /*// Don't show notification if the sender is the current user.
       if (message.data['id'] != null &&
           message.data['id'] == FirebaseAuth.instance.currentUser?.uid) {
         return;
-      }
+      }*/
 
       final notification = message.notification;
       final route = message.data["route"];
@@ -171,7 +171,7 @@ class ClairNotification {
       "If you don't tell me, I won't know.",
     ];
     final message = messages[Random().nextInt(messages.length)];
-    await Future.delayed(Duration(minutes: 45), () {
+    await Future.delayed(Duration(minutes: 5), () {
       flutterLocalNotificationsPlugin.show(0, 'Claireminder',
           message.toString(), _notificationDetails(),
           payload: message.contains("game") ? "game" : "claireminder");
