@@ -36,15 +36,25 @@ Future<void> backgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   // --- INITIALIZATIONS ---
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // --- CORRECTED ADMOB INITIALIZATION ---
+  // 1. Await the initialization Future to complete.
   final initFuture = MobileAds.instance.initialize();
-  final adState = AdState(initFuture);
+  await initFuture; // Make sure the SDK is ready
+
+  // 2. Now that it's initialized, you can safely update the configuration.
   MobileAds.instance.updateRequestConfiguration(
     RequestConfiguration(testDeviceIds: ['51F4CA28BB7EDD1F5E61C5F0F8EFFF00']),
   );
 
-  // --- GET INITIAL NOTIFICATION INFO ---
+  // 3. Create your AdState *after* initialization.
+  final adState = AdState(initFuture);
+
+  // ... (rest of your main function remains the same)
+
   final RemoteMessage? initialRemoteMessage =
   await FirebaseMessaging.instance.getInitialMessage();
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -64,7 +74,7 @@ Future<void> main() async {
   // --- TIMEZONE & AUTO-DIARY SERVICE SETUP ---
   tz_data.initializeTimeZones();
   final AutoDiaryService autoDiaryService = AutoDiaryService();
-  await autoDiaryService.init(); // This creates the 'auto_diary_channel'
+  await autoDiaryService.init();
 
   // --- APP START ---
   Config.appFlavor = Flavor.DEVELOPMENT;
@@ -79,6 +89,7 @@ Future<void> main() async {
     ),
   );
 }
+
 
 class MyApp extends StatefulWidget {
   final RemoteMessage? initialRemoteMessage;

@@ -25,7 +25,7 @@ const int maxFailedLoadAttempts = 3;
 class _EditClairevatarState extends State<EditClairevatar> {
 
   User? currentUser = FirebaseAuth.instance.currentUser;
-  late final String avatarUrl;
+  late String avatarUrl;
 
 
   @override
@@ -52,28 +52,29 @@ class _EditClairevatarState extends State<EditClairevatar> {
 
   /// Get user's Clairevatar
 
-  Future<String> getUserClairevatar() async {
+  Future<String?> getUserClairevatar() async {
     DocumentSnapshot response = await FirebaseFirestore.instance
         .collection(AppString.users)
         .doc(currentUser?.uid)
         .get();
-
-    var avatarUrl = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
-    logger.d('Successfully got the clairevatar');
-    print('avatarUrl is: $avatarUrl');
-    return avatarUrl.toString();
+    if (response.exists) {
+      var user = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
+      logger.d('Successfully got the clairevatar');
+      print('avatarUrl is: ${user.avatarUrl}');
+      return user.avatarUrl;
+    }
+    return null;
   }
 
 
   /// Change user's Clairevatar
 
   Future<void> changeClairevatar() async {
-    final imageUrl = avatarUrl.toString();
     FirebaseFirestore.instance
         .collection('users')
         .doc(currentUser?.uid)
         .update({
-      "avatarUrl": imageUrl,
+      "avatarUrl": avatarUrl,
     },
     );
     logger.d('Successfully saved new clairevatar');
@@ -188,25 +189,29 @@ class _EditClairevatarState extends State<EditClairevatar> {
                     mainAxisSpacing: 8.0,
 
                     children: snapshot.data!.docs.map<Widget>((DocumentSnapshot document) {
-                      final dynamic data = document.data()!;
+                      final data = document.data() as Map<String, dynamic>?;
+                      final imageUrl = data?['imageUrl'] as String?;
 
                       return GestureDetector(
                         onTap: () {
-                          avatarUrl = data['imageUrl'];
-                          changeClairevatar();
-                          Future.delayed(Duration(seconds: 1), () {
-                            _showInterstitialAd();
-                          });
-                          Navigator.of(context)
-                              .pushReplacementNamed(AppRoutes.home);
-                          showToast(AppString.nice_clairevatar);
+                          if (imageUrl != null) {
+                            avatarUrl = imageUrl;
+                            changeClairevatar();
+                            Future.delayed(Duration(seconds: 1), () {
+                              _showInterstitialAd();
+                            });
+                            Navigator.of(context)
+                                .pushReplacementNamed(AppRoutes.home);
+                            showToast(AppString.nice_clairevatar);
+                          }
                         },
 
                         child: ClipOval(
-                          child: CachedNetworkImage(
+                          child: (imageUrl != null && imageUrl.isNotEmpty)
+                          ? CachedNetworkImage(
                             width: 20,
                             height:20,
-                            imageUrl: data['imageUrl'],
+                            imageUrl: imageUrl,
                             imageBuilder: (context, imageProvider) => Container(
                               height: 30,
                               width: 30,
@@ -224,7 +229,12 @@ class _EditClairevatarState extends State<EditClairevatar> {
                               width: 20,
                               height: 20,
                             ),
-                          ),
+                          )
+                          : Image.asset(
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                              width: 20,
+                              height: 20,
+                            ),
                         ),
                       );
 
