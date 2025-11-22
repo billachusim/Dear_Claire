@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:clairediary/ui/create_session/sound/custom_play_sound_widget.dart';
 import 'package:clairediary/widgets/audio_recorder.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/ui/ego-profile/claire_loves.dart';
@@ -51,6 +50,10 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   GlobalKey<FlipCardState> cardKey2 = GlobalKey<FlipCardState>();
   late String mantraUserId;
   late String mantraEgoName;
+  String _audioStatusHint = "...write a new ego mantra...";
+  String? _recordedAudioPath;
+  bool _isUploadingAudio = false;
+
 
 
 
@@ -172,17 +175,20 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   /// Delete an ego message
 
-  Future<void> deleteEgoMessage(String egoMessage) async {
-    final collection = FirebaseFirestore.instance
-        .collection('ego_stream')
-        .where("egoMessage", isEqualTo: egoMessage);
-    collection.get().then((value) {
-      value.docs.forEach((element) {
-        element.reference.delete();
-      });
-    });
-    logger.d('Successfully deleted an ego message');
+  Future<void> deleteEgoStreamMessage(String documentId) async {
+    try {
+      await FirebaseFirestore.instance        .collection('ego_stream')
+          .doc(documentId)
+          .delete();
+      logger.d('Successfully deleted ego stream message: $documentId');
+      showToast("Message deleted");
+    } catch (e) {
+      logger.e('Error deleting ego stream message: $e');
+      showToast("Failed to delete message");
+    }
   }
+
+
 
   InterstitialAd? _interstitialAd;
   InterstitialAd? _interstitialAd2;
@@ -701,23 +707,28 @@ class _EgoProfilePageState extends State<EgoProfilePage>
             /// Front card: Write Ego mantra and send to stream
 
 
-            Container(
-              width: getDeviceWidth(context),
-              height: 100,
-              margin: EdgeInsets.only(left: 4, right: 4, bottom: 4), // Added bottom margin
-              child: FlipCard(
-                key: cardKey,
-                direction: FlipDirection.HORIZONTAL, // default
-                back: Stack(
+        Container(
+          width: getDeviceWidth(context),
+          height: 100,
+          margin: EdgeInsets.only(left: 4, right: 4, bottom: 4),
+          child: FlipCard(
+              key: cardKey,
+              direction: FlipDirection.HORIZONTAL, // default
+              back: SingleChildScrollView( // Fixes bottom overflow
+                physics: NeverScrollableScrollPhysics(),
+                child: Stack(
                   alignment: Alignment.center,
                   children: [
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(25),
-                        color: userType == 'REGULAR'? Pallet.colorPrimary
-                            : userType == 'ADMIN'? Pallet.colorSecondary
-                            : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                            :Pallet.colorBlue,
+                        color: userType == 'REGULAR'
+                            ? Pallet.colorPrimary
+                            : userType == 'ADMIN'
+                            ? Pallet.colorSecondary
+                            : userType == 'SUPER_ADMIN'
+                            ? Pallet.colorSecondary
+                            : Pallet.colorBlue,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -726,10 +737,13 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                             Align(
                               alignment: Alignment.topLeft,
                               child: Text(
-                                userType == 'REGULAR'? 'Ego Stream:' :
-                                userType == 'ADMIN'? 'Alter Ego Stream:' :
-                                userType == 'SUPER_ADMIN'? 'Super Ego Stream:' :
-                                '',
+                                userType == 'REGULAR'
+                                    ? 'Ego Stream:'
+                                    : userType == 'ADMIN'
+                                    ? 'Alter Ego Stream:'
+                                    : userType == 'SUPER_ADMIN'
+                                    ? 'Super Ego Stream:'
+                                    : '',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -737,21 +751,42 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                 ),
                               ),
                             ),
-                            SizedBox(height: 3,),
+                            SizedBox(height: 3),
                             Row(
                               children: [
-                                AudioRecorder(onStop: (String path) {
-                                  saveEgoAudioMantra(path);
-                                }),
+                                AudioRecorder(
+                                  onStart: () {
+                                    // When recording starts, update the UI
+                                    setState(() {
+                                      _recordedAudioPath = null;
+                                      _audioStatusHint = "Recording audio...";
+                                      _mantraController.clear(); // Clear text field
+                                    });
+                                  },
+                                  onStop: (String path) {
+                                    // When recording stops, store the path and update the hint
+                                    setState(() {
+                                      _recordedAudioPath = path;
+                                      _audioStatusHint = "Audio recorded! Hit send.";
+                                    });
+                                  },
+                                  onCancel: () {
+                                    // If recording is cancelled, reset everything
+                                    setState(() {
+                                      _recordedAudioPath = null;
+                                      _audioStatusHint = "...write a new ego mantra...";
+                                    });
+                                  },
+                                ),
                                 Expanded(
-                                  child: new ConstrainedBox(
-                                    constraints: new BoxConstraints(
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
                                       minWidth: getDeviceWidth(context),
                                       maxWidth: getDeviceWidth(context),
                                       minHeight: 50.0,
                                       maxHeight: 90.0,
                                     ),
-                                    child: new Scrollbar(
+                                    child: Scrollbar(
                                       child: Container(
                                         padding: EdgeInsets.zero,
                                         decoration: BoxDecoration(
@@ -759,16 +794,22 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                           color: cardBackgroundColor,
                                         ),
                                         child: TextField(
+                                          // Make field read-only when recording or uploading
+                                          readOnly: _recordedAudioPath != null || _isUploadingAudio,
                                           cursorColor: Pallet.colorSplashScreen,
                                           keyboardType: TextInputType.multiline,
                                           style: TextStyle(color: cardTextColor),
                                           maxLines: 2,
-                                          controller: _mantraController,
+                                          controller: _mantraController, // Use your profile's controller
                                           decoration: InputDecoration(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                            EdgeInsets.only(left: 13.0, right: 13.0, top: 10, bottom: 10), // Adjusted padding
-                                            hintText: "...write a new ego mantra...",
+                                            contentPadding: EdgeInsets.only(
+                                                left: 13.0,
+                                                right: 13.0,
+                                                top: 10,
+                                                bottom: 10),
+                                            // Use the dynamic hint text from your state
+                                            hintText: _audioStatusHint,
                                             hintStyle: TextStyle(
                                               fontStyle: FontStyle.italic,
                                               color: hintTextColor,
@@ -784,24 +825,58 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                 ),
                                 FloatingActionButton(
                                     onPressed: () {
-                                      if (userModel.nickname != null)
-                                        if (_mantraController.text.isNotEmpty)
-                                          saveEgoMantra();
-                                      _mantraController.clear();
-                                      if(cardKey.currentState != null) { //null safety
-                                        cardKey.currentState!.toggleCard();
-                                      }
-                                      showToast(AppString.change_ego_mantra);
+                                      // --- NEW SMART SEND LOGIC ---
+                                      // Check if we are sending an AUDIO message
+                                      if (_recordedAudioPath != null) {
+                                        if (_isUploadingAudio) return; // Prevent double taps
 
-                                      Future.delayed(Duration(seconds: 4), () {
-                                        _showEgoMantraInterstitialAd();
-                                      });
+                                        setState(() {
+                                          _isUploadingAudio = true;
+                                          _audioStatusHint = "Uploading audio...";
+                                        });
+
+                                        // Call your audio save method
+                                        saveEgoAudioMantra(_recordedAudioPath!).then((_) {
+                                          showToast(AppString.change_ego_mantra);
+                                          setState(() {
+                                            _isUploadingAudio = false;
+                                            _recordedAudioPath = null;
+                                            _audioStatusHint = "...write a new ego mantra...";
+                                          });
+                                          if (cardKey.currentState?.isFront == false) {
+                                            cardKey.currentState!.toggleCard();
+                                          }
+                                          Future.delayed(Duration(seconds: 4), () {
+                                            _showEgoMantraInterstitialAd();
+                                          });
+                                        });
+                                      }
+                                      // Check if we are sending a TEXT message
+                                      else if (_mantraController.text.trim().isNotEmpty) {
+                                        if (userModel.nickname != null) {
+                                          saveEgoMantra();
+                                          _mantraController.clear();
+
+                                          if (cardKey.currentState?.isFront == false) {
+                                            cardKey.currentState!.toggleCard();
+                                          }
+                                          showToast(AppString.change_ego_mantra);
+                                          Future.delayed(Duration(seconds: 4), () {
+                                            _showEgoMantraInterstitialAd();
+                                          });
+                                        }
+                                      }
+                                      // If neither is ready
+                                      else {
+                                        showToast("Write a mantra or record audio.");
+                                      }
                                     },
                                     mini: true,
                                     backgroundColor: Pallet.colorWhite,
                                     child: SvgPicture.asset(
                                       AppImages.appSend,
-                                      colorFilter: ColorFilter.mode(Pallet.colorPrimary, BlendMode.srcIn),
+                                      colorFilter: ColorFilter.mode(
+                                          Pallet.colorPrimary, BlendMode.srcIn),
                                       height: 20,
                                     )),
                               ],
@@ -810,12 +885,13 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                         ),
                       ),
                     ),
-
                   ],
                 ),
+              ),
 
 
-                /// Back of card is Ego Stream for display
+
+        /// Back of card is Ego Stream for display
 
 
                 front: Stack(
@@ -920,23 +996,23 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
-                                      trailing: Visibility(
-                                        visible: data['userId'] == currentUser!.uid,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            final String _egoMessage = data['egoMessage'];
-                                            showCustomDialog(context,
-                                                message: AppString.delete_mantra_alert_note,
-                                                onPressed: () {
-                                                  PageRouter.goBack(context);
-                                                  deleteEgoMessage(_egoMessage);
-                                                });
-                                          },
-                                          child: Icon(
-                                            Icons.delete_forever_rounded,
-                                            color: Colors.white70,
-                                            size: 15,
-                                          ),
+                                      trailing: GestureDetector(
+                                        onTap: () {
+                                          // Get the unique document ID
+                                          final String documentId = document.id;
+
+                                          showCustomDialog(context,
+                                              message: AppString.delete_mantra_alert_note,
+                                              onPressed: () {
+                                                PageRouter.goBack(context);
+                                                // Call the new universal delete method
+                                                deleteEgoStreamMessage(documentId);
+                                              });
+                                        },
+                                        child: Icon(
+                                          Icons.delete_forever_rounded,
+                                          color: Colors.white70,
+                                          size: 18,
                                         ),
                                       ),
                                     );

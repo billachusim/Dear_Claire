@@ -1,13 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/utils/enums.dart';
 import 'package:clairediary/utils/strings.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
-import 'color.dart';
 
 /// Converts timeStamp from firebase
 String timeConverter(Timestamp timestamp,
@@ -21,6 +17,14 @@ String timeConverter(Timestamp timestamp,
     _date = DateFormat('MMM dd, yyyy').format(timestamp.toDate());
 
   return _date;
+}
+
+String formatFirestoreTimestamp(Timestamp timestamp) {
+  // Converts Firestore Timestamp to a DateTime object
+  DateTime dateTime = timestamp.toDate();
+  final String formattedDate = DateFormat('h:mm a, E, MMM d, y').format(dateTime);
+
+  return formattedDate;
 }
 
 /// Handles hexadecimal colors
