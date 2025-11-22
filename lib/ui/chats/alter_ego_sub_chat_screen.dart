@@ -44,9 +44,13 @@ const int maxFailedLoadAttempts = 3;
 class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
 
   List<Temp> _chatList = [];
-
   User? currentUser = FirebaseAuth.instance.currentUser;
 
+  // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
+  BannerAd? _bottomBannerAd;
+  bool _isBannerAdInitialized = false;
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
 
 
   @override
@@ -55,20 +59,16 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
     _createSubChatInterstitialAd();
   }
 
-
-
   @override
   void dispose() {
-    super.dispose();
+    // --- ADMOB COMPLIANCE FIX 2: Show interstitial on exit and dispose all ads ---
+    _showSubChatInterstitialAd();
     _interstitialAd?.dispose();
+    _bottomBannerAd?.dispose();
+    super.dispose();
   }
 
-
-  InterstitialAd? _interstitialAd;
-  int _interstitialLoadAttempts = 0;
-
   /// Create new sub chat interstitial ad.
-
   void _createSubChatInterstitialAd() {
     InterstitialAd.load(
       adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/9839548530" :
@@ -91,41 +91,50 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
     );
   }
 
+  // --- ADMOB COMPLIANCE FIX 3: Add the show interstitial method ---
+  void _showSubChatInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+        },
+      );
+      _interstitialAd!.show();
+      _interstitialAd = null; // Prevent showing the same ad twice
+    }
+  }
 
 
-  // Admob Ad Units.
-  late BannerAd insideInsideChatroomTopBanner;
-  late BannerAd insideInsideChatroomBottomBanner;
-
+  // --- ADMOB COMPLIANCE FIX 4: Clean up banner ad loading logic ---
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final adState = Provider.of<AdState>(context);
-
-    // Implement a top location banner ad unit.
-    adState.initialization.then((status) {
-      setState(() {
-        insideInsideChatroomTopBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.insideInsideChatroomTopBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener()
-        )..load();
+    if (!_isBannerAdInitialized) {
+      final adState = Provider.of<AdState>(context);
+      adState.initialization.then((status) {
+        if (mounted) {
+          setState(() {
+            _bottomBannerAd = BannerAd(
+                size: AdSize.banner,
+                // Using a unique ad unit ID for this page
+                adUnitId: adState.insideInsideChatroomBottomBannerAdUnitId,
+                request: AdRequest(),
+                listener: BannerAdListener(
+                  onAdLoaded: (ad) => print('Sub-chat banner loaded.'),
+                  onAdFailedToLoad: (ad, error) {
+                    print('Sub-chat banner failed to load: $error');
+                    ad.dispose();
+                  },
+                )
+            )..load();
+            _isBannerAdInitialized = true;
+          });
+        }
       });
-    });
-
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
-        insideInsideChatroomBottomBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.insideInsideChatroomBottomBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener()
-        )..load();
-      });
-    });
+    }
   }
 
 
@@ -140,16 +149,14 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
         elevation: 0,
       ),
       body: SafeArea(
+        // --- ADMOB COMPLIANCE FIX 5: Ensure body is a Stack ---
         child: Stack(
           children: [
             ListView(
               children: [
-
-
                 AnimationLimiter(
                   child: ListView.builder(
                     shrinkWrap: true,
-                    //padding: EdgeInsets.all(15),
                     physics:
                     BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
                     itemCount: 1,
@@ -174,22 +181,16 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
                                     AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
                                     snapShot) {
                                   if (snapShot.hasData) {
-                                    if (_chatList.isNotEmpty) _chatList.clear();
+                                    _chatList.clear(); // Clear list before populating
                                     snapShot.data!.docs
                                         .map((e) => _chatList
-                                        .add(Temp(e.id, ChatModel.fromJson(e.data()))))
+                                        .add(Temp(e.id, ChatModel.fromJson(e.data() as Map<String, dynamic>))))
                                         .toList();
+                                    // --- ADMOB COMPLIANCE FIX 6: Remove ads from Column ---
                                     return Column(
                                       children: [
                                         InsideInsideAlterEgoChatWidget(documentID: widget.documentID, chatModel: widget.chatModel, chatRoomPodo: widget.chatRoomPodo),
-
-                                        // Top ad unit is here
-                                        Container(
-                                          height: 60,
-                                          child: AdWidget(ad: insideInsideChatroomTopBanner),
-                                        ),
-
-
+                                        // Top ad unit REMOVED
                                         ..._chatList
                                             .map((element) => InsideInsideInsideAlterEgoChatWidget(
                                           isSubChat: true,
@@ -198,12 +199,7 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
                                           chatRoomPodo: widget.chatRoomPodo,
                                         ))
                                             .toList(),
-
-                                        // Bottom ad unit is here
-                                        Container(
-                                          height: 60,
-                                          child: AdWidget(ad: insideInsideChatroomBottomBanner),
-                                        ),
+                                        // Bottom ad unit REMOVED
                                       ],
                                     );
                                   }
@@ -215,14 +211,25 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
                     },
                   ),
                 ),
-
-
-                SizedBox(
-                  height: 70,
-                )
+                // Adjust space for the input field AND the banner ad
+                SizedBox(height: 120),
               ],
             ),
-            ChatEditField(onTap: (v, voiceNote, image1, image2) => _sendMessage(v, voiceNote, image1, image2))
+            // Your existing chat input field
+            ChatEditField(onTap: (v, voiceNote, image1, image2) => _sendMessage(v, voiceNote, image1, image2)),
+            // --- ADMOB COMPLIANCE FIX 7: Place a single, compliant banner ad ---
+            if (_bottomBannerAd != null && _isBannerAdInitialized)
+              Positioned(
+                bottom: 60, // Position above the ChatEditField
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: _bottomBannerAd!.size.height.toDouble(),
+                  width: _bottomBannerAd!.size.width.toDouble(),
+                  child: AdWidget(ad: _bottomBannerAd!),
+                  alignment: Alignment.center,
+                ),
+              ),
           ],
         ),
       ),
@@ -245,8 +252,6 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
     updateDiaryroomTimeLastActivity(_user.userId.toString(), widget.chatRoomPodo!);
   }
 
-
-
   void updateMembers({required bool joining}) async {
     final userID = currentUser!.uid.toString();
     if (joining) {
@@ -258,9 +263,7 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
     firebaseServices.updateAlterEgoMembers(widget.documentID!, widget.chatRoomPodo, widget.chatModel!);
   }
 
-
   /// Update a session's timeLastActivity when new chat is made.
-
   Future<void> updateDiaryroomTimeLastActivity(String key, ChatRoomPodo chatRoomPodo) async {
     FirebaseFirestore.instance
         .collection("alterEgoChats")
@@ -273,6 +276,4 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
     );
     logger.d('Successfully updated time of last activity');
   }
-
-
 }

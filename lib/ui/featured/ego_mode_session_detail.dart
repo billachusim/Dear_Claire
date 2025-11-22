@@ -128,48 +128,33 @@ class _EgoModeSessionDetailState
 
 
   // Admob Ad Units.
-  BannerAd? egoModeSessionDetailTopBanner;
   BannerAd? egoModeSessionDetailBottomBanner;
-  bool _bannerIsLoaded = false;
+  bool _isBannerAdInitialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final adState = Provider.of<AdState>(context);
-
-    // Implement a top location banner ad unit.
-    adState.initialization.then((status) {
-      setState(() {
-        egoModeSessionDetailTopBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.egoModeTopCommentBannerAdUnitId,
-            request: const AdRequest(),
-            listener: BannerAdListener(
-              onAdFailedToLoad: (ad, error) {
-                ad.dispose();
-              },
-            )
-        )..load();
-        _bannerIsLoaded = true;
+    if (!_isBannerAdInitialized) {
+      final adState = Provider.of<AdState>(context);
+      adState.initialization.then((status) {
+        setState(() {
+          egoModeSessionDetailBottomBanner = BannerAd(
+              size: AdSize.banner,
+              // Using the bottom ad unit ID, but you can choose either one
+              adUnitId: adState.egoModeBottomCommentBannerAdUnitId,
+              request: const AdRequest(),
+              listener: BannerAdListener(
+                onAdLoaded: (ad) => print('Session detail banner loaded.'),
+                onAdFailedToLoad: (ad, error) {
+                  print('Session detail banner failed to load: $error');
+                  ad.dispose();
+                },
+              )
+          )..load();
+          _isBannerAdInitialized = true;
+        });
       });
-    });
-
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
-        egoModeSessionDetailBottomBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.egoModeBottomCommentBannerAdUnitId,
-            request: AdRequest(),
-          listener: BannerAdListener(
-            onAdFailedToLoad: (ad, error) {
-              ad.dispose();
-            },
-          )
-        )..load();
-      });
-    });
+    }
   }
 
   @override
@@ -235,16 +220,6 @@ class _EgoModeSessionDetailState
 
                                     children: [
 
-                                      // Top ad unit is here
-                                      if (egoModeSessionDetailTopBanner != null && _bannerIsLoaded)
-                                        SizedBox(
-                                          height: 60,
-                                          child: AdWidget(ad: egoModeSessionDetailTopBanner!),
-                                        )
-                                      else
-                                        SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: textColor),),),
-
-
                                       ..._commentList
                                           .map((element) => CommentWidget(
                                         commentSessionModel: element,
@@ -268,16 +243,6 @@ class _EgoModeSessionDetailState
 
                                       SimilarCategorySessions(element: featuredSessionModel!,),
                                       SizedBox(height: 4),
-
-                                      // Bottom ad unit is here
-                                      if (egoModeSessionDetailBottomBanner != null && _bannerIsLoaded)
-                                        SizedBox(
-                                          height: 60,
-                                          child: AdWidget(ad: egoModeSessionDetailBottomBanner!),
-                                        )
-                                      else
-                                        SizedBox(height: 70, child: Text('Relevant ads only', style: TextStyle(color: textColor),),),
-
                                     ],
                                   );
                                 }
@@ -293,16 +258,33 @@ class _EgoModeSessionDetailState
 
 
               SizedBox(
-                height: 70,
+                height: 120,
               )
             ],
           ),
 
-          ChatEditField(
-            onTap: (String comment, voiceNote, image1, image2) =>
-                _sendComment(comment, voiceNote, widget.featuredSessionModel!, image1, image2),
-          )
+          // --- COMPLIANT BANNER AD PLACEMENT ---
+          if (egoModeSessionDetailBottomBanner != null && _isBannerAdInitialized)
+            Positioned(
+              bottom: 60, // Positioned above the ChatEditField
+              left: 0,
+              right: 0,
+              child: Container(
+                height: egoModeSessionDetailBottomBanner!.size.height.toDouble(),
+                width: egoModeSessionDetailBottomBanner!.size.width.toDouble(),
+                child: AdWidget(ad: egoModeSessionDetailBottomBanner!),
+                alignment: Alignment.center,
+              ),
+            ),
 
+          // Your chat input field at the very bottom
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: ChatEditField(
+              onTap: (String comment, voiceNote, image1, image2) =>
+                  _sendComment(comment, voiceNote, widget.featuredSessionModel!, image1, image2),
+            ),
+          )
         ],
       ),
     );

@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -14,8 +15,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../Admob/ad_state.dart';
 import '../../utils/color.dart';
-import '../routes/page_router_animation.dart';
-import '../routes/routes.dart';
 
 class TicTacToe extends StatefulWidget {
   const TicTacToe({Key? key}) : super(key: key);
@@ -29,48 +28,56 @@ class TicTacToe extends StatefulWidget {
 const int maxFailedLoadAttempts = 3;
 
 class _TicTacToeState extends State<TicTacToe> {
-  late final WebViewController _webViewController;  // Updated initialization
+  late final WebViewController _webViewController;
   String filePath = 'assets/web_games/tictactoe/index.html';
   bool isWon = false;
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
+  // --- ADMOB COMPLIANCE FIX 1: Update ad state variables ---
+  BannerAd? _bottomBannerAd;
+  bool _isBannerAdInitialized = false;
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+
 
   @override
   void initState() {
     super.initState();
     _createTictactoeInterstitialAd();
 
-    // Initialize WebViewController
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel('Score', onMessageReceived: (JavaScriptMessage message) {
         Fluttertoast.showToast(msg: message.message);
         isWon = true;
-        Future.delayed(Duration(seconds: 5), () {
-          _showTictactoeInterstitialAd();
-          incrementTotalLoveCount();
-        });
+        // The interstitial ad will now be shown on exit.
+        incrementTotalLoveCount();
       });
 
-    // Load HTML after WebView creation
     _loadHtmlFromAssets();
   }
 
   @override
   void dispose() {
-    super.dispose();
+    // --- ADMOB COMPLIANCE FIX 2: Show ad on exit and dispose all ads ---
+    if (isWon) {
+      _showTictactoeInterstitialAd();
+    }
     _interstitialAd?.dispose();
+    _bottomBannerAd?.dispose();
+    super.dispose();
   }
-
-  // Admob Ad Units.
-  late BannerAd tictactoeTopBanner;
-  InterstitialAd? _interstitialAd;
-  int _interstitialLoadAttempts = 0;
 
   /// Create new tictactoe interstitial ad.
   void _createTictactoeInterstitialAd() {
     InterstitialAd.load(
-      adUnitId: Platform.isAndroid ? "ca-app-pub-2404156870680632/6838873265" :
-      Platform.isIOS ? "ca-app-pub-2404156870680632/9286456091" : '',
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/6838873265"
+          : Platform.isIOS
+          ? "ca-app-pub-2404156870680632/9286456091"
+          : '',
       request: AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
@@ -94,37 +101,46 @@ class _TicTacToeState extends State<TicTacToe> {
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
-          _createTictactoeInterstitialAd();
+          // Optionally load the next one
+          // _createTictactoeInterstitialAd();
         },
         onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
           ad.dispose();
-          _createTictactoeInterstitialAd();
+          // Optionally load the next one
+          // _createTictactoeInterstitialAd();
         },
       );
       _interstitialAd!.show();
+      _interstitialAd = null;
     }
   }
 
+  // --- ADMOB COMPLIANCE FIX 3: Clean up banner ad loading logic ---
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final adState = Provider.of<AdState>(context);
-
-    // Implement a top location banner ad unit.
-    adState.initialization.then((status) {
-      setState(() {
-        tictactoeTopBanner = BannerAd(
-          size: AdSize.banner,
-          adUnitId: adState.tictactoeTopBannerAdUnitId,
-          request: AdRequest(),
-          listener: BannerAdListener(
-            onAdFailedToLoad: (ad, error) {
-              ad.dispose();
-            },
-          ),
-        )..load();
+    if (!_isBannerAdInitialized) {
+      final adState = Provider.of<AdState>(context);
+      adState.initialization.then((status) {
+        if (mounted) {
+          setState(() {
+            _bottomBannerAd = BannerAd(
+                size: AdSize.banner,
+                adUnitId: adState.tictactoeTopBannerAdUnitId, // Using your unique ID
+                request: AdRequest(),
+                listener: BannerAdListener(
+                  onAdLoaded: (ad) => print('TicTacToe banner loaded.'),
+                  onAdFailedToLoad: (ad, error) {
+                    print('TicTacToe banner failed to load: $error');
+                    ad.dispose();
+                  },
+                ))
+              ..load();
+            _isBannerAdInitialized = true;
+          });
+        }
       });
-    });
+    }
   }
 
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -151,7 +167,6 @@ class _TicTacToeState extends State<TicTacToe> {
             presentSound: true));
   }
 
-  /// Increase total love count when user wins on tic tac toe.
   Future<void> incrementTotalLoveCount() async {
     FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
       {
@@ -183,19 +198,22 @@ class _TicTacToeState extends State<TicTacToe> {
           ),
         ),
       ),
-      body: ListView(
+      // --- ADMOB COMPLIANCE FIX 4: Restructure body with a Stack and Column ---
+      body: Column(
         children: [
-          // Top ad unit is here
-          SizedBox(
-            height: 60,
-            child: AdWidget(ad: tictactoeTopBanner),
-          ),
-          SizedBox(
-            height: 600,
+          Expanded(
             child: WebViewWidget(
-              controller: _webViewController, // Updated WebView widget
+              controller: _webViewController,
             ),
           ),
+          // --- ADMOB COMPLIANCE FIX 5: Place a single, compliant banner ad ---
+          if (_bottomBannerAd != null && _isBannerAdInitialized)
+            Container(
+              height: _bottomBannerAd!.size.height.toDouble(),
+              width: _bottomBannerAd!.size.width.toDouble(),
+              child: AdWidget(ad: _bottomBannerAd!),
+              alignment: Alignment.center,
+            ),
         ],
       ),
     );
@@ -208,6 +226,6 @@ class _TicTacToeState extends State<TicTacToe> {
       mimeType: 'text/html',
       encoding: Encoding.getByName('utf-8'),
     );
-    _webViewController.loadRequest(uri); // Updated method
+    _webViewController.loadRequest(uri);
   }
 }

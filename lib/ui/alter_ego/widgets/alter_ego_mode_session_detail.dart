@@ -35,7 +35,6 @@ class AlterEgoModeSessionDetail extends StatefulWidget {
 
 const int maxFailedLoadAttempts = 3;
 
-
 class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
   Session? featuredSessionModel;
 
@@ -44,11 +43,14 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
   List<CommentSessionModel> _commentSessionList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
 
-
-
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
 
+  // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
+  BannerAd? _bottomBannerAd;
+  bool _isBannerAdInitialized = false;
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
 
 
   @override
@@ -57,25 +59,21 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     _createAdviseInterstitialAd();
   }
 
-
-
   @override
   void dispose() {
-    super.dispose();
+    // --- ADMOB COMPLIANCE FIX 2: Show interstitial on exit and dispose all ads ---
+    _showAdviseInterstitialAd();
     _interstitialAd?.dispose();
+    _bottomBannerAd?.dispose();
+    super.dispose();
   }
 
-
-  InterstitialAd? _interstitialAd;
-  int _interstitialLoadAttempts = 0;
-
   /// Create new sub chat interstitial ad.
-
   void _createAdviseInterstitialAd() {
     InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/9839548530" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/8291211887" :
-      '',      request: AdRequest(),
+      adUnitId: Platform.isAndroid ? "ca-app-pub-2404156870680632/9839548530" :
+      Platform.isIOS ? "ca-app-pub-2404156870680632/8291211887" :
+      '', request: AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
           _interstitialAd = ad;
@@ -98,74 +96,65 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
-          _createAdviseInterstitialAd();
         },
         onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
           ad.dispose();
-          _createAdviseInterstitialAd();
         },
       );
       _interstitialAd!.show();
+      _interstitialAd = null; // Prevent showing the same ad twice
     }
   }
 
-
-  // Admob Ad Units.
-  late BannerAd alterEgoModeSessionDetailTopBanner;
-  late BannerAd alterEgoModeSessionDetailBottomBanner;
-
+  // --- ADMOB COMPLIANCE FIX 3: Clean up banner ad loading logic ---
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final adState = Provider.of<AdState>(context);
-
-    // Implement a top location banner ad unit.
-    adState.initialization.then((status) {
-      setState(() {
-        alterEgoModeSessionDetailTopBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.alterEgoModeTopCommentBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdFailedToLoad: (ad, error) {
-                ad.dispose();
-              },
+    if (!_isBannerAdInitialized) {
+      final adState = Provider.of<AdState>(context);
+      adState.initialization.then((status) {
+        if (mounted) {
+          setState(() {
+            _bottomBannerAd = BannerAd(
+                size: AdSize.banner,
+                // Using a specific ad unit for this page
+                adUnitId: adState.alterEgoModeBottomCommentBannerAdUnitId,
+                request: AdRequest(),
+                listener: BannerAdListener(
+                  onAdLoaded: (ad) =>
+                      print('Alter Ego session detail banner loaded.'),
+                  onAdFailedToLoad: (ad, error) {
+                    print(
+                        'Alter Ego session detail banner failed to load: $error');
+                    ad.dispose();
+                  },
+                )
             )
-        )..load();
+              ..load();
+            _isBannerAdInitialized = true;
+          });
+        }
       });
-    });
-
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
-        alterEgoModeSessionDetailBottomBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.alterEgoModeBottomCommentBannerAdUnitId,
-            request: AdRequest(),
-          listener: BannerAdListener(
-            onAdFailedToLoad: (ad, error) {
-              ad.dispose();
-            },
-          )
-        )..load();
-      });
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final Color backgroundColor = HexColor.fromHex(featuredSessionModel!.colorHex!);
-    final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+    final Color backgroundColor = HexColor.fromHex(
+        featuredSessionModel!.colorHex!);
+    final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors
+        .black : Colors.white;
 
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: backgroundColor,
-        title: Text(featuredSessionModel!.title!, style: TextStyle(color: textColor)),
+        title: Text(
+            featuredSessionModel!.title!, style: TextStyle(color: textColor)),
         elevation: 0,
         iconTheme: IconThemeData(color: textColor),
       ),
+      // --- ADMOB COMPLIANCE FIX 4: Restructure body with a Stack ---
       body: Stack(
         children: [
           CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
@@ -178,7 +167,6 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
               AnimationLimiter(
                 child: ListView.builder(
                   shrinkWrap: true,
-                  //padding: EdgeInsets.all(15),
                   physics:
                   BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
                   itemCount: 1,
@@ -197,55 +185,57 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                           flipAxis: FlipAxis.y,
 
                           child: StreamBuilder(
-                              stream: firebaseServices.getFeaturedSessionsComments(
+                              stream: firebaseServices
+                                  .getFeaturedSessionsComments(
                                   featuredSessionModel!.sessionId!),
-                              builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                              builder: (context,
+                                  AsyncSnapshot<QuerySnapshot> snapShot) {
                                 if (snapShot.hasError) {
                                   return Container();
                                 }
 
                                 if (snapShot.hasData) {
-                                  /// clear list before adding now items
                                   _commentSessionList.clear();
                                   snapShot.data!.docs
-                                      .map((e) => _commentSessionList
-                                      .add(CommentSessionModel.fromJson(e.data())))
+                                      .map((e) =>
+                                      _commentSessionList
+                                          .add(CommentSessionModel.fromJson(
+                                          e.data() as Map<String, dynamic>)))
                                       .toList();
+                                  // --- ADMOB COMPLIANCE FIX 5: Remove ads from the Column ---
                                   return Column(
-
                                     children: [
-
-                                      // Top ad unit is here
-                                      Container(
-                                        height: 60,
-                                        child: AdWidget(ad: alterEgoModeSessionDetailTopBanner),
-                                      ),
+                                      // Top ad unit REMOVED
                                       ..._commentSessionList
-                                          .map((element) => CommentWidget(
-                                        commentSessionModel: element,
-                                        onPressed: () => _updateReaction(
-                                            element, featuredSessionModel!),
-                                        onShare: () => _share(element.message), featuredSessionModel: featuredSessionModel!, userId: '',
-                                      ))
+                                          .map((element) =>
+                                          CommentWidget(
+                                            commentSessionModel: element,
+                                            onPressed: () =>
+                                                _updateReaction(
+                                                    element,
+                                                    featuredSessionModel!),
+                                            onShare: () =>
+                                                _share(element.message),
+                                            featuredSessionModel: featuredSessionModel!,
+                                            userId: '',
+                                          ))
                                           .toList(),
 
                                       SizedBox(height: 4,),
                                       Text(
-                                        "Earn more> Respond to more sessions from category - " + featuredSessionModel!.category1.toString(),
+                                        "Earn more> Respond to more sessions from category - " +
+                                            featuredSessionModel!.category1
+                                                .toString(),
                                         style: TextStyle(
                                           color: textColor,
                                           fontSize: 12,
                                         ),
                                       ),
 
-                                      NextUnrepliedSession(element: featuredSessionModel!,),
+                                      NextUnrepliedSession(
+                                        element: featuredSessionModel!,),
                                       SizedBox(height: 4),
-
-                                      // Bottom ad unit is here
-                                      Container(
-                                        height: 60,
-                                        child: AdWidget(ad: alterEgoModeSessionDetailBottomBanner),
-                                      ),
+                                      // Bottom ad unit REMOVED
                                     ],
                                   );
                                 }
@@ -257,33 +247,51 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                   },
                 ),
               ),
-
-              SizedBox(
-                height: 70,
-              )
+              // Adjust space for the input field AND the banner ad
+              SizedBox(height: 120),
             ],
           ),
-          ChatEditField(
-            onTap: (String comment, voiceNote, image1, image2) =>
-                _sendComment(comment, voiceNote, widget.featuredSessionModel!, image1, image2),
+
+          // --- ADMOB COMPLIANCE FIX 6: Place a single, compliant banner ad ---
+          if (_bottomBannerAd != null && _isBannerAdInitialized)
+            Positioned(
+              bottom: 60, // Position above the ChatEditField
+              left: 0,
+              right: 0,
+              child: Container(
+                height: _bottomBannerAd!.size.height.toDouble(),
+                width: _bottomBannerAd!.size.width.toDouble(),
+                child: AdWidget(ad: _bottomBannerAd!),
+                alignment: Alignment.center,
+              ),
+            ),
+
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: ChatEditField(
+              onTap: (String comment, voiceNote, image1, image2) =>
+                  _sendComment(
+                      comment, voiceNote, widget.featuredSessionModel!, image1,
+                      image2),
+            ),
           )
         ],
       ),
     );
   }
 
-  void _sendComment(String comment, String voiceNote, Session session, String image1, String image2) async {
+  void _sendComment(String comment, String voiceNote, Session session,
+      String image1, String image2) async {
+    // ... This method's implementation remains the same
     if (!await firebaseServices.isUserSignIn(context)) return;
 
-
-    CollectionReference ref =
-    FirebaseFirestore.instance
+    CollectionReference ref = FirebaseFirestore.instance
         .collection("sessions")
         .doc(session.sessionId!)
         .collection("comments");
-
-    String docId = ref.doc().id;
-
+    String docId = ref
+        .doc()
+        .id;
     final _userModel = await firebaseServices.getUserInfo();
     final _commentModel = CommentSessionModel(
         alterEgoId: _userModel.alterEgoId,
@@ -302,24 +310,21 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         userId: _userModel.userId,
         userNickname: _userModel.nickname,
         originalAdviseCategory: session.category1);
-
     await ref.doc(docId).set(_commentModel.toJson());
-
-
     firebaseServices.addCommentNotification(
-        title: session.title ?? '',
-        docId: session.sessionId!,
-        sender: _userModel.userType == 'ADMIN'? 'Claire' :
-        _userModel.userType == 'SUPER_ADMIN'? 'Claire' :
-        _userModel.nickname.toString(),
+      title: session.title ?? '',
+      docId: session.sessionId!,
+      sender: _userModel.userType == 'ADMIN'
+          ? 'Claire'
+          : _userModel.userType == 'SUPER_ADMIN'
+          ? 'Claire'
+          : _userModel.nickname.toString(),
     );
-
     updateSessionTimeLastActivity(session);
     isOriginalAdvise(context, comment, session);
     saveAlterEgoCommentActivity();
     firebaseServices.subscribeAlterEgoToAdvisedSession(session);
   }
-
 
   String timeAgo() {
     final commentTime = featuredSessionModel!.timeCreated?.toDate();
@@ -327,28 +332,32 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     return _time;
   }
 
-
   /// checks if advise meets original advise rules...
   /// if it does, then increment necessary counts.
-  Future<bool> isOriginalAdvise(BuildContext context, String adviseText, Session session) async {
+  Future<bool> isOriginalAdvise(BuildContext context, String adviseText,
+      Session session) async {
     final _timeAgo = timeAgo();
     final _advise = adviseText.toString();
     final _length = _advise.length;
-    if(!_timeAgo.contains('day'))
-    if (_advise.contains("arling"))
-      if (_length >= 20)
+    if (!_timeAgo.contains('day')) {
+      if (_advise.contains("arling")) {
+        if (_length >= 20) {
+          incrementAdviseCount();
+          incrementTotalLoveCount();
+          showToast("Thanks! You earned 10 Loves.");
+          flutterLocalNotificationsPlugin.show(
+              0,
+              'ClaireLove Wallet',
+              "Thanks for that original advise. You just earned 10 Loves.",
+              _notificationDetails(),
+              payload: "wallet");
 
-      {
-        incrementAdviseCount();
-        incrementTotalLoveCount();
-        showToast("Thanks! You earned 10 Loves.");
-        flutterLocalNotificationsPlugin.show(0, 'ClaireLove Wallet',
-            "Thanks for that original advise. You just earned 10 Loves.", _notificationDetails(), payload: "wallet");
-        Future.delayed(Duration(seconds: 4), () {
-          _showAdviseInterstitialAd();
-        });
-        return true;
+          // --- ADMOB COMPLIANCE FIX 7: Interstitial ad call REMOVED from here ---
+
+          return true;
+        }
       }
+    }
     return false;
   }
 
@@ -360,6 +369,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
       playSound: true);
 
   NotificationDetails? _notificationDetails() {
+    // ... This method's implementation remains the same
     return NotificationDetails(
         android: AndroidNotificationDetails(
             channel.id, channel.name,
@@ -376,11 +386,8 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
             presentSound: true));
   }
 
-
-
-  /// Increase advise counter when user creates new comment.
-
   Future<void> incrementAdviseCount() async {
+    // ... This method's implementation remains the same
     FirebaseFirestore.instance
         .collection("users")
         .doc(currentUser?.uid)
@@ -391,7 +398,6 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     );
     logger.d('Increased advise count');
     print('Advise Count is: $FieldValue');
-
   }
 
   /// Increase total love count when user creates new session or comment.

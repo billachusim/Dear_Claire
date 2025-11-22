@@ -39,6 +39,13 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
 
   List<Temp> _chatList = [];
 
+  // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
+  BannerAd? _bottomBannerAd;
+  bool _isBannerAdInitialized = false;
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+
+
   @override
   void initState() {
     super.initState();
@@ -49,16 +56,15 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
 
   @override
   void dispose() {
-    super.dispose();
+    // --- ADMOB COMPLIANCE FIX 2: Show interstitial on exit and dispose all ads ---
+    _showNewChatInterstitialAd();
     _interstitialAd?.dispose();
+    _bottomBannerAd?.dispose();
+    super.dispose();
   }
 
 
-  InterstitialAd? _interstitialAd;
-  int _interstitialLoadAttempts = 0;
-
   // Create interstitial ad.
-
   void _createNewChatInterstitialAd() {
     InterstitialAd.load(
       adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/9695244155" :
@@ -86,51 +92,44 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
-          _createNewChatInterstitialAd();
         },
         onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
           ad.dispose();
-          _createNewChatInterstitialAd();
         },
       );
       _interstitialAd!.show();
+      _interstitialAd = null; // Prevent showing the same ad twice
     }
   }
 
 
-  // Admob Ad Units.
-  late BannerAd insideChatroomTopBanner;
-  late BannerAd insideChatroomBottomBanner;
-
+  // --- ADMOB COMPLIANCE FIX 3: Clean up banner ad loading logic ---
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final adState = Provider.of<AdState>(context);
-
-    // Implement a top location banner ad unit.
-    adState.initialization.then((status) {
-      setState(() {
-        insideChatroomTopBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.insideChatroomTopBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener()
-        )..load();
+    if (!_isBannerAdInitialized) {
+      final adState = Provider.of<AdState>(context);
+      adState.initialization.then((status) {
+        if (mounted) {
+          setState(() {
+            _bottomBannerAd = BannerAd(
+                size: AdSize.banner,
+                // Using a unique ad unit ID for this page
+                adUnitId: adState.insideChatroomBottomBannerAdUnitId,
+                request: AdRequest(),
+                listener: BannerAdListener(
+                  onAdLoaded: (ad) => print('Alter Ego chat banner loaded.'),
+                  onAdFailedToLoad: (ad, error) {
+                    print('Alter Ego chat banner failed to load: $error');
+                    ad.dispose();
+                  },
+                )
+            )..load();
+            _isBannerAdInitialized = true;
+          });
+        }
       });
-    });
-
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
-        insideChatroomBottomBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.insideChatroomBottomBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener()
-        )..load();
-      });
-    });
+    }
   }
 
   @override
@@ -144,15 +143,14 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
         elevation: 0,
       ),
       body: SafeArea(
+        // --- ADMOB COMPLIANCE FIX 4: Ensure body is a Stack ---
         child: Stack(
           children: [
             ListView(
               children: [
-
                 AnimationLimiter(
                   child: ListView.builder(
                     shrinkWrap: true,
-                    //padding: EdgeInsets.all(15),
                     physics:
                     BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
                     itemCount: 1,
@@ -169,29 +167,22 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
                             duration: Duration(milliseconds: 3000),
                             curve: Curves.fastLinearToSlowEaseIn,
                             flipAxis: FlipAxis.y,
-
                             child: StreamBuilder(
                                 stream: firebaseServices.getAlterEgoChats(chatRoomPodo),
                                 builder: (context,
                                     AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
                                     snapShot) {
                                   if (snapShot.hasData) {
-                                    if (_chatList.isNotEmpty) _chatList.clear();
+                                    _chatList.clear(); // Clear list before populating
                                     snapShot.data!.docs
                                         .map((e) => _chatList
                                         .add(Temp(e.id, ChatModel.fromJson(e.data()))))
                                         .toList();
+                                    // --- ADMOB COMPLIANCE FIX 5: Remove ads from Column ---
                                     return Column(
                                       children: [
                                         AlterEgoSubDiaryRoomWidget(element: widget.chatRoomPodo),
-
-                                        // Top ad unit is here
-                                        Container(
-                                          height: 60,
-                                          child: AdWidget(ad: insideChatroomTopBanner),
-                                        ),
-
-
+                                        // Top ad unit REMOVED
                                         ..._chatList
                                             .map((element) => AlterEgoChatWidget(
                                           documentID: element.id,
@@ -199,13 +190,7 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
                                           chatRoomPodo: chatRoomPodo,
                                         ))
                                             .toList(),
-
-
-                                        // Bottom ad unit is here
-                                        Container(
-                                          height: 60,
-                                          child: AdWidget(ad: insideChatroomBottomBanner),
-                                        ),
+                                        // Bottom ad unit REMOVED
                                       ],
                                     );
                                   }
@@ -217,14 +202,27 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
                     },
                   ),
                 ),
-                SizedBox(
-                  height: 70,
-                )
+                // Adjust space for the input field AND the banner ad
+                SizedBox(height: 120),
               ],
             ),
+            // Your existing chat input field
             ChatEditField(
               onTap: (v, voiceNote, image1, image2) => _sendMessage(v, voiceNote, image1, image2),
-            )
+            ),
+            // --- ADMOB COMPLIANCE FIX 6: Place a single, compliant banner ad ---
+            if (_bottomBannerAd != null && _isBannerAdInitialized)
+              Positioned(
+                bottom: 60, // Position above the ChatEditField
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: _bottomBannerAd!.size.height.toDouble(),
+                  width: _bottomBannerAd!.size.width.toDouble(),
+                  child: AdWidget(ad: _bottomBannerAd!),
+                  alignment: Alignment.center,
+                ),
+              ),
           ],
         ),
       ),
@@ -244,8 +242,6 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
             image1: image1,
             image2: image2,
             members: [_user.userId]));
-    Future.delayed(Duration(seconds: 4), () {
-      _showNewChatInterstitialAd();
-    });
+    // --- ADMOB COMPLIANCE FIX 7: Remove interstitial ad call from here ---
   }
 }

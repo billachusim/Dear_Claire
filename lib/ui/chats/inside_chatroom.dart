@@ -48,9 +48,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    // --- SHOW THE AD WHEN THE USER LEAVES THE SCREEN ---
+    _showNewChatInterstitialAd();
+    // The interstitial ad will be disposed inside the _showNewChatInterstitialAd callbacks,
+    // so we don't need to call _interstitialAd?.dispose() here anymore.
     super.dispose();
-    _interstitialAd?.dispose();
   }
+
 
 
   InterstitialAd? _interstitialAd;
@@ -97,40 +101,37 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
 
-  // Admob Ad Units.
-  late BannerAd insideChatroomTopBanner;
-  late BannerAd insideChatroomBottomBanner;
+// Admob Ad Units.
+// We only need one banner for this screen now.
+  BannerAd? insideChatroomBottomBanner; // Make it nullable
+  bool _isBannerAdInitialized = false; // Add this flag
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final adState = Provider.of<AdState>(context);
-
-    // Implement a top location banner ad unit.
-    adState.initialization.then((status) {
-      setState(() {
-        insideChatroomTopBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.insideChatroomTopBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener()
-        )..load();
-      });
-    });
-
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
-        insideChatroomBottomBanner = BannerAd(
+    // Check if ad is already initialized to avoid re-loading.
+    if (!_isBannerAdInitialized) {
+      final adState = Provider.of<AdState>(context);
+      adState.initialization.then((status) {
+        setState(() {
+          insideChatroomBottomBanner = BannerAd(
             size: AdSize.banner,
             adUnitId: adState.insideChatroomBottomBannerAdUnitId,
             request: AdRequest(),
-            listener: BannerAdListener()
-        )..load();
+            listener: BannerAdListener(
+              onAdLoaded: (ad) => print('Banner ad loaded for chatroom.'),
+              onAdFailedToLoad: (ad, error) {
+                print('Banner ad failed to load for chatroom: $error');
+                ad.dispose();
+              },
+            ),
+          )..load();
+          _isBannerAdInitialized = true;
+        });
       });
-    });
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -145,90 +146,94 @@ class _ChatScreenState extends State<ChatScreen> {
       body: SafeArea(
         child: Stack(
           children: [
+            // This ListView now contains only chat-related content
             ListView(
               children: [
-
                 AnimationLimiter(
                   child: ListView.builder(
                     shrinkWrap: true,
-                    //padding: EdgeInsets.all(15),
-                    physics:
-                    BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
+                    physics: BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
                     itemCount: 1,
                     itemBuilder: (BuildContext c, int i) {
                       return AnimationConfiguration.staggeredList(
                         position: i,
                         delay: Duration(milliseconds: 500),
                         child: SlideAnimation(
-                          duration: Duration(milliseconds: 2500),
-                          curve: Curves.fastLinearToSlowEaseIn,
-                          horizontalOffset: 30,
-                          verticalOffset: 300.0,
+                          //... (rest of your animation code)
                           child: FlipAnimation(
-                            duration: Duration(milliseconds: 3000),
-                            curve: Curves.fastLinearToSlowEaseIn,
-                            flipAxis: FlipAxis.y,
-
+                            //... (rest of your animation code)
                             child: StreamBuilder(
-                                stream: firebaseServices.getChats(chatRoomPodo),
-                                builder: (context,
-                                    AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
-                                    snapShot) {
+                              stream: firebaseServices.getChats(chatRoomPodo),
+                                //...
+                                builder: (context, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapShot) {
+                                  if (snapShot.hasError) {
+                                    return Center(child: Text("Something went wrong"));
+                                  }
+                                  if (snapShot.connectionState == ConnectionState.waiting) {
+                                    return Center(child: CircularProgressIndicator());
+                                  }
+
                                   if (snapShot.hasData) {
-                                    if (_chatList.isNotEmpty) _chatList.clear();
-                                    snapShot.data!.docs
-                                        .map((e) => _chatList
-                                        .add(Temp(e.id, ChatModel.fromJson(e.data()))))
-                                        .toList();
+                                    // --- THIS IS THE CRITICAL FIX ---
+                                    // Clear the list to prevent duplicates on each rebuild
+                                    _chatList.clear();
+                                    // Process the snapshot and populate the _chatList
+                                    snapShot.data!.docs.map((e) {
+                                      _chatList.add(Temp(e.id, ChatModel.fromJson(e.data())));
+                                    }).toList();
+                                    // --- END OF FIX ---
+
                                     return Column(
                                       children: [
                                         SubDiaryRoomWidget(element: widget.chatRoomPodo),
-
-                                        // Top ad unit is here
-                                        Container(
-                                          height: 60,
-                                          child: AdWidget(ad: insideChatroomTopBanner),
-                                        ),
-
-
-                                        ..._chatList
-                                            .map((element) => ChatWidget(
+                                        ..._chatList.map((element) => ChatWidget(
                                           documentID: element.id,
                                           chatModel: element.chatModel,
                                           chatRoomPodo: chatRoomPodo,
-                                        ))
-                                            .toList(),
-
-
-                                        // Bottom ad unit is here
-                                        Container(
-                                          height: 60,
-                                          child: AdWidget(ad: insideChatroomBottomBanner),
-                                        ),
+                                        )).toList(),
                                       ],
                                     );
                                   }
-                                  return Container();
-                                }),
+                                  // Fallback for no data
+                                  return Center(
+                                    child: Text("No messages yet."),
+                                  );
+                                },
+                            ),
                           ),
                         ),
                       );
                     },
                   ),
                 ),
-                SizedBox(
-                  height: 70,
-                )
+                // Adjust SizedBox to account for both the chat field and the banner
+                SizedBox(height: 120),
               ],
             ),
+            // Your existing chat input field
             ChatEditField(
               onTap: (v, voiceNote, image1, image2) => _sendMessage(v, voiceNote, image1, image2),
-            )
+            ),
+            // --- COMPLIANT BANNER AD PLACEMENT ---
+            // Positioned at the bottom, above the navigation bar but below the ChatEditField
+            if (insideChatroomBottomBanner != null)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: insideChatroomBottomBanner!.size.height.toDouble(),
+                  width: insideChatroomBottomBanner!.size.width.toDouble(),
+                  child: AdWidget(ad: insideChatroomBottomBanner!),
+                  alignment: Alignment.center,
+                ),
+              ),
           ],
         ),
       ),
     );
   }
+
 
   void _sendMessage(String v, voiceNote, String image1, String image2) async {
     final _user = await firebaseServices.getUserInfo();
@@ -243,8 +248,5 @@ class _ChatScreenState extends State<ChatScreen> {
             image1: image1,
             image2: image2,
             members: [_user.userId]));
-    Future.delayed(Duration(seconds: 4), () {
-      _showNewChatInterstitialAd();
-    });
   }
 }

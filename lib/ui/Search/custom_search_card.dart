@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/ui/featured/model/comment_session_model.dart';
 import 'package:clairediary/ui/featured/model/session.dart';
@@ -10,6 +9,7 @@ import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/utils/mood.dart';
 import 'package:clairediary/widgets/comments_button.dart';
 import 'package:clairediary/widgets/metoo_button.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -291,28 +291,30 @@ class CustomSearchCard extends StatelessWidget {
 
             Row(
               children: [
-                MetooButton(
-                  cheers: element.meToos!.length,
-                  thanks: element.meLove!.length,
-                  sorry: element.meHiFive!.length,
-                  me2: element.meFlower!.length,
-                  color: textColor,
-                  onReactionChanged: (reaction, index) async {
-                    if (await firebaseServices
-                        .isUserSignIn(context)) {
-                      final _userModel =
-                      await firebaseServices.getUserInfo();
+                Flexible(
+                  child: MetooButton(
+                    cheers: element.meToos!.length,
+                    thanks: element.meLove!.length,
+                    sorry: element.meHiFive!.length,
+                    me2: element.meFlower!.length,
+                    color: textColor,
+                    onReactionChanged: (reaction, index) async {
+                      if (await firebaseServices
+                          .isUserSignIn(context)) {
+                        final _userModel =
+                        await firebaseServices.getUserInfo();
 
-                      firebaseServices.addUsersReactionToASession(
-                          context, index,
-                          session: element,
-                          sender: _userModel.nickname ?? '');
+                        firebaseServices.addUsersReactionToASession(
+                            context, index,
+                            session: element,
+                            sender: _userModel.nickname ?? '');
 
-                      saveUserMe2Activity();
-                      await firebaseServices.updateSessionLastTimeActivity(element.sessionId.toString());
-                    }
+                        saveUserMe2Activity();
+                        await firebaseServices.updateSessionLastTimeActivity(element.sessionId.toString());
+                      }
 
-                  }, session: element,
+                    }, session: element,
+                  ),
                 ),
                 new Spacer(),
                 StreamBuilder(

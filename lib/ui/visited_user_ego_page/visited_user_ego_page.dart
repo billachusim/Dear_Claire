@@ -98,85 +98,108 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
 
   // Admob Ad Units.
-  late BannerAd visitedUserTopOfSessionsBanner;
-  late BannerAd visitedUserBottomOfSessionsBanner;
-  late BannerAd visitedUserTopOfActivitiesBanner;
-  late BannerAd visitedUserBottomOfActivitiesBanner;
+  BannerAd? visitedUserTopOfSessionsBanner;
+  BannerAd? visitedUserBottomOfSessionsBanner;
+  BannerAd? visitedUserTopOfActivitiesBanner;
+  BannerAd? visitedUserBottomOfActivitiesBanner;
+  bool _isTopOfSessionsBannerLoaded = false;
+  bool _isBottomOfSessionsBannerLoaded = false;
+  bool _isTopOfActivitiesBannerLoaded = false;
+  bool _isBottomOfActivitiesBannerLoaded = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // We can remove the _areAdsInitialized check to allow for reloading if needed,
+    // since the individual loaded flags will prevent crashes.
     final adState = Provider.of<AdState>(context);
 
-    // Implement a top location banner ad unit.
     adState.initialization.then((status) {
       setState(() {
+        // --- Load Top of Sessions Banner ---
         visitedUserTopOfSessionsBanner = BannerAd(
             size: AdSize.banner,
             adUnitId: adState.visitedUserTopOfSessionBannerAdUnitId,
             request: AdRequest(),
             listener: BannerAdListener(
+              onAdLoaded: (ad) {
+                print('Ad loaded: ${ad.adUnitId}');
+                setState(() {
+                  _isTopOfSessionsBannerLoaded = true;
+                });
+              },
               onAdFailedToLoad: (ad, error) {
+                print('Ad failed to load: ${ad.adUnitId}, error: $error');
                 ad.dispose();
               },
             )
-        )..load();
-      });
-    });
+        )
+          ..load();
 
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
+        // --- Load Bottom of Sessions Banner ---
         visitedUserBottomOfSessionsBanner = BannerAd(
             size: AdSize.banner,
             adUnitId: adState.visitedUserBottomOfSessionsBannerAdUnitId,
             request: AdRequest(),
             listener: BannerAdListener(
+              onAdLoaded: (ad) {
+                print('Ad loaded: ${ad.adUnitId}');
+                setState(() {
+                  _isBottomOfSessionsBannerLoaded = true;
+                });
+              },
               onAdFailedToLoad: (ad, error) {
+                print('Ad failed to load: ${ad.adUnitId}, error: $error');
                 ad.dispose();
               },
             )
-        )..load();
-      });
-    });
+        )
+          ..load();
 
-
-
-    // Implement a top location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
+        // --- Load Top of Activities Banner ---
         visitedUserTopOfActivitiesBanner = BannerAd(
             size: AdSize.banner,
             adUnitId: adState.visitedUserTopOfActivitiesBannerAdUnitId,
             request: AdRequest(),
             listener: BannerAdListener(
+              onAdLoaded: (ad) {
+                print('Ad loaded: ${ad.adUnitId}');
+                setState(() {
+                  _isTopOfActivitiesBannerLoaded = true;
+                });
+              },
               onAdFailedToLoad: (ad, error) {
+                print('Ad failed to load: ${ad.adUnitId}, error: $error');
                 ad.dispose();
               },
             )
-        )..load();
-      });
-    });
+        )
+          ..load();
 
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
+        // --- Load Bottom of Activities Banner ---
         visitedUserBottomOfActivitiesBanner = BannerAd(
             size: AdSize.banner,
             adUnitId: adState.visitedUserBottomOfActivitiesBannerAdUnitId,
             request: AdRequest(),
             listener: BannerAdListener(
+              onAdLoaded: (ad) {
+                print('Ad loaded: ${ad.adUnitId}');
+                setState(() {
+                  _isBottomOfActivitiesBannerLoaded = true;
+                });
+              },
               onAdFailedToLoad: (ad, error) {
+                print('Ad failed to load: ${ad.adUnitId}, error: $error');
                 ad.dispose();
               },
             )
-        )..load();
+        )
+          ..load();
       });
     });
   }
+
+
 
 
   Future<void> _fetchInitialData() async {
@@ -1628,25 +1651,36 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                   children: [
 
                                     // Top ad unit is here
-                                    Container(
-                                      height: 60,
-                                      child: AdWidget(ad: visitedUserTopOfSessionsBanner),
-                                    ),
-
+                                    if (visitedUserTopOfSessionsBanner != null && _isTopOfSessionsBannerLoaded)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                        child: Container(
+                                          height: visitedUserTopOfSessionsBanner!.size.height.toDouble(),
+                                          width: visitedUserTopOfSessionsBanner!.size.width.toDouble(),
+                                          child: AdWidget(ad: visitedUserTopOfSessionsBanner!),
+                                          alignment: Alignment.center,
+                                        ),
+                                      ),
 
                                     ..._sessionList!
                                         .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                                         .toList(),
 
-                                    // Top ad unit is here
-                                    Container(
-                                      height: 60,
-                                      child: AdWidget(ad: visitedUserBottomOfSessionsBanner),
-                                    ),
-
+                                    // Bottom ad unit is here
+                                    if (visitedUserBottomOfSessionsBanner != null && _isBottomOfSessionsBannerLoaded)
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                        child: Container(
+                                          height: visitedUserBottomOfSessionsBanner!.size.height.toDouble(),
+                                          width: visitedUserBottomOfSessionsBanner!.size.width.toDouble(),
+                                          child: AdWidget(ad: visitedUserBottomOfSessionsBanner!),
+                                          alignment: Alignment.center,
+                                        ),
+                                      ),
                                   ],
                                 ),
                               );
+
                             }
                             return Container();
                           },
@@ -1693,24 +1727,32 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                             children: [
 
                               // Top ad unit is here
-                              Container(
-                                height: 60,
-                                child: AdWidget(ad: visitedUserTopOfActivitiesBanner),
+                              if (visitedUserTopOfActivitiesBanner != null && _isTopOfActivitiesBannerLoaded) Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Container(
+                                  height: visitedUserTopOfActivitiesBanner!.size.height.toDouble(),
+                                  width: visitedUserTopOfActivitiesBanner!.size.width.toDouble(),
+                                  child: AdWidget(ad: visitedUserTopOfActivitiesBanner!),
+                                  alignment: Alignment.center,
+                                ),
                               ),
-
 
                               ...userActivity.data!
                                   .map((element) => VisitedUserActivityCard(element: element,)
                               )
                                   .toList(),
 
-
-                              // Top ad unit is here
-                              Container(
-                                height: 60,
-                                child: AdWidget(ad: visitedUserBottomOfActivitiesBanner),
-                              ),
-
+                              // Bottom ad unit is here
+                              if (visitedUserBottomOfActivitiesBanner != null && _isBottomOfActivitiesBannerLoaded)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Container(
+                                    height: visitedUserBottomOfActivitiesBanner!.size.height.toDouble(),
+                                    width: visitedUserBottomOfActivitiesBanner!.size.width.toDouble(),
+                                    child: AdWidget(ad: visitedUserBottomOfActivitiesBanner!),
+                                    alignment: Alignment.center,
+                                  ),
+                                ),
                             ],
                           );
                         }

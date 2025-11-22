@@ -68,6 +68,9 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
 
+  // Admob Ad Units.
+  late BannerAd egoModeSessionDetailBottomBanner;
+  bool _isBannerAdInitialized = false;
 
 
   @override
@@ -80,8 +83,13 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
 
   @override
   void dispose() {
-    super.dispose();
+    // --- ADMOB COMPLIANCE FIX 2: Show interstitial on exit for compliant placement ---
+    _showAdviseInterstitialAd();
+
+    // Dispose all ad resources
     _interstitialAd?.dispose();
+    egoModeSessionDetailBottomBanner?.dispose();
+    super.dispose();
   }
 
 
@@ -89,12 +97,14 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   int _interstitialLoadAttempts = 0;
 
   /// Create new sub chat interstitial ad.
-
   void _createAdviseInterstitialAd() {
     InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/9839548530" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/8291211887" :
-      '',      request: AdRequest(),
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/9839548530"
+          : Platform.isIOS
+          ? "ca-app-pub-2404156870680632/8291211887"
+          : '',
+      request: AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
           _interstitialAd = ad;
@@ -117,60 +127,45 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
-          _createAdviseInterstitialAd();
         },
         onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
           ad.dispose();
-          _createAdviseInterstitialAd();
         },
       );
       _interstitialAd!.show();
+      _interstitialAd = null; // Prevent showing the same ad twice
     }
   }
 
 
 
-  // Admob Ad Units.
-  late BannerAd egoModeSessionDetailTopBanner;
-  late BannerAd egoModeSessionDetailBottomBanner;
+
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final adState = Provider.of<AdState>(context);
-
-    // Implement a top location banner ad unit.
-    adState.initialization.then((status) {
-      setState(() {
-        egoModeSessionDetailTopBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.egoModeTopCommentBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdFailedToLoad: (ad, error) {
-                ad.dispose();
-              },
-            )
-        )..load();
+    if (!_isBannerAdInitialized) {
+      final adState = Provider.of<AdState>(context);
+      adState.initialization.then((status) {
+        if (mounted) { // Ensure widget is still in the tree
+          setState(() {
+            egoModeSessionDetailBottomBanner = BannerAd(
+                size: AdSize.banner,
+                adUnitId: adState.egoModeBottomCommentBannerAdUnitId,
+                request: const AdRequest(),
+                listener: BannerAdListener(
+                  onAdLoaded: (ad) => print('Notified session banner loaded.'),
+                  onAdFailedToLoad: (ad, error) {
+                    print('Notified session banner failed to load: $error');
+                    ad.dispose();
+                  },
+                ))
+              ..load();
+            _isBannerAdInitialized = true;
+          });
+        }
       });
-    });
-
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
-    adState.initialization.then((status) {
-      setState(() {
-        egoModeSessionDetailBottomBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.egoModeBottomCommentBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdFailedToLoad: (ad, error) {
-                ad.dispose();
-              },
-            )
-        )..load();
-      });
-    });
+    }
   }
 
 
@@ -706,12 +701,6 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
 
                                   children: [
 
-                                    // Top ad unit is here
-                                    Container(
-                                      height: 60,
-                                      child: AdWidget(ad: egoModeSessionDetailTopBanner),
-                                    ),
-
                                     ..._commentList
                                         .map((element) => CommentWidget(
                                       commentSessionModel: element,
@@ -734,12 +723,6 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                     ),
 
                                     SimilarCategorySessions(element: theSession!,),
-
-                                    // Bottom ad unit is here
-                                    Container(
-                                      height: 60,
-                                      child: AdWidget(ad: egoModeSessionDetailBottomBanner),
-                                    ),
                                   ],
                                 );
                               }
@@ -754,25 +737,41 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
             ),
 
             SizedBox(
-              height: 70,
+              height: 120,
             )
 
           ]
         ),
 
-          ChatEditField(
-            onTap: (String comment, voiceNote, image1, image2) {
-              if (theSession?.repliesEnabled == true) {
-                _sendComment(comment, voiceNote, theSession!, image1, image2);
-              } else if (theSession!.respondentUserId == currentUser!.uid) {
-                _sendComment(comment, voiceNote, theSession!, image1, image2);
-              }else if (theSession?.userId == currentUser.uid) {
-                _sendComment(comment, voiceNote, theSession!, image1, image2);
-              }
-              else showToast("Switch to Alter Ego first.");
-            }
+          if (egoModeSessionDetailBottomBanner != null && _isBannerAdInitialized)
+            Positioned(
+              bottom: 60, // Position above the ChatEditField
+              left: 0,
+              right: 0,
+              child: Container(
+                height: egoModeSessionDetailBottomBanner!.size.height.toDouble(),
+                width: egoModeSessionDetailBottomBanner!.size.width.toDouble(),
+                child: AdWidget(ad: egoModeSessionDetailBottomBanner!),
+                alignment: Alignment.center,
+              ),
+            ),
+
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: ChatEditField(
+                onTap: (String comment, voiceNote, image1, image2) {
+                  if (theSession?.repliesEnabled == true) {
+                    _sendComment(comment, voiceNote, theSession!, image1, image2);
+                  } else if (theSession!.respondentUserId == currentUser!.uid) {
+                    _sendComment(comment, voiceNote, theSession!, image1, image2);
+                  }else if (theSession?.userId == currentUser.uid) {
+                    _sendComment(comment, voiceNote, theSession!, image1, image2);
+                  }
+                  else showToast("Switch to Alter Ego first.");
+                }
+            ),
           )
-      ]
+        ]
       ),
     );
   }
