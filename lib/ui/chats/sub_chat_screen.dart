@@ -140,11 +140,10 @@ class _SubChatScreenState extends State<SubChatScreen> {
     }
   }
 
-
+  
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),
+    return Scaffold(    backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),
@@ -152,16 +151,16 @@ class _SubChatScreenState extends State<SubChatScreen> {
         elevation: 0,
       ),
       body: SafeArea(
-        // --- ADMOB COMPLIANCE FIX 5: Ensure body is a Stack ---
+        // 1. Revert back to using a Stack, as this is the layout pattern used elsewhere.
         child: Stack(
           children: [
+            // 2. The main content is a ListView.
             ListView(
               children: [
                 AnimationLimiter(
                   child: ListView.builder(
                     shrinkWrap: true,
-                    physics:
-                    BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
+                    physics: BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
                     itemCount: 1,
                     itemBuilder: (BuildContext c, int i) {
                       return AnimationConfiguration.staggeredList(
@@ -176,54 +175,52 @@ class _SubChatScreenState extends State<SubChatScreen> {
                             duration: Duration(milliseconds: 3000),
                             curve: Curves.fastLinearToSlowEaseIn,
                             flipAxis: FlipAxis.y,
-
                             child: StreamBuilder(
-                                stream: firebaseServices.getSubMessages(
-                                    widget.documentID!, widget.chatRoomPodo, widget.chatModel!),
-                                builder: (context,
-                                    AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
-                                    snapShot) {
-                                  if (snapShot.hasData) {
-                                    _chatList.clear(); // Clear list before populating
-                                    snapShot.data!.docs
-                                        .map((e) => _chatList
-                                        .add(Temp(e.id, ChatModel.fromJson(e.data() as Map<String, dynamic>))))
-                                        .toList();
-                                    // --- ADMOB COMPLIANCE FIX 6: Remove ads from Column ---
-                                    return Column(
-                                      children: [
-                                        InsideInsideChatWidget(documentID: widget.documentID, chatModel: widget.chatModel, chatRoomPodo: widget.chatRoomPodo),
-                                        // Top ad unit REMOVED
-                                        ..._chatList
-                                            .map((element) => InsideInsideInsideChatWidget(
-                                          isSubChat: true,
-                                          documentID: element.id,
-                                          chatModel: element.chatModel,
-                                          chatRoomPodo: widget.chatRoomPodo,
-                                        ))
-                                            .toList(),
-                                        // Bottom ad unit REMOVED
-                                      ],
-                                    );
-                                  }
-                                  return Container();
-                                }),
+                              stream: firebaseServices.getSubMessages(
+                                  widget.documentID!, widget.chatRoomPodo, widget.chatModel!),
+                              builder: (context,
+                                  AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapShot) {
+                                if (snapShot.hasData) {
+                                  _chatList.clear();
+                                  snapShot.data!.docs
+                                      .map((e) => _chatList.add(Temp(e.id, ChatModel.fromJson(e.data()))))
+                                      .toList();
+                                  return Column(
+                                    children: [
+                                      InsideInsideChatWidget(
+                                          documentID: widget.documentID,
+                                          chatModel: widget.chatModel,
+                                          chatRoomPodo: widget.chatRoomPodo),
+                                      ..._chatList
+                                          .map((element) => InsideInsideInsideChatWidget(
+                                        isSubChat: true,
+                                        documentID: element.id,
+                                        chatModel: element.chatModel,
+                                        chatRoomPodo: widget.chatRoomPodo,
+                                      ))
+                                          .toList(),
+                                    ],
+                                  );
+                                }
+                                return Container();
+                              },
+                            ),
                           ),
                         ),
                       );
                     },
                   ),
                 ),
-                // Adjust space for the input field AND the banner ad
+                // 3. Add a SizedBox at the end of the list to create space for the controls below.
+                //    This ensures the last message isn't hidden behind the ad/input.
                 SizedBox(height: 120),
               ],
             ),
-            // Your existing chat input field
-            ChatEditField(onTap: (v, voiceNote, image1, image2) => _sendMessage(v, voiceNote, image1, image2)),
-            // --- ADMOB COMPLIANCE FIX 7: Place a single, compliant banner ad ---
+
+            // 4. Place the banner ad above the chat field using Positioned.
             if (_bottomBannerAd != null && _isBannerAdInitialized)
               Positioned(
-                bottom: 60, // Position above the ChatEditField
+                bottom: 60, // Position it 60 pixels from the bottom, leaving space for the input field.
                 left: 0,
                 right: 0,
                 child: Container(
@@ -233,11 +230,19 @@ class _SubChatScreenState extends State<SubChatScreen> {
                   alignment: Alignment.center,
                 ),
               ),
+
+            // 5. Align the ChatEditField to the absolute bottom of the Stack.
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: ChatEditField(onTap: (v, voiceNote, image1, image2) =>
+                  _sendMessage(v, voiceNote, image1, image2)),
+            ),
           ],
         ),
       ),
     );
   }
+
 
   void _sendMessage(String v, String voiceNote, String image1, String image2) async {
     final _user = await firebaseServices.getUserInfo();

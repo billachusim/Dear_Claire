@@ -152,7 +152,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 AnimationLimiter(
                   child: ListView.builder(
                     shrinkWrap: true,
-                    physics: BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
+                    physics: BouncingScrollPhysics(
+                        parent: NeverScrollableScrollPhysics()),
                     itemCount: 1,
                     itemBuilder: (BuildContext c, int i) {
                       return AnimationConfiguration.staggeredList(
@@ -164,41 +165,48 @@ class _ChatScreenState extends State<ChatScreen> {
                             //... (rest of your animation code)
                             child: StreamBuilder(
                               stream: firebaseServices.getChats(chatRoomPodo),
-                                //...
-                                builder: (context, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapShot) {
-                                  if (snapShot.hasError) {
-                                    return Center(child: Text("Something went wrong"));
-                                  }
-                                  if (snapShot.connectionState == ConnectionState.waiting) {
-                                    return Center(child: CircularProgressIndicator());
-                                  }
-
-                                  if (snapShot.hasData) {
-                                    // --- THIS IS THE CRITICAL FIX ---
-                                    // Clear the list to prevent duplicates on each rebuild
-                                    _chatList.clear();
-                                    // Process the snapshot and populate the _chatList
-                                    snapShot.data!.docs.map((e) {
-                                      _chatList.add(Temp(e.id, ChatModel.fromJson(e.data())));
-                                    }).toList();
-                                    // --- END OF FIX ---
-
-                                    return Column(
-                                      children: [
-                                        SubDiaryRoomWidget(element: widget.chatRoomPodo),
-                                        ..._chatList.map((element) => ChatWidget(
-                                          documentID: element.id,
-                                          chatModel: element.chatModel,
-                                          chatRoomPodo: chatRoomPodo,
-                                        )).toList(),
-                                      ],
-                                    );
-                                  }
-                                  // Fallback for no data
+                              //...
+                              builder: (context, AsyncSnapshot<
+                                  QuerySnapshot<Map<String, dynamic>>> snapShot) {
+                                if (snapShot.hasError) {
                                   return Center(
-                                    child: Text("No messages yet."),
+                                      child: Text("Something went wrong"));
+                                }
+                                if (snapShot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Center(
+                                      child: CircularProgressIndicator());
+                                }
+
+                                if (snapShot.hasData) {
+                                  // --- THIS IS THE CRITICAL FIX ---
+                                  // Clear the list to prevent duplicates on each rebuild
+                                  _chatList.clear();
+                                  // Process the snapshot and populate the _chatList
+                                  snapShot.data!.docs.map((e) {
+                                    _chatList.add(
+                                        Temp(e.id, ChatModel.fromJson(e.data())));
+                                  }).toList();
+                                  // --- END OF FIX ---
+
+                                  return Column(
+                                    children: [
+                                      SubDiaryRoomWidget(
+                                          element: widget.chatRoomPodo),
+                                      ..._chatList.map((element) =>
+                                          ChatWidget(
+                                            documentID: element.id,
+                                            chatModel: element.chatModel,
+                                            chatRoomPodo: chatRoomPodo,
+                                          )).toList(),
+                                    ],
                                   );
-                                },
+                                }
+                                // Fallback for no data
+                                return Center(
+                                  child: Text("No messages yet."),
+                                );
+                              },
                             ),
                           ),
                         ),
@@ -210,15 +218,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 SizedBox(height: 120),
               ],
             ),
-            // Your existing chat input field
-            ChatEditField(
-              onTap: (v, voiceNote, image1, image2) => _sendMessage(v, voiceNote, image1, image2),
-            ),
-            // --- COMPLIANT BANNER AD PLACEMENT ---
-            // Positioned at the bottom, above the navigation bar but below the ChatEditField
-            if (insideChatroomBottomBanner != null)
+
+            // --- BANNER AD PLACEMENT ---
+            // Positioned above the ChatEditField
+            if (insideChatroomBottomBanner != null && _isBannerAdInitialized)
               Positioned(
-                bottom: 0,
+                bottom: 60, // Position it 60 pixels from the bottom.
                 left: 0,
                 right: 0,
                 child: Container(
@@ -228,6 +233,16 @@ class _ChatScreenState extends State<ChatScreen> {
                   alignment: Alignment.center,
                 ),
               ),
+
+            // --- CHAT INPUT FIELD ---
+            // Aligned to the absolute bottom of the Stack.
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: ChatEditField(
+                onTap: (v, voiceNote, image1, image2) =>
+                    _sendMessage(v, voiceNote, image1, image2),
+              ),
+            ),
           ],
         ),
       ),

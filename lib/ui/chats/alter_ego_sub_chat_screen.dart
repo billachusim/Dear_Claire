@@ -149,7 +149,6 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
         elevation: 0,
       ),
       body: SafeArea(
-        // --- ADMOB COMPLIANCE FIX 5: Ensure body is a Stack ---
         child: Stack(
           children: [
             ListView(
@@ -176,30 +175,36 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
 
                             child: StreamBuilder(
                                 stream: firebaseServices.getAlterEgoSubMessages(
-                                    widget.documentID!, widget.chatRoomPodo, widget.chatModel!),
+                                    widget.documentID!, widget.chatRoomPodo,
+                                    widget.chatModel!),
                                 builder: (context,
-                                    AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
+                                    AsyncSnapshot<
+                                        QuerySnapshot<Map<String, dynamic>>>
                                     snapShot) {
                                   if (snapShot.hasData) {
-                                    _chatList.clear(); // Clear list before populating
+                                    _chatList
+                                        .clear(); // Clear list before populating
                                     snapShot.data!.docs
-                                        .map((e) => _chatList
-                                        .add(Temp(e.id, ChatModel.fromJson(e.data() as Map<String, dynamic>))))
+                                        .map((e) =>
+                                        _chatList
+                                            .add(Temp(e.id, ChatModel.fromJson(
+                                            e.data() as Map<String, dynamic>))))
                                         .toList();
-                                    // --- ADMOB COMPLIANCE FIX 6: Remove ads from Column ---
                                     return Column(
                                       children: [
-                                        InsideInsideAlterEgoChatWidget(documentID: widget.documentID, chatModel: widget.chatModel, chatRoomPodo: widget.chatRoomPodo),
-                                        // Top ad unit REMOVED
+                                        InsideInsideAlterEgoChatWidget(
+                                            documentID: widget.documentID,
+                                            chatModel: widget.chatModel,
+                                            chatRoomPodo: widget.chatRoomPodo),
                                         ..._chatList
-                                            .map((element) => InsideInsideInsideAlterEgoChatWidget(
-                                          isSubChat: true,
-                                          documentID: element.id,
-                                          chatModel: element.chatModel,
-                                          chatRoomPodo: widget.chatRoomPodo,
-                                        ))
+                                            .map((element) =>
+                                            InsideInsideInsideAlterEgoChatWidget(
+                                              isSubChat: true,
+                                              documentID: element.id,
+                                              chatModel: element.chatModel,
+                                              chatRoomPodo: widget.chatRoomPodo,
+                                            ))
                                             .toList(),
-                                        // Bottom ad unit REMOVED
                                       ],
                                     );
                                   }
@@ -215,9 +220,8 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
                 SizedBox(height: 120),
               ],
             ),
-            // Your existing chat input field
-            ChatEditField(onTap: (v, voiceNote, image1, image2) => _sendMessage(v, voiceNote, image1, image2)),
-            // --- ADMOB COMPLIANCE FIX 7: Place a single, compliant banner ad ---
+
+            // --- BANNER AD PLACEMENT ---
             if (_bottomBannerAd != null && _isBannerAdInitialized)
               Positioned(
                 bottom: 60, // Position above the ChatEditField
@@ -230,6 +234,14 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
                   alignment: Alignment.center,
                 ),
               ),
+
+            // --- CHAT INPUT FIELD ---
+            // Aligned to the absolute bottom of the Stack.
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: ChatEditField(onTap: (v, voiceNote, image1, image2) =>
+                  _sendMessage(v, voiceNote, image1, image2)),
+            ),
           ],
         ),
       ),
