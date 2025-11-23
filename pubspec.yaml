@@ -100,6 +100,7 @@ flutter:
   assets:
     - secrets/
     - assets/images/
+    - assets/audio/
     - assets/time/latest.tzf
     - assets/web_games/space/index.html
     - assets/web_games/tictactoe/index.html
