@@ -3,7 +3,9 @@ import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/strings.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // --- SERVICE AND ROUTE IMPORTS (ASSUMED) ---
 // import 'package:clairediary/services/firebase_services.dart';
@@ -67,49 +69,84 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
     super.dispose();
   }
 
-  // --- SUBMISSION LOGIC ---
-  void _submitApplication() async {
-    if (_formKey.currentState!.validate()) {
-      // Check if all pledges are checked
-      if (_pledgeValues.containsValue(false)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('You must agree to all pledges to proceed.'),
-            backgroundColor: Colors.orangeAccent,
-          ),
-        );
-        return;
-      }
 
-      setState(() => _isLoading = true);
+// --- SUBMISSION LOGIC ---
+  void _submitApplication() async {  if (_formKey.currentState!.validate()) {
+    // Check if all pledges are checked
+    if (_pledgeValues.containsValue(false)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must agree to all pledges to proceed.'),
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
+      return;
+    }
 
-      // --- TODO: REPLACE WITH YOUR FIREBASE LOGIC ---
-      // This is where you would collect all the data and send it to Firebase.
-      // Example:
-      // final success = await firebaseServices.submitAlterEgoApplication(
-      //   fullName: _fullNameController.text,
-      //   ...etc
-      // );
+    setState(() => _isLoading = true);
 
-      // For demonstration, we'll simulate a network call
-      await Future.delayed(const Duration(seconds: 2));
-      final success = true; // Assume success
+    // 1. Build the payload string (this part remains the same)
+    final String payload = '''
+An Alter Ego application has been submitted with the following details:
 
+--- PERSONAL DETAILS ---
+Full Name: ${_fullNameController.text}
+Address: ${_fullAddressController.text}
+Age: ${_ageController.text}
+School/Occupation: ${_nameOfSchoolController.text}
+
+--- CONTACT & SOCIALS ---
+Phone Number: ${_phoneController.text}
+Email: ${_emailController.text}
+Best Friend's Name: ${_nameOfBestFriendController.text}
+Best Friend's Number: ${_bestFriendNumController.text}
+Facebook: ${_facebookNameController.text}
+Instagram: ${_instagramUserNameController.text}
+Twitter: ${_twitterUserNameController.text}
+
+--- MOTIVATION ---
+${_shortBioController.text}
+
+--- PLEDGES ---
+Interested in helping?: ${_pledgeValues['value1']}
+Make the world better?: ${_pledgeValues['value2']}
+Believe in humility/selfless leadership?: ${_pledgeValues['value3']}
+Learned on social media?: ${_pledgeValues['value4']}
+Rated the app?: ${_pledgeValues['value5']}
+Believe in the Claire Project?: ${_pledgeValues['value6']}
+Ready to be Claire?: ${_pledgeValues['value7']}
+''';
+
+    // 2. Create an Email object using the flutter_email_sender package
+    final Email email = Email(
+      body: payload,
+      subject: 'New Alter Ego Application',
+      recipients: ['dearclaireapp@gmail.com'],
+      isHTML: false,
+    );
+
+    // 3. Launch the email client using the new, robust method
+    try {
+      await FlutterEmailSender.send(email);
+      // If it returns without an error, the user has been handed off to the email app.
+      _showSuccessDialog();
+    } catch (e) {
       if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not open email app. Please ensure an email client is configured. Error: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
 
-      if (success) {
-        _showSuccessDialog();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Something went wrong. Please try again.'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
+    // Hide the loading indicator once done
+    if (mounted) {
       setState(() => _isLoading = false);
     }
   }
+  }
+
 
   void _showSuccessDialog() {
     showDialog(
@@ -117,15 +154,21 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: Pallet.colorPrimary,
-        title: Text("Initiation Complete", style: GoogleFonts.montserrat(color: Pallet.colorSecondary, fontWeight: FontWeight.bold)),
-        content: Text("Welcome to the inner circle. Your ClaireId and Secret Code will be sent to your email within 24 hours.", style: GoogleFonts.lato(color: Colors.white, height: 1.5)),
+        title: Text("Initiation Complete",
+            style: GoogleFonts.montserrat(
+                color: Pallet.colorSecondary, fontWeight: FontWeight.bold)),
+        content: Text(
+            "Welcome to the inner circle. Your ClaireId and Secret Code will be sent to your email within 24 hours.",
+            style: GoogleFonts.lato(color: Colors.white, height: 1.5)),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).popUntil((route) => route.isFirst);
               // Navigator.of(context).pushReplacementNamed(AppRoutes.home); // Navigate home
             },
-            child: Text("RETURN TO EGO", style: TextStyle(color: Pallet.colorSecondary, fontWeight: FontWeight.bold)),
+            child: Text("RETURN TO EGO",
+                style: TextStyle(
+                    color: Pallet.colorSecondary, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -135,12 +178,14 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final stepperBackgroundColor = isDarkMode ? Pallet.colorSecondaryDark : Colors.grey.shade100;
+    final stepperBackgroundColor =
+        isDarkMode ? Pallet.colorSecondaryDark : Colors.grey.shade100;
 
     return Scaffold(
       backgroundColor: stepperBackgroundColor,
       appBar: AppBar(
-        backgroundColor: isDarkMode ? Pallet.colorSecondaryDark : Pallet.colorSecondary,
+        backgroundColor:
+            isDarkMode ? Pallet.colorSecondaryDark : Pallet.colorSecondary,
         elevation: 0,
         centerTitle: true,
         title: Text('Alter Ego Initiation',
@@ -154,9 +199,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
         child: Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-                primary: Pallet.colorSecondary,
-                onPrimary: Colors.white
-            ),
+                primary: Pallet.colorSecondary, onPrimary: Colors.white),
           ),
           child: Stepper(
             type: StepperType.vertical,
@@ -169,7 +212,9 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                 setState(() => _currentStep += 1);
               }
             },
-            onStepCancel: _currentStep == 0 ? null : () => setState(() => _currentStep -= 1),
+            onStepCancel: _currentStep == 0
+                ? null
+                : () => setState(() => _currentStep -= 1),
             onStepTapped: (step) => setState(() => _currentStep = step),
             controlsBuilder: (context, details) {
               final isLastStep = _currentStep == getSteps().length - 1;
@@ -183,19 +228,27 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Pallet.colorSecondary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                         child: _isLoading
-                            ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
-                            : Text(isLastStep ? 'SUBMIT PLEDGE' : 'CONTINUE', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 3))
+                            : Text(isLastStep ? 'SUBMIT PLEDGE' : 'CONTINUE',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white)),
                       ),
                     ),
-                    if (_currentStep != 0)
-                      const SizedBox(width: 12),
+                    if (_currentStep != 0) const SizedBox(width: 12),
                     if (_currentStep != 0)
                       TextButton(
                         onPressed: details.onStepCancel,
-                        child: const Text('Back', style: TextStyle(color: Colors.grey)),
+                        child: const Text('Back',
+                            style: TextStyle(color: Colors.grey)),
                       ),
                   ],
                 ),
@@ -209,137 +262,136 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
   }
 
   List<Step> getSteps() => [
-    Step(
-      isActive: _currentStep >= 0,
-      title: Text('Personal Details',
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
-      content: FadeInUp(
-        duration: const Duration(milliseconds: 300),
-        child: Column(
-          children: [
-            Text(AppString.alter_ego_orientation_first_header,
-                style: GoogleFonts.lato(
-                    color: Colors.grey.shade600, height: 1.5)),
-            const SizedBox(height: 24),
-            _buildTextFormField(
-                controller: _fullNameController,
-                labelText: "Full Name",
-                hintText: "e.g. Mercy Ezulumalu Achusim"),
-            _buildTextFormField(
-                controller: _fullAddressController,
-                labelText: "Full Address",
-                hintText: "e.g. No 16 Solo Ogun street..."),
-            _buildTextFormField(
-                controller: _ageController,
-                labelText: "Age",
-                hintText: "e.g. 16",
-                keyboardType: TextInputType.number),
-            _buildTextFormField(
-                controller: _nameOfSchoolController,
-                labelText: "School or Occupation",
-                hintText: "e.g. University Of Mumbai"),
-          ],
+        Step(
+          isActive: _currentStep >= 0,
+          title: Text('Personal Details',
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+          content: FadeInUp(
+            duration: const Duration(milliseconds: 300),
+            child: Column(
+              children: [
+                Text(AppString.alter_ego_orientation_first_header,
+                    style: GoogleFonts.lato(
+                        color: Colors.grey.shade600, height: 1.5)),
+                const SizedBox(height: 24),
+                _buildTextFormField(
+                    controller: _fullNameController,
+                    labelText: "Full Name",
+                    hintText: "e.g. Mercy Ezulumalu Achusim"),
+                _buildTextFormField(
+                    controller: _fullAddressController,
+                    labelText: "Full Address",
+                    hintText: "e.g. No 16 Solo Ogun street..."),
+                _buildTextFormField(
+                    controller: _ageController,
+                    labelText: "Age",
+                    hintText: "e.g. 16",
+                    keyboardType: TextInputType.number),
+                _buildTextFormField(
+                    controller: _nameOfSchoolController,
+                    labelText: "School or Occupation",
+                    hintText: "e.g. University Of Mumbai"),
+              ],
+            ),
+          ),
         ),
-      ),
-    ),
-    Step(
-      isActive: _currentStep >= 1,
-      title: Text('Contact & Socials',
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
-      content: FadeInUp(
-        duration: const Duration(milliseconds: 300),
-        child: Column(
-          children: [
-            Text(
-                "Provide secure ways for us to verify and contact you. Your information is kept confidential.",
-                style: GoogleFonts.lato(
-                    color: Colors.grey.shade600, height: 1.5)),
-            const SizedBox(height: 24),
-            _buildTextFormField(
-                controller: _phoneController,
-                labelText: "Phone Number",
-                hintText: "e.g. +2348188578955",
-                keyboardType: TextInputType.phone),
-            _buildTextFormField(
-                controller: _emailController,
-                labelText: "Email Address",
-                hintText: "This will be used for your login",
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) =>
-                v!.isEmpty || !v.contains('@') ? "Enter a valid email" : null),
-            _buildTextFormField(
-                controller: _nameOfBestFriendController,
-                labelText: "Name of Best Friend or Relative"),
-            _buildTextFormField(
-                controller: _bestFriendNumController,
-                labelText: "Their Phone Number",
-                keyboardType: TextInputType.phone),
-            _buildTextFormField(
-                controller: _facebookNameController,
-                labelText: "Facebook Name (Optional)",
-                isRequired: false),
-            _buildTextFormField(
-                controller: _instagramUserNameController,
-                labelText: "Instagram Handle (Optional)",
-                isRequired: false),
-            _buildTextFormField(
-                controller: _twitterUserNameController,
-                labelText: "Twitter Handle (Optional)",
-                isRequired: false),
-          ],
+        Step(
+          isActive: _currentStep >= 1,
+          title: Text('Contact & Socials',
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+          content: FadeInUp(
+            duration: const Duration(milliseconds: 300),
+            child: Column(
+              children: [
+                Text(
+                    "Provide secure ways for us to verify and contact you. Your information is kept confidential.",
+                    style: GoogleFonts.lato(
+                        color: Colors.grey.shade600, height: 1.5)),
+                const SizedBox(height: 24),
+                _buildTextFormField(
+                    controller: _phoneController,
+                    labelText: "Phone Number",
+                    hintText: "e.g. +2348188578955",
+                    keyboardType: TextInputType.phone),
+                _buildTextFormField(
+                    controller: _emailController,
+                    labelText: "Email Address",
+                    hintText: "This will be used for your login",
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) => v!.isEmpty || !v.contains('@')
+                        ? "Enter a valid email"
+                        : null),
+                _buildTextFormField(
+                    controller: _nameOfBestFriendController,
+                    labelText: "Name of Best Friend or Relative"),
+                _buildTextFormField(
+                    controller: _bestFriendNumController,
+                    labelText: "Their Phone Number",
+                    keyboardType: TextInputType.phone),
+                _buildTextFormField(
+                    controller: _facebookNameController,
+                    labelText: "Facebook Name (Optional)",
+                    isRequired: false),
+                _buildTextFormField(
+                    controller: _instagramUserNameController,
+                    labelText: "Instagram Handle (Optional)",
+                    isRequired: false),
+                _buildTextFormField(
+                    controller: _twitterUserNameController,
+                    labelText: "Twitter Handle (Optional)",
+                    isRequired: false),
+              ],
+            ),
+          ),
         ),
-      ),
-    ),
-    Step(
-      isActive: _currentStep >= 2,
-      title: Text('The Pledge',
-          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
-      content: FadeInUp(
-        duration: const Duration(milliseconds: 300),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-                "Being an Alter Ego is a responsibility. You are a guide, a confidant, and a protector of this space. Answer the questions below to proceed.",
-                style: GoogleFonts.lato(
-                    color: Colors.grey.shade600, height: 1.5)),
-            const SizedBox(height: 12),
-            _buildTextFormField(
-                controller: _shortBioController,
-                labelText: "Your Motivation",
-                hintText:
-                "Briefly describe why you want to be an Alter Ego",
-                maxLines: 3),
-            const SizedBox(height: 20),
-            Text('The Initiation Questions:',
-                style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 10),
+        Step(
+          isActive: _currentStep >= 2,
+          title: Text('The Pledge',
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+          content: FadeInUp(
+            duration: const Duration(milliseconds: 300),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                    "Being an Alter Ego is a responsibility. You are a guide, a confidant, and a protector of this space. Answer the questions below to proceed.",
+                    style: GoogleFonts.lato(
+                        color: Colors.grey.shade600, height: 1.5)),
+                const SizedBox(height: 12),
+                _buildTextFormField(
+                    controller: _shortBioController,
+                    labelText: "Your Motivation",
+                    hintText:
+                        "Briefly describe why you want to be an Alter Ego",
+                    maxLines: 3),
+                const SizedBox(height: 20),
+                Text('The Initiation Questions:',
+                    style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 10),
 
-            // --- FIX STARTS HERE ---
-            // Replaced the placeholder pledges with your original questions.
-            _buildPledgeCheckbox("value1",
-                "Are you truly interested in becoming an Alter-Ego not just to read random people's Diary Sessions but to reply to them with happy vibes and good advises?"),
-            _buildPledgeCheckbox("value2",
-                "Do you believe that the world will be a better place if people treat other people like themselves wish to be treated?"),
-            _buildPledgeCheckbox("value3",
-                "Do you believe that humility and selfless leadership are good practises for life?"),
-            _buildPledgeCheckbox("value4",
-                "Did you first learn about Claire on social media?"),
-            _buildPledgeCheckbox("value5",
-                "Have you rated Dear Claire five stars with a short review?"),
-            _buildPledgeCheckbox("value6",
-                "Do you truly believe in the Claire Project? That everyone deserves a true friend in need and indeed?"),
-            _buildPledgeCheckbox(
-                "value7", "Are you ready to become Claire now?"),
-            // --- FIX ENDS HERE ---
-          ],
+                // --- FIX STARTS HERE ---
+                // Replaced the placeholder pledges with your original questions.
+                _buildPledgeCheckbox("value1",
+                    "Are you truly interested in becoming an Alter-Ego not just to read random people's Diary Sessions but to reply to them with happy vibes and good advises?"),
+                _buildPledgeCheckbox("value2",
+                    "Do you believe that the world will be a better place if people treat other people like themselves wish to be treated?"),
+                _buildPledgeCheckbox("value3",
+                    "Do you believe that humility and selfless leadership are good practises for life?"),
+                _buildPledgeCheckbox("value4",
+                    "Did you first learn about Claire on social media?"),
+                _buildPledgeCheckbox("value5",
+                    "Have you rated Dear Claire five stars with a short review?"),
+                _buildPledgeCheckbox("value6",
+                    "Do you truly believe in the Claire Project? That everyone deserves a true friend in need and indeed?"),
+                _buildPledgeCheckbox(
+                    "value7", "Are you ready to become Claire now?"),
+                // --- FIX ENDS HERE ---
+              ],
+            ),
+          ),
         ),
-      ),
-    ),
-  ];
-
-
+      ];
 
   // Reusable widget for text fields
   Widget _buildTextFormField({
@@ -357,12 +409,13 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
-        validator: validator ?? (value) {
-          if (isRequired && (value == null || value.isEmpty)) {
-            return '$labelText cannot be empty';
-          }
-          return null;
-        },
+        validator: validator ??
+            (value) {
+              if (isRequired && (value == null || value.isEmpty)) {
+                return '$labelText cannot be empty';
+              }
+              return null;
+            },
         decoration: InputDecoration(
           labelText: labelText,
           hintText: hintText,
@@ -397,12 +450,13 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
           _pledgeValues[key] = value ?? false;
         });
       },
-      title: Text(title, style: GoogleFonts.lato(color: textColor, height: 1.4)), // Applied color and improved line height
+      title: Text(title,
+          style: GoogleFonts.lato(
+              color: textColor,
+              height: 1.4)), // Applied color and improved line height
       activeColor: Pallet.colorSecondary,
       controlAffinity: ListTileControlAffinity.leading,
       contentPadding: EdgeInsets.zero,
     );
   }
-
 }
-
