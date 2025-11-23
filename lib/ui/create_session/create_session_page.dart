@@ -99,6 +99,64 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   String sessionMood = 'Current Mood';
   String _location = '';
 
+  // Function to save audio path to Hive
+  Future<void> _saveAudioPathToHive(String path) async {
+    await box.put('audio_path', path);
+    setState(() {
+      recordFile = File(path);
+    });
+  }
+
+  // Function to retrieve audio path from Hive
+  void _loadAudioFromHive() {
+    final audioPath = box.get('audio_path');
+    if (audioPath != null && audioPath.isNotEmpty) {
+      final file = File(audioPath);
+      if (file.existsSync()) {
+        setState(() {
+          recordFile = file;
+        });
+      } else {
+        // If file doesn't exist, clear from Hive
+        _deleteAudioFromHive();
+      }
+    }
+  }
+
+// Function to delete audio file and clear from Hive
+  Future<void> _deleteAudioFromHive() async {
+    final audioPath = box.get('audio_path');
+    if (audioPath != null) {
+      final fileToDelete = File(audioPath);
+      if (fileToDelete.existsSync()) {
+        await fileToDelete.delete();
+      }
+      await box.delete('audio_path');
+      setState(() {
+        recordFile = null;
+      });
+    }
+  }
+
+  // Override openRecordScreen to handle saving the file
+  void openRecordScreen() async {
+    final result = await Navigator.push<File>(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            SoundRecorderWidget(
+              onRecordComplete: (file) {
+                // This callback is no longer needed here as we use the pop result
+              },
+            ),
+      ),
+    );
+
+    if (result != null) {
+      await _saveAudioPathToHive(result.path);
+    }
+  }
+
 
 
   Future<Placemark?> determinePosition() async {
@@ -170,11 +228,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   void initializeDatabaseObject() async {
     box = await Hive.openBox('draft');
-    String text = box.get("text");
-    print("text is:$text");
+    // Load text
+    String text = box.get("text", defaultValue: "");
     if (text.isNotEmpty) {
       sessionTextEditingController.text = text;
     }
+    // Load audio
+    _loadAudioFromHive();
   }
 
   randomizeNewDiarySessionToast() async {
@@ -316,6 +376,51 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     logger.d('Got the current love count');
     print('Current love Count is: $currentLoveCount');
 
+  }
+
+
+  Widget _buildAudioPlayer() {
+    if (recordFile != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: CustomPlaySoundWidget(filePath: recordFile!.path),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete, color: Colors.white70),
+              onPressed: () {
+                // Show a confirmation dialog before deleting
+                showDialog(
+                  context: context,
+                  builder: (ctx) =>
+                      AlertDialog(
+                        title: Text("Delete Recording"),
+                        content: Text(
+                            "Are you sure you want to delete this audio recording?"),
+                        actions: [
+                          TextButton(
+                            child: Text("Cancel"),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                          TextButton(
+                            child: Text("Delete"),
+                            onPressed: () {
+                              _deleteAudioFromHive();
+                              Navigator.of(ctx).pop();
+                            },
+                          ),
+                        ],
+                      ),
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+    return SizedBox.shrink(); // Return empty space if no recording
   }
 
 
@@ -593,6 +698,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         SizedBox(
                           width: 15.w,
                         ),
+
+                        _buildAudioPlayer(),
+
                         Container(
                             height: 100.h,
                             width: 100.w,
@@ -602,25 +710,10 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                 size: 80,
                                 color: Pallet.colorWhite,
                               ),
-                              onPressed: () async {
-                                var data = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) => SoundRecorderWidget(
-                                          onRecordComplete: (recordFile) {},
-                                        )));
-                                if (data != null) {
-                                  recordFile = data;
-                                  setState(() {});
-                                }
-                              },
+                              onPressed: openRecordScreen,
                             )),
 
                         SizedBox(height: 20,),
-
-                        recordFile != null
-                            ? _recordFileWidget()
-                            : SizedBox.shrink(),
 
                         Align(
                             alignment: Alignment.center,

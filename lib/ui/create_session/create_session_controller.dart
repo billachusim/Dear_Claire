@@ -8,9 +8,17 @@ import 'dart:math';
 
 class CreateSessionController extends GetxController {
 
+  @override
+  void onInit() {
+    super.onInit();
+    // Randomize the background color when the controller is initialized
+    randomizeBackgroundColor();
+  }
+
   randomizeBackgroundColor(){
     Random random = new Random();
-    int randomNumber = random.nextInt(Constant.DIARY_COLORS.length+1);
+    // Corrected the range to avoid out-of-bounds errors
+    int randomNumber = random.nextInt(Constant.DIARY_COLORS.length);
     selectedBackgroundColor = randomNumber.obs;
   }
   var selectedBackgroundColor;
@@ -33,7 +41,8 @@ class CreateSessionController extends GetxController {
 
   void changeColor() {
     print(selectedBackgroundColor.value);
-    if (selectedBackgroundColor.value < 18) {
+    // Updated the condition to match the length of the DIARY_COLORS list
+    if (selectedBackgroundColor.value < Constant.DIARY_COLORS.length - 1) {
       selectedBackgroundColor++;
     } else {
       selectedBackgroundColor.value = 0;
