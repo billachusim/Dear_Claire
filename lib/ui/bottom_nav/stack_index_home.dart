@@ -22,6 +22,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shake/shake.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vibration/vibration.dart';
 import '../../services/firebase_services.dart';
 import '../../services/user_model.dart';
 import '../../utils/helper.dart';
@@ -40,7 +41,7 @@ class _HomeDashboardPageState extends State<HomePage>
     with TickerProviderStateMixin<HomePage> {
   var currentUser = FirebaseAuth.instance.currentUser;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late final WebViewController _webViewController;  // Updated initialization
+  late final WebViewController _webViewController; // Updated initialization
   late ShakeDetector detector;
   String filePath = 'assets/web_games/tictactoe/index2.html';
   String tweets = 'assets/tweet/index.html';
@@ -79,13 +80,15 @@ class _HomeDashboardPageState extends State<HomePage>
         .doc(userId)
         .get();
 
-    var egoInfo = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
+    var egoInfo =
+        UserModel.fromFirestore(response.data() as Map<String, dynamic>);
     userName = egoInfo.nickname.toString();
     userType = egoInfo.userType.toString();
     avatarUrl = egoInfo.avatarUrl.toString();
     final _userId = egoInfo.userId.toString();
     await firebaseServices.updateUserLastTimeUnlocked(_userId);
-    logger.d('Successfully got an Ego user model and updated time last unlocked.');
+    logger.d(
+        'Successfully got an Ego user model and updated time last unlocked.');
     return egoInfo;
   }
 
@@ -93,7 +96,7 @@ class _HomeDashboardPageState extends State<HomePage>
     String? encodeQueryParameters(Map<String, String> params) {
       return params.entries
           .map((e) =>
-      '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+              '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
           .join('&');
     }
 
@@ -107,7 +110,7 @@ class _HomeDashboardPageState extends State<HomePage>
     launchUrl(emailLaunchUri);
   }
 
-  String getDonateUrl(){
+  String getDonateUrl() {
     return AppString.donate_url;
   }
 
@@ -115,7 +118,6 @@ class _HomeDashboardPageState extends State<HomePage>
     Uri donateUrl = Uri.parse(getDonateUrl());
     launchUrl(donateUrl);
   }
-
 
   _loadHtmlFromAssets() async {
     String fileHtmlContents = await rootBundle.loadString(filePath);
@@ -131,25 +133,36 @@ class _HomeDashboardPageState extends State<HomePage>
     _webViewController.loadRequest(uri);
   }
 
-
-
   void setTabIndex(index) async {
     if (await firebaseServices.isUserSignIn(context))
-      _pageController.animateToPage(
-          index, duration: Duration(milliseconds: 1500),
-          curve: Curves.elasticOut);
-    switch(index) {
-      case 0: { _title = 'Featured Sessions'; }
-      break;
-      case 1: { _title = 'Followed Sessions'; }
-      break;
-      case 2: { _title = 'Diary Sessions'; }
-      break;
-      case 3: { _title = 'Diary Rooms'; }
-      break;
-      case 4: { _title = 'Ego Profile'; }
-      break;
-
+      _pageController.animateToPage(index,
+          duration: Duration(milliseconds: 1500), curve: Curves.elasticOut);
+    switch (index) {
+      case 0:
+        {
+          _title = 'Featured Sessions';
+        }
+        break;
+      case 1:
+        {
+          _title = 'Followed Sessions';
+        }
+        break;
+      case 2:
+        {
+          _title = 'Diary Sessions';
+        }
+        break;
+      case 3:
+        {
+          _title = 'Diary Rooms';
+        }
+        break;
+      case 4:
+        {
+          _title = 'Ego Profile';
+        }
+        break;
     }
   }
 
@@ -158,12 +171,13 @@ class _HomeDashboardPageState extends State<HomePage>
     super.initState();
     getEgoInfo();
     _title = "Dear Claire";
-    //shakeDevice();
+    shakeDevice();
     AppTrackingTransparency.requestTrackingAuthorization();
     // Initialize WebViewController
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..addJavaScriptChannel('Score', onMessageReceived: (JavaScriptMessage message) {
+      ..addJavaScriptChannel('Score',
+          onMessageReceived: (JavaScriptMessage message) {
         Fluttertoast.showToast(msg: message.message);
         isWon = true;
         Future.delayed(Duration(seconds: 5), () {
@@ -176,36 +190,53 @@ class _HomeDashboardPageState extends State<HomePage>
     _loadHtmlFromAssets();
   }
 
-  /*shakeDevice() async {
-    detector = ShakeDetector.waitForStart(
-      onPhoneShake: () async {
-        var _type = FeedbackType.error;
-        Vibrate.feedback(_type);
-        Fluttertoast.showToast(
-          toastLength: Toast.LENGTH_LONG,
-          msg: "Switching Ego",
-          textColor: Colors.white,
-          backgroundColor: Pallet.colorSplashScreen,
-        );
-        String id = await sharedPreference.getAlterEgoId();
-        String accessCode = await sharedPreference.getAlterEgoAccessCode();
-        print("Show Alter details:: $id || $accessCode");
-        id.isNotEmpty && accessCode.isNotEmpty
-            ? await firebaseServices.getUserAlterEgo(context, id, accessCode)
-            : Navigator.of(context).pushNamed(AppRoutes.alterEgoLogin);
+  void shakeDevice() {
+    detector = ShakeDetector.autoStart(
+      shakeThresholdGravity: 5.5,
+      // The callback now accepts a 'ShakeEvent' parameter
+      onPhoneShake: (ShakeEvent event) {
+        // Immediately invoke an anonymous async function to handle async operations
+        () async {
+          // Use a mounted check for safety in async callbacks
+          if (!mounted) return;
+
+          // Vibrate the device if possible
+          if (await Vibration.hasVibrator() ?? false) {
+            Vibration.vibrate();
+          }
+
+          Fluttertoast.showToast(
+            toastLength: Toast.LENGTH_LONG,
+            msg: "Switching Ego",
+            textColor: Colors.white,
+            backgroundColor: Pallet.colorSplashScreen,
+          );
+
+          // Get Alter Ego details
+          String id = await sharedPreference.getAlterEgoId();
+          String accessCode = await sharedPreference.getAlterEgoAccessCode();
+          print("Show Alter details:: $id || $accessCode");
+
+          // Add another mounted check before using context for navigation
+          if (!mounted) return;
+
+          if (id.isNotEmpty && accessCode.isNotEmpty) {
+            await firebaseServices.getUserAlterEgo(context, id, accessCode);
+          } else {
+            Navigator.of(context).pushNamed(AppRoutes.alterEgoLogin);
+          }
+        }(); // The '()' here calls the anonymous function immediately
       },
       minimumShakeCount: 1,
+      //shakeThresholdGravity: 1.5, // You can adjust this for sensitivity
     );
-    await Future.delayed(Duration(seconds: 1), () {
-      detector.startListening();
-    });
-  }*/
+  }
 
   @override
   dispose() {
     _controller.dispose();
+    detector.stopListening();
     super.dispose();
-    //detector.stopListening();
   }
 
   @override
@@ -234,35 +265,27 @@ class _HomeDashboardPageState extends State<HomePage>
                   ),
                 ),
                 onPressed: () {
-                  Navigator.of(context)
-                      .pushNamed(AppRoutes.searchPage);
+                  Navigator.of(context).pushNamed(AppRoutes.searchPage);
                 })
           ],
           leading: IconButton(
-              icon: Icon(
-                Icons.menu,
-                color: Pallet.colorWhite,
-                size: 25
-              ),
+              icon: Icon(Icons.menu, color: Pallet.colorWhite, size: 25),
               onPressed: () {
                 getEgoInfo();
                 _openEndDrawer();
               }),
         ),
-        body: Stack(
-          children: [
-            PageView(
-            physics: AlwaysScrollableScrollPhysics(),
-            controller: _pageController,
-            onPageChanged: (index){
-              setState(() {
-                _currentIndex  = index;
-              });
-            },
-            children: _body
-          ),
-      ]
-        ),
+        body: Stack(children: [
+          PageView(
+              physics: AlwaysScrollableScrollPhysics(),
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              children: _body),
+        ]),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           type: BottomNavigationBarType.fixed,
@@ -307,13 +330,12 @@ class _HomeDashboardPageState extends State<HomePage>
             child: SingleChildScrollView(
               child: Column(
                 children: [
-
                   UserAccountsDrawerHeader(
-                    decoration: BoxDecoration(color: Pallet.colorPrimary,
+                    decoration: BoxDecoration(
+                      color: Pallet.colorPrimary,
                     ),
-
                     accountEmail: Text(
-                    "You'll never be not truly loved.",
+                      "You'll never be not truly loved.",
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -321,85 +343,97 @@ class _HomeDashboardPageState extends State<HomePage>
                         fontStyle: FontStyle.italic,
                       ),
                     ),
-
                     accountName: Text(userName,
-                        style: TextStyle(color: Pallet.colorWhite,
-                            fontSize: 19.0, fontWeight: FontWeight.w700,)),
-
+                        style: TextStyle(
+                          color: Pallet.colorWhite,
+                          fontSize: 19.0,
+                          fontWeight: FontWeight.w700,
+                        )),
                     currentAccountPicture: GestureDetector(
-                              onTap: () {
-                                lockAlertDialog(context);
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: userType == 'REGULAR'? Pallet.colorPrimary
-                                      : userType == 'ADMIN'? Pallet.colorSecondary
-                                      : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                                      :Pallet.colorBlue,
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                margin: EdgeInsets.only(left: 0),
-                                child: Container(
-                                  height: 75,
-                                  width: 75,
-                                  margin: EdgeInsets.all(4),
-                                  child: CachedNetworkImage(
-                                      width: 60,
-                                      height: 60,
-                                      imageUrl: avatarUrl,
-                                      imageBuilder: (context, imageProvider) => Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(100),
-                                          image: DecorationImage(
-                                            image: imageProvider,
-                                            fit: BoxFit.fill,
-                                          ),
-                                        ),
+                      onTap: () {
+                        lockAlertDialog(context);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: userType == 'REGULAR'
+                              ? Pallet.colorPrimary
+                              : userType == 'ADMIN'
+                                  ? Pallet.colorSecondary
+                                  : userType == 'SUPER_ADMIN'
+                                      ? Pallet.colorSecondary
+                                      : Pallet.colorBlue,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        margin: EdgeInsets.only(left: 0),
+                        child: Container(
+                          height: 75,
+                          width: 75,
+                          margin: EdgeInsets.all(4),
+                          child: CachedNetworkImage(
+                              width: 60,
+                              height: 60,
+                              imageUrl: avatarUrl,
+                              imageBuilder: (context, imageProvider) =>
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(100),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.fill,
                                       ),
-                                      placeholder: (context, url) =>
-                                          CircularProgressIndicator(),
-                                      errorWidget: (context, url, error) => Image.asset(
-                                        "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                        width: 50,
-                                        height: 50,
-                                      ) //Icon(Icons.error),
+                                    ),
                                   ),
-                                ),
+                              placeholder: (context, url) =>
+                                  CircularProgressIndicator(),
+                              errorWidget: (context, url, error) => Image.asset(
+                                    "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                    width: 50,
+                                    height: 50,
+                                  ) //Icon(Icons.error),
                               ),
-                            ),
-
+                        ),
+                      ),
+                    ),
                     otherAccountsPictures: [
                       InkWell(
-                          onTap: () async {
-                            String id = await sharedPreference.getAlterEgoId();
-                            String accessCode = await sharedPreference.getAlterEgoAccessCode();
-                            print("Show Alter details:: $id || $accessCode");
-                            id.isNotEmpty && accessCode.isNotEmpty ? await firebaseServices.getUserAlterEgo(context,id, accessCode)
-                                : Navigator.of(context)
-                                .pushNamed(AppRoutes.alterEgoLogin);
-                          },
-                          child: Image.asset(
-                            "assets/images/claire_icon.png",
-                            height: 50,
-                            width: 50,
-                          ),
+                        onTap: () async {
+                          String id = await sharedPreference.getAlterEgoId();
+                          String accessCode =
+                              await sharedPreference.getAlterEgoAccessCode();
+                          print("Show Alter details:: $id || $accessCode");
+                          id.isNotEmpty && accessCode.isNotEmpty
+                              ? await firebaseServices.getUserAlterEgo(
+                                  context, id, accessCode)
+                              : Navigator.of(context)
+                                  .pushNamed(AppRoutes.alterEgoLogin);
+                        },
+                        child: Image.asset(
+                          "assets/images/claire_icon.png",
+                          height: 50,
+                          width: 50,
+                        ),
                       ),
-
                       GestureDetector(
                         onTap: () async {
                           String id = await sharedPreference.getAlterEgoId();
-                          String accessCode = await sharedPreference.getAlterEgoAccessCode();
+                          String accessCode =
+                              await sharedPreference.getAlterEgoAccessCode();
                           print("Show Alter details:: $id || $accessCode");
-                          id.isNotEmpty && accessCode.isNotEmpty ? await firebaseServices.getUserAlterEgo(context,id, accessCode)
+                          id.isNotEmpty && accessCode.isNotEmpty
+                              ? await firebaseServices.getUserAlterEgo(
+                                  context, id, accessCode)
                               : Navigator.of(context)
-                              .pushNamed(AppRoutes.alterEgoLogin);
+                                  .pushNamed(AppRoutes.alterEgoLogin);
                         },
                         child: Text(
-                          userType == 'REGULAR'? 'Ego' :
-                          userType == 'ADMIN'? 'Alter Ego' :
-                          userType == 'SUPER_ADMIN'? 'Super Ego' :
-                          'Ego',
+                          userType == 'REGULAR'
+                              ? 'Ego'
+                              : userType == 'ADMIN'
+                                  ? 'Alter Ego'
+                                  : userType == 'SUPER_ADMIN'
+                                      ? 'Super Ego'
+                                      : 'Ego',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 12,
@@ -409,82 +443,102 @@ class _HomeDashboardPageState extends State<HomePage>
                         ),
                       ),
                     ],
-
                   ),
-
-                  SizedBox(height: 28,),
+                  SizedBox(
+                    height: 28,
+                  ),
                   ListTile(
                     title: Text("How Claire Works",
                         style: TextStyle(color: Pallet.colorWhite)),
                     onTap: () {
                       Navigator.of(context).pushNamed(AppRoutes.howClaireWorks);
                     },
-                    leading: Icon(Icons.info_rounded,
-                        color: Pallet.colorWhite),
+                    leading: Icon(Icons.info_rounded, color: Pallet.colorWhite),
                   ),
-                  SizedBox(height: 18,),
+                  SizedBox(
+                    height: 18,
+                  ),
                   ListTile(
                     title: Text("Request Alter Ego Mode     🔥",
                         style: TextStyle(color: Pallet.colorWhite)),
                     onTap: () {
-                      Navigator.of(context).pushNamed(AppRoutes.howAlterEgoWorks);
+                      Navigator.of(context)
+                          .pushNamed(AppRoutes.howAlterEgoWorks);
                     },
                     leading: Icon(Icons.star, color: Pallet.colorWhite),
                   ),
-                  SizedBox(height: 18,),
+                  SizedBox(
+                    height: 18,
+                  ),
                   ListTile(
                     title: Text("Auto Diary",
                         style: TextStyle(color: Pallet.colorWhite)),
                     onTap: () async {
                       if (await firebaseServices.isUserSignIn(context))
-                      Navigator.of(context).pushNamed(AppRoutes.setupClaireminder);
+                        Navigator.of(context)
+                            .pushNamed(AppRoutes.setupClaireminder);
                     },
-                    leading: Icon(Icons.auto_awesome_motion_rounded, color: Pallet.colorWhite),
+                    leading: Icon(Icons.auto_awesome_motion_rounded,
+                        color: Pallet.colorWhite),
                   ),
-                  SizedBox(height: 18,),
+                  SizedBox(
+                    height: 18,
+                  ),
                   ListTile(
                     title: Text("Top Up Your Love",
                         style: TextStyle(color: Pallet.colorWhite)),
                     onTap: () => onDonateClicked(),
-                    leading: Icon(Icons.currency_exchange_rounded, color: Pallet.colorWhite),
+                    leading: Icon(Icons.currency_exchange_rounded,
+                        color: Pallet.colorWhite),
                   ),
-
-                  SizedBox(height: 10,),
+                  SizedBox(
+                    height: 10,
+                  ),
                   SizedBox(
                     height: 300,
                     child: WebViewWidget(
-
                       controller: _webViewController, // Updated WebView widget
                     ),
                   ),
-
-                  SizedBox(height: 18,),
+                  SizedBox(
+                    height: 18,
+                  ),
                   ListTile(
                     title: Text("More Games With Claire",
                         style: TextStyle(color: Pallet.colorWhite)),
-                    onTap: (){Navigator. pop(context);
-                    Navigator.of(context).pushNamed(AppRoutes.games);
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.of(context).pushNamed(AppRoutes.games);
                     },
-                    leading: Icon(Icons.gamepad_rounded, color: Pallet.colorWhite),
+                    leading:
+                        Icon(Icons.gamepad_rounded, color: Pallet.colorWhite),
                   ),
-                  SizedBox(height: 18,),
+                  SizedBox(
+                    height: 18,
+                  ),
                   ListTile(
                     title: Text("Send Claire To Someone",
                         style: TextStyle(color: Pallet.colorWhite)),
-                    onTap: ()=>sendClaireToSomeone(),
+                    onTap: () => sendClaireToSomeone(),
                     leading: Icon(Icons.share, color: Pallet.colorWhite),
                   ),
-                  SizedBox(height: 18,),
+                  SizedBox(
+                    height: 18,
+                  ),
                   ListTile(
                     title: Text("Updates And Announcements",
                         style: TextStyle(color: Pallet.colorWhite)),
-                    onTap: (){Navigator. pop(context);
-                    Navigator.of(context).pushNamed(AppRoutes.updatesAndAnnouncements);
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.of(context)
+                          .pushNamed(AppRoutes.updatesAndAnnouncements);
                     },
-                    leading: Icon(Icons.announcement_rounded, color: Pallet.colorWhite),
+                    leading: Icon(Icons.announcement_rounded,
+                        color: Pallet.colorWhite),
                   ),
-                  SizedBox(height: 18,),
-
+                  SizedBox(
+                    height: 18,
+                  ),
                   Container(
                     height: 450,
                     child: WebViewWidget(
@@ -493,35 +547,34 @@ class _HomeDashboardPageState extends State<HomePage>
                         ..loadRequest(Uri.parse('https://x.com/dearclaireapp')),
                     ),
                   ),
-
-                  SizedBox(height: 18,),
+                  SizedBox(
+                    height: 18,
+                  ),
                   ListTile(
                     title: Text("Contact Us",
                         style: TextStyle(color: Pallet.colorWhite)),
-                    onTap: () =>launchEmailApp(),
+                    onTap: () => launchEmailApp(),
                     leading: Icon(Icons.email, color: Pallet.colorWhite),
                   ),
-
-                  SizedBox(height: 18,),
+                  SizedBox(
+                    height: 18,
+                  ),
                 ],
               ),
             ),
           ),
-        )
-    );
+        ));
   }
 
   void _openEndDrawer() {
     _scaffoldKey.currentState!.openDrawer();
   }
 
-
   lockAlertDialog(BuildContext context) {
-
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text("Ego Profile"),
-      onPressed:  () {
+      onPressed: () {
         String thisEgoName = "Guest View Of Your Ego";
         String? thisUser = currentUser?.uid.toString();
         PageRouter.gotoWidget(
@@ -530,12 +583,12 @@ class _HomeDashboardPageState extends State<HomePage>
                 visitedEgoName: thisEgoName),
             context);
         print("Visited User ID::: $thisEgoName");
-        },
+      },
     );
 
     Widget continueButton = TextButton(
       child: Text("Lock Out."),
-      onPressed:  () {
+      onPressed: () {
         firebaseServices.logUserOut(context);
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       },
@@ -559,6 +612,4 @@ class _HomeDashboardPageState extends State<HomePage>
       },
     );
   }
-
-
 }

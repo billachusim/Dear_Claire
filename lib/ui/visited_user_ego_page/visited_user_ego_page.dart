@@ -1274,13 +1274,16 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                       ),
                                       // UPDATED TITLE WIDGET
                                       title: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        // Use baseline alignment for perfect vertical text alignment
+                                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                                        textBaseline: TextBaseline.alphabetic, // Required for baseline alignment
                                         children: [
                                           Text(
                                             data['egoName'].toString(),
-                                            style: TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: 12,
+                                            style: GoogleFonts.lato( // Using GoogleFonts.lato for consistency
+                                              color: Colors.white, // Increased contrast for better readability
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold, // Make the name stand out
                                             ),
                                           ),
                                           SizedBox(width: 8),
@@ -1292,9 +1295,10 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                                   ? formatFirestoreTimestamp(data['egoTime'])
                                                   : '', // Show nothing if data is invalid
                                               overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                color: Colors.white54,
-                                                fontSize: 10,
+                                              style: GoogleFonts.lato( // Using GoogleFonts.lato
+                                                color: Colors.white60, // Slightly dimmed for hierarchy
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.normal,
                                               ),
                                             ),
                                           ),

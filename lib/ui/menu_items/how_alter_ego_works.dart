@@ -1,16 +1,14 @@
-import 'package:clairediary/ui/menu_items/view_model.dart';
+import 'package:animate_do/animate_do.dart';
 import 'package:clairediary/ui/routes/routes.dart';
 import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/strings.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:clairediary/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_swipe_detector/flutter_swipe_detector.dart';
-import 'package:provider/provider.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../../utils/constant.dart';
-import '../../widgets/toast.dart';
+import 'dart:ui'; // Needed for ImageFilter.blur
 
 class HowAlterEgoWorks extends StatefulWidget {
   const HowAlterEgoWorks({Key? key}) : super(key: key);
@@ -20,152 +18,263 @@ class HowAlterEgoWorks extends StatefulWidget {
 }
 
 class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
+  // Use a PageController for a smoother and more standard slider
+  final PageController _pageController = PageController();
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    List<Widget> widgetsList = [
-      singleImageWidget(index: 0, isDarkMode: isDarkMode),
-      singleImageWidget(index: 1, isDarkMode: isDarkMode),
-      singleImageWidget(index: 2, isDarkMode: isDarkMode),
-      singleImageWidget(index: 3, isDarkMode: isDarkMode),
-    ];
+    final backgroundColor = isDarkMode ? Pallet.colorSecondaryDark : Colors.grey.shade200;
+    final primaryTextColor = isDarkMode ? Pallet.colorWhite : Colors.black87;
+    final secondaryTextColor = isDarkMode ? Pallet.colorTextGray : Colors.black54;
 
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: isDarkMode ? Pallet.colorSecondaryDark : Pallet.colorSecondary,
-          centerTitle: false,
-          automaticallyImplyLeading: true,
-          title: Text('About Alter Ego Mode',
-              textAlign: TextAlign.start,
-              maxLines: 1,
-              style: GoogleFonts.lato(
-                  fontSize: 24.0,
-                  color: Pallet.colorWhite,
-                  fontWeight: FontWeight.w600)),
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: primaryTextColor),
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        body: SingleChildScrollView(
-            child: Container(
-                padding: EdgeInsets.all(15),
-                child: Column(
-                  children: [
-                    Consumer<HowClaireWorksProvider>(
-                        builder: (context, provider, child) => SwipeDetector(
-                              child: Container(
-                                  height: 280,
-                                  child: AnimatedSwitcher(
-                                    duration: Duration(milliseconds: 3000),
-                                    transitionBuilder: (child, animation) =>
-                                        ScaleTransition(
-                                            scale: animation,
-                                            child:
-                                                SizedBox.expand(child: child)),
-                                    child:
-                                        widgetsList[provider.imageSliderIndex],
-                                  )),
-                              onSwipeLeft: (offset) {
-                                provider
-                                    .increaseIndex(provider.imageSliderIndex);
-                              },
-                              onSwipeRight: (offset) {
-                                provider
-                                    .decreaseIndex(provider.imageSliderIndex);
-                              },
-                            )),
-                    // imageSliderWidget(),
-                    SizedBox(height: 20),
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Text(AppString.what_is_alter_ego_header,
-                          style: GoogleFonts.lato(
-                              fontSize: 15.0, fontWeight: FontWeight.w700, color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorSecondary)),
-                    ),
-                    Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(AppString.what_is_alter_ego_paragraph,
-                            style: GoogleFonts.lato(
-                              fontSize: 15.0,
-                            ))),
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Text(AppString.what_is_alter_ego_mode_header,
-                          style: GoogleFonts.lato(
-                              fontSize: 15.0, fontWeight: FontWeight.w700, color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorSecondary)),
-                    ),
-                    Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(AppString.what_is_alter_ego_mode_paragraph,
-                            style: GoogleFonts.lato(
-                              fontSize: 15.0,
-                            ))),
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Text(AppString.how_does_it_work,
-                          style: GoogleFonts.lato(
-                              fontSize: 15.0, fontWeight: FontWeight.w700, color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorSecondary)),
-                    ),
-                    Align(
-                        alignment: Alignment.topLeft,
-                        child: Text(AppString.how_does_it_work_paragraph,
-                            style: GoogleFonts.lato(
-                              fontSize: 15.0,
-                            ))),
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Text(AppString.creators_quote,
-                          style: GoogleFonts.lato(
-                            fontSize: 15.0,
-                            fontWeight: FontWeight.w700,
-                            color: Pallet.deepGreen
-                          )),
-                    ),
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Text(AppString.creators_quote_paragraph,
-                          style: GoogleFonts.lato(
-                            fontSize: 15.0,
-                          )),
-                    ),
-                    SizedBox(height: 30),
-                    InkWell(
-                      onTap: onDonateClicked,
-                        child: Container(
-                            padding: EdgeInsets.all(12),
-                            width: 150,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25),
-                              color: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary,
-                            ),
-                            child: Center(
-                                child: Text(AppString.donate,
-                                    style: GoogleFonts.lato(
-                                        fontSize: 17.0,
-                                        color: Pallet.colorWhite,
-                                        fontWeight: FontWeight.w700))))),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    OutlinedButton(
-                      onPressed: () async {
-                        final _user = await firebaseServices.getUserInfo();
-                        if (_user.currentLoveCount > 2000) {
-                          Navigator.pushNamed(context, AppRoutes.alterEgoRegistration);
-                        } else showToast("...but you need 2000 Loves.");
-                      },
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: isDarkMode ? Pallet.colorSecondaryDark : Pallet.colorSecondary,
-                        padding: EdgeInsets.all(20),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25)),
-                      ),
-                      child: Text(AppString.request_access,
-                          style: GoogleFonts.lato(
-                              fontSize: 16.0, fontWeight: FontWeight.w700, color: Colors.white)),
-                    ),
-                  ],
-                ))));
+        centerTitle: true,
+        title: Text(
+          'About Alter Ego',
+          style: GoogleFonts.montserrat(
+            fontSize: 22.0,
+            color: primaryTextColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 20),
+
+              // --- 1. REDESIGNED HERO SLIDER ---
+              _buildHeroSlider(),
+
+              const SizedBox(height: 40),
+
+              // --- 2. ANIMATED CONTENT SECTIONS ---
+              _buildInfoSection(
+                header: AppString.what_is_alter_ego_header,
+                paragraph: AppString.what_is_alter_ego_paragraph,
+                isDarkMode: isDarkMode,
+                delay: 200, // Staggered animation delay
+              ),
+              _buildInfoSection(
+                header: AppString.what_is_alter_ego_mode_header,
+                paragraph: AppString.what_is_alter_ego_mode_paragraph,
+                isDarkMode: isDarkMode,
+                delay: 400,
+              ),
+              _buildInfoSection(
+                header: AppString.how_does_it_work,
+                paragraph: AppString.how_does_it_work_paragraph,
+                isDarkMode: isDarkMode,
+                delay: 600,
+              ),
+
+              const SizedBox(height: 30),
+
+              // --- 3. ENHANCED CTA SECTION ---
+              _buildRequestAccessButton(isDarkMode),
+              const SizedBox(height: 20),
+              _buildDonateButton(),
+
+              const SizedBox(height: 50),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
+  // --- NEW: Hero Slider Widget ---
+  Widget _buildHeroSlider() {
+    return Column(
+      children: [
+        SizedBox(
+          height: 280,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: imageSliderList.length,
+            itemBuilder: (context, index) {
+              return FadeIn(
+                duration: const Duration(milliseconds: 500),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Pallet.colorSecondary,
+                    borderRadius: BorderRadius.circular(24),
+                    image: DecorationImage(
+                      image: AssetImage(imageSliderList[index]),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Text(
+                      imageSliderDescriptionList[index],
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.lato(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 20),
+        SmoothPageIndicator(
+          controller: _pageController,
+          count: imageSliderList.length,
+          effect: WormEffect(
+            dotHeight: 10,
+            dotWidth: 10,
+            spacing: 12,
+            dotColor: Colors.grey.shade400,
+            activeDotColor: Pallet.colorSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- NEW: Glassmorphism Info Section Widget ---
+  Widget _buildInfoSection({
+    required String header,
+    required String paragraph,
+    required bool isDarkMode,
+    required int delay,
+  }) {
+    final cardColor = isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4);
+    final headingColor = isDarkMode ? Colors.white : Pallet.colorSecondary;
+
+    return FadeInUp(
+      from: 50,
+      delay: Duration(milliseconds: delay),
+      duration: const Duration(milliseconds: 500),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20.0),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+          child: Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 20.0),
+            padding: const EdgeInsets.all(20.0),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(20.0),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  header,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                    color: headingColor,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  paragraph,
+                  style: GoogleFonts.lato(
+                    fontSize: 15.0,
+                    color: isDarkMode ? Colors.white70 : Colors.black87,
+                    height: 1.5, // Improved line spacing for readability
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- NEW: Rebuilt Request Access Button ---
+  Widget _buildRequestAccessButton(bool isDarkMode) {
+    return FadeInUp(
+      from: 50,
+      delay: const Duration(milliseconds: 800),
+      child: Material(
+        color: Pallet.colorSecondary,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () async {
+            final user = await firebaseServices.getUserInfo();
+            if (user.currentLoveCount > 2000) {
+              Navigator.pushNamed(context, AppRoutes.alterEgoRegistration);
+            } else {
+              showToast("...but you need 2000 Loves to request access.");
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            width: double.infinity,
+            child: Column(
+              children: [
+                Text(
+                  AppString.request_access,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "(Requires 2000 Loves)",
+                  style: GoogleFonts.lato(
+                    fontSize: 12.0,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- NEW: Rebuilt Donate Button ---
+  Widget _buildDonateButton() {
+    return FadeInUp(
+      from: 50,
+      delay: const Duration(milliseconds: 900),
+      child: TextButton(
+        onPressed: onDonateClicked,
+        child: Text(
+          "Top Up Loves",
+          style: GoogleFonts.lato(
+            fontSize: 17.0,
+            color: Pallet.colorSecondary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- Helper Data and Methods from original file ---
   static List<String> imageSliderList = [
     "assets/images/alter_ego_slide_1.png",
     "assets/images/alter_ego_slide_2.png",
@@ -180,42 +289,8 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
     AppString.about_alter_ego_slide4,
   ];
 
-  static singleImageWidget({int? index, required bool isDarkMode}) {
-    return Container(
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: isDarkMode ? Pallet.colorSecondaryDark : Pallet.colorSecondary,
-        borderRadius: BorderRadius.circular(30),
-      ),
-        child: Column(children: [
-      Image.asset(imageSliderList[index!]),
-      SizedBox(
-        height: 6,
-      ),
-      Text(imageSliderDescriptionList[index],style: TextStyle(color: Pallet.colorWhite),),
-      SizedBox(height: 6),
-      AnimatedSmoothIndicator(
-        activeIndex: index,
-        count: 4,
-        effect: SlideEffect(
-            spacing: 8.0,
-            radius: 25,
-            dotWidth: 10,
-            dotHeight: 10,
-            paintStyle: PaintingStyle.fill,
-            strokeWidth: 1.5,
-            dotColor: isDarkMode ? Pallet.colorPrimaryDark : Pallet.colorPrimary,
-            activeDotColor: Pallet.colorWhite),
-      )
-    ]));
-  }
-
-  String getDonateUrl(){
-    return AppString.donate_url;
-  }
-
-  onDonateClicked() {
-    Uri donateUrl = Uri.parse(getDonateUrl());
+  void onDonateClicked() {
+    final Uri donateUrl = Uri.parse(AppString.donate_url);
     launchUrl(donateUrl);
   }
 }

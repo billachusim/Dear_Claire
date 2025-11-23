@@ -499,30 +499,40 @@ class FirebaseServices extends ChangeNotifier {
 
 
   /// Authenticate the AlterEgo in
-
-  getUserAlterEgo(BuildContext context, String alterEgoId,
+  /// Returns true if credentials are valid, false otherwise.
+  Future<bool> getUserAlterEgo(BuildContext context, String alterEgoId,
       String alterEgoAccessCode) async {
-    UserModel user = await getUserInfo();
-    var userId = currentUser?.uid;
-    var getAlterEgoId = user.alterEgoId;
-    var getAlterEgoAccessCode = user.alterEgoAccessCode;
-    var isLoggedIn = currentUser;
-    print(
-        "AlterEgo login details...: user: $user ..userId: ${userId.toString()}, isLoggedIn: $isLoggedIn, isLoggedIn.uid: ${isLoggedIn?.uid} ,getAlterEgoId: ${user.alterEgoId}, getAlterEgoAccessCode: ${user.alterEgoAccessCode}");
-    print(
-        "Get getAlterEgoId...: $alterEgoId , getAlterEgoId await from:::$getAlterEgoId, getAlterEgoAccessCode await from:: $getAlterEgoAccessCode, Get getAlterEgoAccessCode...: $alterEgoAccessCode");
-    if (isLoggedIn?.uid == userId.toString()
-        && getAlterEgoId.toString() == alterEgoId && getAlterEgoAccessCode.toString() == alterEgoAccessCode
-        ) {
-      setAlterEgoId(alterEgoId);
-      setAlterEgoAccessCode(alterEgoAccessCode);
-      print("AlterEgo value...: $alterEgoId , $alterEgoAccessCode");
-      Navigator.of(context).pushReplacementNamed(AppRoutes.alterEgoHomepage);
-    } else {
-      showToast(message: AppString.get_alter_ego_error);
-      print("AlterEgo login fail...: $alterEgoId , $alterEgoAccessCode");
+    try {      // Fetch the currently logged-in user's data
+      UserModel user = await getUserInfo();
+
+      // Compare the provided credentials with the ones stored in the user's document
+      if (currentUser?.uid == user.userId &&
+          user.alterEgoId == alterEgoId &&
+          user.alterEgoAccessCode == alterEgoAccessCode) {
+
+        // Credentials match, login is successful.
+        print("AlterEgo login success: $alterEgoId");
+
+        // Use a mounted check before navigating
+        if (context.mounted) {
+          Navigator.of(context)
+              .pushReplacementNamed(AppRoutes.alterEgoHomepage);
+        }
+        return true; // Indicate success
+      } else {
+        // Credentials do not match.
+        showToast(message: AppString.get_alter_ego_error);
+        print("AlterEgo login fail: Credentials do not match.");
+        return false; // Indicate failure
+      }
+    } catch (e) {
+      // Handle potential errors like network issues or user not found
+      logger.e("Error during AlterEgo login: $e");
+      showToast(message: 'An error occurred. Please try again.');
+      return false; // Indicate failure
     }
   }
+
 
 
 

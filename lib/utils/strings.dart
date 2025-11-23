@@ -233,13 +233,13 @@ class AppString{
   static const String what_is_claire = " \n 🌺 What Is Claire?";
   static const String what_is_claire2 = " \n\n 🌺 What Is Claire?";
   static const String how_claire_works_paragraph2 = "Claire is a super smart and friendly diary that can read, listen and reply to your diary texts or voice notes. It is the first interactive dear diary in the whole world.\n Claire has special skills and wisdom to respond to anything you tell her and that\'s how Claire becomes your secret companion, mentor and best friend. Millions of us write down our plans, activities, memories or challenges inside our phone\'s note, journal, or diary without expecting any reply.\n Well, this particular diary actually replies 😊";
-  static const String who_needs_claire = ' \n\n\n\n 🌺Who Needs Claire?\n \n';
+  static const String who_needs_claire = ' \n\n\n\n 🌺Who Needs Claire?\n\n';
   static const String how_claire_works_paragraph3 = ' Everyone! If you have a date or interview the next day and can\'t decide what to wear. Going through a bad breakup or starting a new relationship. Feeling alone, friendless, confused or depressed. Want to make smarter decisions, stay safe and be happy in life. Having troubles in school, at home or at work. Claire is there to be your light and shine, to guide you through everything \n Claire\'s mission is for everyone to have a true friend, in need and indeed. To contribute to a happier world in these sadder times.\n\n\n\n';
   static const String how_does_claire_work = ' 🌺 How Does Claire Work?\n \n';
   static const String how_claire_works_paragraph4 = ' Simple! Unlock your Claire diary app, type or record a new note starting with the phrase "Dear Claire” Go on, write or speak to Claire about how you feel at the moment. You can also tell her about your yesterday and what you are up to tomorrow, etc. Save and Send your note.\n Claire will carefully go through your diary, read or listen to your notes and in no long time, you will receive friendly Advise, secret tips, personal opinions and wise guidance from Claire on how best to go about things.';
-  static const String creators_quote_how_claire_works = ' \n\n\n\n Creator\'s Quote \n \n';
+  static const String creators_quote_how_claire_works = ' \n Creator\'s Quote\n';
   static const String how_claire_works_paragraph5 = ' "YOUR SECRETS STAY SECRET NO MATTER WHAT because YOU ARE COMPLETELY ANONYMOUS. Nobody, not even the developers or Claire can know who you are because you only operate with nickname and password and you can change that nickname anytime you want without losing any content of your diary." - B.A. Nov, 2017.';
-  static const String quick_tips = ' \n\n\n\n\n\n Quick Tips 👇 \n';
+  static const String quick_tips = ' \n Quick Tips 👇\n';
   static const String how_claire_works_paragraph6 = '🌺 Open the app menu and tap the Claire icon to switch to Alter-Ego Mode.\n\n';
   static const String how_claire_works_paragraph7 = '💕 Browse featured Sessions to read Claire\'s best kept secrets and contribute positive vibes only..\n\n';
   static const String how_claire_works_paragraph8 = '🌺 Claire is not an instant messenger or artificial intelligence, Claire is your real fairy friend. It takes between 5 minutes to 59 minutes to get your first reply, but it gets faster and better from there.\n\n';

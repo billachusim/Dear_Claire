@@ -43,61 +43,78 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
     super.initState();
     _title = "Alter Ego Mode";
     _pageController = PageController(keepPage: true);
-    //shakeDevice();
+    shakeDevice();
   }
-
 
   void setTabIndex(index) async {
     if (await firebaseServices.isUserSignIn(context))
-      _pageController?.animateToPage(
-          index, duration: Duration(milliseconds: 1500),
-          curve: Curves.elasticOut);
-    switch(index) {
-      case 0: { _title = 'Advising'; }
-      break;
-      case 1: { _title = 'All'; }
-      break;
-      case 2: { _title = 'Flagged'; }
-      break;
-      case 3: { _title = 'Rooms'; }
-      break;
-      case 4: { _title = 'Loves'; }
-      break;
-
+      _pageController?.animateToPage(index,
+          duration: Duration(milliseconds: 1500), curve: Curves.elasticOut);
+    switch (index) {
+      case 0:
+        {
+          _title = 'Advising';
+        }
+        break;
+      case 1:
+        {
+          _title = 'All';
+        }
+        break;
+      case 2:
+        {
+          _title = 'Flagged';
+        }
+        break;
+      case 3:
+        {
+          _title = 'Rooms';
+        }
+        break;
+      case 4:
+        {
+          _title = 'Loves';
+        }
+        break;
     }
   }
 
-  /*shakeDevice() async {
-    detector = ShakeDetector.waitForStart(
-      onPhoneShake: () async {
-        // Trigger vibration
-        if (await Vibration.hasVibrator() ?? false) {
-          if (await Vibration.hasAmplitudeControl() ?? false) {
-            // Stronger haptic feedback
-            Vibration.vibrate(duration: 200, amplitude: 128);
-          } else {
-            Vibration.vibrate(duration: 200);
+  shakeDevice() {
+    detector = ShakeDetector.autoStart(
+      // 1. INCREASED SENSITIVITY: Higher value means a harder shake is needed.
+      // Default is ~1.5. Let's try 2.5 or 3.0 for a more deliberate shake.
+      shakeThresholdGravity: 5.5,
+
+      onPhoneShake: (ShakeEvent event) {
+        () async {
+          if (!mounted) return;
+
+          // Vibrate to give user feedback
+          if (await Vibration.hasVibrator() ?? false) {
+            Vibration.vibrate();
           }
-        }
 
-        // Show toast
-        Fluttertoast.showToast(
-          toastLength: Toast.LENGTH_LONG,
-          msg: "Switching Ego",
-          textColor: Colors.white,
-          backgroundColor: Pallet.colorSplashScreen,
-        );
+          Fluttertoast.showToast(
+            toastLength: Toast.LENGTH_SHORT, // Shorter toast
+            msg: "Returning to Ego...",
+            textColor: Colors.white,
+            backgroundColor: Pallet.colorSplashScreen,
+          );
 
-        // Navigate
-        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          // 2. CRITICAL FIX: Stop listening for shakes on THIS page FIRST.
+          detector.stopListening();
+
+          // Add a small delay to ensure the event loop is clear
+          await Future.delayed(const Duration(milliseconds: 100));
+
+          // 3. Navigate AFTER the detector is stopped.
+          if (!mounted) return;
+          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        }();
       },
       minimumShakeCount: 1,
     );
-
-    await Future.delayed(Duration(seconds: 1), () {
-      detector.startListening();
-    });
-  }*/
+  }
 
   dispose() {
     _pageController!.dispose();
@@ -105,7 +122,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
     super.dispose();
   }
 
-  String? getWhatsAppUrl(){
+  String? getWhatsAppUrl() {
     return AppString.WHATSAPP_URL;
   }
 
@@ -115,7 +132,9 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   }
 
   @override
-  Widget build(BuildContext context,) {
+  Widget build(
+    BuildContext context,
+  ) {
     return SafeArea(
         child: Scaffold(
             key: _scaffoldKey,
@@ -146,9 +165,8 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                     child: Icon(Icons.search, color: Pallet.colorSecondary))
               ],
             ),
-            body: Stack(
-              children: [
-                PageView(
+            body: Stack(children: [
+              PageView(
                 physics: AlwaysScrollableScrollPhysics(),
                 controller: _pageController,
                 onPageChanged: (index) {
@@ -164,15 +182,15 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                   ClaireLoves(),
                 ],
               ),
-          ]
-            ),
+            ]),
             bottomNavigationBar: Container(
               decoration: BoxDecoration(color: Colors.black),
               height: 60,
               width: double.infinity,
               child: BottomNavigationBar(
                 type: BottomNavigationBarType.fixed,
-                showSelectedLabels: true, backgroundColor: Pallet.colorBottomNav,
+                showSelectedLabels: true,
+                backgroundColor: Pallet.colorBottomNav,
                 selectedLabelStyle: TextStyle(color: Pallet.colorWhite),
                 unselectedLabelStyle: TextStyle(color: Pallet.colorWhite),
                 currentIndex: currentIndex,
@@ -235,7 +253,8 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                 child: Column(
                   children: [
                     UserAccountsDrawerHeader(
-                      decoration: BoxDecoration(color: Pallet.colorPrimary,
+                      decoration: BoxDecoration(
+                        color: Pallet.colorPrimary,
                       ),
                       accountEmail: Text(
                         "Influence the world positively.",
@@ -246,14 +265,21 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                           fontStyle: FontStyle.italic,
                         ),
                       ),
-                      accountName: Text(userType == 'REGULAR'? 'Ego' :
-                      userType == 'ADMIN'? 'Alter Ego' :
-                      userType == 'SUPER_ADMIN'? 'Super Ego' :
-                      'Ego',
-                          style: TextStyle(color: Pallet.colorWhite,
-                            fontSize: 19.0, fontWeight: FontWeight.w700,)),
-                      currentAccountPicture: FutureBuilder<
-                          DocumentSnapshot<Map<String, dynamic>>>(
+                      accountName: Text(
+                          userType == 'REGULAR'
+                              ? 'Ego'
+                              : userType == 'ADMIN'
+                                  ? 'Alter Ego'
+                                  : userType == 'SUPER_ADMIN'
+                                      ? 'Super Ego'
+                                      : 'Ego',
+                          style: TextStyle(
+                            color: Pallet.colorWhite,
+                            fontSize: 19.0,
+                            fontWeight: FontWeight.w700,
+                          )),
+                      currentAccountPicture:
+                          FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                         future: FirebaseFirestore.instance
                             .collection("users")
                             .doc(currentUser?.uid)
@@ -264,58 +290,58 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                             userName = data?["nickname"] ?? " ";
                             userType = data?["userType"] ?? " ";
                             avatarUrl = data?["avatarUrl"] ?? " ";
-                            return
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: userType == 'REGULAR'? Pallet.colorPrimary
-                                      : userType == 'ADMIN'? Pallet.colorSecondary
-                                      : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                                      :Pallet.colorBlue,
-                                  borderRadius: BorderRadius.circular(100),
-                                ),
-                                margin: EdgeInsets.only(left: 0),
-                                child: Container(
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: userType == 'REGULAR'
+                                    ? Pallet.colorPrimary
+                                    : userType == 'ADMIN'
+                                        ? Pallet.colorSecondary
+                                        : userType == 'SUPER_ADMIN'
+                                            ? Pallet.colorSecondary
+                                            : Pallet.colorBlue,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              margin: EdgeInsets.only(left: 0),
+                              child: Container(
                                   height: 75,
                                   width: 75,
                                   margin: EdgeInsets.all(4),
                                   child: RotateImage(75.h, 75.w)),
-                                );
+                            );
                           }
 
                           return CircularProgressIndicator();
                         },
                       ),
-
                       otherAccountsPictures: [
                         GestureDetector(
                           onTap: () {
-                            Navigator.of(context)
-                                .pushNamed(AppRoutes.home);
+                            Navigator.of(context).pushNamed(AppRoutes.home);
                           },
                           child: CachedNetworkImage(
                               width: 60,
                               height: 60,
                               imageUrl: avatarUrl,
-                              imageBuilder: (context, imageProvider) => Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(100),
-                                  image: DecorationImage(
-                                    image: imageProvider,
-                                    fit: BoxFit.fill,
+                              imageBuilder: (context, imageProvider) =>
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(100),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.fill,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
                               placeholder: (context, url) =>
                                   CircularProgressIndicator(),
                               errorWidget: (context, url, error) => Image.asset(
-                                "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                width: 50,
-                                height: 50,
-                              ) //Icon(Icons.error),
-                          ),
+                                    "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                    width: 50,
+                                    height: 50,
+                                  ) //Icon(Icons.error),
+                              ),
                         ),
-
                         GestureDetector(
                           onTap: () async {
                             lockAlertDialog(context);
@@ -331,46 +357,44 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                           ),
                         ),
                       ],
-
                     ),
                     //SizedBox(height: 30.h,),
                     ListTile(
                       title: Text("Settings",
                           style: TextStyle(color: Pallet.colorWhite)),
-                      onTap: () {
-
-                      },
+                      onTap: () {},
                       leading: Icon(Icons.settings, color: Pallet.colorWhite),
                     ),
                     ListTile(
                       title: Text("How Claire Works",
                           style: TextStyle(color: Pallet.colorWhite)),
                       onTap: () {
-                        Navigator. pop(context);
-                        Navigator.of(context).pushNamed(AppRoutes.howClaireWorks);
+                        Navigator.pop(context);
+                        Navigator.of(context)
+                            .pushNamed(AppRoutes.howClaireWorks);
                       },
-                      leading: Icon(Icons.info_rounded,
-                          color: Pallet.colorWhite),
+                      leading:
+                          Icon(Icons.info_rounded, color: Pallet.colorWhite),
                     ),
                     ListTile(
                       title: Text("Send Claire to Someone",
                           style: TextStyle(color: Pallet.colorWhite)),
-                      onTap: ()=>sendClaireToSomeone(),
+                      onTap: () => sendClaireToSomeone(),
                       leading: Icon(Icons.share, color: Pallet.colorWhite),
                     ),
-                    SizedBox(height: 18,),
+                    SizedBox(
+                      height: 18,
+                    ),
                     ListTile(
                       title: Text("Contact Us",
                           style: TextStyle(color: Pallet.colorWhite)),
-                      onTap: () =>onContinueToWhatsAppClicked(),
+                      onTap: () => onContinueToWhatsAppClicked(),
                       leading: Icon(Icons.email, color: Pallet.colorWhite),
                     ),
                   ],
                 ),
               ),
-            )
-        )
-    );
+            )));
   }
 
   void _openEndDrawer() {
@@ -378,18 +402,17 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   }
 
   lockAlertDialog(BuildContext context) {
-
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text("No, Wait."),
-      onPressed:  () {
+      onPressed: () {
         Navigator.of(context).pop();
       },
     );
 
     Widget continueButton = TextButton(
       child: Text("Yes, Lock Out."),
-      onPressed:  () {
+      onPressed: () {
         firebaseServices.logUserOut(context);
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       },
