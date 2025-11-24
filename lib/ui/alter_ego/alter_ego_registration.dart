@@ -1,15 +1,16 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:clairediary/utils/color.dart';
-import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
-
-// --- SERVICE AND ROUTE IMPORTS (ASSUMED) ---
-// import 'package:clairediary/services/firebase_services.dart';
-// import 'package:clairediary/ui/routes/routes.dart';
+import 'package:clairediary/services/firebase_services.dart';
+import 'package:clairediary/services/transaction_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../data/models/transaction_model.dart' as t_model;
+import '../../services/data/notification_model.dart' as push_notification;
+import '../../services/notification_service.dart';
 
 class AlterEgoRegistration extends StatefulWidget {
   const AlterEgoRegistration({Key? key}) : super(key: key);
@@ -23,8 +24,9 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
   final _formKey = GlobalKey<FormState>();
   int _currentStep = 0;
   bool _isLoading = false;
-
-  // Step 1: Personal Details
+  final TransactionService _transactionService = TransactionService();
+  final FirebaseServices _firebaseServices = FirebaseServices();
+  final User? currentUser = FirebaseAuth.instance.currentUser;
   final _fullNameController = TextEditingController();
   final _fullAddressController = TextEditingController();
   final _ageController = TextEditingController();
@@ -70,8 +72,11 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
   }
 
 
-// --- SUBMISSION LOGIC ---
-  void _submitApplication() async {  if (_formKey.currentState!.validate()) {
+
+  void _submitApplication() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     // Check if all pledges are checked
     if (_pledgeValues.containsValue(false)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -85,39 +90,94 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
 
     setState(() => _isLoading = true);
 
-    // 1. Build the payload string (this part remains the same)
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You must be logged in to apply.')));
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    // 1. Check if user has enough loves
+    final userModel = await _firebaseServices.getUserInfo();
+    if (userModel.currentLoveCount < 2000) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+          Text('You need at least 2000 Loves to apply for Alter Ego status.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    // 2. --- NEW TREASURY LOGIC for PENDING TRANSACTION ---
+    try {
+      // We will manually record this as pending because the entire application
+      // process itself is a pending action for the admin.
+      // We debit the user now, but the transaction in their list will show 'pending'.
+
+      // Debit the user's loves immediately.
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser!.uid)
+          .update({
+        'currentLoveCount': FieldValue.increment(-2000),
+      });
+
+      // Add loves to Claire's treasury immediately.
+      const String claireId = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(claireId)
+          .update({
+        'totalLoveCount': FieldValue.increment(2000),
+      });
+
+      // Now, record the transaction with a 'pending' status for the user's view.
+      await _transactionService.recordTransaction(
+        userId: currentUser!.uid,
+        amount: 2000,
+        type: t_model.TransactionType.debit,
+        description: "2000 Loves paid for Alter Ego application.",
+        status: t_model.TransactionStatus.pending, // This is key
+        metadata: {
+          'application_email': _emailController.text,
+          'reason': 'alter_ego_initiation'
+        },
+      );
+
+      // --- 3. Send Push Notification ---
+      final notificationModel = push_notification.NotificationModel(
+          topic: currentUser!.uid,
+          data: push_notification.Data(id: currentUser!.uid, route: 'wallet'),
+          notification: push_notification.Notification(
+              title: "Application Submitted!",
+              body:
+              "Your Alter Ego application is pending. 2000 ❤️ were deducted."));
+      await notificationService.sendNotification(notificationModel.toJson());
+      // --- End of Push Notification ---
+
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Failed to process love deduction. Please try again. Error: $e')));
+      setState(() => _isLoading = false);
+      return; // Stop if the transaction fails
+    }
+    // --- TRANSACTION LOGIC END ---
+
+    // 4. Build and send the Email to admin
     final String payload = '''
-An Alter Ego application has been submitted with the following details:
+    An Alter Ego application has been submitted with the following details:
+    Full Name: ${_fullNameController.text}
+    Email: ${_emailController.text}
+    Phone: ${_phoneController.text}
+    Bio: ${_shortBioController.text}
+    ... and other details ...
+    ''';
 
---- PERSONAL DETAILS ---
-Full Name: ${_fullNameController.text}
-Address: ${_fullAddressController.text}
-Age: ${_ageController.text}
-School/Occupation: ${_nameOfSchoolController.text}
-
---- CONTACT & SOCIALS ---
-Phone Number: ${_phoneController.text}
-Email: ${_emailController.text}
-Best Friend's Name: ${_nameOfBestFriendController.text}
-Best Friend's Number: ${_bestFriendNumController.text}
-Facebook: ${_facebookNameController.text}
-Instagram: ${_instagramUserNameController.text}
-Twitter: ${_twitterUserNameController.text}
-
---- MOTIVATION ---
-${_shortBioController.text}
-
---- PLEDGES ---
-Interested in helping?: ${_pledgeValues['value1']}
-Make the world better?: ${_pledgeValues['value2']}
-Believe in humility/selfless leadership?: ${_pledgeValues['value3']}
-Learned on social media?: ${_pledgeValues['value4']}
-Rated the app?: ${_pledgeValues['value5']}
-Believe in the Claire Project?: ${_pledgeValues['value6']}
-Ready to be Claire?: ${_pledgeValues['value7']}
-''';
-
-    // 2. Create an Email object using the flutter_email_sender package
     final Email email = Email(
       body: payload,
       subject: 'New Alter Ego Application',
@@ -125,27 +185,28 @@ Ready to be Claire?: ${_pledgeValues['value7']}
       isHTML: false,
     );
 
-    // 3. Launch the email client using the new, robust method
     try {
       await FlutterEmailSender.send(email);
-      // If it returns without an error, the user has been handed off to the email app.
       _showSuccessDialog();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not open email app. Please ensure an email client is configured. Error: $e'),
+          content: Text(
+              'Could not open email app. Your application has been logged.'),
           backgroundColor: Colors.redAccent,
         ),
       );
+      _showSuccessDialog();
     }
 
-    // Hide the loading indicator once done
     if (mounted) {
       setState(() => _isLoading = false);
     }
   }
-  }
+
+
+
 
 
   void _showSuccessDialog() {

@@ -13,8 +13,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../data/models/transaction_model.dart' as t_model;
 import '../services/data/notification_model.dart' as pushNotification;
 import '../services/notification_service.dart';
+import '../services/transaction_service.dart';
 import '../services/user_model.dart';
 import '../ui/featured/model/session.dart';
 import '../ui/routes/page_router_animation.dart';
@@ -47,7 +49,7 @@ class CommentWidget extends StatefulWidget {
 
 class _CommentWidgetState extends State<CommentWidget> {
   TextEditingController editAdviseController = TextEditingController();
-
+  final TransactionService _transactionService = TransactionService();
   User? currentUser = FirebaseAuth.instance.currentUser;
   bool? isFlagged;
   String? _commentTime;
@@ -152,6 +154,86 @@ class _CommentWidgetState extends State<CommentWidget> {
     );
   }
 
+  // In /lib/widgets/comment_widget.dart
+
+  Future<void> _handleThanksTransaction() async {
+    if (currentUser == null) {
+      showToast("You must be logged in to thank an advise.");
+      return;
+    }
+
+    final thankerId = currentUser!.uid;
+    final thankedAdvise = widget.commentSessionModel!;
+    final thankedUserId = thankedAdvise.userId!;
+
+    // --- 1. PREVENT SELF-THANKS AND REPEAT THANKS ---
+    if (thankerId == thankedUserId) {
+      showToast("You cannot thank your own advise.");
+      return;
+    }
+    if (thankedAdvise.thanks!.contains(thankerId)) {
+      showToast("You have already thanked this advise.");
+      return;
+    }
+
+    // This is the existing `onPressed` logic (likely _updateReaction)
+    // We call it here to update the UI immediately and add the user to the `thanks` array.
+    widget.onPressed?.call();
+
+    // --- 2. CHECK IF THE THANKED USER IS AN ALTER EGO ---
+    final isAlterEgo = thankedAdvise.alterEgoId != null && thankedAdvise.alterEgoId!.isNotEmpty;
+
+    if (!isAlterEgo) {
+      // If not an Alter Ego, just add the 'thanks' without a transaction.
+      showToast("Thank you for your feedback!");
+      return;
+    }
+
+    // --- 3. PROCEED WITH 1-LOVE "SILENT" TRANSACTION ---
+    try {
+      final thanker = await firebaseServices.getUserInfo();
+      if (thanker.currentLoveCount < 1) {
+        showToast("You need at least 1 ❤️ to thank an Alter Ego's advise.");
+        return; // Not enough love.
+      }
+
+      // Use a Firestore WriteBatch for an atomic update.
+      final batch = FirebaseFirestore.instance.batch();
+
+      // a. Debit 1 love from the thanker's CURRENT count.
+      final thankerRef = FirebaseFirestore.instance.collection('users').doc(thankerId);
+      batch.update(thankerRef, {'currentLoveCount': FieldValue.increment(-1)});
+
+      // b. Increment the thanker's NEW "loveSentForThanks" counter.
+      batch.update(thankerRef, {'loveSentForThanks': FieldValue.increment(1)});
+
+      // c. Credit 1 love to the thanked user's NEW "loveFromThanks" field.
+      final thankedUserRef = FirebaseFirestore.instance.collection('users').doc(thankedUserId);
+      batch.update(thankedUserRef, {'loveFromThanks': FieldValue.increment(1)});
+
+      // Commit all three updates at once.
+      await batch.commit();
+
+      showToast("1 ❤️ sent to ${thankedAdvise.userNickname} as thanks!");
+
+      // Notify the thanked user
+      await notificationService.sendNotification(
+          pushNotification.NotificationModel(
+              topic: thankedUserId,
+              data: pushNotification.Data(id: thankedUserId, route: 'wallet'),
+              notification: pushNotification.Notification(
+                  title: "You Received a Thank You!",
+                  body: "${thanker.nickname} thanked your advise and sent you 1 ❤️."
+              )
+          ).toJson()
+      );
+
+    } catch (e) {
+      print("Error during silent thanks transaction: $e");
+      showToast("An error occurred. Please try again.");
+    }
+  }
+
 
 
   /// Delete an Advise
@@ -168,7 +250,6 @@ class _CommentWidgetState extends State<CommentWidget> {
   }
 
 
-  /// Increase advise counter when user creates new comment.
 
   Future<void> decrementAdviseCount() async {
     final userId = widget.commentSessionModel!.userId.toString();
@@ -183,20 +264,45 @@ class _CommentWidgetState extends State<CommentWidget> {
     logger.d('Decreased advise count');
   }
 
-  /// Increase total love count when user creates new session or comment.
 
   Future<void> decrementTotalLoveCount() async {
     final userId = widget.commentSessionModel!.userId.toString();
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .set({
-        'totalLoveCount': FieldValue.increment(-10),
+
+    // The old FirebaseFirestore.instance.collection('users')... call and
+    // the old _transactionService.recordTransaction call are no longer needed here.
+
+    // --- NEW TREASURY LOGIC ---
+    // A single, safe call to the new centralized method.
+    // It handles the user's debit, Claire's credit, and transaction recording.
+    await firebaseServices.updateTreasuryAndUser(
+      userId: userId,
+      amount: 10,
+      type: t_model.TransactionType.debit,
+      userTransactionDescription: "10 Loves lost for a deleted advise.",
+      metadata: {
+        'sessionId': widget.featuredSessionModel?.sessionId,
+        'commentId': widget.commentSessionModel?.commentId,
+        'reason': 'advise_deleted'
       },
-      SetOptions(merge: true),
     );
-    logger.d('Successfully decreased total love count');
+    // --- END OF NEW TREASURY LOGIC ---
+
+    // --- Send Push Notification to the User ---
+    try {
+      final notificationModel = pushNotification.NotificationModel(
+          topic: userId, // Send to the user's personal topic
+          data: pushNotification.Data(id: userId, route: 'wallet'),
+          notification: pushNotification.Notification(
+              title: 'An Advise Was Deleted',
+              body: "Your advise was deleted, and you lost 10 ❤️."));
+      await notificationService.sendNotification(notificationModel.toJson());
+    } catch (e) {
+      print("Failed to send 'Advise Deleted' push notification: $e");
+    }
+    // --- End of Push Notification ---
   }
+
+
 
   /// subscribe user to a topic
   Future<void> notifyForDeletedAdvise() async {

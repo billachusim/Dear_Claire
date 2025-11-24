@@ -2,12 +2,17 @@ import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/ui/featured/model/session.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/strings.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import '../../data/models/transaction_model.dart' as t_model;
 import '../../helpers/toast_helper.dart';
+import '../../services/data/notification_model.dart' as push_notification;
+import '../../services/notification_service.dart';
+import '../../services/transaction_service.dart';
 import '../../utils/constant.dart';
 
 class RequestFeatureForm extends StatefulWidget {
@@ -22,6 +27,8 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
   final TextEditingController _whyFeatureController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isProcessing = false;
+  final TransactionService _transactionService = TransactionService();
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -118,15 +125,20 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
     );
   }
 
+
+  // In /lib/ui/featured/request_feature_form.dart
+
   Future<void> _submitRequest() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isProcessing = true;
       });
 
+      // --- Love count check remains the same ---
       final _user = await firebaseServices.getUserInfo();
       if (_user.currentLoveCount < 1000) {
-        showToast(message: 'You need at least 1000 Loves to submit a feature request.');
+        showToast(
+            message: 'You need at least 1000 Loves to submit a feature request.');
         setState(() {
           _isProcessing = false;
         });
@@ -140,24 +152,65 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
       final isAbusive = await _checkForAbusiveLanguage(title, message, egoName);
 
       if (isAbusive) {
-        showToast(message: 'Your request contains inappropriate language and cannot be submitted.');
+        showToast(
+            message:
+            'Your request contains inappropriate language and cannot be submitted.');
         setState(() {
           _isProcessing = false;
         });
         return;
       }
 
-      await firebaseServices.deductLoves(1000);
+      if (_currentUser != null) {
+        // --- NEW TREASURY LOGIC ---
+        // A single, safe call to the new centralized method.
+        // It handles user debit, Claire's credit, and transaction recording.
+        await firebaseServices.updateTreasuryAndUser(
+          userId: _currentUser!.uid,
+          amount: 1000,
+          type: t_model.TransactionType.debit,
+          userTransactionDescription: "1000 Loves paid to feature a session.",
+          metadata: {
+            'sessionId': widget.session.sessionId,
+            'sessionTitle': widget.session.title,
+            'reason': 'feature_request'
+          },
+        );
+        // --- END OF NEW TREASURY LOGIC ---
+
+
+        // --- Send Push Notification ---
+        try {
+          final notificationModel = push_notification.NotificationModel(
+              topic: _currentUser!.uid, // Send to the user's personal topic
+              data: push_notification.Data(id: _currentUser!.uid, route: 'wallet'),
+              notification: push_notification.Notification(
+                  title: "Session Featured!",
+                  body:
+                  "1000 ❤️ were successfully used to feature your session."));
+          await notificationService.sendNotification(notificationModel.toJson());
+        } catch (e) {
+          print("Failed to send 'Feature Session' push notification: $e");
+        }
+        // --- End of Push Notification ---
+      }
+
+      // This line already exists and features the session.
       await firebaseServices.featureSession(widget.session.sessionId!);
 
       showToast(message: 'Your session has been featured successfully!');
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
 
       setState(() {
         _isProcessing = false;
       });
     }
   }
+
+
+
 
   Future<bool> _checkForAbusiveLanguage(String title, String message, String egoName) async {
     const apiKey = 'AIzaSyA2Nh3m4lupDBewWT_Z0ZBkwpjXY9x6Fi4';

@@ -27,7 +27,11 @@ import '../../../services/user_model.dart';
 import '../../../utils/strings.dart';
 import '../../../widgets/custom_image_widget.dart';
 import '../../Admob/ad_state.dart';
+import '../../data/models/transaction_model.dart' as t_model;
+import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/native_gallery_saver.dart';
+import '../../services/notification_service.dart';
+import '../../services/transaction_service.dart';
 import '../../widgets/chat_edit_field.dart';
 import '../../widgets/comment_widget.dart';
 import '../../widgets/toast.dart';
@@ -49,7 +53,7 @@ class NotifiedSessionDetails extends StatefulWidget {
 class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   final screenshotController = ScreenshotController();
   TextEditingController editSessionController = TextEditingController();
-
+  final TransactionService _transactionService = TransactionService();
   User? currentUser = FirebaseAuth.instance.currentUser;
 
   bool? isFeatured;
@@ -834,30 +838,70 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
 
   /// checks if advise meets original advise rules...
   /// if it does, then increment necessary counts.
-  Future<bool> isOriginalAdvise(BuildContext context, String adviseText, Session session) async {
+  Future<bool> isOriginalAdvise(BuildContext context, String adviseText,
+      Session session) async {
     final _timeAgo = timeAgo();
     final _advise = adviseText.toString();
     final _length = _advise.length;
-    if(!_timeAgo.contains('day'))
-      if (_advise.contains("arling"))
-        if (_length >= 20)
 
-        {
-          incrementAdviseCount();
-          incrementTotalLoveCount();
+    if (!_timeAgo.contains('day') && _advise.contains("arling") &&
+        _length >= 20) {
 
-          showToast("Thanks! You earned 10 Loves.");
+      incrementAdviseCount();
 
-          flutterLocalNotificationsPlugin.show(0, 'ClaireLove Wallet',
-              "Thanks for that original advise. You just earned 10 Loves.", _notificationDetails(), payload: "wallet");
+      if (currentUser != null) {
+        // --- NEW TREASURY LOGIC ---
+        // A single, safe call to the new centralized method.
+        final bool wasApproved = await firebaseServices.updateTreasuryAndUser(
+          userId: currentUser!.uid,
+          amount: 10,
+          type: t_model.TransactionType.credit,
+          userTransactionDescription: "10 Loves received for an original advise.",
+          metadata: {'sessionId': session.sessionId},
+        );
 
-          Future.delayed(Duration(seconds: 5), () {
-            _showAdviseInterstitialAd();
-          });
-          return true;
+        // Check if the transaction was approved or is pending
+        if (!wasApproved) {
+          // If the treasury was too low, the transaction is now pending.
+          showToast("Your reward of 10 Loves is pending admin approval.");
+          // We don't send a push notification here because the reward isn't confirmed.
+          return true; // Exit the function gracefully.
         }
+        // --- END OF NEW TREASURY LOGIC ---
+
+
+        // --- Send Push Notification (Only if approved) ---
+        try {
+          final notificationModel = push_notification.NotificationModel(
+              topic: currentUser!.uid, // Send to the user's personal topic
+              data: push_notification.Data(id: currentUser!.uid, route: 'wallet'),
+              notification: push_notification.Notification(
+                  title: "You've Earned Love!",
+                  body: "You received 10 ❤️ for posting an original advise."));
+          await notificationService.sendNotification(notificationModel.toJson());
+        } catch (e) {
+          print("Failed to send 'Original Advise' push notification: $e");
+        }
+      }
+
+      showToast("Thanks! You earned 10 Loves.");
+
+      // This local notification is still useful for immediate UI feedback.
+      flutterLocalNotificationsPlugin.show(
+          0,
+          'ClaireLove Wallet',
+          "Thanks for that original advise. You just earned 10 Loves.",
+          _notificationDetails(),
+          payload: "wallet");
+
+      Future.delayed(Duration(seconds: 5), () {
+        _showAdviseInterstitialAd();
+      });
+      return true;
+    }
     return false;
   }
+
 
 
   final AndroidNotificationChannel channel = AndroidNotificationChannel(

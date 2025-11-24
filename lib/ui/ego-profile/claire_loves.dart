@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../widgets/recent_transactions_list.dart';
 import 'request_claire_love_form.dart';
 
 class ClaireLoves extends StatefulWidget {
@@ -32,6 +33,10 @@ class _ClaireLovesState extends State<ClaireLoves> {
   double _convertedAmount = 0.0;
   late String _userId;
   bool _isLoading = true;
+  int _loveSentForVisits = 0;
+  int _profileVisitLove = 0;
+  int _loveFromThanks = 0;
+  int _loveSentForThanks = 0;
 
   final TextEditingController _amountController = TextEditingController();
   User? currentUser = FirebaseAuth.instance.currentUser;
@@ -72,6 +77,10 @@ class _ClaireLovesState extends State<ClaireLoves> {
           _withdrawnLoveCount = data["withdrawnLoveCount"] ?? 0;
           _sessionCount = data["sessionCount"] ?? 0;
           _adviseCount = data["adviseCount"] ?? 0;
+          _loveSentForVisits = data["loveSentForVisits"] ?? 0;
+          _profileVisitLove = data["profileVisitLove"] ?? 0;
+          _loveFromThanks = data["loveFromThanks"] ?? 0;
+          _loveSentForThanks = data["loveSentForThanks"] ?? 0;
           _userId = data["userId"] ?? "";
           _rate = userType == 'SUPER_ADMIN'
               ? 3.0
@@ -111,6 +120,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                   SliverToBoxAdapter(child: SizedBox(height: 20)),
                   _buildStatsSection(),
                   SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  _buildRecentTransactions(),
                   _buildWithdrawSection(),
                 ],
               ),
@@ -166,6 +176,10 @@ class _ClaireLovesState extends State<ClaireLoves> {
               "Withdrawn Loves", "$_withdrawnLoveCount ❤️", Colors.orange),
           _buildStatCard("Sessions", "$_sessionCount 📝", Colors.blue),
           _buildStatCard("Advises", "$_adviseCount 💡", Colors.purple),
+          _buildStatCard("Love from Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
+          _buildStatCard("Love Sent on Visits", "-$_loveSentForVisits ❤️", Colors.grey),
+          _buildStatCard("Love from Thanks", "+$_loveFromThanks ❤️", Colors.teal),
+          _buildStatCard("Love Sent as Thanks", "-$_loveSentForThanks ❤️", Colors.blueGrey),
         ],
       ),
     );
@@ -193,6 +207,37 @@ class _ClaireLovesState extends State<ClaireLoves> {
                 fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRecentTransactions() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Recent Transactions",
+              style: GoogleFonts.lato(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 10),
+            Container(
+              height: 300, // Give it a fixed height or use Expanded in a Column
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Pallet.colorSecondary.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: RecentTransactionsList(),
+            ),
+          ],
+        ),
       ),
     );
   }

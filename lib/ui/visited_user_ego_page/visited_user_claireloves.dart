@@ -4,16 +4,18 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/ui/ego-profile/love_history_chart.dart';
-import 'package:clairediary/ui/routes/page_router_animation.dart';
-import 'package:clairediary/ui/visited_user_ego_page/send_clairelove_form.dart';
 import 'package:clairediary/utils/color.dart';
-import 'package:clairediary/utils/constant.dart';
-import 'package:clairediary/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../data/models/transaction_model.dart' as t_model;
+import '../../services/data/notification_model.dart' as push_notification;
+import '../../services/notification_service.dart';
+import '../../services/transaction_service.dart';
+import '../../services/user_model.dart';
 
 class VisitedUserClaireLoves extends StatefulWidget {
   final String visitedUsersID;
@@ -37,14 +39,17 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
   double _rate = 1.5;
   double _convertedAmount = 0.0;
   bool _isLoading = true;
-
+  final TransactionService _transactionService = TransactionService();
+  final FirebaseServices _firebaseServices = FirebaseServices();
   final TextEditingController _amountController = TextEditingController();
   User? currentUser = FirebaseAuth.instance.currentUser;
+  bool _visitLoveTransferred = false;
 
   @override
   void initState() {
     super.initState();
     _fetchUserData();
+    _handleSilentProfileVisitTransfer();
     _amountController.addListener(_calculateConversion);
   }
 
@@ -95,6 +100,143 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
       AppToast.showError(e.toString());
     }
   }
+
+
+  // In /lib/ui/visited_user_ego_page/visited_user_claireloves.dart
+
+  Future<void> _handleSilentProfileVisitTransfer() async {
+    // 1. Safety checks remain the same.
+    if (_visitLoveTransferred || currentUser == null ||
+        currentUser!.uid == widget.visitedUsersID) {
+      return;
+    }
+
+    // Mark as processed immediately.
+    setState(() {
+      _visitLoveTransferred = true;
+    });
+
+    try {
+      final visitor = await _firebaseServices.getUserInfo();
+
+      // 2. Check if the visitor has at least 1 Love to give.
+      if (visitor.currentLoveCount < 1) {
+        print("Visitor has less than 1 love, cannot perform silent visit transfer.");
+        return;
+      }
+
+      // 3. Use a Firestore WriteBatch for an atomic update.
+      final batch = FirebaseFirestore.instance.batch();
+
+      // --- Reference to the visitor's document ---
+      final visitorRef = FirebaseFirestore.instance.collection('users').doc(visitor.userId!);
+
+      // --- Reference to the visited user's document ---
+      final visitedUserRef = FirebaseFirestore.instance.collection('users').doc(widget.visitedUsersID);
+
+      // --- Perform a 3-PART ATOMIC UPDATE ---
+
+      // a. Debit 1 love from the visitor's CURRENT count.
+      batch.update(visitorRef, {'currentLoveCount': FieldValue.increment(-1)});
+
+      // b. Increment the visitor's NEW "loveSentForVisits" counter.
+      batch.update(visitorRef, {'loveSentForVisits': FieldValue.increment(1)});
+
+      // c. Credit 1 love to the visited user's "profileVisitLove" field.
+      batch.update(visitedUserRef, {'profileVisitLove': FieldValue.increment(1)});
+
+      // Commit all three updates at once.
+      await batch.commit();
+
+      print("Successfully processed 1 love for profile visit (silent transaction).");
+
+      // 4. Send a push notification to the visited user (remains the same).
+      final notificationModel = push_notification.NotificationModel(
+          topic: widget.visitedUsersID,
+          data: push_notification.Data(id: widget.visitedUsersID, route: 'wallet'),
+          notification: push_notification.Notification(
+              title: "Someone Visited You!",
+              body: "${visitor.nickname} visited your profile and you earned 1 ❤️ from the visit."
+          )
+      );
+      await notificationService.sendNotification(notificationModel.toJson());
+
+    } catch (e) {
+      print("Error during silent profile visit love transfer: $e");
+      setState(() {
+        _visitLoveTransferred = false;
+      });
+    }
+  }
+
+
+
+  Future<void> _sendGiftNotifications({
+    required String senderName,
+    required String receiverId,
+    required int amount,
+  }) async {
+    try {
+      // Notify the receiver
+      final receiverNotification = push_notification.NotificationModel(
+          topic: receiverId, // Subscribing users to their own UID topic
+          data: push_notification.Data(id: receiverId, route: 'wallet'),
+          notification: push_notification.Notification(
+              title: "You've Received Love!",
+              body: "$senderName has sent you $amount ❤️"));
+      await notificationService.sendNotification(receiverNotification.toJson());
+
+      // Notify the sender (confirmation)
+      final senderNotification = push_notification.NotificationModel(
+          topic: currentUser!.uid,
+          data: push_notification.Data(id: currentUser!.uid, route: 'wallet'),
+          notification: push_notification.Notification(
+              title: "Love Sent!",
+              body: "You successfully sent loves to ${widget.visitedEgoName}."));
+      await notificationService.sendNotification(senderNotification.toJson());
+
+    } catch (e) {
+      print("Failed to send gift notifications: $e");
+    }
+  }
+
+  Future<void> _sendAdminEmail({
+    required UserModel sender,
+    required String receiverName,
+    required String receiverId,
+    required int amountSent,
+    required int amountReceived,
+    required String note
+  }) async {
+    try {
+      final String emailPayload = '''
+A 'Send Love' transaction has occurred:
+--------------------------------
+Sender Nickname: ${sender.nickname}
+Sender ID: ${sender.userId}
+Amount Sent: $amountSent Loves
+
+Receiver Nickname: $receiverName
+Receiver ID: $receiverId
+Amount Received: $amountReceived Loves
+
+Note: "${note.isNotEmpty ? note : 'No note provided.'}"
+Timestamp: ${DateTime.now().toIso8601String()}
+''';
+
+      final Email email = Email(
+        body: emailPayload,
+        subject: '[Love Transfer] ${sender.nickname} -> $receiverName',
+        recipients: ['dearclaireapp@gmail.com'],
+        isHTML: false,
+      );
+      await FlutterEmailSender.send(email);
+    } catch (e) {
+      print("Failed to prepare admin email: $e");
+      // Don't block the user, just log the error
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -281,32 +423,172 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
     );
   }
 
+
   void _handleSendLove() async {
-    if (_amountController.text.isEmpty) {
-      AppToast.showError("Please enter an amount");
+    // Basic validation before showing the dialog
+    if (currentUser == null) {
+      AppToast.showError("You must be logged in to send love.");
       return;
     }
     final amount = int.tryParse(_amountController.text);
     if (amount == null || amount <= 0) {
-      AppToast.showError("Please enter a valid amount");
+      AppToast.showError("Please enter a valid amount to send.");
       return;
     }
 
-    final sender = await firebaseServices.getUserInfo();
-    if (sender.currentLoveCount < amount) {
-      AppToast.showError("You don't have enough love to send.");
+    // --- FIX: Calculate total debit amount for balance check ---
+    final int taxAmount = (amount * 0.10).ceil();
+    final int totalDebitAmount = amount + taxAmount;
+    // --- END FIX ---
+
+    final sender = await _firebaseServices.getUserInfo();
+
+    // --- FIX: Check against the total debit amount ---
+    if (sender.currentLoveCount < totalDebitAmount) {
+      AppToast.showError("You need $totalDebitAmount Loves to send $amount (including tax).");
       return;
     }
+    // --- END FIX ---
 
-    PageRouter.gotoWidget(
-        SendClaireLoveForm(
-          amountToSend: _convertedAmount.toString(),
-          userId: widget.visitedUsersID,
-          visitedUsersId: widget.visitedUsersID,
-          visitedUser: widget.visitedEgoName,
-        ),
-        context);
+    // If all checks pass, show the confirmation dialog
+    _showConfirmationDialog(amount, sender);
   }
+
+
+
+  void _showConfirmationDialog(int amount, UserModel sender) {
+    final noteController = TextEditingController();  // --- Calculate tax and total debit ---
+    final int taxAmount = (amount * 0.10).ceil(); // 10% tax, rounded up.
+    final int totalDebitAmount = amount + taxAmount;
+    final int amountToReceive = _convertedAmount.toInt();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Pallet.colorSecondary,
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text("Confirm Your Gift",
+              style: TextStyle(color: Colors.white)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // --- Updated Dialog Text ---
+                Text(
+                  "You are sending $amount ❤️ to ${widget.visitedEgoName}.",
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "They will receive: $amountToReceive ❤️",
+                  style: TextStyle(color: Colors.greenAccent, fontSize: 14),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Claire's Tax (10%): $taxAmount ❤️",
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Total Debit: $totalDebitAmount ❤️",
+                  style: TextStyle(color: Colors.redAccent, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                // --- End of Updated Text ---
+                SizedBox(height: 20),
+                TextFormField(
+                  controller: noteController,
+                  style: TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: "Add a short note (optional)",
+                    labelStyle: TextStyle(color: Colors.white54),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Pallet.colorPrimary),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white24),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text("Cancel", style: TextStyle(color: Colors.redAccent)),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Pallet.colorPrimary),
+              child: Text("Confirm & Send",
+                  style: TextStyle(color: Colors.white)),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                setState(() => _isLoading = true);
+
+                try {
+                  final senderId = currentUser!.uid;
+                  final receiverId = widget.visitedUsersID;
+                  final note = noteController.text.trim();
+
+                  final noteText = note.isNotEmpty ? ' for "$note"' : '.';
+                  final senderDesc = "Out: $totalDebitAmount ❤️ ($amount to ${widget.visitedEgoName} + $taxAmount tax)$noteText";
+                  final receiverDesc = "Credit: $amountToReceive ❤️ received from ${sender.nickname}$noteText";
+                  final claireDesc = "Credit: $taxAmount ❤️ tax from transfer: ${sender.nickname} -> ${widget.visitedEgoName}";
+
+                  // --- SINGLE, CORRECT CALL to the new transfer method ---
+                  bool success = await _firebaseServices.transferLoveBetweenUsers(
+                    senderId: senderId,
+                    receiverId: receiverId,
+                    amountToSend: amountToReceive,
+                    taxAmount: taxAmount,
+                    totalDebitAmount: totalDebitAmount,
+                    senderTransactionDesc: senderDesc,
+                    receiverTransactionDesc: receiverDesc,
+                    claireTransactionDesc: claireDesc,
+                    metadata: {'senderId': senderId, 'receiverId': receiverId, 'note': note},
+                  );
+
+                  if (success) {
+                    AppToast.show("Love sent successfully!");
+                    await _sendGiftNotifications(
+                      senderName: sender.nickname ?? 'An Ego',
+                      receiverId: receiverId,
+                      amount: amountToReceive,
+                    );
+                    await _sendAdminEmail(
+                      sender: sender,
+                      receiverName: widget.visitedEgoName,
+                      receiverId: receiverId,
+                      amountSent: totalDebitAmount,
+                      amountReceived: amountToReceive,
+                      note: note,
+                    );
+                  } else {
+                    AppToast.showError("Transaction failed. Please try again.");
+                  }
+                } catch (e) {
+                  AppToast.showError("An error occurred. Please try again.");
+                  print("Error in _showConfirmationDialog: $e");
+                } finally {
+                  _amountController.clear();
+                  _fetchUserData();
+                  setState(() => _isLoading = false);
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
+
 
   List<FlSpot> _generateDummySpots() {
     final Random random = Random();

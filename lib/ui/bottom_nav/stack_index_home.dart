@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:clairediary/widgets/drawer_transactions_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/chats/chatrooms.dart';
 import 'package:clairediary/ui/dairy/diary.dart';
@@ -23,13 +24,19 @@ import 'package:just_audio/just_audio.dart';
 import 'package:shake/shake.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
+import '../../helpers/toast_helper.dart';
+import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/firebase_services.dart';
+import '../../services/notification_service.dart';
 import '../../services/user_model.dart';
 import '../../utils/helper.dart';
+import '../../widgets/recent_transactions_list.dart';
 import '../routes/page_router_animation.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'destination.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../../data/models/transaction_model.dart' as t_model;
+import '../../services/transaction_service.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -439,22 +446,27 @@ class _AppDrawer extends StatefulWidget {
   final int playerScore;
   final int claireScore;
 
-  const _AppDrawer({
-    Key? key,
-    required this.userName,
-    required this.userType,
-    required this.avatarUrl,
-    required this.lockAlertDialog,
-    required this.onAlterEgoTapped,
-    required this.onDonateClicked,
-    required this.sendClaireToSomeone,
-    required this.launchEmailApp,
-    required this.isUserSignedIn,
-    required this.ticTacToeController,
-    required this.twitterController,
-    required this.playerScore,
-    required this.claireScore,
-  }) : super(key: key);
+  const _AppDrawer
+      (
+      {
+        Key
+        ?
+        key
+        ,
+        required this.userName,
+        required this.userType,
+        required this.avatarUrl,
+        required this.lockAlertDialog,
+        required this.onAlterEgoTapped,
+        required this.onDonateClicked,
+        required this.sendClaireToSomeone,
+        required this.launchEmailApp,
+        required this.isUserSignedIn,
+        required this.ticTacToeController,
+        required this.twitterController,
+        required this.playerScore,
+        required this.claireScore,
+      }) : super(key: key);
 
   @override
   State<_AppDrawer> createState() => _AppDrawerState();
@@ -462,14 +474,17 @@ class _AppDrawer extends StatefulWidget {
 
 class _AppDrawerState extends State<_AppDrawer> {
   late final AudioPlayer _audioPlayer;
+  final TransactionService _transactionService = TransactionService();
+  final User? _currentUser = FirebaseAuth.instance.currentUser;
+  bool _isGameRewardProcessed = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize the audio player here
+// Initialize the audio player here
     _audioPlayer = AudioPlayer();
 
-    // Add the JavaScript channel for sound here
+// Add the JavaScript channel for sound here
     widget.ticTacToeController.addJavaScriptChannel(
       'Sound',
       onMessageReceived: (JavaScriptMessage message) async {
@@ -488,12 +503,22 @@ class _AppDrawerState extends State<_AppDrawer> {
       },
     );
 
-    // Trigger Claire's first move
+// Trigger Claire's first move
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         widget.ticTacToeController.runJavaScript('claireMakesFirstMove()');
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant _AppDrawer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+// Check if the score has changed and trigger the game result logic
+    if (widget.playerScore != oldWidget.playerScore ||
+        widget.claireScore != oldWidget.claireScore) {
+      _handleGameResult();
+    }
   }
 
   @override
@@ -514,7 +539,8 @@ class _AppDrawerState extends State<_AppDrawer> {
               _buildTicTacToeGame(context),
               const SizedBox(height: 10),
               _buildMenuList(context),
-              _buildTwitterFeed(context),
+              _buildRecentTransactions(),
+// _buildTwitterFeed(context),
               const SizedBox(height: 20),
             ],
           ),
@@ -531,7 +557,8 @@ class _AppDrawerState extends State<_AppDrawer> {
         image: DecorationImage(
           image: const AssetImage("assets/images/claire_bg_2.jpeg"),
           fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(Pallet.colorPrimary.withOpacity(0.6), BlendMode.darken),
+          colorFilter:
+          ColorFilter.mode(Pallet.colorPrimary.withOpacity(0.6), BlendMode.darken),
         ),
       ),
       accountEmail: const Text(
@@ -559,13 +586,22 @@ class _AppDrawerState extends State<_AppDrawer> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 2.5),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), spreadRadius: 2, blurRadius: 6)],
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  spreadRadius: 2,
+                  blurRadius: 6)
+            ],
           ),
           child: CachedNetworkImage(
             imageUrl: widget.avatarUrl,
-            imageBuilder: (context, imageProvider) => CircleAvatar(backgroundImage: imageProvider),
-            placeholder: (context, url) => const CircularProgressIndicator(color: Colors.white),
-            errorWidget: (context, url, error) => const CircleAvatar(backgroundImage: AssetImage("assets/images/Speak_No_Evil_Monkey_Emoji.png")),
+            imageBuilder: (context, imageProvider) =>
+                CircleAvatar(backgroundImage: imageProvider),
+            placeholder: (context, url) =>
+            const CircularProgressIndicator(color: Colors.white),
+            errorWidget: (context, url, error) => const CircleAvatar(
+                backgroundImage:
+                AssetImage("assets/images/Speak_No_Evil_Monkey_Emoji.png")),
           ),
         ),
       ),
@@ -600,8 +636,8 @@ class _AppDrawerState extends State<_AppDrawer> {
 
   Widget _buildTicTacToeGame(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
@@ -610,9 +646,15 @@ class _AppDrawerState extends State<_AppDrawer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Quick Tac Toe", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text("Quick Tac Toe",
+              style:
+              TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 8),
           _buildScoreboard(context),
+          const SizedBox(height: 12),
+          _buildGameProgressBar(),
+          const SizedBox(height: 8),
+          _buildMilestoneMarkers(),
           const SizedBox(height: 12),
           AspectRatio(
             aspectRatio: 1.0,
@@ -623,6 +665,66 @@ class _AppDrawerState extends State<_AppDrawer> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildGameProgressBar() {
+    // Calculate the progress based on the player's score, capping at 20.
+    double progress = (widget.playerScore / 20).clamp(0.0, 1.0);
+
+    return Container(
+      height: 12,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.black.withOpacity(0.3),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: LinearProgressIndicator(
+          value: progress,
+          backgroundColor: Colors.transparent,
+          valueColor: const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMilestoneMarkers() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _milestoneWidget("10 Wins", "50 ❤️"),
+          _milestoneWidget("20 Wins", "100 ❤️", alignment: CrossAxisAlignment.end),
+        ],
+      ),
+    );
+  }
+
+  Widget _milestoneWidget(String title, String subtitle, {CrossAxisAlignment alignment = CrossAxisAlignment.start}) {
+    return Column(
+      crossAxisAlignment: alignment,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            color: Colors.greenAccent,
+            fontWeight: FontWeight.w900,
+            fontSize: 14,
+          ),
+        ),
+      ],
     );
   }
 
@@ -637,7 +739,9 @@ class _AppDrawerState extends State<_AppDrawer> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _scorePillar('You', widget.playerScore, Colors.white),
-          Text('vs', style: GoogleFonts.lato(color: Colors.white54, fontSize: 14, fontWeight: FontWeight.w600)),
+          Text('vs',
+              style: GoogleFonts.lato(
+                  color: Colors.white54, fontSize: 14, fontWeight: FontWeight.w600)),
           _scorePillar('Claire', widget.claireScore, Colors.white),
         ],
       ),
@@ -647,9 +751,13 @@ class _AppDrawerState extends State<_AppDrawer> {
   Widget _scorePillar(String label, int score, Color labelColor) {
     return Column(
       children: [
-        Text(label, style: GoogleFonts.montserrat(color: labelColor, fontSize: 14, fontWeight: FontWeight.bold)),
+        Text(label,
+            style: GoogleFonts.montserrat(
+                color: labelColor, fontSize: 14, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        Text('$score', style: GoogleFonts.lato(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
+        Text('$score',
+            style: GoogleFonts.lato(
+                color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
       ],
     );
   }
@@ -659,8 +767,15 @@ class _AppDrawerState extends State<_AppDrawer> {
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Column(
         children: [
-          _MenuTile(title: "How Claire Works", icon: Icons.info_rounded, onTap: () => Navigator.of(context).pushNamed(AppRoutes.howClaireWorks)),
-          _MenuTile(title: "Request Alter Ego Mode 🔥", icon: Icons.star_rounded, onTap: () => Navigator.of(context).pushNamed(AppRoutes.howAlterEgoWorks)),
+          _MenuTile(
+              title: "How Claire Works",
+              icon: Icons.info_rounded,
+              onTap: () => Navigator.of(context).pushNamed(AppRoutes.howClaireWorks)),
+          _MenuTile(
+              title: "Request Alter Ego Mode 🔥",
+              icon: Icons.star_rounded,
+              onTap: () =>
+                  Navigator.of(context).pushNamed(AppRoutes.howAlterEgoWorks)),
           _MenuTile(
             title: "Auto Diary",
             icon: Icons.auto_awesome_motion_rounded,
@@ -670,7 +785,10 @@ class _AppDrawerState extends State<_AppDrawer> {
               }
             },
           ),
-          _MenuTile(title: "Top Up Your Love", icon: Icons.currency_exchange_rounded, onTap: widget.onDonateClicked),
+          _MenuTile(
+              title: "Top Up Your Love",
+              icon: Icons.currency_exchange_rounded,
+              onTap: widget.onDonateClicked),
           _MenuTile(
             title: "More Games With Claire",
             icon: Icons.gamepad_rounded,
@@ -679,7 +797,10 @@ class _AppDrawerState extends State<_AppDrawer> {
               Navigator.of(context).pushNamed(AppRoutes.games);
             },
           ),
-          _MenuTile(title: "Send Claire To Someone", icon: Icons.share_rounded, onTap: widget.sendClaireToSomeone),
+          _MenuTile(
+              title: "Send Claire To Someone",
+              icon: Icons.share_rounded,
+              onTap: widget.sendClaireToSomeone),
           _MenuTile(
             title: "Updates & Announcements",
             icon: Icons.announcement_rounded,
@@ -693,36 +814,158 @@ class _AppDrawerState extends State<_AppDrawer> {
     );
   }
 
-  Widget _buildTwitterFeed(BuildContext context) {
+  Widget _buildRecentTransactions() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       height: 400,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withOpacity(0.2)),
       ),
-      child: Column(
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.all(12.0),
+          Padding(
+            padding: EdgeInsets.only(bottom: 12.0),
             child: Row(
               children: [
-                Icon(Icons.rss_feed_rounded, color: Color(0xFF1DA1F2)),
+                Icon(Icons.history_rounded, color: Colors.white70),
                 SizedBox(width: 8),
-                Text("Latest from X", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  "Recent Love Transactions",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                ),
               ],
             ),
           ),
           Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
-              child: WebViewWidget(controller: widget.twitterController),
-            ),
-          ),
+              child: DrawerRecentTransactionsList()),
         ],
       ),
     );
+  }
+
+// Widget _buildTwitterFeed(BuildContext context) {
+//   return Container(
+//     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+//     height: 400,
+//     decoration: BoxDecoration(
+//       color: Colors.black.withOpacity(0.2),
+//       borderRadius: BorderRadius.circular(16),
+//       border: Border.all(color: Colors.white.withOpacity(0.2)),
+//     ),
+//     child: Column(
+//       children: [
+//         const Padding(
+//           padding: EdgeInsets.all(12.0),
+//           child: Row(
+//             children: [
+//               Icon(Icons.rss_feed_rounded, color: Color(0xFF1DA1F2)),
+//               SizedBox(width: 8),
+//               Text("Latest from X", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+//             ],
+//           ),
+//         ),
+//         Expanded(
+//           child: ClipRRect(
+//             borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
+//             child: WebViewWidget(controller: widget.twitterController),
+//           ),
+//         ),
+//       ],
+//     ),
+//   );
+// }
+
+  Future<void> _handleGameResult() async {
+// Stop if a reward has already been processed or if the user is not logged in
+    if (_isGameRewardProcessed || _currentUser == null) return;
+
+// Condition 1: Player wins (Credit user, Debit Claire)
+    if (widget.playerScore >= 10) {
+      setState(() {
+        _isGameRewardProcessed = true; // Mark as processed
+      });
+
+// --- NEW TREASURY LOGIC FOR WIN ---
+      final bool wasApproved = await firebaseServices.updateTreasuryAndUser(
+        userId: _currentUser!.uid,
+        amount: 100,
+        type: t_model.TransactionType.credit,
+        userTransactionDescription:
+        "100 Loves won from Tic-Tac-Toe against Claire.",
+        metadata: {'game': 'tic-tac-toe', 'reason': 'player_won'},
+      );
+
+      if (!wasApproved) {
+// Treasury is low, so the reward is pending.
+        showToast(
+            message: "You won! Your 100 Love reward is pending admin approval.");
+        return; // Exit gracefully
+      }
+// --- END OF NEW TREASURY LOGIC ---
+
+// --- Send Push Notification for WIN (Only if approved) ---
+      try {
+        final notificationModel = push_notification.NotificationModel(
+            topic: _currentUser!.uid,
+            data: push_notification.Data(id: _currentUser!.uid, route: 'wallet'),
+            notification: push_notification.Notification(
+                title: 'You Won!',
+                body: "You beat Claire in Tic-Tac-Toe and won 100 ❤️."));
+        await notificationService.sendNotification(notificationModel.toJson());
+      } catch (e) {
+        print("Failed to send 'Game Won' push notification: $e");
+      }
+
+      showToast(message: "You won! 100 Loves have been added to your wallet.");
+
+// Play win sound
+      try {
+        if (_audioPlayer.playing) await _audioPlayer.stop();
+        await _audioPlayer.setAsset('assets/audio/win_sound.mp3');
+        _audioPlayer.play();
+      } catch (e) {
+        print("Error playing win sound: $e");
+      }
+    }
+// Condition 2: Player loses (Debit user, Credit Claire)
+    else if (widget.claireScore >= 10) {
+      setState(() {
+        _isGameRewardProcessed = true; // Mark as processed
+      });
+
+// --- NEW TREASURY LOGIC FOR LOSS ---
+      await firebaseServices.updateTreasuryAndUser(
+        userId: _currentUser!.uid,
+        amount: 50,
+        type: t_model.TransactionType.debit,
+        userTransactionDescription:
+        "50 Loves lost in Tic-Tac-Toe against Claire.",
+        metadata: {'game': 'tic-tac-toe', 'reason': 'player_lost'},
+      );
+// --- END OF NEW TREASURY LOGIC ---
+
+// --- Send Push Notification for LOSS ---
+      try {
+        final notificationModel = push_notification.NotificationModel(
+            topic: _currentUser!.uid,
+            data: push_notification.Data(id: _currentUser!.uid, route: 'wallet'),
+            notification: push_notification.Notification(
+                title: 'Claire Won!',
+                body: "Claire beat you in Tic-Tac-Toe. You lost 50 ❤️."));
+        await notificationService.sendNotification(notificationModel.toJson());
+      } catch (e) {
+        print("Failed to send 'Game Lost' push notification: $e");
+      }
+
+      showToast(message: "Claire won! 50 Loves have been deducted.");
+    }
   }
 }
 
@@ -731,7 +974,9 @@ class _MenuTile extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _MenuTile({Key? key, required this.title, required this.icon, required this.onTap}) : super(key: key);
+  const _MenuTile(
+      {Key? key, required this.title, required this.icon, required this.onTap})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {

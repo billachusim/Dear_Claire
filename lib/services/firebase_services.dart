@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:clairediary/services/transaction_service.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,6 +23,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/models/transaction_model.dart' as t_model;
 import 'data/notification_model.dart' as pushNotification;
 final firebase_storage.FirebaseStorage _storage = firebase_storage.FirebaseStorage.instance; // Add this line
 
@@ -44,6 +46,179 @@ class FirebaseServices extends ChangeNotifier {
   //var sharedPreference = SharedPreference.instance;
   UserModel? user;
   UserModel userModel = UserModel();
+
+
+  /// Handles all love transactions between a user and the Claire Treasury.
+  ///
+  /// [userId]: The ID of the user performing the action.
+  /// [amount]: The number of loves to be transacted.
+  /// [type]: 'credit' if the user is receiving loves, 'debit' if they are spending.
+  /// [userTransactionDescription]: The description for the user's transaction list.
+  /// [metadata]: Optional data for the transaction record.
+  ///
+  /// Returns `true` if the transaction was processed, `false` if it was set to pending.
+  Future<bool> updateTreasuryAndUser({
+    required String userId,
+    required int amount,
+    required t_model.TransactionType type,
+    required String userTransactionDescription,
+    Map<String, dynamic>? metadata,
+  }) async {
+    const String claireId = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
+    const int treasuryMinBalance = 4000000;
+    final DocumentReference claireDoc = _firebaseFirestore
+        .collection('users')
+        .doc(claireId);
+    final DocumentReference userDoc = _firebaseFirestore.collection('users').doc(
+        userId);
+    final TransactionService transactionService = TransactionService();
+
+    if (type == t_model.TransactionType.credit) {
+      // USER is RECEIVING loves (deduct from Claire)
+      try {
+        final claireSnapshot = await claireDoc.get();
+        final claireLoves = (claireSnapshot.data() as Map<String,
+            dynamic>?)?['totalLoveCount'] ?? 0;
+
+        if (claireLoves < treasuryMinBalance) {
+          // Treasury is too low, mark as pending and DO NOT process.
+          await transactionService.recordTransaction(
+            userId: userId,
+            amount: amount,
+            type: type,
+            description: userTransactionDescription,
+            status: t_model.TransactionStatus.pending,
+            // Mark as pending
+            metadata: {
+              ...metadata ?? {},
+              'treasury_status': 'pending_low_balance'
+            },
+          );
+          return false; // Indicate that the transaction is pending
+        }
+
+        // Treasury has enough, process the transaction for both.
+        await userDoc.update({
+          'currentLoveCount': FieldValue.increment(amount),
+          'totalLoveCount': FieldValue.increment(amount),
+        });
+        await claireDoc.update({'totalLoveCount': FieldValue.increment(-amount)});
+
+        await transactionService.recordTransaction(
+          userId: userId,
+          amount: amount,
+          type: type,
+          description: userTransactionDescription,
+          status: t_model.TransactionStatus.approved,
+          metadata: metadata,
+        );
+        return true; // Transaction approved
+      } catch (e) {
+        print("Error in treasury credit transaction: $e");
+        return false;
+      }
+    } else {
+      // USER is SPENDING loves (add to Claire)
+      try {
+        // No need to check Claire's balance when user is paying.
+        await userDoc.update({'currentLoveCount': FieldValue.increment(-amount)});
+        await claireDoc.update({'totalLoveCount': FieldValue.increment(amount)});
+
+        await transactionService.recordTransaction(
+          userId: userId,
+          amount: amount,
+          type: type,
+          description: userTransactionDescription,
+          status: t_model.TransactionStatus.approved,
+          metadata: metadata,
+        );
+        return true; // Transaction approved
+      } catch (e) {
+        print("Error in treasury debit transaction: $e");
+        return false;
+      }
+    }
+  }
+
+
+  // In /lib/services/firebase_services.dart, inside the FirebaseServices class
+
+  /// Handles a direct user-to-user love transfer with a 10% tax for Claire.
+  ///
+  /// This is a three-way transaction:
+  /// 1. Debits the sender for the amount + tax.
+  /// 2. Credits the receiver for the amount.
+  /// 3. Credits Claire's treasury for the tax.
+  ///
+  /// Returns `true` if successful, `false` otherwise.
+  Future<bool> transferLoveBetweenUsers({
+    required String senderId,
+    required String receiverId,
+    required int amountToSend,
+    required int taxAmount,
+    required int totalDebitAmount,
+    required String senderTransactionDesc,
+    required String receiverTransactionDesc,
+    required String claireTransactionDesc,
+    Map<String, dynamic>? metadata,
+  }) async {
+    const String claireId = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
+    final DocumentReference senderDoc = _firebaseFirestore.collection('users').doc(senderId);
+    final DocumentReference receiverDoc = _firebaseFirestore.collection('users').doc(receiverId);
+    final DocumentReference claireDoc = _firebaseFirestore.collection('users').doc(claireId);
+    final TransactionService transactionService = TransactionService();
+
+    try {
+      // Use a Firestore transaction to ensure all updates succeed or none do.
+      await _firebaseFirestore.runTransaction((transaction) async {
+        // 1. Debit the sender
+        transaction.update(senderDoc, {'currentLoveCount': FieldValue.increment(-totalDebitAmount)});
+
+        // 2. Credit the receiver
+        transaction.update(receiverDoc, {
+          'currentLoveCount': FieldValue.increment(amountToSend),
+          'totalLoveCount': FieldValue.increment(amountToSend),
+        });
+
+        // 3. Credit Claire's treasury with the tax
+        transaction.update(claireDoc, {'totalLoveCount': FieldValue.increment(taxAmount)});
+      });
+
+      // If the transaction is successful, record the individual transaction logs.
+      // Sender's Debit Record
+      await transactionService.recordTransaction(
+        userId: senderId,
+        amount: totalDebitAmount,
+        type: t_model.TransactionType.debit,
+        description: senderTransactionDesc,
+        metadata: metadata,
+      );
+
+      // Receiver's Credit Record
+      await transactionService.recordTransaction(
+        userId: receiverId,
+        amount: amountToSend,
+        type: t_model.TransactionType.credit,
+        description: receiverTransactionDesc,
+        metadata: metadata,
+      );
+
+      // Claire's Tax Credit Record (Optional but good for auditing)
+      await transactionService.recordTransaction(
+        userId: claireId,
+        amount: taxAmount,
+        type: t_model.TransactionType.credit,
+        description: claireTransactionDesc,
+        metadata: metadata,
+      );
+
+      return true; // Success
+    } catch (e) {
+      print("Error during user-to-user love transfer: $e");
+      return false; // Failure
+    }
+  }
+
 
 
 
@@ -233,17 +408,39 @@ class FirebaseServices extends ChangeNotifier {
   }
 
 
-  /// [delete] all users informations
+  /// [delete] all user's information and loves
   void deleteEgoAccount(BuildContext context, String userId) async {
+    // --- Optional: Record a final transaction for archival ---
+    try {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        final lovesToClear = userDoc.data()?['currentLoveCount'] ?? 0;
+        if (lovesToClear > 0) {
+          await TransactionService().recordTransaction( // Assuming you instantiate or have access to it
+            userId: userId,
+            amount: lovesToClear,
+            type: t_model.TransactionType.debit,
+            description: "Account deleted. Remaining loves cleared.",
+            status: t_model.TransactionStatus.approved,
+            metadata: {'reason': 'account_deletion'},
+          );
+        }
+      }
+    } catch (e) {
+      print("Could not record final transaction for deleted account: $e");
+    }
     await FirebaseAuth.instance.signOut();
     await prefs!.clear();
     final _userId = userId;
-    final collection = FirebaseFirestore.instance
-        .collection('users');
+    final collection = FirebaseFirestore.instance.collection('users');
     await collection.doc(_userId).delete();
     logger.d('Successfully deleted an ego account');
     Navigator.of(context).pushReplacementNamed(AppRoutes.authSelection);
   }
+
+
+
+
 
 
   /// checks if a user is signed in or not

@@ -19,7 +19,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data/models/transaction_model.dart' as t_model;
+import '../services/data/notification_model.dart' as push_notification;
 import '../services/firebase_services.dart';
+import '../services/notification_service.dart';
+import '../services/transaction_service.dart';
 import '../services/user_model.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../utils/strings.dart';
@@ -33,7 +37,7 @@ class EgoModeSessionCard extends StatelessWidget {
   EgoModeSessionCard({Key? key, required this.element, required this.visitedUsersID, required this.visitedEgoName}) : super(key: key);
   late String visitedUsersID;
   late String visitedEgoName;
-
+  final TransactionService _transactionService = TransactionService();
   User? currentUser = FirebaseAuth.instance.currentUser;
 
 
@@ -72,22 +76,58 @@ class EgoModeSessionCard extends StatelessWidget {
 
 
 
-  /// Archive a session
 
+  /// Archive a session
   Future<bool?> sendToArchive() async {
     final value = true;
+
+    if (currentUser != null) {
+      // --- NEW TREASURY LOGIC ---
+      // A single, safe call to the new centralized method.
+      // It handles the user's debit, Claire's credit, and the transaction recording.
+      await firebaseServices.updateTreasuryAndUser(
+        userId: currentUser!.uid,
+        amount: 10,
+        type: t_model.TransactionType.debit,
+        userTransactionDescription: "10 Loves deducted for archiving a session.",
+        metadata: {'sessionId': element.sessionId, 'sessionTitle': element.title},
+      );
+      // --- END OF NEW TREASURY LOGIC ---
+
+
+      // --- Send Push Notification ---
+      try {
+        final notificationModel = push_notification.NotificationModel(
+            topic: currentUser!.uid, // Send to the user's personal topic
+            data: push_notification.Data(id: currentUser!.uid, route: 'wallet'),
+            notification: push_notification.Notification(
+                title: "Session Archived",
+                body: "Your session has been archived. 10 ❤️ were deducted."));
+        await notificationService.sendNotification(notificationModel.toJson());
+      } catch (e) {
+        print("Failed to send 'Archive Session' push notification: $e");
+      }
+      // --- End of Push Notification ---
+    }
+
+    // This part remains the same: update the session document itself.
     FirebaseFirestore.instance
         .collection('sessions')
         .doc(element.sessionId)
         .update({
       "archived": value,
-    },
-    );
+    });
+
     logger.d('Successfully changed archive');
     print('Is Archived?: $value');
     isArchived = value;
+    showToast(message: "Session archived. 10 Loves deducted.");
+
     return value;
   }
+
+
+
 
 
   Future<bool?> removeFromArchive() async {

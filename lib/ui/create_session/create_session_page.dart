@@ -26,6 +26,10 @@ import 'package:hive/hive.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
+import '../../data/models/transaction_model.dart' as t_model;
+import '../../services/data/notification_model.dart' as push_notification;
+import '../../services/notification_service.dart';
+import '../../services/transaction_service.dart';
 import '../featured/model/comment_session_model.dart';
 import '../featured/model/session.dart';
 import 'create_session_controller.dart';
@@ -42,6 +46,7 @@ class CreateSessionPage extends StatefulWidget {
 const int maxFailedLoadAttempts = 3;
 
 class _CreateSessionPageState extends State<CreateSessionPage> {
+  final TransactionService _transactionService = TransactionService();
   TextEditingController sessionTitleController = TextEditingController();
   final FirebaseServices _firebaseServices = FirebaseServices();
   final c = Get.find<CreateSessionController>();
@@ -282,27 +287,64 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   }
 
 
-  /// checks if advise meets original advise rules...
+  /// checks if session meets original session rules...
+  /// if it does, then increment necessary counts.
+  /// checks if session meets original session rules...
   /// if it does, then increment necessary counts.
   Future<bool> isOriginalSession(String sessionText) async {
     final _session = sessionText.toString();
     final _length = _session.length;
 
-    if (_session.contains("ear"))
-      if (_session.contains("laire"))
-        if (_length >= 50)
+    if (_session.contains("ear") && _session.contains("laire") && _length >= 50) {
+      // This is a simple stat counter and can remain.
+      incrementSessionCount();
 
-      {
-        incrementSessionCount();
-        incrementTotalLoveCount();
+      // The old incrementTotalLoveCount() and _transactionService calls are no longer needed here.
 
-        flutterLocalNotificationsPlugin.show(0, 'Clairelove Wallet',
-            "You started an original diary session. 10 Loves for you.", _notificationDetails(), payload: "wallet");
+      if (currentUser != null) {
+        // --- NEW TREASURY LOGIC ---
+        // A single, safe call to the new centralized method.
+        final bool wasApproved = await _firebaseServices.updateTreasuryAndUser(
+          userId: currentUser!.uid,
+          amount: 10,
+          type: t_model.TransactionType.credit,
+          userTransactionDescription: "10 Loves received for an original diary session.",
+          metadata: {'source': 'new_session'},
+        );
 
-        return true;
+        // Check if the transaction was approved or is pending
+        if (!wasApproved) {
+          // If the treasury was too low, the transaction is now pending.
+          showToast("Your reward of 10 Loves is pending admin approval.");
+          // We don't send a push notification because the reward isn't confirmed.
+          return true; // Exit gracefully.
+        }
+        // --- END OF NEW TREASURY LOGIC ---
+
+        // --- Send Push Notification (Only if approved) ---
+        try {
+          final notificationModel = push_notification.NotificationModel(
+              topic: currentUser!.uid, // Send to the user's personal topic
+              data: push_notification.Data(id: currentUser!.uid, route: 'wallet'),
+              notification: push_notification.Notification(
+                  title: "You've Earned Love!",
+                  body: "You received 10 ❤️ for creating an original session."));
+          await notificationService.sendNotification(notificationModel.toJson());
+        } catch (e) {
+          print("Failed to send 'Original Session' push notification: $e");
+        }
       }
+
+      // This local notification is still useful for immediate UI feedback.
+      flutterLocalNotificationsPlugin.show(0, 'Clairelove Wallet',
+          "You started an original diary session. 10 Loves for you.", _notificationDetails(), payload: "wallet");
+
+      return true;
+    }
     return false;
   }
+
+
 
 
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
