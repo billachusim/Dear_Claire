@@ -213,10 +213,6 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                                           .map((element) =>
                                           CommentWidget(
                                             commentSessionModel: element,
-                                            onPressed: () =>
-                                                _updateReaction(
-                                                    element,
-                                                    featuredSessionModel!),
                                             onShare: () =>
                                                 _share(element.message),
                                             featuredSessionModel: featuredSessionModel!,

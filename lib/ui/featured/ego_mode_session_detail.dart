@@ -227,12 +227,10 @@ class _EgoModeSessionDetailState
                                       ..._commentList
                                           .map((element) => CommentWidget(
                                         commentSessionModel: element,
-                                        onPressed: () => _updateReaction(
-                                            element, widget.featuredSessionModel!),
+                                        // onPressed is now removed. The CommentWidget handles its own logic.
                                         onShare: () => _share(element.message),
                                         featuredSessionModel: widget.featuredSessionModel!,
                                         userId: widget.featuredSessionModel!.userId.toString(),
-
                                       ))
                                           .toList(),
 

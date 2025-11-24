@@ -708,12 +708,10 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                     ..._commentList
                                         .map((element) => CommentWidget(
                                       commentSessionModel: element,
-                                      onPressed: () => _updateReaction(
-                                          element, theSession!),
+                                      // onPressed is now removed.
                                       onShare: () => _share(element.message),
                                       featuredSessionModel: theSession!,
                                       userId: theSession!.userId.toString(),
-
                                     ))
                                         .toList(),
 

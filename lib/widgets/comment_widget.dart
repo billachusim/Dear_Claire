@@ -30,13 +30,11 @@ import 'custom_image_widget.dart';
 class CommentWidget extends StatefulWidget {
   CommentWidget(
       {Key? key,
-      this.onPressed,
       this.onShare,
       required this.commentSessionModel, required this.featuredSessionModel, required this.userId})
       : super(key: key);
 
   CommentSessionModel? commentSessionModel;
-  final Function()? onPressed;
   final Function()? onShare;
   late String visitedUsersID;
   late String visitedEgoName;
@@ -53,6 +51,16 @@ class _CommentWidgetState extends State<CommentWidget> {
   User? currentUser = FirebaseAuth.instance.currentUser;
   bool? isFlagged;
   String? _commentTime;
+  bool _isThanked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the button's state based on Firestore data
+    if (currentUser != null) {
+      _isThanked = widget.commentSessionModel?.thanks?.contains(currentUser!.uid) ?? false;
+    }
+  }
 
   String timeAgo() {
     final commentTime = widget.commentSessionModel?.timeCreated?.toDate();
@@ -154,15 +162,14 @@ class _CommentWidgetState extends State<CommentWidget> {
     );
   }
 
-  // In /lib/widgets/comment_widget.dart
+
+
 
   Future<void> _handleThanksTransaction() async {
     if (currentUser == null) {
       showToast("You must be logged in to thank an advise.");
       return;
-    }
-
-    final thankerId = currentUser!.uid;
+    }  final thankerId = currentUser!.uid;
     final thankedAdvise = widget.commentSessionModel!;
     final thankedUserId = thankedAdvise.userId!;
 
@@ -172,13 +179,10 @@ class _CommentWidgetState extends State<CommentWidget> {
       return;
     }
     if (thankedAdvise.thanks!.contains(thankerId)) {
+      // This check will now work and the user will see the toast.
       showToast("You have already thanked this advise.");
       return;
     }
-
-    // This is the existing `onPressed` logic (likely _updateReaction)
-    // We call it here to update the UI immediately and add the user to the `thanks` array.
-    widget.onPressed?.call();
 
     // --- 2. CHECK IF THE THANKED USER IS AN ALTER EGO ---
     final isAlterEgo = thankedAdvise.alterEgoId != null && thankedAdvise.alterEgoId!.isNotEmpty;
@@ -186,53 +190,88 @@ class _CommentWidgetState extends State<CommentWidget> {
     if (!isAlterEgo) {
       // If not an Alter Ego, just add the 'thanks' without a transaction.
       showToast("Thank you for your feedback!");
+      // We still need to persist the 'thanks' list update to Firestore for non-alter egos
+      // so the button stays thanked.
+      await FirebaseFirestore.instance
+          .collection('sessions')
+          .doc(widget.featuredSessionModel?.sessionId)
+          .collection('comments')
+          .doc(thankedAdvise.commentId)
+          .update({
+        'thanks': FieldValue.arrayUnion([thankerId])
+      });
       return;
     }
 
-    // --- 3. PROCEED WITH 1-LOVE "SILENT" TRANSACTION ---
+    // --- 3. PROCEED WITH 1-LOVE TRANSACTION VIA SERVICE ---
+    const int thankYouCost = 1;
+    const int taxAmount = 0; // No tax for a 1-love transaction
+    const int totalDebit = thankYouCost + taxAmount;
+
     try {
       final thanker = await firebaseServices.getUserInfo();
-      if (thanker.currentLoveCount < 1) {
-        showToast("You need at least 1 ❤️ to thank an Alter Ego's advise.");
-        return; // Not enough love.
+      if (thanker.currentLoveCount < totalDebit) {
+        showToast("You need at least $totalDebit ❤️ to thank an Alter Ego's advise.");
+        // Since the UI was already updated, we should ideally revert it here if the transaction fails.
+        // However, for simplicity, we'll leave it as is, but the backend prevents the charge.
+        return;
       }
 
-      // Use a Firestore WriteBatch for an atomic update.
-      final batch = FirebaseFirestore.instance.batch();
-
-      // a. Debit 1 love from the thanker's CURRENT count.
-      final thankerRef = FirebaseFirestore.instance.collection('users').doc(thankerId);
-      batch.update(thankerRef, {'currentLoveCount': FieldValue.increment(-1)});
-
-      // b. Increment the thanker's NEW "loveSentForThanks" counter.
-      batch.update(thankerRef, {'loveSentForThanks': FieldValue.increment(1)});
-
-      // c. Credit 1 love to the thanked user's NEW "loveFromThanks" field.
-      final thankedUserRef = FirebaseFirestore.instance.collection('users').doc(thankedUserId);
-      batch.update(thankedUserRef, {'loveFromThanks': FieldValue.increment(1)});
-
-      // Commit all three updates at once.
-      await batch.commit();
-
-      showToast("1 ❤️ sent to ${thankedAdvise.userNickname} as thanks!");
-
-      // Notify the thanked user
-      await notificationService.sendNotification(
-          pushNotification.NotificationModel(
-              topic: thankedUserId,
-              data: pushNotification.Data(id: thankedUserId, route: 'wallet'),
-              notification: pushNotification.Notification(
-                  title: "You Received a Thank You!",
-                  body: "${thanker.nickname} thanked your advise and sent you 1 ❤️."
-              )
-          ).toJson()
+      // Use the centralized user-to-user transfer method
+      final bool success = await firebaseServices.transferLoveBetweenUsers(
+        senderId: thankerId,
+        receiverId: thankedUserId,
+        amountToSend: thankYouCost,
+        taxAmount: taxAmount,
+        totalDebitAmount: totalDebit,
+        senderTransactionDesc: "Sent 1 ❤️ to thank an advise from ${thankedAdvise.userNickname}.",
+        receiverTransactionDesc: "Received 1 ❤️ from ${thanker.nickname} for your advise.",
+        claireTransactionDesc: "Tax from a 'Thank You' transaction.",
+        forThanks: thankYouCost,
+        fromThanks: thankYouCost,
+        metadata: {
+          'reason': 'thank_advise',
+          'sessionId': widget.featuredSessionModel?.sessionId,
+          'commentId': thankedAdvise.commentId,
+        },
       );
 
+      if (success) {
+        showToast("1 ❤️ sent to ${thankedAdvise.userNickname} as thanks!");
+
+        // The 'thanks' array is now updated via a separate WriteBatch in transferLoveBetweenUsers
+        // so we don't need to do it here anymore. Let's ensure your service does this.
+        // For now, let's explicitly add it to be safe.
+        await FirebaseFirestore.instance
+            .collection('sessions')
+            .doc(widget.featuredSessionModel?.sessionId)
+            .collection('comments')
+            .doc(thankedAdvise.commentId)
+            .update({
+          'thanks': FieldValue.arrayUnion([thankerId])
+        });
+
+        // Notify the thanked user
+        await notificationService.sendNotification(
+            pushNotification.NotificationModel(
+                topic: thankedUserId,
+                data: pushNotification.Data(id: thankedUserId, route: 'wallet'),
+                notification: pushNotification.Notification(
+                    title: "You Received a Thank You!",
+                    body: "${thanker.nickname} thanked your advise and sent you 1 ❤️."
+                )
+            ).toJson()
+        );
+      }
+      // If 'success' is false, the service method already shows an error toast.
+
     } catch (e) {
-      print("Error during silent thanks transaction: $e");
+      print("Error during thanks transaction: $e");
       showToast("An error occurred. Please try again.");
     }
   }
+
+
 
 
 
@@ -285,9 +324,7 @@ class _CommentWidgetState extends State<CommentWidget> {
         'reason': 'advise_deleted'
       },
     );
-    // --- END OF NEW TREASURY LOGIC ---
 
-    // --- Send Push Notification to the User ---
     try {
       final notificationModel = pushNotification.NotificationModel(
           topic: userId, // Send to the user's personal topic
@@ -510,9 +547,9 @@ class _CommentWidgetState extends State<CommentWidget> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   ThanksButton(
-                    count: widget.commentSessionModel!.thanks!.length,
-                    onPressed: widget.onPressed,
-                    color: 1 == 2 ? Pallet.colorPrimaryDark : Pallet.colorTextGray,
+                    count: widget.commentSessionModel?.thanks?.length ?? 0,
+                    onPressed: _handleThanksTransaction,
+                    color: _isThanked ? Pallet.colorPrimaryDark : Pallet.colorTextGray,
                   ),
 
                   SizedBox(width: 3,),

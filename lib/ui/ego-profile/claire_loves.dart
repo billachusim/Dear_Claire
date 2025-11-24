@@ -37,6 +37,13 @@ class _ClaireLovesState extends State<ClaireLoves> {
   int _profileVisitLove = 0;
   int _loveFromThanks = 0;
   int _loveSentForThanks = 0;
+  int fromGameWins = 0;
+  int forGameLoses = 0;
+  int _fromRoomVisits = 0;
+  int _forRoomVisits = 0;
+  int _loveFromReactions = 0;
+  int _loveSentForReactions = 0;
+  bool _showMoreStats = false;
 
   final TextEditingController _amountController = TextEditingController();
   User? currentUser = FirebaseAuth.instance.currentUser;
@@ -81,6 +88,12 @@ class _ClaireLovesState extends State<ClaireLoves> {
           _profileVisitLove = data["profileVisitLove"] ?? 0;
           _loveFromThanks = data["loveFromThanks"] ?? 0;
           _loveSentForThanks = data["loveSentForThanks"] ?? 0;
+          fromGameWins = data["fromGameWins"] ?? 0;
+          forGameLoses = data["forGameLoses"] ?? 0;
+          _fromRoomVisits = data["fromRoomVisits"] ?? 0;
+          _forRoomVisits = data["forRoomVisits"] ?? 0;
+          _loveFromReactions = data["loveFromReactions"] ?? 0;
+          _loveSentForReactions = data["loveSentForReactions"] ?? 0;
           _userId = data["userId"] ?? "";
           _rate = userType == 'SUPER_ADMIN'
               ? 3.0
@@ -162,28 +175,93 @@ class _ClaireLovesState extends State<ClaireLoves> {
     );
   }
 
+
   Widget _buildStatsSection() {
+    // A list to hold the primary stat cards
+    final List<Widget> primaryStats = [
+      _buildStatCard("Current Loves", "$_currentLoveCount ❤️", Colors.green),
+      _buildStatCard("Withdrawn Loves", "$_withdrawnLoveCount ❤️", Colors.orange),
+      _buildStatCard("Sessions", "$_sessionCount 📝", Colors.blue),
+      _buildStatCard("Advises", "$_adviseCount 💡", Colors.purple),
+      _buildStatCard("From Game Wins", "+$fromGameWins ❤️", Colors.green),
+      _buildStatCard("For Game Loses", "-$forGameLoses ❤️", Colors.red),
+    ];
+
+    // A list for the stats that will be hidden initially
+    final List<Widget> secondaryStats = [
+      _buildStatCard("From Ego Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
+      _buildStatCard("To Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
+      _buildStatCard("Love from Thanks", "+$_loveFromThanks ❤️", Colors.teal),
+      _buildStatCard("Love Sent as Thanks", "-$_loveSentForThanks ❤️", Colors.blueGrey),
+      _buildStatCard("From Room Visits", "+$_fromRoomVisits ❤️", Colors.cyan),
+      _buildStatCard("For Room Visits", "-$_forRoomVisits ❤️", Colors.indigo),
+      _buildStatCard("From Reactions", "+$_loveFromReactions ❤️", Colors.amber),
+      _buildStatCard("Sent for Reactions", "-$_loveSentForReactions ❤️", Colors.brown),
+    ];
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      sliver: SliverGrid.count(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 2,
-        children: [
-          _buildStatCard("Current Loves", "$_currentLoveCount ❤️", Colors.green),
-          _buildStatCard(
-              "Withdrawn Loves", "$_withdrawnLoveCount ❤️", Colors.orange),
-          _buildStatCard("Sessions", "$_sessionCount 📝", Colors.blue),
-          _buildStatCard("Advises", "$_adviseCount 💡", Colors.purple),
-          _buildStatCard("Love from Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
-          _buildStatCard("Love Sent on Visits", "-$_loveSentForVisits ❤️", Colors.grey),
-          _buildStatCard("Love from Thanks", "+$_loveFromThanks ❤️", Colors.teal),
-          _buildStatCard("Love Sent as Thanks", "-$_loveSentForThanks ❤️", Colors.blueGrey),
-        ],
+      sliver: SliverList(
+        delegate: SliverChildListDelegate(
+          [
+            // Grid for the primary stats that are always visible
+            GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 2,
+              ),
+              itemCount: primaryStats.length,
+              itemBuilder: (context, index) => primaryStats[index],
+              shrinkWrap: true, // Important for nested scrolling
+              physics:
+              const NeverScrollableScrollPhysics(), // Disable GridView's own scrolling
+            ),
+
+            // Conditionally display the "See More" section
+            if (_showMoreStats) ...[
+              const SizedBox(height: 10),
+              // Grid for the secondary, expandable stats
+              GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 2,
+                ),
+                itemCount: secondaryStats.length,
+                itemBuilder: (context, index) => secondaryStats[index],
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+              ),
+            ],
+
+            const SizedBox(height: 10),
+
+            // The "See More" / "See Less" button
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    _showMoreStats = !_showMoreStats;
+                  });
+                },
+                child: Text(
+                  _showMoreStats ? 'See Less' : 'See More',
+                  style: GoogleFonts.lato(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+
 
   Widget _buildStatCard(String title, String value, Color color) {
     return Container(

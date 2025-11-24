@@ -717,8 +717,6 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
                                           ..._commentList
                                               .map((element) => CommentWidget(
                                             commentSessionModel: element,
-                                            onPressed: () => _updateReaction(
-                                                element, theSession!),
                                             onShare: () => _share(element.message),
                                             featuredSessionModel: theSession!,
                                             userId: theSession!.userId.toString(),

@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../data/models/transaction_model.dart' as t_model;
 import '../../../services/user_model.dart';
 import '../../../utils/constant.dart';
 import '../../../widgets/toast.dart';
@@ -28,24 +29,55 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
   Widget build(BuildContext context) {
     return CupertinoButton(
       onPressed: () async {
-        isLoading = true;
-        setState(() {});
+        setState(() {
+          isLoading = true;
+        });
+
         UserModel user = await firebaseServices.getUserInfo();
-        if (widget.element.id == -1) {
-          //PageRouter.gotoWidget(AIChat(), context);
-          showToast("You need up to 2000 Loves first");
+
+        // Define the cost and check if the user can afford it
+        const int roomEntryCost = 1;
+        if (user.currentLoveCount < roomEntryCost) {
+          showToast("You need at least 1 ❤️ to enter a room.");
+          setState(() {
+            isLoading = false;
+          });
+          return;
         }
-        else if (widget.element.title != "One On One Room" && widget.element.title != "Five Aside Room") {
-          PageRouter.gotoWidget(
-              ChatScreen(chatRoomPodo: widget.element), context);
+
+        // Check for room-specific requirements (like the 2000 loves for certain rooms)
+        if ((widget.element.title == "One On One Room" ||
+            widget.element.title == "Five Aside Room") &&
+            user.currentLoveCount <= 2000) {
+          showToast("You need more than 2000 Loves for this room.");
+          setState(() {
+            isLoading = false;
+          });
+          return;
         }
-        else if (user.currentLoveCount > 2000) {
-          PageRouter.gotoWidget(
-              ChatScreen(chatRoomPodo: widget.element), context);
-        }
-        else {
-          showToast("You need up to 2000 Loves first");
-        }
+
+        // --- TRANSACTION LOGIC ---
+        // If all checks pass, deduct the love for entering the room.
+        await firebaseServices.updateTreasuryAndUser(
+          userId: user.userId!,
+          amount: roomEntryCost,
+          type: t_model.TransactionType.debit,
+          // User is spending
+          userTransactionDescription: "Spent 1 ❤️ to enter ${widget.element
+              .title}.",
+          forRoomVisits: roomEntryCost,
+          // Increment the 'forRoomVisits' stat
+          metadata: {
+            'room_id': widget.element.id,
+            'room_title': widget.element.title
+          },
+        );
+        // --- END TRANSACTION LOGIC ---
+
+        // Navigate to the chat screen after the transaction
+        PageRouter.gotoWidget(
+            ChatScreen(chatRoomPodo: widget.element), context);
+
         setState(() {
           isLoading = false;
         });

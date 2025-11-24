@@ -636,7 +636,7 @@ class _AppDrawerState extends State<_AppDrawer> {
 
   Widget _buildTicTacToeGame(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.2),
@@ -882,50 +882,77 @@ class _AppDrawerState extends State<_AppDrawer> {
 //   );
 // }
 
+
   Future<void> _handleGameResult() async {
-// Stop if a reward has already been processed or if the user is not logged in
+    // Stop if a reward has already been processed for this milestone or if the user is not logged in
     if (_isGameRewardProcessed || _currentUser == null) return;
 
-// Condition 1: Player wins (Credit user, Debit Claire)
-    if (widget.playerScore >= 10) {
+    int rewardAmount = 0;
+    int lossAmount = 50;
+    String winMessage = "";
+    String lossMessage = "";
+    bool isGameOver = false;
+
+    // --- MILESTONE LOGIC ---
+    // Milestone 1: Player reaches 10 wins
+    if (widget.playerScore == 10) {
+      rewardAmount = 50;
+      winMessage = "You reached 10 wins! 50 ❤️ have been added to your wallet.";
+    }
+    // Milestone 2: Player reaches 20 wins (Game Over)
+    else if (widget.playerScore >= 20) {
+      rewardAmount = 100;
+      winMessage = "CONGRATS! You beat Claire with 20 wins and won 100 ❤️!";
+      isGameOver = true;
+    }
+    // Milestone 1: Claire reaches 10 wins
+    else if (widget.claireScore == 10) {
+      lossMessage = "Claire reached 10 wins! You lose 50 ❤️. But the game isn't over!";
+    }
+    // Milestone 2: Claire reaches 20 wins (Game Over)
+    else if (widget.claireScore >= 20) {
+      lossMessage = "Claire beat you with 20 wins! You lose another 50 ❤️.";
+      isGameOver = true;
+    }
+
+    // --- HANDLE WIN CONDITION ---
+    if (rewardAmount > 0) {
       setState(() {
-        _isGameRewardProcessed = true; // Mark as processed
+        _isGameRewardProcessed = true; // Mark milestone as processed
       });
 
-// --- NEW TREASURY LOGIC FOR WIN ---
+      // --- NEW TREASURY LOGIC FOR WIN ---
       final bool wasApproved = await firebaseServices.updateTreasuryAndUser(
         userId: _currentUser!.uid,
-        amount: 100,
+        amount: rewardAmount,
         type: t_model.TransactionType.credit,
-        userTransactionDescription:
-        "100 Loves won from Tic-Tac-Toe against Claire.",
-        metadata: {'game': 'tic-tac-toe', 'reason': 'player_won'},
+        userTransactionDescription: "$rewardAmount Loves won from Tic-Tac-Toe.",
+        metadata: {'game': 'tic-tac-toe', 'reason': 'player_won_milestone'},
+        // Also update the specific game win fields
+        fromGameWins: rewardAmount,
       );
 
       if (!wasApproved) {
-// Treasury is low, so the reward is pending.
-        showToast(
-            message: "You won! Your 100 Love reward is pending admin approval.");
-        return; // Exit gracefully
+        showToast(message: "You won! Your $rewardAmount Love reward is pending admin approval.");
+        return;
       }
-// --- END OF NEW TREASURY LOGIC ---
 
-// --- Send Push Notification for WIN (Only if approved) ---
+      // --- Send Push Notification ---
       try {
         final notificationModel = push_notification.NotificationModel(
             topic: _currentUser!.uid,
             data: push_notification.Data(id: _currentUser!.uid, route: 'wallet'),
             notification: push_notification.Notification(
                 title: 'You Won!',
-                body: "You beat Claire in Tic-Tac-Toe and won 100 ❤️."));
+                body: "You beat Claire in Tic-Tac-Toe and won $rewardAmount ❤️."));
         await notificationService.sendNotification(notificationModel.toJson());
       } catch (e) {
         print("Failed to send 'Game Won' push notification: $e");
       }
 
-      showToast(message: "You won! 100 Loves have been added to your wallet.");
+      showToast(message: winMessage);
 
-// Play win sound
+      // Play win sound
       try {
         if (_audioPlayer.playing) await _audioPlayer.stop();
         await _audioPlayer.setAsset('assets/audio/win_sound.mp3');
@@ -934,39 +961,51 @@ class _AppDrawerState extends State<_AppDrawer> {
         print("Error playing win sound: $e");
       }
     }
-// Condition 2: Player loses (Debit user, Credit Claire)
-    else if (widget.claireScore >= 10) {
+    // --- HANDLE LOSS CONDITION ---
+    else if (lossMessage.isNotEmpty) {
       setState(() {
-        _isGameRewardProcessed = true; // Mark as processed
+        _isGameRewardProcessed = true; // Mark milestone as processed
       });
 
-// --- NEW TREASURY LOGIC FOR LOSS ---
+      // --- NEW TREASURY LOGIC FOR LOSS ---
       await firebaseServices.updateTreasuryAndUser(
         userId: _currentUser!.uid,
-        amount: 50,
+        amount: lossAmount,
         type: t_model.TransactionType.debit,
-        userTransactionDescription:
-        "50 Loves lost in Tic-Tac-Toe against Claire.",
-        metadata: {'game': 'tic-tac-toe', 'reason': 'player_lost'},
+        userTransactionDescription: "$lossAmount Loves lost in Tic-Tac-Toe.",
+        metadata: {'game': 'tic-tac-toe', 'reason': 'player_lost_milestone'},
+        // Also update the specific game loss fields
+        forGameLoses: lossAmount,
       );
-// --- END OF NEW TREASURY LOGIC ---
 
-// --- Send Push Notification for LOSS ---
+      // --- Send Push Notification ---
       try {
         final notificationModel = push_notification.NotificationModel(
             topic: _currentUser!.uid,
             data: push_notification.Data(id: _currentUser!.uid, route: 'wallet'),
             notification: push_notification.Notification(
                 title: 'Claire Won!',
-                body: "Claire beat you in Tic-Tac-Toe. You lost 50 ❤️."));
+                body: "Claire beat you in Tic-Tac-Toe. You lost $lossAmount ❤️."));
         await notificationService.sendNotification(notificationModel.toJson());
       } catch (e) {
         print("Failed to send 'Game Lost' push notification: $e");
       }
 
-      showToast(message: "Claire won! 50 Loves have been deducted.");
+      showToast(message: lossMessage);
+    }
+
+    // --- RESET GAME if a 20-win milestone was hit ---
+    if (isGameOver) {
+      // Here you would call a function to reset the game state.
+      // This function would likely live in your parent widget (the one holding the state for playerScore and claireScore)
+      // and be passed down to `stack_index_home.dart`.
+      // For example: widget.onGameReset();
+      print("GAME OVER: Resetting scores now.");
+      // You can also show a dialog here celebrating the final winner.
     }
   }
+
+
 }
 
 class _MenuTile extends StatelessWidget {

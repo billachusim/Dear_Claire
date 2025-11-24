@@ -381,29 +381,81 @@ class EgoModeSessionCard extends StatelessWidget {
 
             Row(
               children: [
+
                 MetooButton(
-                    cheers: element.meToos!.length,
-                    thanks: element.meLove!.length,
-                    sorry: element.meHiFive!.length,
-                    me2: element.meFlower!.length,
-                    color: textColor,
-                    onReactionChanged: (reaction, index) async {
-                      if (await firebaseServices
-                          .isUserSignIn(context)) {
-                        final _userModel =
-                        await firebaseServices.getUserInfo();
+                  cheers: element.meToos!.length,
+                  thanks: element.meLove!.length,
+                  sorry: element.meHiFive!.length,
+                  me2: element.meFlower!.length,
+                  color: textColor,
+                  session: element,
+                  onReactionChanged: (reaction, index) async {
+                    if (await firebaseServices.isUserSignIn(context) == false) {
+                      return;
+                    }
 
-                        firebaseServices.addUsersReactionToASession(
-                            context, index,
-                            session: element,
-                            sender: _userModel.nickname ?? '');
+                    // --- 1. SETUP TRANSACTION DETAILS ---
+                    final reactingUser = await firebaseServices.getUserInfo();
+                    final String reactingUserId = reactingUser.userId!;
+                    final String sessionOwnerId = element.userId!;
+                    const int reactionCost = 1;
 
-                        saveUserMe2Activity();
-                        //await firebaseServices.updateSessionLastTimeActivity(element.sessionId.toString());
-                      }
+                    // --- 2. PREVENT SELF-REACTION & INSUFFICIENT LOVES ---
+                    if (reactingUserId == sessionOwnerId) {
+                      // User is reacting to their own post, just update the reaction locally.
+                      // The original logic handles this well.
+                      firebaseServices.addUsersReactionToASession(
+                        context,
+                        index,
+                        session: element,
+                        sender: reactingUser.nickname ?? '',
+                      );
+                      showToast(message: "You reacted to your own session.");
+                      return;
+                    }
 
-                    }, session: element,
-                    ),
+                    if (reactingUser.currentLoveCount < reactionCost) {
+                      showToast(message: "You need at least 1 ❤️ to react.");
+                      return;
+                    }
+
+                    // --- 3. PERFORM THE LOVE TRANSACTION ---
+                    final bool success = await firebaseServices.transferLoveBetweenUsers(
+                      senderId: reactingUserId,
+                      receiverId: sessionOwnerId,
+                      amountToSend: reactionCost,
+                      taxAmount: 0, // No tax on a 1-love transaction
+                      totalDebitAmount: reactionCost,
+                      senderTransactionDesc: "Sent 1 ❤️ by reacting to a session.",
+                      receiverTransactionDesc:
+                      "Received 1 ❤️ from ${reactingUser.nickname} reacting to your session.",
+                      claireTransactionDesc: "Tax from a session reaction.",
+                      // Pass the specific stat increments
+                      forReactions: reactionCost,
+                      fromReactions: reactionCost,
+                      metadata: {
+                        'reason': 'session_reaction',
+                        'sessionId': element.sessionId,
+                        'reactionIndex': index
+                      },
+                    );
+
+                    // --- 4. UPDATE REACTION COUNT ON SUCCESS ---
+                    if (success) {
+                      // Only after a successful transaction, update the reaction on the session.
+                      firebaseServices.addUsersReactionToASession(
+                        context,
+                        index,
+                        session: element,
+                        sender: reactingUser.nickname ?? '',
+                      );
+                      saveUserMe2Activity(); // Your existing activity tracking
+                      showToast(message: "1 ❤️ sent to the session owner!");
+                    }
+                    // If !success, the service method already shows a toast.
+                  },
+                ),
+
 
                 new Spacer(),
 

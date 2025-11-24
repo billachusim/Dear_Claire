@@ -597,26 +597,67 @@ class ChatWidget extends StatelessWidget {
                 Align(
                   alignment: Alignment.bottomRight,
                   child: InkWell(
-                    onTap: () {
-                      _createContChatInterstitialAd();
-                      visitedUsersID = chatModel!.userId!.toString();
-                      String thisUser = visitedUsersID;
+                    onTap: () async { // Make sure this is async
+                      _createContChatInterstitialAd(); // Your existing ad logic
 
-                      if (!_isCompleted(chatModel, chatRoomPodo))
-                        showToast('Welcome back. Positive vibes only.');
+                      final String roomOwnerId = chatModel!.userId!;
+                      final String visitorId = currentUser!.uid;
 
+                      // --- NEW AND CORRECTED LOGIC ---
+                      if (visitorId == roomOwnerId) {
+                        // User is entering their own room, no cost.
+                        showToast('Welcome back to your room.');
+                      } else {
+                        // Visitor is entering another user's room.
+                        const int entryCost = 1;
+                        const int taxAmount = 0; // No tax for a 1-love transaction.
+                        const int totalDebit = entryCost + taxAmount;
+
+                        // Check if the visitor can afford the entry
+                        UserModel visitorData = await firebaseServices.getUserWithId(id: visitorId);
+                        if (visitorData.currentLoveCount < totalDebit) {
+                          showToast("You need at least $totalDebit ❤️ to enter another user's room.");
+                          return; // Stop if they can't afford it.
+                        }
+
+                        // Perform the user-to-user transfer
+                        bool success = await firebaseServices.transferLoveBetweenUsers(
+                          senderId: visitorId,
+                          receiverId: roomOwnerId,
+                          amountToSend: entryCost,
+                          taxAmount: taxAmount,
+                          totalDebitAmount: totalDebit,
+                          senderTransactionDesc: "Paid 1 ❤️ to enter ${chatModel!.userNickname}'s room.",
+                          receiverTransactionDesc: "Received 1 ❤️ because ${visitorData.nickname} visited your room.",
+                          claireTransactionDesc: "Tax from room entry.", // Will be 0 for now
+                          // Pass the stat increments
+                          forRoomVisits: entryCost,
+                          fromRoomVisits: entryCost,
+                        );
+
+                        if (!success) {
+                          // The transaction failed, probably due to a race condition or other error.
+                          // The service method already shows a toast.
+                          return;
+                        }
+                      }
+
+                      // --- END OF LOGIC ---
+
+                      // Existing ad logic and navigation
                       Future.delayed(Duration(days: 2), () {
                         _showContChatInterstitialAd();
                       });
 
                       PageRouter.gotoWidget(
                           SubChatScreen(
-                            documentID: thisUser,
+                            documentID: roomOwnerId,
                             chatModel: chatModel,
                             chatRoomPodo: chatRoomPodo,
                           ),
                           context);
                     },
+
                     child: Container(
                         padding: EdgeInsets.all(5),
                         width: 85,
