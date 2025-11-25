@@ -13,7 +13,7 @@ import 'package:flutter_svg/svg.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clairediary/services/user_model.dart';
-import 'package:clairediary/ui/ego-profile/acvitity.dart';
+import 'package:clairediary/ui/ego-profile/activity_widget.dart';
 import 'package:clairediary/ui/ego-profile/archive.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
@@ -25,6 +25,7 @@ import 'package:focused_menu/modals.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../routes/page_router_animation.dart';
+import '../splash_screen/rotate_logo.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'clairevatar.dart';
 
@@ -44,6 +45,7 @@ const int maxFailedLoadAttempts = 3;
 class _EgoProfilePageState extends State<EgoProfilePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late Future<UserModel> _userFuture;
   final TextEditingController _mantraController = TextEditingController();
   final TextEditingController _nicknameController = TextEditingController();
   GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
@@ -60,7 +62,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   @override
   void initState() {
     super.initState();
-    getUser();
+    _userFuture = getUser();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       print(_tabController.index);
@@ -81,8 +83,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   UserModel userModel = UserModel();
   User? currentUser = FirebaseAuth.instance.currentUser;
 
-  getUser() async {
+  Future<UserModel> getUser() async {
     userModel = await firebaseServices.getUserInfo();
+    return userModel;
   }
 
   /// Edit nickname
@@ -1118,9 +1121,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   @override
   Widget build(BuildContext context) {
-    print("User nickname::: ${userModel.nickname}");
-    print("User type::: ${userModel.userType}");
-
     return SafeArea(
       child: PopScope(
         canPop: false,
@@ -1132,10 +1132,10 @@ class _EgoProfilePageState extends State<EgoProfilePage>
           backgroundColor: Pallet.colorSecondaryDark,
           body: Column(
             children: [
+              // This part for the header can remain as it is, as it has its own FutureBuilder
               Material(
                 elevation: 10,
-                child: FutureBuilder<
-                    DocumentSnapshot<Map<String, dynamic>>>(
+                child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                   future: FirebaseFirestore.instance
                       .collection("users")
                       .doc(currentUser?.uid)
@@ -1147,216 +1147,250 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                         userName: data?["nickname"] ?? "Claire's Darling",
                         sessionCount: data?["sessionCount"].toString() ?? "0",
                         advisesCount: data?["adviseCount"].toString() ?? "0",
-                        totalLoveCount: data?["totalLoveCount"].toString() ?? "0",
+                        totalLoveCount:
+                        data?["totalLoveCount"].toString() ?? "0",
                         userType: data?["userType"] ?? "Ego",
                         avatarUrl: data?["avatarUrl"] ?? " ",
                       );
                     }
-
-                    return CircularProgressIndicator();
+                    // Show a placeholder or compact loader while the header loads
+                    return SizedBox(
+                        height: 150, // Give it a fixed height to avoid layout jumps
+                        child: Center(child: CircularProgressIndicator()));
                   },
                 ),
-
               ),
 
-
-              /// The three Ego page tabs are here
-              /// First tab is Activity Tab
-
+              // --- THE FIX IS APPLIED HERE ---
+              // We wrap the part of the UI that needs the userModel in a FutureBuilder
               Expanded(
-                  child: DefaultTabController(
-                    length: 3, child: Column(children: [
-                    SizedBox(height: 7.h),
-                    Container(
-                      // margin: EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        //border: Border.all(color: Pallet.colorPrimary, width: 1),
-                      ),
-                      child: Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _tabController.animateTo(0);
-                                    currentTabIndex = 0;
-                                  });
-                                },
-                                child: Container(
-                                  margin: EdgeInsets.only(bottom: 8),
-                                  height: 43,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                      border: currentTabIndex != 0
-                                          ? Border.all(
-                                          color: Pallet.colorPrimary, width: 3)
-                                          : Border.all(
-                                          color: Pallet.colorPrimary, width: 6),
-                                      borderRadius: BorderRadius.circular(25),
-                                      color: currentTabIndex != 0
-                                          ? Pallet.colorWhite
-                                          : Pallet.colorWhite),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(3.0),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          "Activity",
-                                          style: TextStyle(
-                                            color: currentTabIndex != 0
-                                                ? Pallet.colorPrimary
-                                                : Pallet.colorPrimary,
-                                            fontWeight: currentTabIndex != 0
-                                                ? FontWeight.w500
-                                                : FontWeight.w700,
-                                            fontSize: currentTabIndex != 0 ? 14 : 14,
-                                          ),
-                                        ),
-                                        SizedBox(width: 14),
-                                        currentTabIndex != 0
-                                            ? SizedBox.shrink()
-                                            : Icon(Icons.circle_notifications,
-                                            color: Pallet.colorPrimary)
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
+                child: FutureBuilder<UserModel>(
+                  // Use the _userFuture you already defined in initState
+                  future: _userFuture,
+                  builder: (context, userSnapshot) {
+                    // While waiting for the user data, show a single loading indicator
+                    if (userSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return Center(child: RotateImage(70, 70));
+                    }
 
+                    // If we failed to get the user data, show an error
+                    if (userSnapshot.hasError || !userSnapshot.hasData) {
+                      return Center(
+                          child: Text("Could not load user data.",
+                              style: TextStyle(color: Colors.white70)));
+                    }
 
+                    // SUCCESS: We have the user data!
+                    final loadedUserModel = userSnapshot.data!;
 
-                            /// Second tab is Claire Love Tab
-
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _tabController.animateTo(1);
-                                    currentTabIndex = 1;
-                                  });
-                                },
-                                child: Container(
-                                  margin: EdgeInsets.only(bottom: 8),
-                                  height: 43,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                      border: currentTabIndex != 1
-                                          ? Border.all(
-                                          color: Pallet.colorSecondary, width: 3)
-                                          : Border.all(
-                                          color: Pallet.colorSecondary, width: 6),
-                                      borderRadius: BorderRadius.circular(25),
-                                      color: currentTabIndex != 1
-                                          ? Pallet.colorWhite
-                                          : Pallet.colorWhite),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(3.0),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          "Wallet",
-                                          style: TextStyle(
-                                            color: currentTabIndex != 1
-                                                ? Pallet.colorSecondary
-                                                : Pallet.colorSecondary,
-                                            fontWeight: currentTabIndex != 1
-                                                ? FontWeight.w500
-                                                : FontWeight.w700,
-                                            fontSize: currentTabIndex != 1 ? 14 : 14,
-                                          ),
-                                        ),
-                                        SizedBox(width: 14),
-                                        currentTabIndex != 1
-                                            ? SizedBox.shrink()
-                                            : Icon(Icons.monetization_on_rounded,
-                                            color: Pallet.colorSecondary)
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-
-
-                            /// Third tab is Archive Tab
-
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _tabController.animateTo(2);
-                                    currentTabIndex = 2;
-                                  });
-                                },
-                                child: Container(
-                                  margin: EdgeInsets.only(bottom: 8),
-                                  height: 43,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                      border: currentTabIndex != 2
-                                          ? Border.all(
-                                          color: Pallet.deepGreen, width: 3)
-                                          : Border.all(
-                                          color: Pallet.deepGreen, width: 6),
-                                      borderRadius: BorderRadius.circular(25),
-                                      color: currentTabIndex != 2
-                                          ? Pallet.colorWhite
-                                          : Pallet.colorWhite),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(3.0),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          "Archive",
-                                          style: TextStyle(
-                                            color: currentTabIndex != 2
-                                                ? Pallet.deepGreen
-                                                : Pallet.deepGreen,
-                                            fontWeight: currentTabIndex != 2
-                                                ? FontWeight.w500
-                                                : FontWeight.w700,
-                                            fontSize: currentTabIndex != 2 ? 14 : 14,
-                                          ),
-                                        ),
-                                        SizedBox(width: 14),
-                                        currentTabIndex != 2
-                                            ? SizedBox.shrink()
-                                            : Icon(Icons.archive_rounded,
-                                            color: Pallet.deepGreen)
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                          ]
-                      ),
-                    ),
-
-                    Expanded(
-                      child: TabBarView(
-                        physics: NeverScrollableScrollPhysics(),
-                        controller: _tabController,
+                    // Now, we can build the rest of the UI with confidence
+                    return DefaultTabController(
+                      length: 3,
+                      child: Column(
                         children: [
-                          ActivityWidget(),
-                          ClaireLoves(),
-                          ArchiveWidget(),
+                          SizedBox(height: 7.h),
+                          // Your custom Tab Bar UI
+                          Container(
+                            decoration: BoxDecoration(),
+                            child: Row(children: [
+                              // Activity Tab Button
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _tabController.animateTo(0);
+                                      currentTabIndex = 0;
+                                    });
+                                  },
+                                  child: Container(
+                                    margin: EdgeInsets.only(bottom: 8),
+                                    height: 43,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                        border: currentTabIndex != 0
+                                            ? Border.all(
+                                            color: Pallet.colorPrimary,
+                                            width: 3)
+                                            : Border.all(
+                                            color: Pallet.colorPrimary,
+                                            width: 6),
+                                        borderRadius:
+                                        BorderRadius.circular(25),
+                                        color: currentTabIndex != 0
+                                            ? Pallet.colorWhite
+                                            : Pallet.colorWhite),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(3.0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text("Activity",
+                                              style: TextStyle(
+                                                  color: Pallet.colorPrimary,
+                                                  fontWeight:
+                                                  currentTabIndex != 0
+                                                      ? FontWeight.w500
+                                                      : FontWeight.w700,
+                                                  fontSize:
+                                                  currentTabIndex != 0
+                                                      ? 14
+                                                      : 14)),
+                                          SizedBox(width: 14),
+                                          currentTabIndex != 0
+                                              ? SizedBox.shrink()
+                                              : Icon(
+                                              Icons
+                                                  .circle_notifications,
+                                              color: Pallet.colorPrimary)
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Wallet (Claire Love) Tab Button
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _tabController.animateTo(1);
+                                      currentTabIndex = 1;
+                                    });
+                                  },
+                                  child: Container(
+                                    margin: EdgeInsets.only(bottom: 8),
+                                    height: 43,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                        border: currentTabIndex != 1
+                                            ? Border.all(
+                                            color: Pallet.colorSecondary,
+                                            width: 3)
+                                            : Border.all(
+                                            color: Pallet.colorSecondary,
+                                            width: 6),
+                                        borderRadius:
+                                        BorderRadius.circular(25),
+                                        color: currentTabIndex != 1
+                                            ? Pallet.colorWhite
+                                            : Pallet.colorWhite),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(3.0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text("Wallet",
+                                              style: TextStyle(
+                                                  color:
+                                                  Pallet.colorSecondary,
+                                                  fontWeight:
+                                                  currentTabIndex != 1
+                                                      ? FontWeight.w500
+                                                      : FontWeight.w700,
+                                                  fontSize:
+                                                  currentTabIndex != 1
+                                                      ? 14
+                                                      : 14)),
+                                          SizedBox(width: 14),
+                                          currentTabIndex != 1
+                                              ? SizedBox.shrink()
+                                              : Icon(
+                                              Icons
+                                                  .monetization_on_rounded,
+                                              color:
+                                              Pallet.colorSecondary)
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Archive Tab Button
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _tabController.animateTo(2);
+                                      currentTabIndex = 2;
+                                    });
+                                  },
+                                  child: Container(
+                                    margin: EdgeInsets.only(bottom: 8),
+                                    height: 43,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                        border: currentTabIndex != 2
+                                            ? Border.all(
+                                            color: Pallet.deepGreen,
+                                            width: 3)
+                                            : Border.all(
+                                            color: Pallet.deepGreen,
+                                            width: 6),
+                                        borderRadius:
+                                        BorderRadius.circular(25),
+                                        color: currentTabIndex != 2
+                                            ? Pallet.colorWhite
+                                            : Pallet.colorWhite),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(3.0),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text("Archive",
+                                              style: TextStyle(
+                                                  color: Pallet.deepGreen,
+                                                  fontWeight:
+                                                  currentTabIndex != 2
+                                                      ? FontWeight.w500
+                                                      : FontWeight.w700,
+                                                  fontSize:
+                                                  currentTabIndex != 2
+                                                      ? 14
+                                                      : 14)),
+                                          SizedBox(width: 14),
+                                          currentTabIndex != 2
+                                              ? SizedBox.shrink()
+                                              : Icon(Icons.archive_rounded,
+                                              color: Pallet.deepGreen)
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ]),
+                          ),
+
+                          // The TabBarView that contains the widgets
+                          Expanded(
+                            child: TabBarView(
+                              physics: NeverScrollableScrollPhysics(),
+                              controller: _tabController,
+                              children: [
+                                // Pass the CORRECT userId from the loaded data
+                                ActivityWidget(
+                                    userId: loadedUserModel.userId!),
+                                ClaireLoves(),
+                                ArchiveWidget(),
+                              ],
+                            ),
+                          )
                         ],
                       ),
-                    )
-                  ]),
-                  ))
+                    );
+                  },
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
   }
+
 }
 
 class AudioPlayerWidget extends StatefulWidget {

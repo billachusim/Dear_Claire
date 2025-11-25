@@ -25,6 +25,8 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/models/transaction_model.dart' as t_model;
 import 'data/notification_model.dart' as pushNotification;
+
+
 final firebase_storage.FirebaseStorage _storage = firebase_storage.FirebaseStorage.instance; // Add this line
 
 Logger logger = Logger();
@@ -253,6 +255,38 @@ class FirebaseServices extends ChangeNotifier {
     }
   }
 
+
+  /// Fetches a list of transactions for a specific user.
+  ///
+  /// [userId]: The ID of the user whose transactions are to be fetched.
+  /// [limit]: The maximum number of transactions to retrieve.
+  Future<List<t_model.TransactionModel>> getTransactionsForUser({ // FIX 1: Use TransactionModel
+    required String userId,
+    int limit = 20,
+  }) async {
+    try {
+      final querySnapshot = await _firebaseFirestore
+          .collection('users')
+          .doc(userId)
+          .collection('transactions')
+          .orderBy('timestamp', descending: true) // Get the most recent first
+          .limit(limit)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        return [];
+      }
+
+      // Convert each document into a TransactionModel
+      return querySnapshot.docs
+          .map((doc) => t_model.TransactionModel.fromFirestore(doc)) // FIX 2: Use TransactionModel.fromFirestore
+          .toList();
+    } catch (e) {
+      print("Error fetching user transactions: $e");
+      // Return an empty list or re-throw the error as needed
+      return [];
+    }
+  }
 
 
 
@@ -1140,27 +1174,102 @@ class FirebaseServices extends ChangeNotifier {
     return session;
   }
 
-  /// [User Activity] -> get user activity that a user made
-  Future<List<UserActivityModel>> getActivityForUser() async {
+  // REPLACE your old getActivityForUser method with this new one
+
+  /// [User Activity] -> get user activity that a specific user made (with pagination)
+  Future<PaginatedActivities> getActivityForUser({
+    required String userId,
+    int limit = 20, // Now accepts a limit for pagination
+    DocumentSnapshot? startAfter, // And a document to start after for the next page
+  }) async {
+    List<UserActivityModel> _userActivityList = [];
+
+    // This is the base query
+    var query = _firebaseFirestore
+        .collection(AppString.userActivity)
+        .where("clientId", isEqualTo: userId)
+        .orderBy('dateCreated', descending: true)
+        .limit(limit);
+
+    // If we are fetching the "next page", we start after the last document we saw
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+
+    try {
+      final _value = await query.get();
+
+      for (var doc in _value.docs) {
+        _userActivityList.add(UserActivityModel.fromJson(doc.data()));
+      }
+
+      // Get the very last document from this batch. It will be our starting point for the next "Load More" press.
+      final lastDoc = _value.docs.isNotEmpty ? _value.docs.last : null;
+
+      // Return our special object that holds both the list and the last document reference.
+      return PaginatedActivities(activities: _userActivityList, lastDocument: lastDoc);
+
+    } catch (e) {
+      logger.e(e);
+      // Return an empty object in case of an error
+      return PaginatedActivities(activities: [], lastDocument: null);
+    }
+  }
+
+  // ADD THIS NEW METHOD INSIDE your FirebaseServices class
+
+  Future<List<Session>> getSessionsByIds(List<String> sessionIds) async {
+    if (sessionIds.isEmpty) {
+      return [];
+    }
+
+    List<Session> allSessions = [];
+    // Firestore's "in" query is limited to 10 items, so we fetch in batches.
+    for (var i = 0; i < sessionIds.length; i += 10) {
+      final sublist = sessionIds.sublist(
+          i, i + 10 > sessionIds.length ? sessionIds.length : i + 10);
+      try {
+        final querySnapshot = await _firebaseFirestore
+            .collection('sessions') // Make sure 'sessions' is your collection name
+            .where(FieldPath.documentId, whereIn: sublist)
+            .get();
+
+        allSessions.addAll(querySnapshot.docs
+            .map((doc) => Session.fromJson(doc.data() as Map<String, dynamic>))
+            .toList());
+      } catch (e) {
+        print('Error batch fetching sessions: $e');
+      }
+    }
+    return allSessions;
+  }
+
+
+
+  /* /// [User Activity] -> get user activity that a specific user made
+  Future<List<UserActivityModel>> getActivityForUser({required String userId}) async {
     List<UserActivityModel> _userActivityList = [];
 
     try {
       final _value = await _firebaseFirestore
           .collection(AppString.userActivity)
-          .where("clientId", isEqualTo: currentUser?.uid.toString())
+      // FIX: Use the provided userId to fetch activities for any user
+          .where("clientId", isEqualTo: userId)
           .orderBy('dateCreated', descending: true)
           .limit(AppString.allSessionLength)
           .get();
 
-      _value.docs
-          .map((e) =>
-              _userActivityList.addAll([UserActivityModel.fromJson(e.data())]))
-          .toList();
+      // FIX: Use a cleaner .add() method
+      for (var doc in _value.docs) {
+        _userActivityList.add(UserActivityModel.fromJson(doc.data()));
+      }
     } catch (e) {
       logger.e(e);
     }
     return _userActivityList;
-  }
+  }*/
+
+
 
 
   /// [User Activity] -> get all users activities for super ego tab.
@@ -1637,3 +1746,12 @@ class FirebaseServices extends ChangeNotifier {
         .update({'featured': true});
   }
 }
+
+// ADD THIS CLASS AT THE TOP OF lib/services/firebase_services.dart
+class PaginatedActivities {
+  final List<UserActivityModel> activities;
+  final DocumentSnapshot? lastDocument;
+
+  PaginatedActivities({required this.activities, this.lastDocument});
+}
+

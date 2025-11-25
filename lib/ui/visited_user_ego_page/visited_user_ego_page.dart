@@ -28,6 +28,7 @@ import '../../Admob/ad_state.dart';
 import '../../helpers/toast_helper.dart' as CustomToast;
 import '../../services/notification_service.dart';
 import '../create_session/sound/custom_play_sound_widget.dart';
+import '../ego-profile/activity_widget.dart';
 import '/services/data/notification_model.dart' as pushNotification;
 import '../../services/user_activity_model.dart';
 import '../../services/user_model.dart';
@@ -1691,81 +1692,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                           },
                         ),
 
-
-
-                        FutureBuilder(
-                        future: _userActivitiesFuture,
-                      builder: (context, AsyncSnapshot<List<UserActivityModel>> userActivity) {
-                        if (userActivity.connectionState == ConnectionState.waiting) {
-                          return RotateImage(70, 70);
-                        }
-                        if (!userActivity.hasData) {
-                          return Center(
-                            child: Text("There are no activities yet",
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.lato(
-                                    fontSize: 15.0,
-                                    color: Pallet.colorBlack,
-                                    //fontStyle: FontStyle.normal,
-                                    fontWeight: FontWeight.w600)),
-                          );
-                        }
-
-                        if (userActivity.hasError) {
-                          return Container(
-                            child: Text(userActivity.error.toString(),
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.lato(
-                                    fontSize: 15.0,
-                                    color: Pallet.colorBlack,
-                                    //fontStyle: FontStyle.normal,
-                                    fontWeight: FontWeight.w600)),
-                          );
-                        }
-
-                        if (userActivity.hasData) {
-                          return ListView(
-                            children: [
-
-                              // Top ad unit is here
-                              if (visitedUserTopOfActivitiesBanner != null && _isTopOfActivitiesBannerLoaded) Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                child: Container(
-                                  height: visitedUserTopOfActivitiesBanner!.size.height.toDouble(),
-                                  width: visitedUserTopOfActivitiesBanner!.size.width.toDouble(),
-                                  child: AdWidget(ad: visitedUserTopOfActivitiesBanner!),
-                                  alignment: Alignment.center,
-                                ),
-                              ),
-
-                              ...userActivity.data!
-                                  .map((element) => VisitedUserActivityCard(element: element,)
-                              )
-                                  .toList(),
-
-                              // Bottom ad unit is here
-                              if (visitedUserBottomOfActivitiesBanner != null && _isBottomOfActivitiesBannerLoaded)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                  child: Container(
-                                    height: visitedUserBottomOfActivitiesBanner!.size.height.toDouble(),
-                                    width: visitedUserBottomOfActivitiesBanner!.size.width.toDouble(),
-                                    child: AdWidget(ad: visitedUserBottomOfActivitiesBanner!),
-                                    alignment: Alignment.center,
-                                  ),
-                                ),
-                            ],
-                          );
-                        }
-                        return Container();
-                      }
-                  ),
-
-
+                        ActivityWidget(userId: widget.visitedUsersID),
 
                         VisitedUserClaireLoves(visitedEgoName: visitedUser?.nickname.toString() ?? '', visitedUsersID: visitedUser?.userId.toString() ?? '',),
                       ],

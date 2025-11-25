@@ -1,6 +1,7 @@
 import 'dart:core';
 import 'dart:math';
 
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/ui/ego-profile/love_history_chart.dart';
@@ -13,8 +14,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../widgets/recent_transactions_list.dart';
+import 'package:clairediary/data/models/transaction_model.dart';
+import '../../utils/helper.dart' as Helper;
 import 'request_claire_love_form.dart';
 
 class ClaireLoves extends StatefulWidget {
@@ -44,6 +45,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
   int _loveFromReactions = 0;
   int _loveSentForReactions = 0;
   bool _showMoreStats = false;
+  bool _showAllTransactions = false;
 
   final TextEditingController _amountController = TextEditingController();
   User? currentUser = FirebaseAuth.instance.currentUser;
@@ -126,7 +128,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
       backgroundColor: Pallet.colorSecondaryDark,
       body: SafeArea(
         child: _isLoading
-            ? Center(child: CircularProgressIndicator(color: Pallet.colorWhite))
+            ? Center(child: RotateImage(70, 70))
             : CustomScrollView(
                 slivers: [
                   SliverToBoxAdapter(child: _buildHeader()),
@@ -289,36 +291,110 @@ class _ClaireLovesState extends State<ClaireLoves> {
     );
   }
 
+
+// REPLACE the existing _buildRecentTransactions method with this one.
   Widget _buildRecentTransactions() {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Recent Transactions",
-              style: GoogleFonts.lato(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+    // This now uses your actual `TransactionModel`
+    return FutureBuilder<List<TransactionModel>>(
+      // Fetch a larger number of transactions to have them ready for expansion
+      future: firebaseServices.getTransactionsForUser(userId: _userId, limit: 50),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SliverToBoxAdapter(
+            child: Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: CircularProgressIndicator(color: Colors.white),
               ),
             ),
-            SizedBox(height: 10),
-            Container(
-              height: 300, // Give it a fixed height or use Expanded in a Column
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Pallet.colorSecondary.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(15),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return SliverToBoxAdapter(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  "Error loading transactions: ${snapshot.error}",
+                  style: const TextStyle(color: Colors.white70),
+                ),
               ),
-              child: RecentTransactionsList(),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          // Gracefully show nothing if there are no transactions
+          return const SliverToBoxAdapter(child: SizedBox.shrink());
+        }
+
+        final allTransactions = snapshot.data!;
+        // Show only the first 5 transactions initially, or all if "See More" is tapped
+        final transactionsToShow = _showAllTransactions ? allTransactions : allTransactions.take(5).toList();
+
+        // This Sliver contains the title, the container, the list, and the "See More" button
+        return SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate.fixed([
+              // 1. The Title
+              Text(
+                "Recent Transactions",
+                style: GoogleFonts.lato(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // 2. The styled Container
+              Container(
+                decoration: BoxDecoration(
+                  color: Pallet.colorSecondary.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: transactionsToShow.length,
+                  itemBuilder: (context, index) {
+                    // 3. The TransactionCard for each item
+                    return TransactionCard(
+                      transaction: transactionsToShow[index],
+                      isLastItem: index == transactionsToShow.length - 1,
+                    );
+                  },
+                ),
+              ),
+
+              // 4. The "See More" / "See Less" button
+              // Only show the button if there are more transactions than the initial limit
+              if (allTransactions.length > 5)
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _showAllTransactions = !_showAllTransactions;
+                      });
+                    },
+                    child: Text(
+                      _showAllTransactions ? 'See Less' : 'See More',
+                      style: GoogleFonts.lato(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ]),
+          ),
+        );
+      },
     );
   }
+
 
   Widget _buildWithdrawSection() {
     return SliverToBoxAdapter(
@@ -464,3 +540,65 @@ class AppToast {
     );
   }
 }
+
+
+class TransactionCard extends StatelessWidget {
+  // Use your existing TransactionModel
+  final TransactionModel transaction;
+  final bool isLastItem;
+
+  const TransactionCard({
+    Key? key,
+    required this.transaction,
+    this.isLastItem = false,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // This now correctly references the `type` property from your TransactionModel
+    final bool isCredit = transaction.type == TransactionType.credit;
+
+    return Column(
+      children: [
+        ListTile(
+          leading: Icon(
+            isCredit ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+            color: isCredit ? Colors.greenAccent : Colors.redAccent,
+            size: 28,
+          ),
+          title: Text(
+            // This now correctly references the `description` property
+            transaction.description,
+            style: GoogleFonts.lato(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          subtitle: Text(
+            // Use the correct helper method from your Helper class
+            Helper.formatFirestoreTimestamp(transaction.timestamp),
+            style: GoogleFonts.lato(color: Colors.white70),
+          ),
+          trailing: Text(
+            // This now correctly references the `amount` property
+            '${isCredit ? '+' : '-'}${transaction.amount} ❤️',
+            style: GoogleFonts.lato(
+              color: isCredit ? Colors.greenAccent : Colors.redAccent,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        if (!isLastItem)
+          const Divider(
+            color: Colors.white24,
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+          ),
+      ],
+    );
+  }
+}
+
+
