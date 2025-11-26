@@ -536,11 +536,11 @@ class _AppDrawerState extends State<_AppDrawer> {
           child: Column(
             children: [
               _buildDrawerHeader(context),
+              const SizedBox(height: 10),
               _buildTicTacToeGame(context),
               const SizedBox(height: 10),
               _buildMenuList(context),
               _buildRecentTransactions(),
-// _buildTwitterFeed(context),
               const SizedBox(height: 20),
             ],
           ),
@@ -564,7 +564,7 @@ class _AppDrawerState extends State<_AppDrawer> {
       accountEmail: const Text(
         "You'll never be not truly loved.",
         style: TextStyle(
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: FontWeight.w600,
           color: Colors.white,
           fontStyle: FontStyle.italic,
@@ -575,7 +575,7 @@ class _AppDrawerState extends State<_AppDrawer> {
         widget.userName,
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 20.0,
+          fontSize: 18.0,
           fontWeight: FontWeight.bold,
           shadows: [Shadow(blurRadius: 3, color: Colors.black54)],
         ),
@@ -609,21 +609,15 @@ class _AppDrawerState extends State<_AppDrawer> {
         GestureDetector(
           onTap: widget.onAlterEgoTapped,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            //mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset("assets/images/claire_icon.png", height: 35, width: 35),
-              const SizedBox(height: 4),
+              Image.asset("assets/images/claire_icon.png", height: 25, width: 25),
               Text(
-                widget.userType == 'ADMIN'
-                    ? 'Alter Ego'
-                    : widget.userType == 'SUPER_ADMIN'
-                    ? 'Super Ego'
-                    : 'Ego',
+                "Switch",
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: Pallet.colorWhite.withOpacity(0.95),
-                  shadows: const [Shadow(blurRadius: 1, color: Colors.black54)],
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -636,7 +630,7 @@ class _AppDrawerState extends State<_AppDrawer> {
 
   Widget _buildTicTacToeGame(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 25),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.2),
@@ -653,7 +647,7 @@ class _AppDrawerState extends State<_AppDrawer> {
           _buildScoreboard(context),
           const SizedBox(height: 12),
           _buildGameProgressBar(),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           _buildMilestoneMarkers(),
           const SizedBox(height: 12),
           AspectRatio(
@@ -696,16 +690,15 @@ class _AppDrawerState extends State<_AppDrawer> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _milestoneWidget("10 Wins", "50 ❤️"),
-          _milestoneWidget("20 Wins", "100 ❤️", alignment: CrossAxisAlignment.end),
+          _milestoneWidget("10 Wins = ", "50 ❤️"),
+          _milestoneWidget("20 Wins = ", "100 ❤️",),
         ],
       ),
     );
   }
 
-  Widget _milestoneWidget(String title, String subtitle, {CrossAxisAlignment alignment = CrossAxisAlignment.start}) {
-    return Column(
-      crossAxisAlignment: alignment,
+  Widget _milestoneWidget(String title, String subtitle) {
+    return Row(
       children: [
         Text(
           title,
@@ -772,7 +765,7 @@ class _AppDrawerState extends State<_AppDrawer> {
               icon: Icons.info_rounded,
               onTap: () => Navigator.of(context).pushNamed(AppRoutes.howClaireWorks)),
           _MenuTile(
-              title: "Request Alter Ego Mode 🔥",
+              title: "Request Alter Ego Mode",
               icon: Icons.star_rounded,
               onTap: () =>
                   Navigator.of(context).pushNamed(AppRoutes.howAlterEgoWorks)),
@@ -785,10 +778,10 @@ class _AppDrawerState extends State<_AppDrawer> {
               }
             },
           ),
-          _MenuTile(
+          /*_MenuTile(
               title: "Top Up Your Love",
               icon: Icons.currency_exchange_rounded,
-              onTap: widget.onDonateClicked),
+              onTap: widget.onDonateClicked),*/
           _MenuTile(
             title: "More Games With Claire",
             icon: Icons.gamepad_rounded,
@@ -801,14 +794,14 @@ class _AppDrawerState extends State<_AppDrawer> {
               title: "Send Claire To Someone",
               icon: Icons.share_rounded,
               onTap: widget.sendClaireToSomeone),
-          _MenuTile(
+          /*_MenuTile(
             title: "Updates & Announcements",
             icon: Icons.announcement_rounded,
             onTap: () {
               Navigator.pop(context);
               Navigator.of(context).pushNamed(AppRoutes.updatesAndAnnouncements);
             },
-          ),
+          ),*/
         ],
       ),
     );

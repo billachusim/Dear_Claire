@@ -945,23 +945,66 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                       leading: ClipOval(
                                         child: GestureDetector(
                                           onTap: () async {
-                                            final String _mantraUserId = data['senderId'].toString();
-                                            final String _mantraEgoName = data['egoName'].toString();
-                                            UserModel user = await firebaseServices.getUserInfo();
-                                            if (user.userType != "REGULAR") {
+                                            // --- 1. SETUP TRANSACTION DETAILS ---
+                                            final visitingUser = await firebaseServices.getUserInfo();
+                                            final String visitedUserId = data['senderId'].toString();
+                                            final String visitedEgoName = data['egoName'].toString();
+                                            const int visitCost = 1;
+                                            // --- 2. HANDLE SELF-VISIT ---
+                                            if (visitingUser.userId == visitedUserId) {
+                                              // If visiting self, just navigate without a transaction.
                                               PageRouter.gotoWidget(
-                                                  VisitedUserEgoProfilePage(visitedUsersID: _mantraUserId, visitedEgoName: _mantraEgoName),
+                                                  VisitedUserEgoProfilePage(
+                                                      visitedUsersID: visitedUserId,
+                                                      visitedEgoName: visitedEgoName),
                                                   context);
+                                              return;
                                             }
-                                            else if (user.currentLoveCount > 500) {
-                                              PageRouter.gotoWidget(
-                                                  VisitedUserEgoProfilePage(visitedUsersID: _mantraUserId, visitedEgoName: _mantraEgoName),
-                                                  context);
-                                            }
-                                            else {
+
+                                            // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
+                                            // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
+                                            if (visitingUser.userType == "REGULAR" &&
+                                                visitingUser.currentLoveCount < 500) { // Changed from 50 to 500 for consistency
                                               showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                                              return;
                                             }
-                                            print("Visited User ID::: $_mantraEgoName");
+
+                                            if (visitingUser.currentLoveCount < visitCost) {
+                                              showToast("You need at least 1 ❤️ to visit a profile.");
+                                              return;
+                                            }
+
+                                            // --- 4. PERFORM THE LOVE TRANSACTION ---
+                                            final bool success =
+                                            await firebaseServices.transferLoveBetweenUsers(
+                                              senderId: visitingUser.userId!,
+                                              receiverId: visitedUserId,
+                                              amountToSend: visitCost,
+                                              taxAmount: 0,
+                                              totalDebitAmount: visitCost,
+                                              senderTransactionDesc:
+                                              "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                                              receiverTransactionDesc:
+                                              "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                                              claireTransactionDesc:
+                                              "Tax from a profile visit.", // Will be 0, but required
+                                              forRoomVisits: 1, // Stat for the sender
+                                              fromRoomVisits: 1, // Stat for the receiver
+                                              metadata: {
+                                                'reason': 'profile_visit',
+                                                'visitedUserId': visitedUserId
+                                              },
+                                            );
+
+                                            // --- 5. NAVIGATE ON SUCCESS ---
+                                            if (success) {
+                                              // Only navigate to the profile if the transaction was successful.
+                                              PageRouter.gotoWidget(
+                                                  VisitedUserEgoProfilePage(
+                                                      visitedUsersID: visitedUserId,
+                                                      visitedEgoName: visitedEgoName),
+                                                  context);
+                                            }
                                           },
                                           child: CachedNetworkImage(
                                             width: 40,
@@ -1165,7 +1208,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
               // We wrap the part of the UI that needs the userModel in a FutureBuilder
               Expanded(
                 child: FutureBuilder<UserModel>(
-                  // Use the _userFuture you already defined in initState
                   future: _userFuture,
                   builder: (context, userSnapshot) {
                     // While waiting for the user data, show a single loading indicator

@@ -5,6 +5,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../services/firebase_services.dart';
+
 class RequestClaireLovesForm extends StatefulWidget {
   final int loveAmount;
   final String userId;
@@ -213,6 +215,12 @@ class _RequestClaireLovesFormState extends State<RequestClaireLovesForm> {
     try {
       await launchUrl(emailLaunchUri);
       AppToast.show("Request sent successfully! Check your email app.");
+      // Save the activity
+      final firebaseServices = FirebaseServices();
+      await firebaseServices.saveUserActivity(
+        activityType: 'cash_out',
+        activityMessage: "You requested a cash out of ${widget.loveAmount} ❤️.",
+      );
       Navigator.pop(context); // Go back to the wallet
     } catch (e) {
       AppToast.showError("Could not launch email app.");

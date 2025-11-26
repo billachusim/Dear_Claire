@@ -55,49 +55,6 @@ class ChatWidget extends StatelessWidget {
       this.isSubChat = false})
       : super(key: key);
 
-  InterstitialAd? _joinChatInterstitialAd;
-  int _joinChatInterstitialLoadAttempts = 0;
-
-  /// Create and show Join Chat interstitial ad.
-
-  void _createJoinChatInterstitialAd() {
-    InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/7417113912" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/7030101104" :
-      '',      request: AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          _joinChatInterstitialAd = ad;
-          _joinChatInterstitialLoadAttempts = 0;
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          print('Failed to load an interstitial ad: ${error.message}');
-          _joinChatInterstitialLoadAttempts += 1;
-          _joinChatInterstitialAd = null;
-          if (_joinChatInterstitialLoadAttempts <= maxFailedLoadAttempts) {
-            _createJoinChatInterstitialAd();
-          }
-        },
-      ),
-    );
-  }
-
-  void _showJoinChatInterstitialAd() {
-    if (_joinChatInterstitialAd != null) {
-      _joinChatInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          _createJoinChatInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          _createJoinChatInterstitialAd();
-        },
-      );
-      _joinChatInterstitialAd!.show();
-    }
-  }
-
 
 
   InterstitialAd? _leaveChatInterstitialAd;
@@ -144,48 +101,6 @@ class ChatWidget extends StatelessWidget {
   }
 
 
-  InterstitialAd? _contChatInterstitialAd;
-  int _contChatInterstitialLoadAttempts = 0;
-
-  /// Create and show Continue Chat interstitial ad.
-
-  void _createContChatInterstitialAd() {
-    InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/2293350565" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/3728601600" :
-      '',      request: AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          _contChatInterstitialAd = ad;
-          _contChatInterstitialLoadAttempts = 0;
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          print('Failed to load an interstitial ad: ${error.message}');
-          _contChatInterstitialLoadAttempts += 1;
-          _contChatInterstitialAd = null;
-          if (_contChatInterstitialLoadAttempts <= maxFailedLoadAttempts) {
-            _createContChatInterstitialAd();
-          }
-        },
-      ),
-    );
-  }
-
-  void _showContChatInterstitialAd() {
-    if (_contChatInterstitialAd != null) {
-      _contChatInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          _createContChatInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          _createContChatInterstitialAd();
-        },
-      );
-      _contChatInterstitialAd!.show();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -218,26 +133,65 @@ class ChatWidget extends StatelessWidget {
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        visitedUsersID = _user.userId ?? '';
-                        visitedEgoName = _user.nickname ?? 'Chatter';
-                        String thisEgoName = visitedEgoName;
-                        String thisUser = visitedUsersID;
+                        // --- 1. SETUP TRANSACTION DETAILS ---
+                        final visitingUser = await firebaseServices.getUserInfo();
+                        final String visitedUserId = _user.userId!;
+                        final String visitedEgoName = _user.nickname!;
+                        const int visitCost = 1;
 
-                        UserModel user = await firebaseServices.getUserInfo();
-                        if (user.userType != "REGULAR") {
+                        // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
+                        if (visitingUser.userId == visitedUserId) {
+                          // If visiting self, just navigate without a transaction.
                           PageRouter.gotoWidget(
-                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                              VisitedUserEgoProfilePage(
+                                  visitedUsersID: visitedUserId,
+                                  visitedEgoName: visitedEgoName),
+                              context);
+                          return;
+                        }
+
+                        if (visitingUser.userType == "REGULAR" &&
+                            visitingUser.currentLoveCount < 100) {
+                          showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                          return;
+                        }
+
+                        if (visitingUser.currentLoveCount < visitCost) {
+                          showToast("You need at least 1 ❤️ to visit a profile.");
+                          return;
+                        }
+
+                        // --- 3. PERFORM THE LOVE TRANSACTION ---
+                        final bool success =
+                        await firebaseServices.transferLoveBetweenUsers(
+                          senderId: visitingUser.userId!,
+                          receiverId: visitedUserId,
+                          amountToSend: visitCost,
+                          taxAmount: 0,
+                          totalDebitAmount: visitCost,
+                          senderTransactionDesc:
+                          "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                          receiverTransactionDesc:
+                          "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                          claireTransactionDesc:
+                          "Tax from a profile visit.", // Will be 0, but required
+                          forRoomVisits: 1, // Stat for the sender
+                          fromRoomVisits: 1, // Stat for the receiver
+                          metadata: {
+                            'reason': 'profile_visit',
+                            'visitedUserId': visitedUserId
+                          },
+                        );
+
+                        // --- 4. NAVIGATE ON SUCCESS ---
+                        if (success) {
+                          // Only navigate to the profile if the transaction was successful.
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(
+                                  visitedUsersID: visitedUserId,
+                                  visitedEgoName: visitedEgoName),
                               context);
                         }
-                        else if (user.currentLoveCount > 500) {
-                          PageRouter.gotoWidget(
-                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
-                              context);
-                        }
-                        else {
-                          showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                        }
-                        print("Visited User ID::: $visitedUsersID");
                       },
                       child: CachedNetworkImage(
                           width: 40,
@@ -266,25 +220,65 @@ class ChatWidget extends StatelessWidget {
                     Expanded(
                       child: GestureDetector(
                         onTap: () async {
-                          visitedUsersID = _user.userId ?? '';
-                          visitedEgoName = _user.nickname ?? 'Chatter';
-                          String thisEgoName = visitedEgoName;
-                          String thisUser = visitedUsersID;
-                          UserModel user = await firebaseServices.getUserInfo();
-                          if (user.userType != "REGULAR") {
+                          // --- 1. SETUP TRANSACTION DETAILS ---
+                          final visitingUser = await firebaseServices.getUserInfo();
+                          final String visitedUserId = _user.userId!;
+                          final String visitedEgoName = _user.nickname!;
+                          const int visitCost = 1;
+
+                          // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
+                          if (visitingUser.userId == visitedUserId) {
+                            // If visiting self, just navigate without a transaction.
                             PageRouter.gotoWidget(
-                                VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                VisitedUserEgoProfilePage(
+                                    visitedUsersID: visitedUserId,
+                                    visitedEgoName: visitedEgoName),
+                                context);
+                            return;
+                          }
+
+                          if (visitingUser.userType == "REGULAR" &&
+                              visitingUser.currentLoveCount < 100) {
+                            showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                            return;
+                          }
+
+                          if (visitingUser.currentLoveCount < visitCost) {
+                            showToast("You need at least 1 ❤️ to visit a profile.");
+                            return;
+                          }
+
+                          // --- 3. PERFORM THE LOVE TRANSACTION ---
+                          final bool success =
+                          await firebaseServices.transferLoveBetweenUsers(
+                            senderId: visitingUser.userId!,
+                            receiverId: visitedUserId,
+                            amountToSend: visitCost,
+                            taxAmount: 0,
+                            totalDebitAmount: visitCost,
+                            senderTransactionDesc:
+                            "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                            receiverTransactionDesc:
+                            "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                            claireTransactionDesc:
+                            "Tax from a profile visit.", // Will be 0, but required
+                            forRoomVisits: 1, // Stat for the sender
+                            fromRoomVisits: 1, // Stat for the receiver
+                            metadata: {
+                              'reason': 'profile_visit',
+                              'visitedUserId': visitedUserId
+                            },
+                          );
+
+                          // --- 4. NAVIGATE ON SUCCESS ---
+                          if (success) {
+                            // Only navigate to the profile if the transaction was successful.
+                            PageRouter.gotoWidget(
+                                VisitedUserEgoProfilePage(
+                                    visitedUsersID: visitedUserId,
+                                    visitedEgoName: visitedEgoName),
                                 context);
                           }
-                          else if (user.currentLoveCount > 500) {
-                            PageRouter.gotoWidget(
-                                VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
-                                context);
-                          }
-                          else {
-                            showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                          }
-                          print("Visited User ID::: $visitedUsersID");
                         },
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -598,8 +592,6 @@ class ChatWidget extends StatelessWidget {
                   alignment: Alignment.bottomRight,
                   child: InkWell(
                     onTap: () async { // Make sure this is async
-                      _createContChatInterstitialAd(); // Your existing ad logic
-
                       final String roomOwnerId = chatModel!.userId!;
                       final String visitorId = currentUser!.uid;
 
@@ -609,8 +601,8 @@ class ChatWidget extends StatelessWidget {
                         showToast('Welcome back to your room.');
                       } else {
                         // Visitor is entering another user's room.
-                        const int entryCost = 1;
-                        const int taxAmount = 0; // No tax for a 1-love transaction.
+                        const int entryCost = 3;
+                        const int taxAmount = 2; // No tax for a 1-love transaction.
                         const int totalDebit = entryCost + taxAmount;
 
                         // Check if the visitor can afford the entry
@@ -627,9 +619,9 @@ class ChatWidget extends StatelessWidget {
                           amountToSend: entryCost,
                           taxAmount: taxAmount,
                           totalDebitAmount: totalDebit,
-                          senderTransactionDesc: "Paid 1 ❤️ to enter ${chatModel!.userNickname}'s room.",
-                          receiverTransactionDesc: "Received 1 ❤️ because ${visitorData.nickname} visited your room.",
-                          claireTransactionDesc: "Tax from room entry.", // Will be 0 for now
+                          senderTransactionDesc: "Sent 5❤️ to enter ${chatModel!.userNickname}'s room.",
+                          receiverTransactionDesc: "Received 3❤️ because ${visitorData.nickname} visited your room.",
+                          claireTransactionDesc: "3 ❤️ Tax from room entry.",
                           // Pass the stat increments
                           forRoomVisits: entryCost,
                           fromRoomVisits: entryCost,
@@ -641,13 +633,6 @@ class ChatWidget extends StatelessWidget {
                           return;
                         }
                       }
-
-                      // --- END OF LOGIC ---
-
-                      // Existing ad logic and navigation
-                      Future.delayed(Duration(days: 2), () {
-                        _showContChatInterstitialAd();
-                      });
 
                       PageRouter.gotoWidget(
                           SubChatScreen(
@@ -699,18 +684,14 @@ class ChatWidget extends StatelessWidget {
                   alignment: Alignment.bottomRight,
                   child: InkWell(
                     onTap: () {
-                      _createJoinChatInterstitialAd();
                       visitedUsersID = _userModel.userId ?? '';
                       String thisUser = visitedUsersID;
 
                       if (!_isCompleted(chatModel, chatRoomPodo))
 
                         updateMembers(joining: true);
-                        showToast('Welcome. Start chatting after this ad.');
+                        showToast('Welcome. Start chatting with positive vibes.');
 
-                      Future.delayed(Duration(seconds: 5), () {
-                        _showJoinChatInterstitialAd();
-                      });
 
                       PageRouter.gotoWidget(
                             SubChatScreen(

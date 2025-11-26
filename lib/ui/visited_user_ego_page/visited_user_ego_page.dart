@@ -205,27 +205,44 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
   Future<void> _fetchInitialData() async {
     try {
+      // --- 1. FETCH BOTH USERS' DATA CONCURRENTLY ---
+      // This is more efficient than awaiting them one by one.
       final results = await Future.wait([
-        getVisitingUserInfo(),
-        getVisitedUserInfo(),
+        getVisitingUserInfo(), // Fetches the current user
+        getVisitedUserInfo(), // Fetches the user whose profile is being viewed
       ]);
 
-      final fetchedVisitedUser = results[1] as VisitedUserModel;
+      // Safely cast the results
+      final UserModel fetchedVisitingUser = results[0] as UserModel;
+      final VisitedUserModel fetchedVisitedUser = results[1] as VisitedUserModel;
 
+      // --- 2. SAVE THE VISIT ACTIVITY ---
+      // Now you have the visiting user's nickname to use in the message.
+      await firebaseServices.saveUserActivity(
+        activityType: 'visit_ego',
+        activityMessage:
+        "${fetchedVisitingUser.nickname ?? 'Someone'} visited ${widget
+            .visitedEgoName}'s Ego.",
+        recipientId: widget.visitedUsersID,
+        recipientNickname: widget.visitedEgoName,
+      );
+
+      // --- 3. UPDATE STATE AND TURN OFF LOADING ---
+      // This is the crucial part. We update the state with ALL fetched data at once.
       if (mounted) {
         setState(() {
-          visitedUser = fetchedVisitedUser;
-          _isLoading = false; // <-- Turn off loading state
+          _visitingUser = fetchedVisitingUser; // Now this is set immediately
+          visitedUser = fetchedVisitedUser; // And this is set too
+          _isLoading = false; // Turn off loading AFTER data is set
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _isLoading = false; // <-- Also turn off loading on error
+          _isLoading = false; // Also turn off loading on error
         });
       }
       logger.e("Failed to fetch initial data: $e");
-      // Optionally show a toast or error message to the user
       CustomToast.showToast(message: "Failed to load profile data.");
     }
   }
@@ -239,8 +256,8 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
         .doc(currentUser?.uid)
         .get();
 
-    var visitingUser = UserModel.fromFirestore(response.data() as Map<String, dynamic>);
-    _visitingUser = visitingUser;
+    var visitingUser =
+    UserModel.fromFirestore(response.data() as Map<String, dynamic>);
     logger.d('Successfully got the visiting user model');
     return visitingUser;
   }
@@ -282,7 +299,12 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     },
     );
     logger.d('Successfully sent an Ego message to $egoName');
-    print('Ego Message: $egoMessage');
+    await firebaseServices.saveUserActivity(
+      activityType: 'mantra', // A new activity type
+      activityMessage: "You left a new mantra for ${widget.visitedEgoName}.",
+      recipientId: widget.visitedUsersID,
+      recipientNickname: widget.visitedEgoName,
+    );
   }
 
   /// Save Ego audio mantra
@@ -306,7 +328,12 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       //SetOptions(merge: true)
     );
     logger.d('Successfully sent an Ego audio message to $egoName');
-    print('Ego Audio Message: $audioPath');
+    await firebaseServices.saveUserActivity(
+      activityType: 'mantra', // Same activity type
+      activityMessage: "You left a new audio mantra for ${widget.visitedEgoName}.",
+      recipientId: widget.visitedUsersID,
+      recipientNickname: widget.visitedEgoName,
+    );
   }
 
 
@@ -1779,107 +1806,5 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   }
 }
 
-
-
-
-
-class VisitedUserActivityCard extends StatefulWidget {
-  final UserActivityModel element;
-
-  const VisitedUserActivityCard({Key? key, required this.element}) : super(key: key);
-
-  @override
-  _VisitedUserActivityCardState createState() => _VisitedUserActivityCardState();
-}
-
-class _VisitedUserActivityCardState extends State<VisitedUserActivityCard> {
-  // This is now a state variable, not a final one.
-  UserModel? userModel;
-
-  @override
-  void initState() {
-    super.initState();
-    // Fetch data only once when the widget is first created.
-    _getUser();
-  }
-
-  Future<void> _getUser() async {
-    // Await the result and then call setState to update the UI.
-    final fetchedUser = await firebaseServices.getUserInfo();
-    if (mounted) { // Check if the widget is still in the tree.
-      setState(() {
-        userModel = fetchedUser;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Now the build method is clean and only focuses on rendering the UI.
-    return Container(
-      margin: const EdgeInsets.all(5),
-      child: Material(
-        borderRadius: const BorderRadius.all(Radius.circular(35)),
-        elevation: 20,
-        child: GestureDetector(
-          onTap: () => PageRouter.gotoWidget(
-              NotifiedSessionDetails(sessionId: widget.element.sessionId),
-              context),
-          child: Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(
-                  AppImages.appChatBg,
-                ),
-                fit: BoxFit.fill,
-              ),
-              borderRadius: BorderRadius.all(Radius.circular(12)),
-            ),
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                ClipOval(
-                  child: CachedNetworkImage(
-                    width: 30,
-                    height: 30,
-                    imageUrl: widget.element.userAvatarUrl ?? "",
-                    imageBuilder: (context, imageProvider) => Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: imageProvider,
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
-                    placeholder: (context, url) =>
-                    const CircularProgressIndicator(),
-                    errorWidget: (context, url, error) => Image.asset(
-                      "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                      width: 30,
-                      height: 30,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 4.w),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(widget.element.activityMessage.toString(),
-                          style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Pallet.colorSecondaryDark)),
-                      Text(timeConverter(widget.element.dateCreated!),
-                          style: TextStyle(fontSize: 11.sp, color: Pallet.colorTextGray)),
-                    ],
-                  ),
-                )
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 

@@ -53,7 +53,6 @@ class NotifiedSessionDetails extends StatefulWidget {
 class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   final screenshotController = ScreenshotController();
   TextEditingController editSessionController = TextEditingController();
-  final TransactionService _transactionService = TransactionService();
   User? currentUser = FirebaseAuth.instance.currentUser;
 
   bool? isFeatured;
@@ -92,7 +91,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
 
     // Dispose all ad resources
     _interstitialAd?.dispose();
-    egoModeSessionDetailBottomBanner?.dispose();
+    egoModeSessionDetailBottomBanner.dispose();
     super.dispose();
   }
 
@@ -218,26 +217,65 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                 children: [
                                   GestureDetector(
                                     onTap: () async {
-                                      visitedUsersID = _session.userId!;
-                                      visitedEgoName = _session.userNickname!;
-                                      String thisEgoName = visitedEgoName;
-                                      String thisUser = visitedUsersID;
+                                      // --- 1. SETUP TRANSACTION DETAILS ---
+                                      final visitingUser = await firebaseServices.getUserInfo();
+                                      final String visitedUserId = _session.userId!;
+                                      final String visitedEgoName = _session.userNickname!;
+                                      const int visitCost = 1;
 
-                                      UserModel user = await firebaseServices.getUserInfo();
-                                      if (user.userType != "REGULAR") {
+                                      // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
+                                      if (visitingUser.userId == visitedUserId) {
+                                        // If visiting self, just navigate without a transaction.
                                         PageRouter.gotoWidget(
-                                            VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                            VisitedUserEgoProfilePage(
+                                                visitedUsersID: visitedUserId,
+                                                visitedEgoName: visitedEgoName),
+                                            context);
+                                        return;
+                                      }
+
+                                      if (visitingUser.userType == "REGULAR" &&
+                                          visitingUser.currentLoveCount < 100) {
+                                        showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                                        return;
+                                      }
+
+                                      if (visitingUser.currentLoveCount < visitCost) {
+                                        showToast("You need at least 1 ❤️ to visit a profile.");
+                                        return;
+                                      }
+
+                                      // --- 3. PERFORM THE LOVE TRANSACTION ---
+                                      final bool success =
+                                      await firebaseServices.transferLoveBetweenUsers(
+                                        senderId: visitingUser.userId!,
+                                        receiverId: visitedUserId,
+                                        amountToSend: visitCost,
+                                        taxAmount: 0,
+                                        totalDebitAmount: visitCost,
+                                        senderTransactionDesc:
+                                        "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                                        receiverTransactionDesc:
+                                        "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                                        claireTransactionDesc:
+                                        "Tax from a profile visit.", // Will be 0, but required
+                                        forRoomVisits: 1, // Stat for the sender
+                                        fromRoomVisits: 1, // Stat for the receiver
+                                        metadata: {
+                                          'reason': 'profile_visit',
+                                          'visitedUserId': visitedUserId
+                                        },
+                                      );
+
+                                      // --- 4. NAVIGATE ON SUCCESS ---
+                                      if (success) {
+                                        // Only navigate to the profile if the transaction was successful.
+                                        PageRouter.gotoWidget(
+                                            VisitedUserEgoProfilePage(
+                                                visitedUsersID: visitedUserId,
+                                                visitedEgoName: visitedEgoName),
                                             context);
                                       }
-                                      else if (user.currentLoveCount > 500) {
-                                        PageRouter.gotoWidget(
-                                            VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
-                                            context);
-                                      }
-                                      else {
-                                        showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                                      }
-                                      print("Visited User ID::: $visitedUsersID");
                                     },
                                     child: CachedNetworkImage(
                                         width: 48,
@@ -272,27 +310,66 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                       children: [
                                         GestureDetector(
                                           onTap: () async {
-                                            visitedUsersID = _session.userId!;
-                                            visitedEgoName = _session.userNickname!;
-                                            String thisEgoName =
-                                            _session.userNickname.toString();
-                                            String thisUser =
-                                            _session.userId.toString();
-                                            UserModel user = await firebaseServices.getUserInfo();
-                                            if (user.userType != "REGULAR") {
+                                            // --- 1. SETUP TRANSACTION DETAILS ---
+                                            final visitingUser = await firebaseServices.getUserInfo();
+                                            final String visitedUserId = _session.userId!;
+                                            final String visitedEgoName = _session.userNickname!;
+                                            const int visitCost = 1;
+                                            // --- 2. HANDLE SELF-VISIT ---
+                                            if (visitingUser.userId == visitedUserId) {
+                                              // If visiting self, just navigate without a transaction.
                                               PageRouter.gotoWidget(
-                                                  VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                                  VisitedUserEgoProfilePage(
+                                                      visitedUsersID: visitedUserId,
+                                                      visitedEgoName: visitedEgoName),
                                                   context);
+                                              return;
                                             }
-                                            else if (user.currentLoveCount > 500) {
-                                              PageRouter.gotoWidget(
-                                                  VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
-                                                  context);
-                                            }
-                                            else {
+
+                                            // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
+                                            // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
+                                            if (visitingUser.userType == "REGULAR" &&
+                                                visitingUser.currentLoveCount < 500) { // Changed from 50 to 500 for consistency
                                               showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                                              return;
                                             }
-                                            print("Visited User ID::: $visitedUsersID");
+
+                                            if (visitingUser.currentLoveCount < visitCost) {
+                                              showToast("You need at least 1 ❤️ to visit a profile.");
+                                              return;
+                                            }
+
+                                            // --- 4. PERFORM THE LOVE TRANSACTION ---
+                                            final bool success =
+                                            await firebaseServices.transferLoveBetweenUsers(
+                                              senderId: visitingUser.userId!,
+                                              receiverId: visitedUserId,
+                                              amountToSend: visitCost,
+                                              taxAmount: 0,
+                                              totalDebitAmount: visitCost,
+                                              senderTransactionDesc:
+                                              "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                                              receiverTransactionDesc:
+                                              "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                                              claireTransactionDesc:
+                                              "Tax from a profile visit.", // Will be 0, but required
+                                              forRoomVisits: 1, // Stat for the sender
+                                              fromRoomVisits: 1, // Stat for the receiver
+                                              metadata: {
+                                                'reason': 'profile_visit',
+                                                'visitedUserId': visitedUserId
+                                              },
+                                            );
+
+                                            // --- 5. NAVIGATE ON SUCCESS ---
+                                            if (success) {
+                                              // Only navigate to the profile if the transaction was successful.
+                                              PageRouter.gotoWidget(
+                                                  VisitedUserEgoProfilePage(
+                                                      visitedUsersID: visitedUserId,
+                                                      visitedEgoName: visitedEgoName),
+                                                  context);
+                                            }
                                           },
                                           child: Text(_session.userNickname!,
                                               textAlign: TextAlign.start,
@@ -466,21 +543,23 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                     },
                                     child: Row(
                                       children: [
-                                        Text(_session.followers!.length.toString(),
+                                        Text(
+                                          _session.followers!.length.toString(),
                                           style: TextStyle(
                                             color: textColor,
-                                            fontSize: 13,
+                                            fontSize: 15,
                                             fontWeight: FontWeight.w900,
                                           ),
                                         ),
-
                                         Icon(
                                           _session.followers!
                                               .contains(currentUser?.uid)
-                                              ? Icons.notifications_active_rounded
-                                              : Icons.notifications_off_outlined,
+                                              ? Icons
+                                              .notifications_active_rounded
+                                              : Icons
+                                              .notifications_off_outlined,
                                           color: textColor,
-                                          size: 24,
+                                          size: 26,
                                         ),
                                       ],
                                     ),
@@ -491,12 +570,74 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                         ? 'Unfollow'
                                         : 'Follow',
                                     onPressed: () async {
-                                      if (await firebaseServices.isUserSignIn(context)) {
-                                        firebaseServices.followThisSession(
-                                            context,
-                                            session: _session);
+                                      if (await firebaseServices
+                                          .isUserSignIn(context)) {
+                                        final follower = await firebaseServices
+                                            .getUserInfo();
+                                        final sessionOwnerId = _session.userId;
+                                        final isAlreadyFollowing = _session
+                                            .followers!
+                                            .contains(currentUser?.uid);
+                                        if (isAlreadyFollowing) {
+                                          firebaseServices.followThisSession(
+                                              context,
+                                              session: _session);
+                                          showToast(
+                                              "You've unfollowed this session.");
+                                          return; // Stop here
+                                        }
+                                        if (follower.currentLoveCount < 1) {
+                                          showToast(
+                                              "You need at least 1 ❤️ to follow a session.");
+                                          return;
+                                        }
 
-                                        saveUserFollowActivity();
+                                        final bool success =
+                                        await firebaseServices
+                                            .transferLoveBetweenUsers(
+                                          senderId: follower.userId!,
+                                          receiverId: sessionOwnerId!,
+                                          amountToSend: 1,
+                                          taxAmount: 0, // No tax for following
+                                          totalDebitAmount: 1,
+                                          senderTransactionDesc:
+                                          "Sent 1 ❤️ to follow '${_session.title}'.",
+                                          receiverTransactionDesc:
+                                          "Received 1 ❤️ from ${follower.nickname} who followed your session.",
+                                          claireTransactionDesc:
+                                          "Follow transaction tax (0%).",
+                                          metadata: {
+                                            'reason': 'follow_session',
+                                            'sessionId': _session.sessionId,
+                                          },
+                                        );
+
+                                        if (success) {
+                                          firebaseServices.followThisSession(
+                                              context,
+                                              session: _session);
+                                          await firebaseServices
+                                              .updateSessionLastTimeActivity(
+                                              _session.sessionId
+                                                  .toString());
+
+                                          await firebaseServices
+                                              .saveUserActivity(
+                                            activityType: 'follow',
+                                            activityMessage:
+                                            "You started following the session: '${_session.title}'.",
+                                            recipientId: sessionOwnerId,
+                                            recipientNickname:
+                                            _session.userNickname,
+                                            sessionId: _session.sessionId,
+                                          );
+
+                                          showToast(
+                                              "Now following! 1 ❤️ was sent to the author.");
+                                        } else {
+                                          showToast(
+                                              "Could not complete the follow. Please try again.");
+                                        }
                                       }
                                     },
                                     count: _session.followers!.length,

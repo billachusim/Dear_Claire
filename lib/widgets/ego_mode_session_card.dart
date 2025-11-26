@@ -34,12 +34,16 @@ class EgoModeSessionCard extends StatelessWidget {
   bool? isFeatured;
   bool? isArchived;
 
-  EgoModeSessionCard({Key? key, required this.element, required this.visitedUsersID, required this.visitedEgoName}) : super(key: key);
+  EgoModeSessionCard(
+      {Key? key,
+      required this.element,
+      required this.visitedUsersID,
+      required this.visitedEgoName})
+      : super(key: key);
   late String visitedUsersID;
   late String visitedEgoName;
   final TransactionService _transactionService = TransactionService();
   User? currentUser = FirebaseAuth.instance.currentUser;
-
 
   /// Edit feature
 
@@ -48,34 +52,32 @@ class EgoModeSessionCard extends StatelessWidget {
     FirebaseFirestore.instance
         .collection('sessions')
         .doc(element.sessionId)
-        .update({
-      "featured": value,
-    },
+        .update(
+      {
+        "featured": value,
+      },
     );
     logger.d('Successfully changed feature');
     print('Is Featured?: $value');
     isFeatured = value;
     return value;
   }
-
 
   Future<bool?> removeFromFeatured() async {
     final value = false;
     FirebaseFirestore.instance
         .collection('sessions')
         .doc(element.sessionId)
-        .update({
-      "featured": value,
-    },
+        .update(
+      {
+        "featured": value,
+      },
     );
     logger.d('Successfully changed feature');
     print('Is Featured?: $value');
     isFeatured = value;
     return value;
   }
-
-
-
 
   /// Archive a session
   Future<bool?> sendToArchive() async {
@@ -89,11 +91,14 @@ class EgoModeSessionCard extends StatelessWidget {
         userId: currentUser!.uid,
         amount: 10,
         type: t_model.TransactionType.debit,
-        userTransactionDescription: "10 Loves deducted for archiving a session.",
-        metadata: {'sessionId': element.sessionId, 'sessionTitle': element.title},
+        userTransactionDescription:
+            "10 Loves deducted for archiving a session.",
+        metadata: {
+          'sessionId': element.sessionId,
+          'sessionTitle': element.title
+        },
       );
       // --- END OF NEW TREASURY LOGIC ---
-
 
       // --- Send Push Notification ---
       try {
@@ -126,18 +131,15 @@ class EgoModeSessionCard extends StatelessWidget {
     return value;
   }
 
-
-
-
-
   Future<bool?> removeFromArchive() async {
     final value = false;
     FirebaseFirestore.instance
         .collection('sessions')
         .doc(element.sessionId)
-        .update({
-      "archived": value,
-    },
+        .update(
+      {
+        "archived": value,
+      },
     );
     logger.d('Successfully changed archive');
     print('Is Archived?: $value');
@@ -145,23 +147,23 @@ class EgoModeSessionCard extends StatelessWidget {
     return value;
   }
 
-
   @override
   Widget build(BuildContext context) {
     final Color backgroundColor = HexColor.fromHex(element.colorHex!);
-    final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
-    final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
+    final Color textColor =
+        backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+    final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5
+        ? Colors.black54
+        : Colors.white70;
 
     return GestureDetector(
       onTap: () => PageRouter.gotoWidget(
-          EgoModeSessionDetail(featuredSessionModel: element),
-          context),
+          EgoModeSessionDetail(featuredSessionModel: element), context),
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 7, horizontal: 7),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(25),
-            color: backgroundColor),
+            borderRadius: BorderRadius.circular(25), color: backgroundColor),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -172,27 +174,70 @@ class EgoModeSessionCard extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: () async {
-                    visitedUsersID = element.userId!;
-                    visitedEgoName = element.userNickname!;
-                    String thisEgoName = visitedEgoName;
-                    String thisUser = visitedUsersID;
+                    // --- 1. SETUP TRANSACTION DETAILS ---
+                    final visitingUser = await firebaseServices.getUserInfo();
+                    final String visitedUserId = element.userId!;
+                    final String visitedEgoName = element.userNickname!;
+                    const int visitCost = 1;
 
-                    UserModel user = await firebaseServices.getUserInfo();
-                    if (user.userType != "REGULAR") {
+                    // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
+                    if (visitingUser.userId == visitedUserId) {
+                      // If visiting self, just navigate without a transaction.
                       PageRouter.gotoWidget(
-                          VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                          VisitedUserEgoProfilePage(
+                              visitedUsersID: visitedUserId,
+                              visitedEgoName: visitedEgoName),
+                          context);
+                      return;
+                    }
+
+                    if (visitingUser.userType == "REGULAR" &&
+                        visitingUser.currentLoveCount < 100) {
+                      showToast(
+                          message:
+                              "Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                      return;
+                    }
+
+                    if (visitingUser.currentLoveCount < visitCost) {
+                      showToast(
+                          message:
+                              "You need at least 1 ❤️ to visit a profile.");
+                      return;
+                    }
+
+                    // --- 3. PERFORM THE LOVE TRANSACTION ---
+                    final bool success =
+                        await firebaseServices.transferLoveBetweenUsers(
+                      senderId: visitingUser.userId!,
+                      receiverId: visitedUserId,
+                      amountToSend: visitCost,
+                      taxAmount: 0,
+                      totalDebitAmount: visitCost,
+                      senderTransactionDesc:
+                          "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                      receiverTransactionDesc:
+                          "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                      claireTransactionDesc:
+                          "Tax from a profile visit.", // Will be 0, but required
+                      forRoomVisits: 1, // Stat for the sender
+                      fromRoomVisits: 1, // Stat for the receiver
+                      metadata: {
+                        'reason': 'profile_visit',
+                        'visitedUserId': visitedUserId
+                      },
+                    );
+
+                    // --- 4. NAVIGATE ON SUCCESS ---
+                    if (success) {
+                      // Only navigate to the profile if the transaction was successful.
+                      PageRouter.gotoWidget(
+                          VisitedUserEgoProfilePage(
+                              visitedUsersID: visitedUserId,
+                              visitedEgoName: visitedEgoName),
                           context);
                     }
-                    else if (user.currentLoveCount > 500) {
-                      PageRouter.gotoWidget(
-                          VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
-                          context);
-                    }
-                    else {
-                      showToast(message: "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                    }
-                    print("Visited User ID::: $visitedUsersID");
-                    },
+                  },
                   child: CachedNetworkImage(
                       width: 50,
                       height: 50,
@@ -205,7 +250,8 @@ class EgoModeSessionCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                      placeholder: (context, url) => CircularProgressIndicator(),
+                      placeholder: (context, url) =>
+                          CircularProgressIndicator(),
                       errorWidget: (context, url, error) => Image.asset(
                             "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                             width: 50,
@@ -223,25 +269,71 @@ class EgoModeSessionCard extends StatelessWidget {
                     children: [
                       GestureDetector(
                         onTap: () async {
-                          visitedUsersID = element.userId!;
-                          visitedEgoName = element.userNickname!;
-                          String thisEgoName = visitedEgoName;
-                          String thisUser = visitedUsersID;
-                          UserModel user = await firebaseServices.getUserInfo();
-                          if (user.userType != "REGULAR") {
+                          // --- 1. SETUP TRANSACTION DETAILS ---
+                          final visitingUser = await firebaseServices.getUserInfo();
+                          final String visitedUserId = element.userId!;
+                          final String visitedEgoName = element.userNickname!;
+                          const int visitCost = 1;
+
+                          // --- 2. HANDLE SELF-VISIT ---
+                          if (visitingUser.userId == visitedUserId) {
+                            // If visiting self, just navigate without a transaction.
                             PageRouter.gotoWidget(
-                                VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                VisitedUserEgoProfilePage(
+                                    visitedUsersID: visitedUserId,
+                                    visitedEgoName: visitedEgoName),
+                                context);
+                            return;
+                          }
+
+                          // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
+                          // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
+                          if (visitingUser.userType == "REGULAR" &&
+                              visitingUser.currentLoveCount < 500) { // Changed from 50 to 500 for consistency
+                            showToast(
+                                message:
+                                "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                            return;
+                          }
+
+                          if (visitingUser.currentLoveCount < visitCost) {
+                            showToast(
+                                message: "You need at least 1 ❤️ to visit a profile.");
+                            return;
+                          }
+
+                          // --- 4. PERFORM THE LOVE TRANSACTION ---
+                          final bool success =
+                          await firebaseServices.transferLoveBetweenUsers(
+                            senderId: visitingUser.userId!,
+                            receiverId: visitedUserId,
+                            amountToSend: visitCost,
+                            taxAmount: 0,
+                            totalDebitAmount: visitCost,
+                            senderTransactionDesc:
+                            "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                            receiverTransactionDesc:
+                            "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                            claireTransactionDesc:
+                            "Tax from a profile visit.", // Will be 0, but required
+                            forRoomVisits: 1, // Stat for the sender
+                            fromRoomVisits: 1, // Stat for the receiver
+                            metadata: {
+                              'reason': 'profile_visit',
+                              'visitedUserId': visitedUserId
+                            },
+                          );
+
+                          // --- 5. NAVIGATE ON SUCCESS ---
+                          if (success) {
+                            // Only navigate to the profile if the transaction was successful.
+                            PageRouter.gotoWidget(
+                                VisitedUserEgoProfilePage(
+                                    visitedUsersID: visitedUserId,
+                                    visitedEgoName: visitedEgoName),
                                 context);
                           }
-                          else if (user.currentLoveCount > 50) {
-                            PageRouter.gotoWidget(
-                                VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
-                                context);
-                          }
-                          else {
-                            showToast(message: "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                          }
-                          print("Visited User ID::: $visitedUsersID");
+                          // If !success, the service method already shows a toast.
                         },
                         child: Text(element.userNickname!,
                             textAlign: TextAlign.start,
@@ -269,7 +361,6 @@ class EgoModeSessionCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-
                       Text(Mood.getMood(element.moodId) ?? "${Mood.getMood(1)}",
                           textAlign: TextAlign.end,
                           maxLines: 1,
@@ -280,13 +371,14 @@ class EgoModeSessionCard extends StatelessWidget {
                       SizedBox(
                         height: 3,
                       ),
-                      Text(element.location ?? "",
-                          textAlign: TextAlign.end,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 13.0,
-                              color: secondaryTextColor,
-                              fontWeight: FontWeight.w700),
+                      Text(
+                        element.location ?? "",
+                        textAlign: TextAlign.end,
+                        maxLines: 1,
+                        style: GoogleFonts.lato(
+                            fontSize: 13.0,
+                            color: secondaryTextColor,
+                            fontWeight: FontWeight.w700),
                       ),
                     ],
                   ),
@@ -310,64 +402,63 @@ class EgoModeSessionCard extends StatelessWidget {
             ),
             Column(
               children: [
-                  Text(
-                    element.message!,
-                    textAlign: TextAlign.justify,
-                    maxLines: element.imageUrls!.isNotEmpty ? 8 : 10,
-                    style: GoogleFonts.lato(
-                        fontSize: 21.0,
-                        color: textColor,
-                        fontWeight: FontWeight.w600),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                Text(
+                  element.message!,
+                  textAlign: TextAlign.justify,
+                  maxLines: element.imageUrls!.isNotEmpty ? 8 : 10,
+                  style: GoogleFonts.lato(
+                      fontSize: 21.0,
+                      color: textColor,
+                      fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis,
+                ),
                 SizedBox(
                   height: 7,
                 ),
-
                 Container(
                   child: element.audioUrl!.isNotEmpty
                       ? CustomPlaySoundWidget(filePath: element.audioUrl)
                       : SizedBox.shrink(),
                 ),
-
                 Visibility(
                   visible: element.imageUrls!.isNotEmpty,
                   child: GridView.count(
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
                     crossAxisCount: 5,
-                    children: List.generate(
-                        element.imageUrls!.length, (index) {
+                    children: List.generate(element.imageUrls!.length, (index) {
                       String image = element.imageUrls![index].toString();
                       return Stack(
                         fit: StackFit.expand,
                         children: <Widget>[
                           GestureDetector(
                             onTap: () {
-                              PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
+                              PageRouter.gotoWidget(
+                                  CustomImageWidget(imageUrl: image), context);
                             },
                             child: CachedNetworkImage(
                                 height: 400,
                                 width: 400,
                                 imageUrl: image,
-                                imageBuilder: (context, imageProvider) => Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(25),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                        fit: BoxFit.cover
+                                imageBuilder: (context, imageProvider) =>
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(25),
+                                        image: DecorationImage(
+                                            image: imageProvider,
+                                            fit: BoxFit.cover),
+                                      ),
+                                      margin: EdgeInsets.all(3),
                                     ),
-                                  ),
-                                  margin: EdgeInsets.all(3),
-                                ),
                                 placeholder: (context, url) =>
                                     Center(child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                  width: 48,
-                                  height: 48,
-                                ) //Icon(Icons.error),
-                            ),
+                                errorWidget: (context, url, error) =>
+                                    Image.asset(
+                                      "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                      width: 48,
+                                      height: 48,
+                                    ) //Icon(Icons.error),
+                                ),
                           ),
                         ],
                       );
@@ -376,12 +467,11 @@ class EgoModeSessionCard extends StatelessWidget {
                 ),
               ],
             ),
-
-            SizedBox(height: 8,),
-
+            SizedBox(
+              height: 8,
+            ),
             Row(
               children: [
-
                 MetooButton(
                   cheers: element.meToos!.length,
                   thanks: element.meLove!.length,
@@ -420,15 +510,17 @@ class EgoModeSessionCard extends StatelessWidget {
                     }
 
                     // --- 3. PERFORM THE LOVE TRANSACTION ---
-                    final bool success = await firebaseServices.transferLoveBetweenUsers(
+                    final bool success =
+                        await firebaseServices.transferLoveBetweenUsers(
                       senderId: reactingUserId,
                       receiverId: sessionOwnerId,
                       amountToSend: reactionCost,
                       taxAmount: 0, // No tax on a 1-love transaction
                       totalDebitAmount: reactionCost,
-                      senderTransactionDesc: "Sent 1 ❤️ by reacting to a session.",
+                      senderTransactionDesc:
+                          "Spent 1❤️ reacting to session ${element.title}.",
                       receiverTransactionDesc:
-                      "Received 1 ❤️ from ${reactingUser.nickname} reacting to your session.",
+                          "Received 1❤️ from ${reactingUser.nickname} reacting to your session.",
                       claireTransactionDesc: "Tax from a session reaction.",
                       // Pass the specific stat increments
                       forReactions: reactionCost,
@@ -450,39 +542,38 @@ class EgoModeSessionCard extends StatelessWidget {
                         sender: reactingUser.nickname ?? '',
                       );
                       saveUserMe2Activity(); // Your existing activity tracking
-                      showToast(message: "1 ❤️ sent to the session owner!");
+                      showToast(message: "1❤️ sent to the session owner!");
                     }
                     // If !success, the service method already shows a toast.
                   },
                 ),
-
-
                 new Spacer(),
-
-                        Visibility(
-                          visible: element.userId == currentUser?.uid,
-                          child: GestureDetector(
-                            onTap: () {
-                              if (element.featured == false)
-                                featureAlertDialog(context);
-                              else unfeatureAlertDialog(context);
-                            },
-                            child: Container(
-                              child: Visibility(
-                                visible: element.repliesEnabled == true,
-                                child: Icon(
-                                  element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
-                                  color: textColor,
-                                  size: 28,
-                                ),
-                              ),
-                            ),
-                          ),
+                Visibility(
+                  visible: element.userId == currentUser?.uid,
+                  child: GestureDetector(
+                    onTap: () {
+                      if (element.featured == false)
+                        featureAlertDialog(context);
+                      else
+                        unfeatureAlertDialog(context);
+                    },
+                    child: Container(
+                      child: Visibility(
+                        visible: element.repliesEnabled == true,
+                        child: Icon(
+                          element.featured == true
+                              ? Icons.lightbulb
+                              : Icons.lightbulb_outline,
+                          color: textColor,
+                          size: 28,
                         ),
-
-                SizedBox(width: 10,),
-
-
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 10,
+                ),
                 Visibility(
                   visible: element.userId == currentUser?.uid,
                   child: GestureDetector(
@@ -491,27 +582,29 @@ class EgoModeSessionCard extends StatelessWidget {
                         showCustomDialog(context,
                             message: element.archived == true
                                 ? AppString.unarchive_alert_note
-                                : AppString.archive_alert_note,
-                            onPressed: () {
-                              sendToArchive();
-                              Navigator.pushReplacementNamed(context, AppRoutes.diarySessions);
-                            });
+                                : AppString.archive_alert_note, onPressed: () {
+                          sendToArchive();
+                          Navigator.pushReplacementNamed(
+                              context, AppRoutes.diarySessions);
+                        });
                       else
                         showCustomDialog(context,
                             message: element.archived == false
                                 ? AppString.archive_alert_note
                                 : AppString.unarchive_alert_note,
                             onPressed: () {
-                              Navigator.pushReplacementNamed(context, AppRoutes.diarySessions);
-                              removeFromArchive();
-                            });
+                          Navigator.pushReplacementNamed(
+                              context, AppRoutes.diarySessions);
+                          removeFromArchive();
+                        });
                     },
-
                     child: Container(
                       child: Visibility(
                         visible: element.userId == currentUser?.uid,
                         child: Icon(
-                          element.archived == true ? Icons.archive_rounded : Icons.archive_outlined,
+                          element.archived == true
+                              ? Icons.archive_rounded
+                              : Icons.archive_outlined,
                           color: textColor,
                           size: 26,
                         ),
@@ -519,10 +612,7 @@ class EgoModeSessionCard extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 new Spacer(),
-
-
                 StreamBuilder(
                     stream: firebaseServices
                         .getFeaturedSessionsComments(element.sessionId!),
@@ -532,10 +622,12 @@ class EgoModeSessionCard extends StatelessWidget {
                       }
                       if (snapShot.hasData) {
                         return CommentsButton(
-                            count: snapShot.data!.docs.length,
+                          count: snapShot.data!.docs.length,
                           onPressed: () => PageRouter.gotoWidget(
-                              EgoModeSessionDetail(featuredSessionModel: element),
-                              context),);
+                              EgoModeSessionDetail(
+                                  featuredSessionModel: element),
+                              context),
+                        );
                       }
                       return Container();
                     }),
@@ -548,7 +640,6 @@ class EgoModeSessionCard extends StatelessWidget {
               color: secondaryTextColor,
               height: 3,
             ),
-
             StreamBuilder(
                 stream: firebaseServices
                     .getFeaturedSessionsComments(element.sessionId!),
@@ -572,7 +663,6 @@ class EgoModeSessionCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-
                         Text(
                           _returnComment(_commentSessionList).message ?? '',
                           textAlign: TextAlign.start,
@@ -600,8 +690,7 @@ class EgoModeSessionCard extends StatelessWidget {
     try {
       final _filter = _commentSessionList
           .where((element) =>
-              _commentSessionList.isNotEmpty &&
-              element.isUserAdmin)
+              _commentSessionList.isNotEmpty && element.isUserAdmin)
           .toList();
       return _filter.first;
     } catch (e) {
@@ -609,22 +698,16 @@ class EgoModeSessionCard extends StatelessWidget {
     }
   }
 
-
-
   onDonateClicked() {
     var donateUrl = Uri.parse(AppString.donate_url);
     launchUrl(donateUrl);
   }
 
-
-
-
   featureAlertDialog(BuildContext context) {
-
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text("TopUp Love"),
-      onPressed:  () {
+      onPressed: () {
         onDonateClicked();
       },
     );
@@ -632,9 +715,10 @@ class EgoModeSessionCard extends StatelessWidget {
     Widget continueButton = TextButton(
       child: Text("Request Feature\n"
           "Cost: 1,000+ Loves"),
-      onPressed:  () {
-       // setToFeatured();
-        Navigator.pushReplacementNamed(context, AppRoutes.requestFeatureForm, arguments: element);
+      onPressed: () {
+        // setToFeatured();
+        Navigator.pushReplacementNamed(context, AppRoutes.requestFeatureForm,
+            arguments: element);
       },
     );
 
@@ -657,19 +741,17 @@ class EgoModeSessionCard extends StatelessWidget {
     );
   }
 
-
   unfeatureAlertDialog(BuildContext context) {
-
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text("Cancel"),
-      onPressed:  () {
+      onPressed: () {
         Navigator.of(context).pop();
-        },
+      },
     );
     Widget continueButton = TextButton(
       child: Text("Unfeature"),
-      onPressed:  () {
+      onPressed: () {
         removeFromFeatured();
         Navigator.of(context).pop();
       },
@@ -694,7 +776,6 @@ class EgoModeSessionCard extends StatelessWidget {
     );
   }
 
-
   /// Save user reaction activity
 
   Future<void> saveUserMe2Activity() async {
@@ -706,33 +787,29 @@ class EgoModeSessionCard extends StatelessWidget {
     final sessionOwnerNickname = element.userNickname.toString();
     final sessionVisitorId = currentUser?.uid.toString();
     final sessionVisitorNickname = _user.nickname.toString();
-    final sessionVisitorAvatar =  _user.userType != "REGULAR"
+    final sessionVisitorAvatar = _user.userType != "REGULAR"
         ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
         : _user.avatarUrl.toString();
-    final activityMessage = "$sessionVisitorNickname reacted to $sessionOwnerNickname's session.";
+    final activityMessage =
+        "$sessionVisitorNickname reacted to $sessionOwnerNickname's session.";
     final activityType = "react";
     final userActivityId = "";
-    FirebaseFirestore.instance
-        .collection('user_activity')
-        .add({
-      "activityMessage": activityMessage,
-      "activityType": activityType,
-      "clientAvatarUrl": sessionVisitorAvatar,
-      "clientId": sessionVisitorId,
-      "clientNickname": sessionVisitorNickname,
-      "dateCreated": dateCreated,
-      "sessionId": sessionId,
-      "userActivityId": userActivityId,
-      "userId": sessionOwnerId,
-      "userNickname": sessionOwnerNickname,
-      "userAvatarUrl": sessionOwnerAvatar,
-
-    },
+    FirebaseFirestore.instance.collection('user_activity').add(
+      {
+        "activityMessage": activityMessage,
+        "activityType": activityType,
+        "clientAvatarUrl": sessionVisitorAvatar,
+        "clientId": sessionVisitorId,
+        "clientNickname": sessionVisitorNickname,
+        "dateCreated": dateCreated,
+        "sessionId": sessionId,
+        "userActivityId": userActivityId,
+        "userId": sessionOwnerId,
+        "userNickname": sessionOwnerNickname,
+        "userAvatarUrl": sessionOwnerAvatar,
+      },
     );
     logger.d('Successfully saved your reaction activity');
     print('Activity Message: $activityMessage');
-
   }
-
-
 }

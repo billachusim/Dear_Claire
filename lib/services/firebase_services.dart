@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:clairediary/services/transaction_service.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:get/get_navigation/src/root/parse_route.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/data/models/profile_page_model.dart';
@@ -108,7 +109,7 @@ class FirebaseServices extends ChangeNotifier {
         // Treasury has enough, process the transaction for both.
         await userDoc.update({
           'currentLoveCount': FieldValue.increment(amount),
-          'totalLoveCount': FieldValue.increment(amount),
+          'totalLoveCount': FieldValue.increment(-amount),
           'fromGameWins': FieldValue.increment(fromGameWins),
           'fromRoomVisits': FieldValue.increment(fromRoomVisits),
         });
@@ -201,6 +202,7 @@ class FirebaseServices extends ChangeNotifier {
         // 1. Debit the sender and update their stats
         transaction.update(senderDoc, {
           'currentLoveCount': FieldValue.increment(-totalDebitAmount),
+          'totalLoveCount': FieldValue.increment(-totalDebitAmount),
           'forRoomVisits': FieldValue.increment(forRoomVisits),
           'loveSentForThanks': FieldValue.increment(forThanks),
           'loveSentForReactions': FieldValue.increment(forReactions),
@@ -1064,6 +1066,8 @@ class FirebaseServices extends ChangeNotifier {
           });
   }
 
+
+  /// Upload audio file to Firebase Storage and return the download URL
   Future<String?> uploadAudioFile(File audioFile, String userId) async {
     try {
       // Create a reference to the location you want to upload to
@@ -1089,6 +1093,7 @@ class FirebaseServices extends ChangeNotifier {
   }
 
 
+  /// Upload image to Firebase Storage and return the download URL
   Future<String> uploadImage(File imageFile) async {
     // Step 1: Generate a unique filename using the current timestamp
     String fileName = DateTime.now().millisecondsSinceEpoch.toString();
@@ -1116,6 +1121,7 @@ class FirebaseServices extends ChangeNotifier {
   }
 
 
+  /// Upload sound to Firebase Storage and return the download URL
   Future<String> uploadSound(File file) async {
     firebase_storage.UploadTask uploadTask;
     DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
@@ -1134,6 +1140,9 @@ class FirebaseServices extends ChangeNotifier {
     return audioUrl;
   }
 
+
+
+  /// Create new session
   Future<bool> createSession({CreateSessionModel? session}) async {
     bool? isSuccessfull;
     DocumentReference<Map<String, dynamic>> sessionRef = FirebaseFirestore
@@ -1174,54 +1183,108 @@ class FirebaseServices extends ChangeNotifier {
     return session;
   }
 
-  // REPLACE your old getActivityForUser method with this new one
 
-  /// [User Activity] -> get user activity that a specific user made (with pagination)
-  Future<PaginatedActivities> getActivityForUser({
-    required String userId,
-    int limit = 20, // Now accepts a limit for pagination
-    DocumentSnapshot? startAfter, // And a document to start after for the next page
+
+  /// Saves a user activity to the database.
+  Future<void> saveUserActivity({
+    required String activityType,
+    required String activityMessage,
+    String? recipientId,
+    String? recipientNickname,
+    String? sessionId,
   }) async {
-    List<UserActivityModel> _userActivityList = [];
-
-    // This is the base query
-    var query = _firebaseFirestore
-        .collection(AppString.userActivity)
-        .where("clientId", isEqualTo: userId)
-        .orderBy('dateCreated', descending: true)
-        .limit(limit);
-
-    // If we are fetching the "next page", we start after the last document we saw
-    if (startAfter != null) {
-      query = query.startAfterDocument(startAfter);
-    }
+    if (currentUser == null) return;
 
     try {
-      final _value = await query.get();
+      final user = await getUserInfo();
+      final docRef = _firebaseFirestore.collection(AppString.userActivity).doc();
 
-      for (var doc in _value.docs) {
-        _userActivityList.add(UserActivityModel.fromJson(doc.data()));
+      // --- THIS IS THE KEY ---
+      // Create a list of all users involved in the activity.
+      final List<String> involvedUsers = [user.userId!];
+      if (recipientId != null && recipientId != user.userId) {
+        involvedUsers.add(recipientId);
       }
+      // --- END OF KEY ---
 
-      // Get the very last document from this batch. It will be our starting point for the next "Load More" press.
-      final lastDoc = _value.docs.isNotEmpty ? _value.docs.last : null;
+      final activity = UserActivityModel(
+        userActivityId: docRef.id,
+        clientId: user.userId,
+        clientNickname: user.nickname,
+        clientAvatarUrl: user.avatarUrl,
+        userId: recipientId ?? user.userId,
+        userNickname: recipientNickname,
+        activityType: activityType,
+        activityMessage: activityMessage,
+        dateCreated: Timestamp.now(),
+        sessionId: sessionId ?? '',
+        // Add the new field
+        involvedUsers: involvedUsers,
+      );
 
-      // Return our special object that holds both the list and the last document reference.
-      return PaginatedActivities(activities: _userActivityList, lastDocument: lastDoc);
+      await docRef.set(activity.toJson());
+      print('✅ Activity Saved: $activityType');
 
     } catch (e) {
+      logger.e('Error saving user activity: $e');
+    }
+  }
+
+
+
+
+
+
+  /// Get user activity that a specific user made (with pagination)
+  Future<PaginatedActivities> getActivityForUser({
+    required String userId,
+    int limit = 20,
+    DocumentSnapshot? startAfter,  }) async {
+    try {
+      // This is the new, single, powerful query.
+      var query = _firebaseFirestore
+          .collection(AppString.userActivity)
+      // It finds all documents where the 'involvedUsers' array contains the user's ID.
+      // This requires a Firestore index. The error message in your console will give you a link to create it.
+          .where("involvedUsers", arrayContains: userId)
+          .orderBy('dateCreated', descending: true)
+          .limit(limit);
+
+      // This pagination logic now works perfectly with the single query.
+      if (startAfter != null) {
+        query = query.startAfterDocument(startAfter);
+      }
+
+      final querySnapshot = await query.get();
+
+      final activities = querySnapshot.docs
+          .map((doc) => UserActivityModel.fromJson(doc.data()))
+          .toList();
+
+      // The last document reference is now reliable.
+      final lastDoc = querySnapshot.docs.isNotEmpty ? querySnapshot.docs.last : null;
+
+      return PaginatedActivities(activities: activities, lastDocument: lastDoc);
+
+    } catch (e) {
+      // Important: If you see an error about needing an index, Firebase will provide a URL in the debug console.
+      // Click the URL to automatically create the required Firestore index. This is a one-time setup.
       logger.e(e);
-      // Return an empty object in case of an error
       return PaginatedActivities(activities: [], lastDocument: null);
     }
   }
 
-  // ADD THIS NEW METHOD INSIDE your FirebaseServices class
 
+
+
+
+  /// Get sessions by ids
   Future<List<Session>> getSessionsByIds(List<String> sessionIds) async {
     if (sessionIds.isEmpty) {
       return [];
     }
+
+    /// Get all sessions
 
     List<Session> allSessions = [];
     // Firestore's "in" query is limited to 10 items, so we fetch in batches.
@@ -1244,30 +1307,6 @@ class FirebaseServices extends ChangeNotifier {
     return allSessions;
   }
 
-
-
-  /* /// [User Activity] -> get user activity that a specific user made
-  Future<List<UserActivityModel>> getActivityForUser({required String userId}) async {
-    List<UserActivityModel> _userActivityList = [];
-
-    try {
-      final _value = await _firebaseFirestore
-          .collection(AppString.userActivity)
-      // FIX: Use the provided userId to fetch activities for any user
-          .where("clientId", isEqualTo: userId)
-          .orderBy('dateCreated', descending: true)
-          .limit(AppString.allSessionLength)
-          .get();
-
-      // FIX: Use a cleaner .add() method
-      for (var doc in _value.docs) {
-        _userActivityList.add(UserActivityModel.fromJson(doc.data()));
-      }
-    } catch (e) {
-      logger.e(e);
-    }
-    return _userActivityList;
-  }*/
 
 
 
@@ -1745,6 +1784,56 @@ class FirebaseServices extends ChangeNotifier {
         .doc(sessionId)
         .update({'featured': true});
   }
+
+
+  // ADD THIS NEW METHOD inside your FirebaseServices class.
+
+  /// ONE-TIME MIGRATION SCRIPT.
+  /// This method will update old activity documents to include the new 'involvedUsers' field.
+  Future<void> backfillInvolvedUsersField() async {
+    print("MIGRATION STARTED: Backfilling 'involvedUsers' field...");
+    try {
+      final activityCollection = _firebaseFirestore.collection(AppString.userActivity);
+      final snapshot = await activityCollection.get(); // Get all documents
+
+      final WriteBatch batch = _firebaseFirestore.batch();
+      int updatedCount = 0;
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+
+        // Check if 'involvedUsers' field is missing or null
+        if (data['involvedUsers'] == null) {
+          final clientId = data['clientId'] as String?;
+          final userId = data['userId'] as String?;
+
+          if (clientId != null && userId != null) {
+            // Create the new array
+            final List<String> involvedUsers = [clientId];
+            if (clientId != userId) {
+              involvedUsers.add(userId);
+            }
+            // Add the update operation to the batch
+            batch.update(doc.reference, {'involvedUsers': involvedUsers});
+            updatedCount++;
+          }
+        }
+      }
+
+      // If there are documents to update, commit the batch
+      if (updatedCount > 0) {
+        await batch.commit();
+        print("✅ MIGRATION COMPLETE: Successfully updated $updatedCount documents.");
+      } else {
+        print("MIGRATION INFO: No documents needed to be updated.");
+      }
+
+    } catch (e) {
+      print("❌ MIGRATION FAILED: $e");
+    }
+  }
+
+
 }
 
 // ADD THIS CLASS AT THE TOP OF lib/services/firebase_services.dart

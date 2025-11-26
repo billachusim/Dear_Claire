@@ -71,15 +71,21 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                 if (snaps.hasData) {
                   final _session = Session.fromJson(snaps.data!.data()!);
                   theSession = _session;
-                  final Color backgroundColor = HexColor.fromHex(_session.colorHex!);
-                  final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
-                  final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
+                  final Color backgroundColor =
+                      HexColor.fromHex(_session.colorHex!);
+                  final Color textColor =
+                      backgroundColor.computeLuminance() > 0.5
+                          ? Colors.black
+                          : Colors.white;
+                  final Color secondaryTextColor =
+                      backgroundColor.computeLuminance() > 0.5
+                          ? Colors.black54
+                          : Colors.white70;
 
                   return Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10.0, vertical: 7),
-                    decoration: BoxDecoration(
-                        color: backgroundColor),
+                    decoration: BoxDecoration(color: backgroundColor),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -90,26 +96,65 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                           children: [
                             GestureDetector(
                               onTap: () async {
-                                visitedUsersID = _session.userId!;
-                                visitedEgoName = _session.userNickname!;
-                                String thisEgoName =
-                                    _session.userNickname.toString();
-                                String thisUser = _session.userId.toString();
-                                UserModel user = await firebaseServices.getUserInfo();
-                                if (user.userType != "REGULAR") {
+                                // --- 1. SETUP TRANSACTION DETAILS ---
+                                final visitingUser = await firebaseServices.getUserInfo();
+                                final String visitedUserId = _session.userId!;
+                                final String visitedEgoName = _session.userNickname!;
+                                const int visitCost = 1;
+
+                                // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
+                                if (visitingUser.userId == visitedUserId) {
+                                  // If visiting self, just navigate without a transaction.
                                   PageRouter.gotoWidget(
-                                      VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                      VisitedUserEgoProfilePage(
+                                          visitedUsersID: visitedUserId,
+                                          visitedEgoName: visitedEgoName),
+                                      context);
+                                  return;
+                                }
+
+                                if (visitingUser.userType == "REGULAR" &&
+                                    visitingUser.currentLoveCount < 100) {
+                                  showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                                  return;
+                                }
+
+                                if (visitingUser.currentLoveCount < visitCost) {
+                                  showToast("You need at least 1 ❤️ to visit a profile.");
+                                  return;
+                                }
+
+                                // --- 3. PERFORM THE LOVE TRANSACTION ---
+                                final bool success =
+                                await firebaseServices.transferLoveBetweenUsers(
+                                  senderId: visitingUser.userId!,
+                                  receiverId: visitedUserId,
+                                  amountToSend: visitCost,
+                                  taxAmount: 0,
+                                  totalDebitAmount: visitCost,
+                                  senderTransactionDesc:
+                                  "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                                  receiverTransactionDesc:
+                                  "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                                  claireTransactionDesc:
+                                  "Tax from a profile visit.", // Will be 0, but required
+                                  forRoomVisits: 1, // Stat for the sender
+                                  fromRoomVisits: 1, // Stat for the receiver
+                                  metadata: {
+                                    'reason': 'profile_visit',
+                                    'visitedUserId': visitedUserId
+                                  },
+                                );
+
+                                // --- 4. NAVIGATE ON SUCCESS ---
+                                if (success) {
+                                  // Only navigate to the profile if the transaction was successful.
+                                  PageRouter.gotoWidget(
+                                      VisitedUserEgoProfilePage(
+                                          visitedUsersID: visitedUserId,
+                                          visitedEgoName: visitedEgoName),
                                       context);
                                 }
-                                else if (user.currentLoveCount > 500) {
-                                  PageRouter.gotoWidget(
-                                      VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
-                                      context);
-                                }
-                                else {
-                                  showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                                }
-                                print("Visited User ID::: $visitedUsersID");
                               },
                               child: CachedNetworkImage(
                                   width: 60,
@@ -150,21 +195,26 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                           _session.userNickname.toString();
                                       String thisUser =
                                           _session.userId.toString();
-                                      UserModel user = await firebaseServices.getUserInfo();
+                                      UserModel user =
+                                          await firebaseServices.getUserInfo();
                                       if (user.userType != "REGULAR") {
                                         PageRouter.gotoWidget(
-                                            VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                            VisitedUserEgoProfilePage(
+                                                visitedUsersID: thisUser,
+                                                visitedEgoName: thisEgoName),
                                             context);
-                                      }
-                                      else if (user.currentLoveCount > 500) {
+                                      } else if (user.currentLoveCount > 500) {
                                         PageRouter.gotoWidget(
-                                            VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                                            VisitedUserEgoProfilePage(
+                                                visitedUsersID: thisUser,
+                                                visitedEgoName: thisEgoName),
                                             context);
+                                      } else {
+                                        showToast(
+                                            "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
                                       }
-                                      else {
-                                        showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                                      }
-                                      print("Visited User ID::: $visitedUsersID");
+                                      print(
+                                          "Visited User ID::: $visitedUsersID");
                                     },
                                     child: Text(_session.userNickname!,
                                         textAlign: TextAlign.start,
@@ -252,53 +302,60 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             ),
                           ],
                         ),
-
-                        SizedBox(height: 7,),
-
+                        SizedBox(
+                          height: 7,
+                        ),
                         Container(
                           child: _session.audioUrl!.isNotEmpty
                               ? CustomPlaySoundWidget(
                                   filePath: _session.audioUrl)
                               : SizedBox.shrink(),
                         ),
-
                         Visibility(
                           visible: _session.imageUrls!.isNotEmpty,
                           child: GridView.count(
                             shrinkWrap: true,
                             physics: NeverScrollableScrollPhysics(),
                             crossAxisCount: 5,
-                            children: List.generate(_session.imageUrls!.length, (index) {
-                              String image = _session.imageUrls![index].toString();
+                            children: List.generate(_session.imageUrls!.length,
+                                (index) {
+                              String image =
+                                  _session.imageUrls![index].toString();
                               return Stack(
                                 fit: StackFit.expand,
                                 children: <Widget>[
                                   GestureDetector(
                                     onTap: () {
-                                      PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
+                                      PageRouter.gotoWidget(
+                                          CustomImageWidget(imageUrl: image),
+                                          context);
                                     },
                                     child: Container(
                                       child: CachedNetworkImage(
                                           height: 200,
                                           width: 200,
                                           imageUrl: image,
-                                          imageBuilder: (context, imageProvider) => Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(25),
-                                              image: DecorationImage(
-                                                  image: imageProvider,
-                                                  fit: BoxFit.cover
+                                          imageBuilder: (context,
+                                                  imageProvider) =>
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(25),
+                                                  image: DecorationImage(
+                                                      image: imageProvider,
+                                                      fit: BoxFit.cover),
+                                                ),
                                               ),
-                                            ),
+                                          placeholder: (context, url) => Center(
+                                              child:
+                                                  CircularProgressIndicator()),
+                                          errorWidget: (context, url, error) =>
+                                              Image.asset(
+                                                "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                                width: 48,
+                                                height: 48,
+                                              ) //Icon(Icons.error),
                                           ),
-                                          placeholder: (context, url) =>
-                                              Center(child: CircularProgressIndicator()),
-                                          errorWidget: (context, url, error) => Image.asset(
-                                            "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                            width: 48,
-                                            height: 48,
-                                          ) //Icon(Icons.error),
-                                      ),
                                       margin: EdgeInsets.all(3),
                                     ),
                                   ),
@@ -307,7 +364,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             }),
                           ),
                         ),
-
                         SizedBox(
                           height: 12,
                         ),
@@ -325,16 +381,20 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       await firebaseServices.getUserInfo();
 
                                   firebaseServices.addUsersReactionToASession(
-                                      context, index,
-                                      session: _session,
-                                    sender: _userModel.userType == 'ADMIN'? 'Claire' :
-                                    _userModel.userType == 'SUPER_ADMIN'? 'Claire' :
-                                    _userModel.nickname.toString(),
+                                    context,
+                                    index,
+                                    session: _session,
+                                    sender: _userModel.userType == 'ADMIN'
+                                        ? 'Claire'
+                                        : _userModel.userType == 'SUPER_ADMIN'
+                                            ? 'Claire'
+                                            : _userModel.nickname.toString(),
                                   );
 
                                   saveUserMe2Activity();
-                                  await firebaseServices.updateSessionLastTimeActivity(_session.sessionId.toString());
-
+                                  await firebaseServices
+                                      .updateSessionLastTimeActivity(
+                                          _session.sessionId.toString());
                                 }
                               },
                               color: textColor,
@@ -343,6 +403,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             new SizedBox(
                               width: 10,
                             ),
+
                             _session.userId == currentUser?.uid
                                 ? TextButton(
                                     onPressed: () async {
@@ -352,19 +413,21 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                     },
                                     child: Row(
                                       children: [
-                                        Text(_session.followers!.length.toString(),
-                                        style: TextStyle(
-                                          color: textColor,
-                                          fontSize: 15,
+                                        Text(
+                                          _session.followers!.length.toString(),
+                                          style: TextStyle(
+                                            color: textColor,
+                                            fontSize: 15,
                                             fontWeight: FontWeight.w900,
+                                          ),
                                         ),
-                                        ),
-
                                         Icon(
                                           _session.followers!
                                                   .contains(currentUser?.uid)
-                                              ? Icons.notifications_active_rounded
-                                              : Icons.notifications_off_outlined,
+                                              ? Icons
+                                                  .notifications_active_rounded
+                                              : Icons
+                                                  .notifications_off_outlined,
                                           color: textColor,
                                           size: 26,
                                         ),
@@ -377,20 +440,80 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                         ? 'Unfollow'
                                         : 'Follow',
                                     onPressed: () async {
-                                      if (await firebaseServices.isUserSignIn(context)) {
-                                        firebaseServices.followThisSession(
-                                            context,
-                                            session: _session);
+                                      if (await firebaseServices
+                                          .isUserSignIn(context)) {
+                                        final follower = await firebaseServices
+                                            .getUserInfo();
+                                        final sessionOwnerId = _session.userId;
+                                        final isAlreadyFollowing = _session
+                                            .followers!
+                                            .contains(currentUser?.uid);
+                                        if (isAlreadyFollowing) {
+                                          firebaseServices.followThisSession(
+                                              context,
+                                              session: _session);
+                                          showToast(
+                                              "You've unfollowed this session.");
+                                          return; // Stop here
+                                        }
+                                        if (follower.currentLoveCount < 1) {
+                                          showToast(
+                                              "You need at least 1❤️ to follow a session.");
+                                          return;
+                                        }
 
-                                        saveUserFollowActivity();
-                                        await firebaseServices.updateSessionLastTimeActivity(_session.sessionId.toString());
+                                        final bool success =
+                                            await firebaseServices
+                                                .transferLoveBetweenUsers(
+                                          senderId: follower.userId!,
+                                          receiverId: sessionOwnerId!,
+                                          amountToSend: 1,
+                                          taxAmount: 0, // No tax for following
+                                          totalDebitAmount: 1,
+                                          senderTransactionDesc:
+                                              "Sent 1❤️ to follow '${_session.title}'.",
+                                          receiverTransactionDesc:
+                                              "Received 1❤️ from ${follower.nickname} who followed your session.",
+                                          claireTransactionDesc:
+                                              "Follow transaction tax (0%).",
+                                          metadata: {
+                                            'reason': 'follow_session',
+                                            'sessionId': _session.sessionId,
+                                          },
+                                        );
+
+                                        if (success) {
+                                          firebaseServices.followThisSession(
+                                              context,
+                                              session: _session);
+                                          await firebaseServices
+                                              .updateSessionLastTimeActivity(
+                                                  _session.sessionId
+                                                      .toString());
+
+                                          await firebaseServices
+                                              .saveUserActivity(
+                                            activityType: 'follow',
+                                            activityMessage:
+                                                "You started following the session: '${_session.title}'.",
+                                            recipientId: sessionOwnerId,
+                                            recipientNickname:
+                                                _session.userNickname,
+                                            sessionId: _session.sessionId,
+                                          );
+
+                                          showToast(
+                                              "Now following! 1❤️ was sent to the author.");
+                                        } else {
+                                          showToast(
+                                              "Could not complete the follow. Please try again.");
+                                        }
                                       }
                                     },
                                     count: _session.followers!.length,
                                   ),
 
                             new Spacer(),
-
                             FutureBuilder<
                                 DocumentSnapshot<Map<String, dynamic>>>(
                               future: FirebaseFirestore.instance
@@ -402,35 +525,36 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   var data = snapshot.data!.data();
                                   var userType = data?["userType"] ?? "0";
 
-                                  return
-                                    Visibility(
-                                      visible: userType == "SUPER_ADMIN",
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          if (_session.featured == false)
-                                            modFeatureAlertDialog(context);
-                                          else unfeatureAlertDialog(context);
-                                        },
-                                        child: Container(
-                                          child: Visibility(
-                                            visible: _session.repliesEnabled == true,
-                                            child: Icon(
-                                              _session.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
-                                              color: Pallet.colorSecondary,
-                                              size: 26,
-                                            ),
+                                  return Visibility(
+                                    visible: userType == "SUPER_ADMIN",
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (_session.featured == false)
+                                          modFeatureAlertDialog(context);
+                                        else
+                                          unfeatureAlertDialog(context);
+                                      },
+                                      child: Container(
+                                        child: Visibility(
+                                          visible:
+                                              _session.repliesEnabled == true,
+                                          child: Icon(
+                                            _session.featured == true
+                                                ? Icons.lightbulb
+                                                : Icons.lightbulb_outline,
+                                            color: Pallet.colorSecondary,
+                                            size: 26,
                                           ),
                                         ),
                                       ),
-                                    );
+                                    ),
+                                  );
                                 }
 
                                 return Container();
                               },
                             ),
-
                             new Spacer(),
-
                             if (_session.userId == currentUser?.uid)
                               CupertinoButton(
                                   padding: EdgeInsets.zero,
@@ -455,7 +579,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   ),
                                   onPressed: _showCardDialog),
                             new Spacer(),
-
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -464,22 +587,22 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                     onTap: () {
                                       if (_session.flagged == false)
                                         showCustomDialog(context,
-                                          message: _session.flagged == true
-                                              ? AppString.unflag_alert_note
-                                              : AppString.flag_alert_note,
-                                          onPressed: () {
-                                            PageRouter.goBack(context);
-                                            sendToFlagged();
-                                          });
+                                            message: _session.flagged == true
+                                                ? AppString.unflag_alert_note
+                                                : AppString.flag_alert_note,
+                                            onPressed: () {
+                                          PageRouter.goBack(context);
+                                          sendToFlagged();
+                                        });
                                       else
                                         showCustomDialog(context,
                                             message: _session.flagged == false
                                                 ? AppString.flag_alert_note
                                                 : AppString.unflag_alert_note,
                                             onPressed: () {
-                                              PageRouter.goBack(context);
-                                              removeFromFlagged();
-                                            });
+                                          PageRouter.goBack(context);
+                                          removeFromFlagged();
+                                        });
                                     },
                                     child: Row(
                                       children: [
@@ -503,7 +626,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                 new SizedBox(
                                   width: 10,
                                 ),
-
                                 FutureBuilder<
                                     DocumentSnapshot<Map<String, dynamic>>>(
                                   future: FirebaseFirestore.instance
@@ -515,87 +637,99 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       var data = snapshot.data!.data();
                                       var userType = data?["userType"] ?? "0";
 
-                                      return
-
-                                        Visibility(
-                                          visible: userType == "SUPER_ADMIN",
-                                          child: Visibility(
-                                            visible: _session.flagged == true,
-                                            child: Row(
-                                              children: [
-                                                GestureDetector(
-                                                  onTap: () {
-                                                    if (_session.archived == false)
-                                                      showCustomDialog(context,
-                                                          message: _session.archived == true
-                                                              ? AppString.unarchive_alert_note
-                                                              : AppString.archive_alert_note,
-                                                          onPressed: () {
-                                                            sendToArchive();
-                                                            Navigator.of(context).pop();
-                                                            setState(() {});
-                                                          });
-                                                    else
-                                                      showCustomDialog(context,
-                                                          message: _session.archived == false
-                                                              ? AppString.archive_alert_note
-                                                              : AppString.unarchive_alert_note,
-                                                          onPressed: () {
-                                                            removeFromArchive();
-                                                            Navigator.of(context).pop();
-                                                            setState(() {});
-                                                          });
-                                                  },
-
-                                                  child: Container(
-                                                    child: Icon(
-                                                      _session.archived == true ? Icons.archive_rounded : Icons.archive_outlined,
-                                                      color: Pallet.colorSecondary,
-                                                      size: 28,
-                                                    ),
+                                      return Visibility(
+                                        visible: userType == "SUPER_ADMIN",
+                                        child: Visibility(
+                                          visible: _session.flagged == true,
+                                          child: Row(
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () {
+                                                  if (_session.archived ==
+                                                      false)
+                                                    showCustomDialog(context,
+                                                        message: _session
+                                                                    .archived ==
+                                                                true
+                                                            ? AppString
+                                                                .unarchive_alert_note
+                                                            : AppString
+                                                                .archive_alert_note,
+                                                        onPressed: () {
+                                                      sendToArchive();
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                      setState(() {});
+                                                    });
+                                                  else
+                                                    showCustomDialog(context,
+                                                        message: _session
+                                                                    .archived ==
+                                                                false
+                                                            ? AppString
+                                                                .archive_alert_note
+                                                            : AppString
+                                                                .unarchive_alert_note,
+                                                        onPressed: () {
+                                                      removeFromArchive();
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                      setState(() {});
+                                                    });
+                                                },
+                                                child: Container(
+                                                  child: Icon(
+                                                    _session.archived == true
+                                                        ? Icons.archive_rounded
+                                                        : Icons
+                                                            .archive_outlined,
+                                                    color:
+                                                        Pallet.colorSecondary,
+                                                    size: 28,
                                                   ),
                                                 ),
-
-                                                SizedBox(
-                                                  width: 4,
-                                                ),
-
-                                                  CupertinoButton(
-                                                      padding: EdgeInsets.zero,
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            Icons.edit,
-                                                            size: 17,
-                                                            color: Pallet.colorSecondary,
-                                                          ),
-                                                          SizedBox(
-                                                            width: 2,
-                                                          ),
-                                                          Text(
-                                                            'MOD',
-                                                            style: GoogleFonts.lato(
-                                                                fontSize: 14.0,
-                                                                color: Pallet.colorSecondary,
-                                                                fontWeight: FontWeight.w800),
-                                                          ),
-                                                        ],
+                                              ),
+                                              SizedBox(
+                                                width: 4,
+                                              ),
+                                              CupertinoButton(
+                                                  padding: EdgeInsets.zero,
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.edit,
+                                                        size: 17,
+                                                        color: Pallet
+                                                            .colorSecondary,
                                                       ),
-                                                      onPressed: _showCardDialog),
-                                              ],
-                                            ),
+                                                      SizedBox(
+                                                        width: 2,
+                                                      ),
+                                                      Text(
+                                                        'MOD',
+                                                        style: GoogleFonts.lato(
+                                                            fontSize: 14.0,
+                                                            color: Pallet
+                                                                .colorSecondary,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w800),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  onPressed: _showCardDialog),
+                                            ],
                                           ),
-                                        );
+                                        ),
+                                      );
                                     }
 
                                     return Container();
                                   },
                                 ),
-
                                 new SizedBox(
                                   width: 10,
                                 ),
-
                                 CupertinoButton(
                                     padding: EdgeInsets.zero,
                                     child: Row(
@@ -643,9 +777,10 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     FirebaseFirestore.instance
         .collection('sessions')
         .doc(widget.sessionId)
-        .update({
-      "featured": value,
-    },
+        .update(
+      {
+        "featured": value,
+      },
     );
     logger.d('Successfully changed feature');
     print('Is Featured?: $value');
@@ -653,19 +788,17 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     return value;
   }
 
-
   modFeatureAlertDialog(BuildContext context) {
-
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text("Cancel"),
-      onPressed:  () {
+      onPressed: () {
         Navigator.of(context).pop();
       },
     );
     Widget continueButton = TextButton(
       child: Text("Feature!"),
-      onPressed:  () {
+      onPressed: () {
         setToFeatured();
         Navigator.of(context).pop();
       },
@@ -695,9 +828,10 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     FirebaseFirestore.instance
         .collection('sessions')
         .doc(widget.sessionId)
-        .update({
-      "featured": value,
-    },
+        .update(
+      {
+        "featured": value,
+      },
     );
     logger.d('Successfully changed feature');
     print('Is Featured?: $value');
@@ -705,18 +839,17 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     return value;
   }
 
-
   unfeatureAlertDialog(BuildContext context) {
-
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text("Cancel"),
-      onPressed:  () {
-        Navigator.of(context).pop();      },
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
     );
     Widget continueButton = TextButton(
       child: Text("Unfeature"),
-      onPressed:  () {
+      onPressed: () {
         removeFromFeatured();
         Navigator.of(context).pop();
       },
@@ -740,8 +873,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
       },
     );
   }
-
-
 
 // Edit session function
   Future<void> editSession() async {
@@ -769,13 +900,16 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
       builder: (BuildContext context) {
         return Center(
           child: AlertDialog(
-            backgroundColor: isDarkMode ? Pallet.colorSecondary : Pallet.colorWhite,
+            backgroundColor:
+                isDarkMode ? Pallet.colorSecondary : Pallet.colorWhite,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0)),
             title: Container(
-              child: Text(AppString.edit_session_dialog_header,
-                  textAlign: TextAlign.center,
-              style: TextStyle(color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack),
+              child: Text(
+                AppString.edit_session_dialog_header,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack),
               ),
             ),
             content: SingleChildScrollView(
@@ -790,10 +924,13 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                         controller: editSessionController,
                         minLines: 8,
                         maxLines: 2000,
-                        style: TextStyle(color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack),
+                        style: TextStyle(
+                            color: isDarkMode
+                                ? Pallet.colorWhite
+                                : Pallet.colorBlack),
                         decoration: InputDecoration(
-                          //border: InputBorder,
-                        ),
+                            //border: InputBorder,
+                            ),
                       ),
                       SizedBox(
                         height: 10,
@@ -864,8 +1001,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     await Share.shareXFiles([xFile], text: text);
   }
 
-
-
   /// Archive a session
 
   Future<bool?> sendToArchive() async {
@@ -873,32 +1008,32 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     FirebaseFirestore.instance
         .collection('sessions')
         .doc(theSession?.sessionId)
-        .update({
-      "archived": value,
-    },
+        .update(
+      {
+        "archived": value,
+      },
     );
     logger.d('Successfully changed archive');
     print('Is Archived?: $value');
     isArchived = value;
     return value;
   }
-
 
   Future<bool?> removeFromArchive() async {
     final value = false;
     FirebaseFirestore.instance
         .collection('sessions')
         .doc(theSession?.sessionId)
-        .update({
-      "archived": value,
-    },
+        .update(
+      {
+        "archived": value,
+      },
     );
     logger.d('Successfully changed archive');
     print('Is Archived?: $value');
     isArchived = value;
     return value;
   }
-
 
   /// Flag a session
 
@@ -917,7 +1052,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     isFlagged = value;
     return value;
   }
-
 
   Future<bool?> removeFromFlagged() async {
     final value = false;

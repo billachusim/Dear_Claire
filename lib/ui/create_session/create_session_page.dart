@@ -2750,6 +2750,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     bool isSuccessfull =
         await _firebaseServices.createSession(session: sessionObject);
 
+    await _firebaseServices.saveUserActivity(
+      activityType: 'session',
+      activityMessage: "You started a new diary session: '${sessionObject.title}'.",
+      sessionId: sessionObject.sessionId,
+    );
+
     //startAiChat(sessionObject, sessionTextEditingController.text);
 
     Hive.box("draft").clear();

@@ -204,8 +204,8 @@ class _CommentWidgetState extends State<CommentWidget> {
     }
 
     // --- 3. PROCEED WITH 1-LOVE TRANSACTION VIA SERVICE ---
-    const int thankYouCost = 1;
-    const int taxAmount = 0; // No tax for a 1-love transaction
+    const int thankYouCost = 3;
+    const int taxAmount = 2; // No tax for a 1-love transaction
     const int totalDebit = thankYouCost + taxAmount;
 
     try {
@@ -224,9 +224,9 @@ class _CommentWidgetState extends State<CommentWidget> {
         amountToSend: thankYouCost,
         taxAmount: taxAmount,
         totalDebitAmount: totalDebit,
-        senderTransactionDesc: "Sent 1 ❤️ to thank an advise from ${thankedAdvise.userNickname}.",
-        receiverTransactionDesc: "Received 1 ❤️ from ${thanker.nickname} for your advise.",
-        claireTransactionDesc: "Tax from a 'Thank You' transaction.",
+        senderTransactionDesc: "5❤️ spent to thank an advise from ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}.",
+        receiverTransactionDesc: "Received 3❤️ from ${thanker.nickname} for your advise.",
+        claireTransactionDesc: "2❤️ Tax from a 'Thank You' transaction.",
         forThanks: thankYouCost,
         fromThanks: thankYouCost,
         metadata: {
@@ -237,7 +237,15 @@ class _CommentWidgetState extends State<CommentWidget> {
       );
 
       if (success) {
-        showToast("1 ❤️ sent to ${thankedAdvise.userNickname} as thanks!");
+        showToast("5❤️ spent to ${thankedAdvise.userNickname} as thanks!");
+
+        // After a successful transaction, save the activity to Firestore.
+        await firebaseServices.saveUserActivity(
+          activityType: 'thank',
+          activityMessage: "You thanked ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advise.",
+          recipientId: thankedUserId, // The user who received the thanks
+          sessionId: widget.featuredSessionModel?.sessionId,
+        );
 
         // The 'thanks' array is now updated via a separate WriteBatch in transferLoveBetweenUsers
         // so we don't need to do it here anymore. Let's ensure your service does this.
@@ -258,7 +266,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                 data: pushNotification.Data(id: thankedUserId, route: 'wallet'),
                 notification: pushNotification.Notification(
                     title: "You Received a Thank You!",
-                    body: "${thanker.nickname} thanked your advise and sent you 1 ❤️."
+                    body: "${thanker.nickname} thanked your advise and sent you 3❤️."
                 )
             ).toJson()
         );
@@ -426,34 +434,75 @@ class _CommentWidgetState extends State<CommentWidget> {
             children: [
               GestureDetector(
                 onTap: () async {
-                  widget.visitedUsersID =
-                      widget.commentSessionModel?.isUserAdmin == true
-                          ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
-                          : widget.commentSessionModel!.userId ?? '';
-                  widget.visitedEgoName =
-                      widget.commentSessionModel?.isUserAdmin == true
-                          ? "Claire"
-                          : widget.commentSessionModel!.userNickname ?? '';
-                  String thisEgoName = widget.visitedEgoName;
-                  String thisUser =
-                      widget.commentSessionModel?.isUserAdmin == true
-                          ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
-                          : widget.commentSessionModel!.userId ?? '';
-                  UserModel user = await firebaseServices.getUserInfo();
-                  if (user.userType != "REGULAR") {
+                  // --- 1. SETUP TRANSACTION DETAILS ---
+                  final visitingUser = await firebaseServices.getUserInfo();
+                  final bool isVisitingAdmin = widget.commentSessionModel?.isUserAdmin == true;
+
+                  final String visitedUserId = isVisitingAdmin
+                      ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2" // Claire's fixed ID
+                      : widget.commentSessionModel!.userId!;
+
+                  final String visitedEgoName = isVisitingAdmin
+                      ? "Claire"
+                      : widget.commentSessionModel!.userNickname!;
+
+                  const int visitCost = 1;
+
+                  // --- 2. HANDLE SELF-VISIT ---
+                  if (visitingUser.userId == visitedUserId) {
+                    // If visiting self, just navigate without a transaction.
                     PageRouter.gotoWidget(
-                        VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                        VisitedUserEgoProfilePage(
+                            visitedUsersID: visitedUserId,
+                            visitedEgoName: visitedEgoName),
+                        context);
+                    return;
+                  }
+
+                  // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
+                  if (visitingUser.userType == "REGULAR" &&
+                      visitingUser.currentLoveCount < 500) {
+                    showToast(
+                        "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                    return;
+                  }
+
+                  if (visitingUser.currentLoveCount < visitCost) {
+                    showToast("You need at least 1 ❤️ to visit a profile.");
+                    return;
+                  }
+
+                  // --- 4. PERFORM THE LOVE TRANSACTION ---
+                  final bool success =
+                  await firebaseServices.transferLoveBetweenUsers(
+                    senderId: visitingUser.userId!,
+                    receiverId: visitedUserId,
+                    amountToSend: visitCost,
+                    taxAmount: 0,
+                    totalDebitAmount: visitCost,
+                    senderTransactionDesc: "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                    receiverTransactionDesc:
+                    "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                    claireTransactionDesc: "Tax from a profile visit.",
+                    forRoomVisits: 1, // Stat for the sender
+                    fromRoomVisits: 1, // Stat for the receiver
+                    metadata: {
+                      'reason': 'profile_visit',
+                      'visitedUserId': visitedUserId,
+                      'from': 'comment_widget'
+                    },
+                  );
+
+                  // --- 5. NAVIGATE ON SUCCESS ---
+                  if (success) {
+                    // Only navigate to the profile if the transaction was successful.
+                    PageRouter.gotoWidget(
+                        VisitedUserEgoProfilePage(
+                            visitedUsersID: visitedUserId,
+                            visitedEgoName: visitedEgoName),
                         context);
                   }
-                  else if (user.currentLoveCount > 500) {
-                    PageRouter.gotoWidget(
-                        VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
-                        context);
-                  }
-                  else {
-                    showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                  }
-                  print("Visited User ID::: $thisEgoName");
+                  // If !success, the service method already shows a toast.
                 },
                 child: CachedNetworkImage(
                     width: 40,
@@ -488,35 +537,75 @@ class _CommentWidgetState extends State<CommentWidget> {
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        widget.visitedUsersID =
-                            widget.commentSessionModel?.isUserAdmin == true
-                                ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
-                                : widget.commentSessionModel!.userId ?? '';
-                        widget.visitedEgoName =
-                            widget.commentSessionModel?.isUserAdmin == true
-                                ? "Lol, yes, it's me, Claire!"
-                                : widget.commentSessionModel!.userNickname ??
-                                    '';
-                        String thisEgoName = widget.visitedEgoName;
-                        String thisUser =
-                            widget.commentSessionModel?.isUserAdmin == true
-                                ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
-                                : widget.commentSessionModel!.userId ?? '';
-                        UserModel user = await firebaseServices.getUserInfo();
-                        if (user.userType != "REGULAR") {
+                        // --- 1. SETUP TRANSACTION DETAILS ---
+                        final visitingUser = await firebaseServices.getUserInfo();
+                        final bool isVisitingAdmin = widget.commentSessionModel?.isUserAdmin == true;
+
+                        final String visitedUserId = isVisitingAdmin
+                            ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2" // Claire's fixed ID
+                            : widget.commentSessionModel!.userId!;
+
+                        final String visitedEgoName = isVisitingAdmin
+                            ? "Claire"
+                            : widget.commentSessionModel!.userNickname!;
+
+                        const int visitCost = 1;
+
+                        // --- 2. HANDLE SELF-VISIT ---
+                        if (visitingUser.userId == visitedUserId) {
+                          // If visiting self, just navigate without a transaction.
                           PageRouter.gotoWidget(
-                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
+                              VisitedUserEgoProfilePage(
+                                  visitedUsersID: visitedUserId,
+                                  visitedEgoName: visitedEgoName),
+                              context);
+                          return;
+                        }
+
+                        // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
+                        if (visitingUser.userType == "REGULAR" &&
+                            visitingUser.currentLoveCount < 500) {
+                          showToast(
+                              "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                          return;
+                        }
+
+                        if (visitingUser.currentLoveCount < visitCost) {
+                          showToast("You need at least 1 ❤️ to visit a profile.");
+                          return;
+                        }
+
+                        // --- 4. PERFORM THE LOVE TRANSACTION ---
+                        final bool success =
+                        await firebaseServices.transferLoveBetweenUsers(
+                          senderId: visitingUser.userId!,
+                          receiverId: visitedUserId,
+                          amountToSend: visitCost,
+                          taxAmount: 0,
+                          totalDebitAmount: visitCost,
+                          senderTransactionDesc: "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                          receiverTransactionDesc:
+                          "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                          claireTransactionDesc: "Tax from a profile visit.",
+                          forRoomVisits: 1, // Stat for the sender
+                          fromRoomVisits: 1, // Stat for the receiver
+                          metadata: {
+                            'reason': 'profile_visit',
+                            'visitedUserId': visitedUserId,
+                            'from': 'comment_widget'
+                          },
+                        );
+
+                        // --- 5. NAVIGATE ON SUCCESS ---
+                        if (success) {
+                          // Only navigate to the profile if the transaction was successful.
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(
+                                  visitedUsersID: visitedUserId,
+                                  visitedEgoName: visitedEgoName),
                               context);
                         }
-                        else if (user.currentLoveCount > 500) {
-                          PageRouter.gotoWidget(
-                              VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
-                              context);
-                        }
-                        else {
-                          showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                        }
-                        print("Visited User ID::: $thisEgoName");
+                        // If !success, the service method already shows a toast.
                       },
                       child: Text(
                           widget.commentSessionModel?.isUserAdmin == true

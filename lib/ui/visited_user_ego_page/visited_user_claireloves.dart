@@ -43,13 +43,11 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
   final FirebaseServices _firebaseServices = FirebaseServices();
   final TextEditingController _amountController = TextEditingController();
   User? currentUser = FirebaseAuth.instance.currentUser;
-  bool _visitLoveTransferred = false;
 
   @override
   void initState() {
     super.initState();
     _fetchUserData();
-    _handleSilentProfileVisitTransfer();
     _amountController.addListener(_calculateConversion);
   }
 
@@ -101,73 +99,6 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
     }
   }
 
-
-  // In /lib/ui/visited_user_ego_page/visited_user_claireloves.dart
-
-  Future<void> _handleSilentProfileVisitTransfer() async {
-    // 1. Safety checks remain the same.
-    if (_visitLoveTransferred || currentUser == null ||
-        currentUser!.uid == widget.visitedUsersID) {
-      return;
-    }
-
-    // Mark as processed immediately.
-    setState(() {
-      _visitLoveTransferred = true;
-    });
-
-    try {
-      final visitor = await _firebaseServices.getUserInfo();
-
-      // 2. Check if the visitor has at least 1 Love to give.
-      if (visitor.currentLoveCount < 1) {
-        print("Visitor has less than 1 love, cannot perform silent visit transfer.");
-        return;
-      }
-
-      // 3. Use a Firestore WriteBatch for an atomic update.
-      final batch = FirebaseFirestore.instance.batch();
-
-      // --- Reference to the visitor's document ---
-      final visitorRef = FirebaseFirestore.instance.collection('users').doc(visitor.userId!);
-
-      // --- Reference to the visited user's document ---
-      final visitedUserRef = FirebaseFirestore.instance.collection('users').doc(widget.visitedUsersID);
-
-      // --- Perform a 3-PART ATOMIC UPDATE ---
-
-      // a. Debit 1 love from the visitor's CURRENT count.
-      batch.update(visitorRef, {'currentLoveCount': FieldValue.increment(-1)});
-
-      // b. Increment the visitor's NEW "loveSentForVisits" counter.
-      batch.update(visitorRef, {'loveSentForVisits': FieldValue.increment(1)});
-
-      // c. Credit 1 love to the visited user's "profileVisitLove" field.
-      batch.update(visitedUserRef, {'profileVisitLove': FieldValue.increment(1)});
-
-      // Commit all three updates at once.
-      await batch.commit();
-
-      print("Successfully processed 1 love for profile visit (silent transaction).");
-
-      // 4. Send a push notification to the visited user (remains the same).
-      final notificationModel = push_notification.NotificationModel(
-          topic: widget.visitedUsersID,
-          data: push_notification.Data(id: widget.visitedUsersID, route: 'wallet'),
-          notification: push_notification.Notification(
-              title: "Someone Visited You!",
-              body: "${visitor.nickname} visited your profile and you earned 1 ❤️ from the visit."
-          )
-      );
-      await notificationService.sendNotification(notificationModel.toJson());
-
-    } catch (e) {
-      print("Error during silent profile visit love transfer: $e");
-      setState(() {
-        _visitLoveTransferred = false;
-      });
-    }
-  }
 
 
 
@@ -439,7 +370,6 @@ Timestamp: ${DateTime.now().toIso8601String()}
     // --- FIX: Calculate total debit amount for balance check ---
     final int taxAmount = (amount * 0.10).ceil();
     final int totalDebitAmount = amount + taxAmount;
-    // --- END FIX ---
 
     final sender = await _firebaseServices.getUserInfo();
 
@@ -448,8 +378,6 @@ Timestamp: ${DateTime.now().toIso8601String()}
       AppToast.showError("You need $totalDebitAmount Loves to send $amount (including tax).");
       return;
     }
-    // --- END FIX ---
-
     // If all checks pass, show the confirmation dialog
     _showConfirmationDialog(amount, sender);
   }
@@ -553,7 +481,15 @@ Timestamp: ${DateTime.now().toIso8601String()}
                   );
 
                   if (success) {
-                    AppToast.show("Love sent successfully!");
+                    // Save  as activity
+                    await _firebaseServices.saveUserActivity(
+                      activityType: 'send_love',
+                      activityMessage: "You sent $amount ❤️ to ${widget.visitedEgoName}.",
+                      recipientId: widget.visitedUsersID,
+                      recipientNickname: widget.visitedEgoName,
+                    );
+
+                    AppToast.show("$totalDebitAmount ❤️ Love sent successfully!");
                     await _sendGiftNotifications(
                       senderName: sender.nickname ?? 'An Ego',
                       receiverId: receiverId,

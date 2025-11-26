@@ -292,53 +292,144 @@ class _ClaireLovesState extends State<ClaireLoves> {
   }
 
 
-// REPLACE the existing _buildRecentTransactions method with this one.
-  Widget _buildRecentTransactions() {
-    // This now uses your actual `TransactionModel`
-    return FutureBuilder<List<TransactionModel>>(
-      // Fetch a larger number of transactions to have them ready for expansion
-      future: firebaseServices.getTransactionsForUser(userId: _userId, limit: 50),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SliverToBoxAdapter(
-            child: Center(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: CircularProgressIndicator(color: Colors.white),
-              ),
-            ),
-          );
-        }
+  void _showTransactionDetailsDialog(TransactionModel transaction) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final isCredit = transaction.type == TransactionType.credit;
+        final statusColor = transaction.status == TransactionStatus.approved
+            ? Colors.greenAccent
+            : transaction.status == TransactionStatus.pending
+            ? Colors.orangeAccent
+            : Colors.redAccent;
 
-        if (snapshot.hasError) {
-          return SliverToBoxAdapter(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  "Error loading transactions: ${snapshot.error}",
-                  style: const TextStyle(color: Colors.white70),
+        return Dialog(
+          backgroundColor: Pallet.colorSecondary,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0)),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              // To make the dialog wrap its content
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Transaction Details',
+                  style: GoogleFonts.lato(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+                const SizedBox(height: 20),
+                _buildDetailRow('Description:', transaction.description),
+                _buildDetailRow(
+                  'Amount:',
+                  '${isCredit ? '+' : '-'}${transaction.amount} ❤️',
+                  valueColor: isCredit ? Colors.greenAccent : Colors.redAccent,
+                ),
+                _buildDetailRow('Date:',
+                    Helper.formatFirestoreTimestamp(transaction.timestamp)),
+                _buildDetailRow(
+                    'Transaction ID:',
+                    transaction.id
+                        .toString()
+                ),
+                _buildDetailRow(
+                  'Status:',
+                  transaction.status
+                      .toString()
+                      .split('.')
+                      .last
+                      .toUpperCase(),
+                  valueColor: statusColor,
+                ),
+                // Safely access metadata
+                if (transaction.metadata != null &&
+                    transaction.metadata!['reason'] != null)
+                  _buildDetailRow('Reason:',
+                      transaction.metadata!['reason'].toString().replaceAll(
+                          '_', ' ')),
+
+                const SizedBox(height: 24),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    child: Text(
+                      'Close',
+                      style: GoogleFonts.lato(
+                          color: Colors.white70, fontSize: 16),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Helper widget for the dialog rows
+  Widget _buildDetailRow(String title, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              title,
+              style: GoogleFonts.lato(color: Colors.white70, fontSize: 16),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: GoogleFonts.lato(
+                color: valueColor ?? Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          );
-        }
+          ),
+        ],
+      ),
+    );
+  }
 
+  // REPLACE the existing _buildRecentTransactions method with this one.
+  Widget _buildRecentTransactions() {
+    return FutureBuilder<List<TransactionModel>>(
+      future: firebaseServices.getTransactionsForUser(
+          userId: _userId, limit: 50),
+      builder: (context, snapshot) {
+        // ... (your existing waiting, error, and no-data checks are perfect)
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // ...
+        }
+        if (snapshot.hasError) {
+          // ...
+        }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          // Gracefully show nothing if there are no transactions
           return const SliverToBoxAdapter(child: SizedBox.shrink());
         }
 
         final allTransactions = snapshot.data!;
-        // Show only the first 5 transactions initially, or all if "See More" is tapped
-        final transactionsToShow = _showAllTransactions ? allTransactions : allTransactions.take(5).toList();
+        final transactionsToShow = _showAllTransactions
+            ? allTransactions
+            : allTransactions.take(5).toList();
 
-        // This Sliver contains the title, the container, the list, and the "See More" button
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           sliver: SliverList(
             delegate: SliverChildListDelegate.fixed([
-              // 1. The Title
               Text(
                 "Recent Transactions",
                 style: GoogleFonts.lato(
@@ -348,8 +439,6 @@ class _ClaireLovesState extends State<ClaireLoves> {
                 ),
               ),
               const SizedBox(height: 10),
-
-              // 2. The styled Container
               Container(
                 decoration: BoxDecoration(
                   color: Pallet.colorSecondary.withOpacity(0.5),
@@ -360,17 +449,25 @@ class _ClaireLovesState extends State<ClaireLoves> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: transactionsToShow.length,
                   itemBuilder: (context, index) {
-                    // 3. The TransactionCard for each item
-                    return TransactionCard(
-                      transaction: transactionsToShow[index],
-                      isLastItem: index == transactionsToShow.length - 1,
+                    final transaction = transactionsToShow[index];
+                    // Wrap the TransactionCard with a GestureDetector
+                    return GestureDetector(
+                      onTap: () {
+                        // Call the dialog method when the card is tapped
+                        _showTransactionDetailsDialog(transaction);
+                      },
+                      child: Material(
+                        color: Colors.transparent,
+                        // Needed for the ripple effect to show correctly
+                        child: TransactionCard(
+                          transaction: transaction,
+                          isLastItem: index == transactionsToShow.length - 1,
+                        ),
+                      ),
                     );
                   },
                 ),
               ),
-
-              // 4. The "See More" / "See Less" button
-              // Only show the button if there are more transactions than the initial limit
               if (allTransactions.length > 5)
                 Center(
                   child: TextButton(

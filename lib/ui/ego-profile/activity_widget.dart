@@ -1,5 +1,5 @@
 import 'package:clairediary/services/user_activity_model.dart';
-import 'package:clairediary/ui/featured/model/session.dart';
+import 'package:clairediary/ui/ego-profile/profile.dart';
 import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/helper.dart';
@@ -11,10 +11,13 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../../services/firebase_services.dart';
 import '../../utils/constant.dart';
+import '../../widgets/toast.dart';
+import '../chats/data/chatroompodo.dart';
+import '../chats/inside_chatroom.dart';
 import '../featured/notified_session_details.dart';
+import '../visited_user_ego_page/visited_user_ego_page.dart';
 
 class ActivityWidget extends StatefulWidget {
   final String userId;
@@ -46,11 +49,12 @@ class _ActivityWidgetState extends State<ActivityWidget> {
     _fetchInitialData();
   }
 
-  // --- 1. SMART PAGINATION: Fetch initial data ---
-  Future<void> _fetchInitialData() async {
-    setState(() => _isLoading = true);
+  // --- NEW DATA FETCHING LOGIC WITH PAGINATION ---
 
-    // Fetch the first page of activities using our new paginated method
+  Future<void> _fetchInitialData() async {
+    if (mounted) setState(() => _isLoading = true);
+
+    // Fetch only the first page of activities
     final activityData = await firebaseServices.getActivityForUser(
       userId: widget.userId,
       limit: _limit,
@@ -59,20 +63,19 @@ class _ActivityWidgetState extends State<ActivityWidget> {
     // Save the state for the next page
     _lastDocument = activityData.lastDocument;
     _activities = activityData.activities;
-    _hasMore = _activities.length == _limit;
+    _hasMore = _activities.length >= _limit;
 
     // Run analysis on the first batch to populate stats quickly
     await _runAnalysisOnData(_activities);
 
-    setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false);
   }
 
-  // --- 2. SMART PAGINATION: Fetch more data when "Load More" is pressed ---
   Future<void> _loadMore() async {
     if (!_hasMore || _isLoadingMore) return;
+    if (mounted) setState(() => _isLoadingMore = true);
 
-    setState(() => _isLoadingMore = true);
-
+    // Fetch the next page using the last document as a starting point
     final activityData = await firebaseServices.getActivityForUser(
       userId: widget.userId,
       limit: _limit,
@@ -81,99 +84,89 @@ class _ActivityWidgetState extends State<ActivityWidget> {
 
     _lastDocument = activityData.lastDocument;
     final newActivities = activityData.activities;
-    _hasMore = newActivities.length == _limit;
+    _hasMore = newActivities.length >= _limit;
 
-    setState(() {
-      _activities.addAll(newActivities);
-      // Re-run analysis with the newly added activities
-      _runAnalysisOnData(_activities);
-      _isLoadingMore = false;
-    });
+    // Add the new activities to our existing list
+    _activities.addAll(newActivities);
+
+    // Re-run analysis to keep stats updated (optional, can be removed for performance)
+    await _runAnalysisOnData(_activities);
+
+    if (mounted) setState(() => _isLoadingMore = false);
   }
 
-  // --- MODIFIED: Analysis logic now runs on the current set of activities ---
+  // --- SIMPLIFIED & RELIABLE ANALYSIS LOGIC ---
+
   Future<void> _runAnalysisOnData(List<UserActivityModel> activities) async {
-    if (activities.isEmpty) return;
+    if (activities.isEmpty) {
+      _currentActivity = 'Not Available';
+      _popularActivity = 'Not Available';
+      _currentMood = 'Not Available';
+      _popularMood = 'Not Available';
+      _activityCounts = {};
+      return;
+    }
 
-    final sessionIds = activities
-        .where((act) => act.sessionId != null && act.sessionId!.isNotEmpty)
-        .map((act) => act.sessionId!)
-        .toSet()
-        .toList();
-
-    // Use our new efficient method to get session details
-    final sessions = await firebaseServices.getSessionsByIds(sessionIds);
-    final sessionMap = {for (var s in sessions) s.sessionId!: s};
-
-    // 1. Analyze Activities
+    // --- Analyze Activities ---
+// First, sort all activities to find the absolute most recent one for the "Current Activity" card.
     activities.sort((a, b) => b.dateCreated!.compareTo(a.dateCreated!));
     _currentActivity = _formatActivityType(activities.first.activityType);
+
+// Create a new list containing ONLY the activities performed by the current user.
+    final userPerformedActivities = activities
+        .where((act) => act.clientId == widget.userId)
+        .toList();
+
+// Now, build the chart data (_activityCounts) and popular activity from this filtered list.
     _activityCounts =
-        groupBy(activities, (UserActivityModel act) => act.activityType!)
+        groupBy(userPerformedActivities, (UserActivityModel act) => act.activityType!)
             .map((key, value) => MapEntry(_formatActivityType(key), value.length));
 
     if (_activityCounts.isNotEmpty) {
       _popularActivity =
           _activityCounts.entries.sortedBy<num>((e) => -e.value).first.key;
+    } else {
+      // If the user has not performed any actions themselves, set popular activity to N/A.
+      _popularActivity = 'Not Available';
     }
 
-    // 2. Analyze Moods
-    final sessionActivities = activities
-        .where((act) =>
-    act.activityType == 'session' &&
-        act.sessionId != null &&
-        sessionMap.containsKey(act.sessionId))
-        .toList();
+    // Analyze Moods (Simplified logic)
+    final mostRecentSessionActivity = activities.firstWhereOrNull(
+          (act) => act.activityType == 'session' && act.sessionId != null,
+    );
 
-    if (sessionActivities.isNotEmpty) {
-      final currentSession = sessionMap[sessionActivities.first.sessionId];
-      if (currentSession != null && currentSession.moodId != null) {
-        _currentMood = Mood.getMood(currentSession.moodId) ?? 'Unknown';
-      }
-
-      final moodGroups =
-      groupBy(sessionActivities, (act) => sessionMap[act.sessionId]?.moodId);
-
-      Map<int, int> validMoodCounts = {};
-      moodGroups.forEach((moodId, acts) {
-        if (moodId != null) {
-          validMoodCounts[moodId] = acts.length;
+    if (mostRecentSessionActivity != null) {
+      final sessions = await firebaseServices.getSessionsByIds([mostRecentSessionActivity.sessionId!]);
+      if (sessions.isNotEmpty) {
+        final session = sessions.first;
+        if (session.moodId != null) {
+          _currentMood = Mood.getMood(session.moodId) ?? 'Unknown';
+          _popularMood = _currentMood; // Simple and reliable
         }
-      });
-
-      if (validMoodCounts.isNotEmpty) {
-        final popularMoodId =
-            validMoodCounts.entries.sortedBy<num>((e) => -e.value).first.key;
-        _popularMood = Mood.getMood(popularMoodId) ?? 'Unknown';
       }
+    } else {
+      _currentMood = 'Not Available';
+      _popularMood = 'Not Available';
     }
   }
 
-  // This is your own excellent formatting function, unchanged
+  // Your formatting function remains the same
   String _formatActivityType(String? type) {
     if (type == null) return 'Unknown';
     switch (type) {
-      case 'session':
-        return 'Sharing Diary';
-      case 'comment':
-        return 'Advising';
-      case 'react':
-        return 'Reacting';
-      case 'thank':
-        return 'Giving Thanks';
-      case 'follow':
-        return 'Following';
-      case 'game_win':
-        return 'Winning Games';
-      case 'room_join':
-        return 'Joining Rooms';
+      case 'session': return 'Sharing Diary';
+      case 'comment': return 'Advising';
+      case 'react': return 'Reacting';
+      case 'thank': return 'Giving Thanks';
+      case 'follow': return 'Following';
+      case 'game_win': return 'Winning Games';
+      case 'room_join': return 'Joining Rooms';
+      case 'visit_ego': return 'Visiting an Ego';
+      case 'send_love': return 'Sending Love';
+      case 'cash_out': return 'Requesting Payout';
+      case 'mantra': return 'Leaving a Mantra';
       default:
-        return type
-            .replaceAll('_', ' ')
-            .split(' ')
-            .map((str) =>
-        str.isNotEmpty ? str[0].toUpperCase() + str.substring(1) : '')
-            .join(' ');
+        return type.replaceAll('_', ' ').split(' ').map((str) => str.isNotEmpty ? str[0].toUpperCase() + str.substring(1) : '').join(' ');
     }
   }
 
@@ -186,14 +179,13 @@ class _ActivityWidgetState extends State<ActivityWidget> {
     if (_activities.isEmpty) {
       return Center(
         child: Text("There are no activities yet",
-            style: GoogleFonts.lato(
-                fontSize: 16.0, color: Colors.white70)),
+            style: GoogleFonts.lato(fontSize: 16.0, color: Colors.white70)),
       );
     }
 
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(child: _buildImmersiveChart()), // <-- NEW IMMERSIVE CHART
+        SliverToBoxAdapter(child: _buildImmersiveChart()),
         const SliverToBoxAdapter(child: SizedBox(height: 20)),
         _buildStatsSection(),
         const SliverToBoxAdapter(child: SizedBox(height: 30)),
@@ -228,20 +220,68 @@ class _ActivityWidgetState extends State<ActivityWidget> {
           ),
         ),
         SliverToBoxAdapter(
-          child: _buildLoadMoreButton(), // <-- NEW PAGINATION BUTTON
+          child: _buildLoadMoreButton(), // <-- The smart button
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 20)),
       ],
     );
   }
 
-  // --- NEW: Immersive Radar Chart replacing the old Bar Chart ---
+
+
+  // --- NEW, COMPLETE, and CRASH-PROOF IMMERSIVE CHART ---
   Widget _buildImmersiveChart() {
-    final top5Activities = _activityCounts.entries
+    final topActivities = _activityCounts.entries
         .sortedBy<num>((e) => -e.value)
         .take(5)
         .toList();
 
+    // --- FALLBACK UI ---
+    // If there are fewer than 3 activity types, show a simple list instead of crashing.
+    if (topActivities.length < 3) {
+      return Container(
+        width: double.infinity, // Ensure it takes full width
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Pallet.colorSecondary.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Activity Breakdown",
+              style: GoogleFonts.lato(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 10),
+            // Handle the case where there are no activities at all
+            if (topActivities.isEmpty)
+              Text(
+                "No activities with distinct types found yet.",
+                style: GoogleFonts.lato(color: Colors.white70, fontSize: 14),
+              )
+            else
+            // If there are 1 or 2, list them
+              for (var activity in topActivities)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Text(
+                    "• ${activity.key} (${activity.value} times)",
+                    style: GoogleFonts.lato(color: Colors.white70, fontSize: 14),
+                  ),
+                ),
+          ],
+        ),
+      );
+    }
+
+    // --- RADAR CHART UI ---
+    // If we have 3 or more activities, build the full RadarChart.
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -254,7 +294,7 @@ class _ActivityWidgetState extends State<ActivityWidget> {
         RadarChartData(
           dataSets: [
             RadarDataSet(
-              dataEntries: top5Activities
+              dataEntries: topActivities
                   .map((entry) => RadarEntry(value: entry.value.toDouble()))
                   .toList(),
               borderColor: Pallet.colorPrimary,
@@ -266,10 +306,10 @@ class _ActivityWidgetState extends State<ActivityWidget> {
           borderData: FlBorderData(show: false),
           radarBorderData: const BorderSide(color: Colors.white24, width: 1.5),
           getTitle: (index, angle) {
-            if (index < top5Activities.length) {
-              final entry = top5Activities[index];
+            if (index < topActivities.length) {
+              final entry = topActivities[index];
               return RadarChartTitle(
-                text: entry.key, // FULL TEXT is displayed clearly
+                text: entry.key,
                 angle: angle,
               );
             }
@@ -284,6 +324,7 @@ class _ActivityWidgetState extends State<ActivityWidget> {
       ),
     );
   }
+
 
   // --- NEW: Smart "Load More" button ---
   Widget _buildLoadMoreButton() {
@@ -317,24 +358,20 @@ class _ActivityWidgetState extends State<ActivityWidget> {
     );
   }
 
-  // --- Unchanged Widgets (included for completeness) ---
+  // Other UI widgets (_buildStatsSection, _buildStatCard, UserActivityCard) remain the same.
+  // ... (Paste the rest of your unchanged UI methods here) ...
 
   Widget _buildStatsSection() {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       sliver: SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 1.5,
+          crossAxisCount: 2, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 1.5,
         ),
         delegate: SliverChildListDelegate([
-          _buildStatCard(
-              Icons.sentiment_satisfied_alt, "Current Mood", _currentMood),
+          _buildStatCard(Icons.sentiment_satisfied_alt, "Current Mood", _currentMood),
           _buildStatCard(Icons.celebration, "Popular Mood", _popularMood),
-          _buildStatCard(
-              Icons.directions_run, "Current Activity", _currentActivity),
+          _buildStatCard(Icons.directions_run, "Current Activity", _currentActivity),
           _buildStatCard(Icons.whatshot, "Popular Activity", _popularActivity),
         ]),
       ),
@@ -354,26 +391,21 @@ class _ActivityWidgetState extends State<ActivityWidget> {
         children: [
           Icon(icon, color: Pallet.colorPrimary, size: 28),
           const SizedBox(height: 8),
-          Text(title,
-              style: GoogleFonts.lato(fontSize: 14, color: Colors.white70)),
-          Text(value,
-              style: GoogleFonts.lato(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-              overflow: TextOverflow.ellipsis),
+          Text(title, style: GoogleFonts.lato(fontSize: 14, color: Colors.white70)),
+          Text(value, style: GoogleFonts.lato(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis),
         ],
       ),
     );
   }
 }
 
-// Your UserActivityCard is already great, no changes needed here.
+
+
 class UserActivityCard extends StatelessWidget {
-  final UserActivityModel element;
-  const UserActivityCard({Key? key, required this.element}) : super(key: key);
+  final UserActivityModel element;  const UserActivityCard({Key? key, required this.element}) : super(key: key);
 
   IconData _getIconForActivity(String? type) {
+    // Your icon logic is already perfect.
     switch (type) {
       case 'session':
         return Icons.article_outlined;
@@ -389,6 +421,14 @@ class UserActivityCard extends StatelessWidget {
         return Icons.emoji_events_outlined;
       case 'room_join':
         return Icons.meeting_room_outlined;
+      case 'visit_ego':
+        return Icons.visibility_outlined;
+      case 'send_love':
+        return Icons.volunteer_activism_outlined;
+      case 'cash_out':
+        return Icons.price_check_outlined;
+      case 'mantra':
+        return Icons.record_voice_over_outlined;
       default:
         return Icons.timeline;
     }
@@ -397,10 +437,70 @@ class UserActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        if (element.sessionId != null && element.sessionId!.isNotEmpty) {
-          PageRouter.gotoWidget(
-              NotifiedSessionDetails(sessionId: element.sessionId), context);
+      onTap: () async {
+        final activityType = element.activityType;
+
+        switch (activityType) {
+        // Session-related activities
+          case 'session':
+          case 'comment':
+          case 'react':
+          case 'thank':
+          case 'follow':
+            if (element.sessionId != null && element.sessionId!.isNotEmpty) {
+              PageRouter.gotoWidget(
+                  NotifiedSessionDetails(sessionId: element.sessionId), context);
+            }
+            break;
+
+        // Visit Ego activity
+          case 'visit_ego':
+            if (element.userId != null && element.userId!.isNotEmpty) {
+              final egoName = element.userNickname ?? 'Ego';
+              PageRouter.gotoWidget(
+                  VisitedUserEgoProfilePage(
+                      visitedUsersID: element.userId!,
+                      visitedEgoName: egoName),
+                  context);
+            }
+            break;
+
+        // Join Room activity
+          case 'room_join':
+            final roomId = element.sessionId;
+            if (roomId != null && roomId.isNotEmpty) {
+              try {
+                showToast("Opening room...");
+                DocumentSnapshot roomDoc = await FirebaseFirestore.instance
+                    .collection('ChatRooms') // Use your correct collection name
+                    .doc(roomId)
+                    .get();
+
+                if (roomDoc.exists) {
+                  final chatRoom = ChatRoomPodo.fromJson(roomDoc.data() as Map<String, dynamic>);
+                  PageRouter.gotoWidget(ChatScreen(chatRoomPodo: chatRoom), context);
+                } else {
+                  showToast("Sorry, this room could not be found.");
+                }
+              } catch (e) {
+                print("Error navigating to room: $e");
+                showToast("Could not open the room.");
+              }
+            }
+            break;
+
+        // Wallet-related activities
+          case 'send_love':
+          case 'cash_out':
+            Navigator.of(context).pushNamed(AppRoutes.egoPage);
+            break;
+
+            // Default case for all other activities
+          default:
+          // For 'game_win', 'mantra', etc., navigate to the user's own profile.
+            Navigator.of(context).pushNamed(AppRoutes.egoPage);
+            print("Navigating to Ego Profile for activity type '$activityType'.");
+            break;
         }
       },
       child: Container(
@@ -409,8 +509,7 @@ class UserActivityCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Pallet.colorSecondary.withOpacity(0.2),
           borderRadius: BorderRadius.circular(15),
-          border:
-          Border.all(color: Pallet.colorSecondary.withOpacity(0.4), width: 1),
+          border: Border.all(color: Pallet.colorSecondary.withOpacity(0.4), width: 1),
         ),
         child: Row(
           children: [
@@ -449,3 +548,5 @@ class UserActivityCard extends StatelessWidget {
     );
   }
 }
+
+
