@@ -258,9 +258,9 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                         taxAmount: 0,
                         totalDebitAmount: visitCost,
                         senderTransactionDesc:
-                            "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                            "1❤️ for visiting ${visitedEgoName}'s Ego.",
                         receiverTransactionDesc:
-                            "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                            "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                         claireTransactionDesc: "Tax from a profile visit.",
                         // Will be 0, but required
                         forRoomVisits: 1,
@@ -390,9 +390,9 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                             taxAmount: 0,
                             totalDebitAmount: visitCost,
                             senderTransactionDesc:
-                                "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                                "1❤️ for visiting ${visitedEgoName}'s Ego.",
                             receiverTransactionDesc:
-                                "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                                "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                             claireTransactionDesc:
                                 "Tax from a profile visit.", // Will be 0, but required
                             forRoomVisits: 1, // Stat for the sender
@@ -615,9 +615,9 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                       taxAmount: 0, // No tax on a 1-love transaction
                       totalDebitAmount: reactionCost,
                       senderTransactionDesc:
-                          "Spent 1❤️ reacting to session ${widget.element.title}.",
+                          "1❤️ for reacting to session ${widget.element.title}.",
                       receiverTransactionDesc:
-                          "Received 1❤️ from ${reactingUser.nickname} reacting to your session.",
+                          "1❤️ from reaction to your session ${widget.element.title} by ${reactingUser.nickname}.",
                       claireTransactionDesc: "Tax from a session reaction.",
                       // Pass the specific stat increments
                       forReactions: reactionCost,

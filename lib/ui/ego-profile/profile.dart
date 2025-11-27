@@ -983,7 +983,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                               taxAmount: 0,
                                               totalDebitAmount: visitCost,
                                               senderTransactionDesc:
-                                              "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                                              "1❤️ for visiting ${visitedEgoName}'s Ego.",
                                               receiverTransactionDesc:
                                               "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
                                               claireTransactionDesc:

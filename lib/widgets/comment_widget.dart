@@ -179,41 +179,65 @@ class _CommentWidgetState extends State<CommentWidget> {
       return;
     }
     if (thankedAdvise.thanks!.contains(thankerId)) {
-      // This check will now work and the user will see the toast.
       showToast("You have already thanked this advise.");
       return;
     }
 
     // --- 2. CHECK IF THE THANKED USER IS AN ALTER EGO ---
     final isAlterEgo = thankedAdvise.alterEgoId != null && thankedAdvise.alterEgoId!.isNotEmpty;
+    final thanker = await firebaseServices.getUserInfo(); // Fetch thanker info early
 
     if (!isAlterEgo) {
-      // If not an Alter Ego, just add the 'thanks' without a transaction.
-      showToast("Thank you for your feedback!");
-      // We still need to persist the 'thanks' list update to Firestore for non-alter egos
-      // so the button stays thanked.
-      await FirebaseFirestore.instance
-          .collection('sessions')
-          .doc(widget.featuredSessionModel?.sessionId)
-          .collection('comments')
-          .doc(thankedAdvise.commentId)
-          .update({
-        'thanks': FieldValue.arrayUnion([thankerId])
-      });
+      // --- 3A. REGULAR USER: 1-LOVE TRANSACTION ---
+      try {
+        final bool success = await firebaseServices.transferLoveBetweenUsers(
+          senderId: thankerId,
+          receiverId: thankedUserId,
+          amountToSend: 1, // Give 1 love
+          taxAmount: 0,
+          totalDebitAmount: 1, // Debit 1 love from the thanker
+          senderTransactionDesc: "1❤️ for thanks to an advise from ${thankedAdvise.userNickname}.",
+          receiverTransactionDesc: "1❤️ from thanks to your advise by ${thanker.nickname}.",
+          claireTransactionDesc: "No Tax from a regular user 'Thank You' transaction.",
+          forThanks: 1,
+          fromThanks: 1,
+          metadata: {
+            'reason': 'thank_advise_regular',
+            'sessionId': widget.featuredSessionModel?.sessionId,
+            'commentId': thankedAdvise.commentId,
+          },
+        );
+
+        if (success) {
+          showToast("...and you too!"); // Keep original toast message for regular users
+          // The 'thanks' array is updated by the service, but we update it here explicitly
+          // to ensure the UI reflects the change immediately.
+          await FirebaseFirestore.instance
+              .collection('sessions')
+              .doc(widget.featuredSessionModel?.sessionId)
+              .collection('comments')
+              .doc(thankedAdvise.commentId)
+              .update({
+            'thanks': FieldValue.arrayUnion([thankerId])
+          });
+        }
+        // If 'success' is false, the service method handles showing an error toast.
+      } catch (e) {
+        print("Error during regular user thanks transaction: $e");
+        showToast("An error occurred while thanking. Please try again.");
+      }
       return;
     }
 
-    // --- 3. PROCEED WITH 1-LOVE TRANSACTION VIA SERVICE ---
+
+    // --- 3B. ALTER EGO: PROCEED WITH 3-LOVE TRANSACTION VIA SERVICE ---
     const int thankYouCost = 3;
-    const int taxAmount = 2; // No tax for a 1-love transaction
+    const int taxAmount = 0; // No tax for a 3-love transaction
     const int totalDebit = thankYouCost + taxAmount;
 
     try {
-      final thanker = await firebaseServices.getUserInfo();
       if (thanker.currentLoveCount < totalDebit) {
         showToast("You need at least $totalDebit ❤️ to thank an Alter Ego's advise.");
-        // Since the UI was already updated, we should ideally revert it here if the transaction fails.
-        // However, for simplicity, we'll leave it as is, but the backend prevents the charge.
         return;
       }
 
@@ -224,9 +248,9 @@ class _CommentWidgetState extends State<CommentWidget> {
         amountToSend: thankYouCost,
         taxAmount: taxAmount,
         totalDebitAmount: totalDebit,
-        senderTransactionDesc: "5❤️ spent to thank an advise from ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}.",
-        receiverTransactionDesc: "Received 3❤️ from ${thanker.nickname} for your advise.",
-        claireTransactionDesc: "2❤️ Tax from a 'Thank You' transaction.",
+        senderTransactionDesc: "3❤️ for thanks an advise from ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}.",
+        receiverTransactionDesc: "3❤️ from ${thanker.nickname} for your advise.",
+        claireTransactionDesc: "No Tax from a 'Thank You' transaction.",
         forThanks: thankYouCost,
         fromThanks: thankYouCost,
         metadata: {
@@ -237,7 +261,7 @@ class _CommentWidgetState extends State<CommentWidget> {
       );
 
       if (success) {
-        showToast("5❤️ spent to ${thankedAdvise.userNickname} as thanks!");
+        showToast("3❤️ sent to ${thankedAdvise.userNickname} as thanks!");
 
         // After a successful transaction, save the activity to Firestore.
         await firebaseServices.saveUserActivity(
@@ -247,9 +271,7 @@ class _CommentWidgetState extends State<CommentWidget> {
           sessionId: widget.featuredSessionModel?.sessionId,
         );
 
-        // The 'thanks' array is now updated via a separate WriteBatch in transferLoveBetweenUsers
-        // so we don't need to do it here anymore. Let's ensure your service does this.
-        // For now, let's explicitly add it to be safe.
+        // Explicitly update the 'thanks' array to be safe.
         await FirebaseFirestore.instance
             .collection('sessions')
             .doc(widget.featuredSessionModel?.sessionId)
@@ -480,9 +502,9 @@ class _CommentWidgetState extends State<CommentWidget> {
                     amountToSend: visitCost,
                     taxAmount: 0,
                     totalDebitAmount: visitCost,
-                    senderTransactionDesc: "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                    senderTransactionDesc: "1❤️ for visiting ${visitedEgoName}'s Ego.",
                     receiverTransactionDesc:
-                    "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                    "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                     claireTransactionDesc: "Tax from a profile visit.",
                     forRoomVisits: 1, // Stat for the sender
                     fromRoomVisits: 1, // Stat for the receiver
@@ -583,9 +605,9 @@ class _CommentWidgetState extends State<CommentWidget> {
                           amountToSend: visitCost,
                           taxAmount: 0,
                           totalDebitAmount: visitCost,
-                          senderTransactionDesc: "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                          senderTransactionDesc: "1❤️ for visiting ${visitedEgoName}'s Ego.",
                           receiverTransactionDesc:
-                          "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                          "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                           claireTransactionDesc: "Tax from a profile visit.",
                           forRoomVisits: 1, // Stat for the sender
                           fromRoomVisits: 1, // Stat for the receiver

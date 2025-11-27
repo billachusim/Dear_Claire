@@ -170,9 +170,9 @@ class ChatWidget extends StatelessWidget {
                           taxAmount: 0,
                           totalDebitAmount: visitCost,
                           senderTransactionDesc:
-                          "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                          "1❤️ visiting ${visitedEgoName}'s Ego.",
                           receiverTransactionDesc:
-                          "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                          "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                           claireTransactionDesc:
                           "Tax from a profile visit.", // Will be 0, but required
                           forRoomVisits: 1, // Stat for the sender
@@ -257,9 +257,9 @@ class ChatWidget extends StatelessWidget {
                             taxAmount: 0,
                             totalDebitAmount: visitCost,
                             senderTransactionDesc:
-                            "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                            "1❤️ for visiting ${visitedEgoName}'s Ego.",
                             receiverTransactionDesc:
-                            "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                            "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                             claireTransactionDesc:
                             "Tax from a profile visit.", // Will be 0, but required
                             forRoomVisits: 1, // Stat for the sender
@@ -602,7 +602,7 @@ class ChatWidget extends StatelessWidget {
                       } else {
                         // Visitor is entering another user's room.
                         const int entryCost = 3;
-                        const int taxAmount = 2; // No tax for a 1-love transaction.
+                        const int taxAmount = 2;
                         const int totalDebit = entryCost + taxAmount;
 
                         // Check if the visitor can afford the entry
@@ -619,9 +619,9 @@ class ChatWidget extends StatelessWidget {
                           amountToSend: entryCost,
                           taxAmount: taxAmount,
                           totalDebitAmount: totalDebit,
-                          senderTransactionDesc: "Sent 5❤️ to enter ${chatModel!.userNickname}'s room.",
-                          receiverTransactionDesc: "Received 3❤️ because ${visitorData.nickname} visited your room.",
-                          claireTransactionDesc: "3 ❤️ Tax from room entry.",
+                          senderTransactionDesc: "5❤️ to enter ${chatModel!.userNickname}'s room.",
+                          receiverTransactionDesc: "3❤️ for ${visitorData.nickname} visiting your room.",
+                          claireTransactionDesc: "2❤️ Tax from room entry.",
                           // Pass the stat increments
                           forRoomVisits: entryCost,
                           fromRoomVisits: entryCost,

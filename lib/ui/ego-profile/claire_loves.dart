@@ -201,8 +201,6 @@ class _ClaireLovesState extends State<ClaireLoves> {
     final List<Widget> secondaryStats = [
       _buildStatCard("From Game Wins", "+$fromGameWins ❤️", Colors.green),
       _buildStatCard("For Game Loses", "-$forGameLoses ❤️", Colors.red),
-      _buildStatCard("From Ego Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
-      _buildStatCard("For Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
       _buildStatCard("From Thanks", "+$_loveFromThanks ❤️", Colors.teal),
       _buildStatCard("For Thanks", "-$_loveSentForThanks ❤️", Colors.blueGrey),
       _buildStatCard("From Room Visits", "+$_fromRoomVisits ❤️", Colors.cyan),
@@ -296,6 +294,10 @@ class _ClaireLovesState extends State<ClaireLoves> {
           title,
           style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
         ),
+            Text(
+              '$count x $lovePerUnit =',
+              style: GoogleFonts.lato(fontSize: 12, color: Colors.white54),
+            ),
         const SizedBox(height: 5),
         Text(
           '$totalLove ❤️',
@@ -305,11 +307,6 @@ class _ClaireLovesState extends State<ClaireLoves> {
             color: Colors.white,
           ),
         ),
-            const SizedBox(height: 2),
-            Text(
-              '$count x $lovePerUnit',
-              style: GoogleFonts.lato(fontSize: 12, color: Colors.white54),
-            ),
           ],
         ),
     );
@@ -458,7 +455,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
   Widget _buildRecentTransactions() {
     return FutureBuilder<List<TransactionModel>>(
       future: firebaseServices.getTransactionsForUser(
-          userId: _userId, limit: 50),
+          userId: _userId, limit: 80),
       builder: (context, snapshot) {
         // ... (your existing waiting, error, and no-data checks are perfect)
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -474,7 +471,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
         final allTransactions = snapshot.data!;
         final transactionsToShow = _showAllTransactions
             ? allTransactions
-            : allTransactions.take(20).toList();
+            : allTransactions.take(10).toList();
 
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -594,6 +591,13 @@ class _ClaireLovesState extends State<ClaireLoves> {
                     style: GoogleFonts.lato(
                         color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
+                  Center(
+                    child: Text('Amount X $_rateBadge',
+                      style: GoogleFonts.lato(
+                          color: Colors.white70, fontSize: 10,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
                   SizedBox(height: 20),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -609,14 +613,6 @@ class _ClaireLovesState extends State<ClaireLoves> {
                         style: TextStyle(color: Colors.white)),
                   ),
                 ],
-              ),
-            ),
-            SizedBox(height: 10),
-            Center(
-              child: Chip(
-                label: Text('Rate: $_rateBadge'),
-                backgroundColor: Pallet.colorPrimary,
-                labelStyle: TextStyle(color: Colors.white),
               ),
             ),
           ],

@@ -35,6 +35,8 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
   int _withdrawnLoveCount = 0;
   int _sessionCount = 0;
   int _adviseCount = 0;
+  int _loveSentForVisits = 0;
+  int _profileVisitLove = 0;
   String _rateBadge = 'Ego Rate';
   double _rate = 1.5;
   double _convertedAmount = 0.0;
@@ -74,6 +76,8 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
           _withdrawnLoveCount = data["withdrawnLoveCount"] ?? 0;
           _sessionCount = data["sessionCount"] ?? 0;
           _adviseCount = data["adviseCount"] ?? 0;
+          _loveSentForVisits = data["loveSentForVisits"] ?? 0;
+          _profileVisitLove = data["profileVisitLove"] ?? 0;
           _rate = userType == 'SUPER_ADMIN'
               ? 3.0
               : userType == 'ADMIN'
@@ -249,6 +253,8 @@ Timestamp: ${DateTime.now().toIso8601String()}
             lovePerUnit: 10,
             color: Colors.purple,
           ),
+          _buildStatCard("From Ego Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
+          _buildStatCard("For Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
         ],
       ),
     );
@@ -276,7 +282,11 @@ Timestamp: ${DateTime.now().toIso8601String()}
             title,
             style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
           ),
-          const SizedBox(height: 5),
+          Text(
+            '$count x $lovePerUnit =',
+            style: GoogleFonts.lato(fontSize: 12, color: Colors.white54),
+          ),
+          const SizedBox(height: 3),
           Text(
             '$totalLove ❤️',
             style: GoogleFonts.lato(
@@ -284,11 +294,6 @@ Timestamp: ${DateTime.now().toIso8601String()}
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '$count x $lovePerUnit',
-            style: GoogleFonts.lato(fontSize: 12, color: Colors.white54),
           ),
         ],
       ),
@@ -373,6 +378,13 @@ Timestamp: ${DateTime.now().toIso8601String()}
                     style: GoogleFonts.lato(
                         color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
+                  Center(
+                    child: Text('Amount X $_rateBadge',
+                      style: GoogleFonts.lato(
+                          color: Colors.white70, fontSize: 10,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
                   SizedBox(height: 20),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -388,14 +400,6 @@ Timestamp: ${DateTime.now().toIso8601String()}
                         style: TextStyle(color: Colors.white)),
                   ),
                 ],
-              ),
-            ),
-            SizedBox(height: 10),
-            Center(
-              child: Chip(
-                label: Text('Rate: $_rateBadge'),
-                backgroundColor: Pallet.colorPrimary,
-                labelStyle: TextStyle(color: Colors.white),
               ),
             ),
           ],

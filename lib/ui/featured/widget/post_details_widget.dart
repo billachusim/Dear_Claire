@@ -160,9 +160,9 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       taxAmount: 0,
                                       totalDebitAmount: visitCost,
                                       senderTransactionDesc:
-                                      "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                                      "1❤️ for visiting ${visitedEgoName}'s Ego.",
                                       receiverTransactionDesc:
-                                      "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                                      "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                                       claireTransactionDesc: "Tax from a profile visit.",
                                       // Will be 0, but required
                                       forRoomVisits: 1,
@@ -518,9 +518,9 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                             taxAmount: 0, // No tax for following
                                             totalDebitAmount: 1,
                                             senderTransactionDesc:
-                                                "Sent 1❤️ to follow '${_session.title}'.",
+                                                "1❤️ to follow '${_session.title}'.",
                                             receiverTransactionDesc:
-                                                "Received 1❤️ from ${follower.nickname} who followed your session.",
+                                                "1❤️ from followed session '${_session.title}'.",
                                             claireTransactionDesc:
                                                 "Follow transaction tax (0%).",
                                             metadata: {

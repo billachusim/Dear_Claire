@@ -123,9 +123,9 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                           taxAmount: 0,
                           totalDebitAmount: visitCost,
                           senderTransactionDesc:
-                          "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                          "1❤️ for visiting ${visitedEgoName}'s Ego.",
                           receiverTransactionDesc:
-                          "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                          "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                           claireTransactionDesc:
                           "Tax from a profile visit.", // Will be 0, but required
                           forRoomVisits: 1, // Stat for the sender
@@ -215,9 +215,9 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                                 taxAmount: 0,
                                 totalDebitAmount: visitCost,
                                 senderTransactionDesc:
-                                "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                                "1❤️for visiting ${visitedEgoName}'s Ego.",
                                 receiverTransactionDesc:
-                                "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                                "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                                 claireTransactionDesc:
                                 "Tax from a profile visit.", // Will be 0, but required
                                 forRoomVisits: 1, // Stat for the sender
