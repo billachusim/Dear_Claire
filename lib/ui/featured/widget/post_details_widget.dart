@@ -53,7 +53,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   bool? isFlagged;
   int _currentPage = 0;
   final GlobalKey<UnifiedMediaViewerState> _mediaViewerKey = GlobalKey<UnifiedMediaViewerState>();
-
+  bool _isAvatarLoading = false;
 
   @override
   void initState() {
@@ -73,11 +73,16 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
       controller: screenshotController,
       child: Material(
         child: GestureDetector(
-          behavior: HitTestBehavior.opaque, // Ensures it captures taps on empty space
           onTap: () {
-            // 3. When tapped, call the public method on the child widget via the key.
-            _mediaViewerKey.currentState?.pauseAllVideos();
-            print("Outside tap detected, pausing videos."); // For debugging
+            // This tap is for the whole card.
+            // We first check if a video is playing. If so, pause it.
+            // If not, navigate to the detail page.
+            final bool didPause = _mediaViewerKey.currentState?.pauseAllVideos() ?? false;
+
+            // If a video was NOT paused by this tap, do something else.
+            if (!didPause) {
+
+            }
           },
           child: SafeArea(
             child: StreamBuilder(
@@ -112,88 +117,124 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             children: [
                               GestureDetector(
                                 onTap: () async {
-                                  // --- 1. SETUP TRANSACTION DETAILS ---
-                                  final visitingUser = await firebaseServices.getUserInfo();
-                                  final String visitedUserId = _session.userId!;
-                                  final String visitedEgoName = _session.userNickname!;
-                                  const int visitCost = 1;
+                                  // --- 1. SHOW THE LOADER ---
+                                  setState(() {
+                                    _isAvatarLoading = true;
+                                  });
+                                  try {
+                                    // --- 1. SETUP TRANSACTION DETAILS ---
+                                    final visitingUser = await firebaseServices.getUserInfo();
+                                    final String visitedUserId = _session.userId!;
+                                    final String visitedEgoName =
+                                    _session.userNickname!;
+                                    const int visitCost = 1;
 
-                                  // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
-                                  if (visitingUser.userId == visitedUserId) {
-                                    // If visiting self, just navigate without a transaction.
-                                    PageRouter.gotoWidget(
-                                        VisitedUserEgoProfilePage(
-                                            visitedUsersID: visitedUserId,
-                                            visitedEgoName: visitedEgoName),
-                                        context);
-                                    return;
-                                  }
+                                    // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
+                                    if (visitingUser.userId == visitedUserId) {
+                                      // If visiting self, just navigate without a transaction.
+                                      PageRouter.gotoWidget(
+                                          VisitedUserEgoProfilePage(
+                                              visitedUsersID: visitedUserId,
+                                              visitedEgoName: visitedEgoName),
+                                          context);
+                                      return;
+                                    }
 
-                                  if (visitingUser.userType == "REGULAR" &&
-                                      visitingUser.currentLoveCount < 100) {
-                                    showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
-                                    return;
-                                  }
+                                    if (visitingUser.userType == "REGULAR" &&
+                                        visitingUser.currentLoveCount < 100) {
+                                      showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                                      return;
+                                    }
 
-                                  if (visitingUser.currentLoveCount < visitCost) {
-                                    showToast("You need at least 1 ❤️ to visit a profile.");
-                                    return;
-                                  }
+                                    if (visitingUser.currentLoveCount < visitCost) {
+                                      showToast("You need at least 1 ❤️ to visit a profile.");
+                                      return;
+                                    }
 
-                                  // --- 3. PERFORM THE LOVE TRANSACTION ---
-                                  final bool success =
-                                  await firebaseServices.transferLoveBetweenUsers(
-                                    senderId: visitingUser.userId!,
-                                    receiverId: visitedUserId,
-                                    amountToSend: visitCost,
-                                    taxAmount: 0,
-                                    totalDebitAmount: visitCost,
-                                    senderTransactionDesc:
-                                    "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
-                                    receiverTransactionDesc:
-                                    "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
-                                    claireTransactionDesc:
-                                    "Tax from a profile visit.", // Will be 0, but required
-                                    forRoomVisits: 1, // Stat for the sender
-                                    fromRoomVisits: 1, // Stat for the receiver
-                                    metadata: {
-                                      'reason': 'profile_visit',
-                                      'visitedUserId': visitedUserId
-                                    },
-                                  );
+                                    // --- 3. PERFORM THE LOVE TRANSACTION ---
+                                    final bool success =
+                                    await firebaseServices.transferLoveBetweenUsers(
+                                      senderId: visitingUser.userId!,
+                                      receiverId: visitedUserId,
+                                      amountToSend: visitCost,
+                                      taxAmount: 0,
+                                      totalDebitAmount: visitCost,
+                                      senderTransactionDesc:
+                                      "Spent 1❤️ visiting ${visitedEgoName}'s Ego.",
+                                      receiverTransactionDesc:
+                                      "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                                      claireTransactionDesc: "Tax from a profile visit.",
+                                      // Will be 0, but required
+                                      forRoomVisits: 1,
+                                      // Stat for the sender
+                                      fromRoomVisits: 1,
+                                      // Stat for the receiver
+                                      metadata: {
+                                        'reason': 'profile_visit',
+                                        'visitedUserId': visitedUserId
+                                      },
+                                    );
 
-                                  // --- 4. NAVIGATE ON SUCCESS ---
-                                  if (success) {
-                                    // Only navigate to the profile if the transaction was successful.
-                                    PageRouter.gotoWidget(
-                                        VisitedUserEgoProfilePage(
-                                            visitedUsersID: visitedUserId,
-                                            visitedEgoName: visitedEgoName),
-                                        context);
+                                    // --- 4. NAVIGATE ON SUCCESS ---
+                                    if (success) {
+                                      // Only navigate to the profile if the transaction was successful.
+                                      PageRouter.gotoWidget(
+                                          VisitedUserEgoProfilePage(
+                                              visitedUsersID: visitedUserId,
+                                              visitedEgoName: visitedEgoName),
+                                          context);
+                                    }
+                                  } finally {
+                                    // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                                    // This runs no matter how the try block exits.
+                                    if (mounted) {
+                                      setState(() {
+                                        _isAvatarLoading = false;
+                                      });
+                                    }
                                   }
                                 },
-                                child: CachedNetworkImage(
-                                    width: 60,
-                                    height: 60,
-                                    imageUrl: _session.userAvatarUrl!,
-                                    imageBuilder: (context, imageProvider) =>
-                                        Container(
+                                child: Stack(
+                                  alignment: AlignmentGeometry.center,
+                                  children: [
+                                    CachedNetworkImage(
+                                        width: 50,
+                                        height: 50,
+                                        imageUrl: _session.userAvatarUrl!,
+                                        imageBuilder: (context, imageProvider) => Container(
                                           decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
                                             image: DecorationImage(
                                               image: imageProvider,
-                                              fit: BoxFit.fill,
+                                              fit: BoxFit.cover,
                                             ),
                                           ),
                                         ),
-                                    placeholder: (context, url) => Center(
-                                        child: CircularProgressIndicator()),
-                                    errorWidget: (context, url, error) =>
-                                        Image.asset(
+                                        placeholder: (context, url) =>
+                                            CircularProgressIndicator(),
+                                        errorWidget: (context, url, error) => Image.asset(
                                           "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                                           width: 50,
                                           height: 50,
-                                        ) //Icon(Icons.error),
-                                    ),
+                                        )),
+
+                                    // --- 2. ADD THE OVERLAY LOADER ---
+                                    if (_isAvatarLoading)
+                                      Container(
+                                        width: 60,
+                                        height: 60,
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.5),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Center(
+                                          child: CupertinoActivityIndicator(
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
                               SizedBox(
                                 width: 8,
@@ -346,10 +387,13 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                     }
                                   }
 
-                                  return UnifiedMediaViewer(
-                                    key: _mediaViewerKey,
-                                    mediaItems: allMedia,
-                                    aspectRatio: 0.5, // A taller, more immersive ratio
+                                  return GestureDetector(
+                                    onTap: () {},
+                                    child: UnifiedMediaViewer(
+                                      key: _mediaViewerKey,
+                                      mediaItems: allMedia,
+                                      aspectRatio: 0.6, // A taller, more immersive ratio
+                                    ),
                                   );
                                 }
                             ),

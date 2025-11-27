@@ -4,13 +4,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
-// Define the type of media.
 enum MediaType { image, video }
 
-// A single item for our unified media list.
 class MediaItem {
   final String networkUrl;
-  final String? thumbnailUrl; // Only used for videos
+  final String? thumbnailUrl;
   final MediaType type;
   final VoidCallback? onDelete;
 
@@ -22,7 +20,6 @@ class MediaItem {
   });
 }
 
-// The main reusable UNIFIED media viewer widget.
 class UnifiedMediaViewer extends StatefulWidget {
   final List<MediaItem> mediaItems;
   final double aspectRatio;
@@ -30,7 +27,7 @@ class UnifiedMediaViewer extends StatefulWidget {
   const UnifiedMediaViewer({
     super.key,
     required this.mediaItems,
-    this.aspectRatio = 0.8, // A taller default aspect ratio
+    this.aspectRatio = 0.8,
   });
 
   @override
@@ -39,10 +36,10 @@ class UnifiedMediaViewer extends StatefulWidget {
 
 class UnifiedMediaViewerState extends State<UnifiedMediaViewer> {
   late PageController _pageController;
-
-  // Map to hold controllers for each video page, keyed by index
   final Map<int, VideoPlayerController?> _videoControllers = {};
   int _currentPage = 0;
+  // ★ FIX: Track which videos were MANUALLY paused by the user.
+  final Set<int> _manualPauseIndexes = {};
 
   @override
   void initState() {
@@ -51,13 +48,15 @@ class UnifiedMediaViewerState extends State<UnifiedMediaViewer> {
     _pageController.addListener(() {
       final newPage = _pageController.page?.round() ?? 0;
       if (_currentPage != newPage) {
-        // Page has changed, pause the old video
+        // Pause the old video regardless of its state.
         final oldController = _videoControllers[_currentPage];
         oldController?.pause();
 
-        // Optionally, play the new one if it's a video
         final newController = _videoControllers[newPage];
-        newController?.play();
+        // ★ FIX: Only autoplay the new video if it wasn't manually paused.
+        if (newController != null && !_manualPauseIndexes.contains(newPage)) {
+          newController.play();
+        }
 
         setState(() {
           _currentPage = newPage;
@@ -68,22 +67,30 @@ class UnifiedMediaViewerState extends State<UnifiedMediaViewer> {
 
   @override
   void dispose() {
+    // Dispose all controllers when the widget is removed.
+    for (var controller in _videoControllers.values) {
+      controller?.dispose();
+    }
     _pageController.dispose();
     super.dispose();
   }
 
-
-
   /// Public method to allow parent widgets to pause all videos.
-  void pauseAllVideos() {
-    // Iterate through all tracked video controllers and pause them.
-    _videoControllers.values.forEach((controller) {
+  /// Returns true if a video was playing and was paused.
+  bool pauseAllVideos() {
+    bool wasAPlayingVideo = false;
+    _videoControllers.forEach((index, controller) {
       if (controller?.value.isPlaying ?? false) {
         controller?.pause();
+        // ★ FIX: Remember that this video was manually paused from the outside.
+        _manualPauseIndexes.add(index);
+        wasAPlayingVideo = true;
       }
     });
+    // We need to trigger a rebuild in the video pages to update the icon.
+    setState(() {});
+    return wasAPlayingVideo;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -91,44 +98,50 @@ class UnifiedMediaViewerState extends State<UnifiedMediaViewer> {
       return const SizedBox.shrink();
     }
 
-    // A NotificationListener is used to solve the "trapped scrolling" problem.
+    // ★ FIX: Refined NotificationListener to only act on Overscroll.
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        // Allow the parent to scroll when the PageView is at the top or bottom.
+        // This is the "eaten scroll" fix. It only triggers on a true overscroll.
         if (notification is OverscrollNotification && notification.overscroll != 0) {
           final parentScrollable = Scrollable.of(context);
           if (parentScrollable != null) {
-            // Forward the scroll to the parent.
             parentScrollable.position.jumpTo(parentScrollable.position.pixels + notification.overscroll);
           }
+          // Cancel the glow effect from the PageView.
+          return true;
         }
-        return true; // We've handled the notification.
+        // Allow other notifications (like ScrollUpdate) to pass through.
+        return false;
       },
       child: AspectRatio(
         aspectRatio: widget.aspectRatio,
         child: PageView.builder(
           controller: _pageController,
-          scrollDirection: Axis.vertical, // Vertical doom-scrolling
+          scrollDirection: Axis.vertical,
           itemCount: widget.mediaItems.length,
           itemBuilder: (context, index) {
             final item = widget.mediaItems[index];
-            // Render the correct widget based on media type.
             if (item.type == MediaType.video) {
               return _VideoPlayerPage(
                 key: ValueKey('media_video_$index'),
                 item: item,
                 videoIndex: index,
                 isMultiMedia: widget.mediaItems.length > 1,
-                // Pass the callback to register the controller
                 onControllerCreated: (controller) {
                   _videoControllers[index] = controller;
                 },
+                // Pass a callback to handle manual pauses.
+                onManualPause: () {
+                  _manualPauseIndexes.add(index);
+                },
+                onDelete: item.onDelete,
               );
             } else {
               return _ImageViewerPage(
                 key: ValueKey('media_image_$index'),
                 item: item,
                 isMultiMedia: widget.mediaItems.length > 1,
+                onDelete: item.onDelete,
               );
             }
           },
@@ -138,22 +151,25 @@ class UnifiedMediaViewerState extends State<UnifiedMediaViewer> {
   }
 }
 
-// region: Internal Page Widgets for Video and Image
+// region: Internal Page Widgets
 
-// This is the internal widget that manages a single VIDEO page.
 class _VideoPlayerPage extends StatefulWidget {
   final MediaItem item;
   final int videoIndex;
   final bool isMultiMedia;
   final Function(VideoPlayerController?) onControllerCreated;
+  final VoidCallback onManualPause; // ★ FIX: New callback for manual pauses.
   final VoidCallback? onDelete;
 
-  const _VideoPlayerPage({super.key,
+  const _VideoPlayerPage({
+    super.key,
     required this.item,
     required this.videoIndex,
     required this.onControllerCreated,
+    required this.onManualPause,
     this.isMultiMedia = false,
-    this.onDelete});
+    this.onDelete,
+  });
 
   @override
   State<_VideoPlayerPage> createState() => _VideoPlayerPageState();
@@ -161,11 +177,10 @@ class _VideoPlayerPage extends StatefulWidget {
 
 class _VideoPlayerPageState extends State<_VideoPlayerPage> with AutomaticKeepAliveClientMixin {
   VideoPlayerController? _controller;
-  bool _isPlaying = false;
   bool _isInitialized = false;
 
   @override
-  bool get wantKeepAlive => true; // Keep state when off-screen
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -176,26 +191,27 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage> with AutomaticKeepAl
   Future<void> _initializeController() async {
     try {
       final item = widget.item;
-      // Check if the URL is a local file path or a network URL.
-      if (item.networkUrl.startsWith('/')) { // Local file paths start with '/'
+      if (item.networkUrl.startsWith('/')) {
         _controller = VideoPlayerController.file(File(item.networkUrl));
-      } else { // Otherwise, it's a network URL
+      } else {
         _controller = VideoPlayerController.networkUrl(Uri.parse(item.networkUrl));
       }
 
+      // ★ FIX: Add a listener to rebuild the UI when the playing state changes.
       _controller!.addListener(() {
-        if (mounted) setState(() {});
+        if (mounted) {
+          setState(() {});
+        }
       });
+
       await _controller!.initialize();
       await _controller!.setLooping(true);
       widget.onControllerCreated(_controller);
+
       if (mounted) {
         setState(() => _isInitialized = true);
-        // --- SMART AUTOPLAY LOGIC ---
-        // Only autoplay if it's NOT the first video in the feed.
         if (widget.videoIndex != 0) {
           _controller!.play();
-          _isPlaying = true;
         }
       }
     } catch (e) {
@@ -209,17 +225,16 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage> with AutomaticKeepAl
     setState(() {
       if (_controller!.value.isPlaying) {
         _controller!.pause();
-        _isPlaying = false;
+        widget.onManualPause(); // ★ FIX: Notify the parent of a manual pause.
       } else {
         _controller!.play();
-        _isPlaying = true;
       }
     });
   }
 
   @override
   void dispose() {
-    widget.onControllerCreated(null); // Unregister the controller
+    widget.onControllerCreated(null);
     _controller?.dispose();
     super.dispose();
   }
@@ -228,7 +243,9 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage> with AutomaticKeepAl
   Widget build(BuildContext context) {
     super.build(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final bezelColor = isDarkMode ? Colors.pink : Colors.white;
+    final bezelColor = isDarkMode ? Colors.grey[900]! : Colors.white;
+    // ★ FIX: The playing state is now ALWAYS read directly from the controller.
+    final bool isPlaying = _controller?.value.isPlaying ?? false;
 
     return _buildMediaFrame(
       context: context,
@@ -244,7 +261,8 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage> with AutomaticKeepAl
           else
             _buildThumbnail(widget.item.thumbnailUrl),
           if (!_isInitialized) const CupertinoActivityIndicator(color: Colors.white, radius: 15),
-          if (_isInitialized && !_isPlaying)
+          // ★ FIX: Icon visibility is now tied directly to the controller's state.
+          if (_isInitialized && !isPlaying)
             Container(
               color: Colors.black.withOpacity(0.2),
               child: Center(child: Icon(CupertinoIcons.play_circle, color: Colors.white.withOpacity(0.85), size: 60)),
@@ -388,5 +406,3 @@ Widget _buildThumbnail(String? thumbnailUrl) {
   }
   return const Center(child: Icon(Icons.movie, color: Colors.white24, size: 60));
 }
-
-// endregion
