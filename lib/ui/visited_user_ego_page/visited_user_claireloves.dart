@@ -233,13 +233,63 @@ Timestamp: ${DateTime.now().toIso8601String()}
         crossAxisCount: 2,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 2,
+        childAspectRatio: 1.4,
         children: [
           _buildStatCard("Current Loves", "$_currentLoveCount ❤️", Colors.green),
-          _buildStatCard(
-              "Withdrawn Loves", "$_withdrawnLoveCount ❤️", Colors.orange),
-          _buildStatCard("Sessions", "$_sessionCount 📝", Colors.blue),
-          _buildStatCard("Advises", "$_adviseCount 💡", Colors.purple),
+          _buildStatCard("Withdrawn Loves", "$_withdrawnLoveCount ❤️", Colors.orange),
+          _buildLoveStatCard(
+            title: "From Sessions",
+            count: _sessionCount,
+            lovePerUnit: 10,
+            color: Colors.blue,
+          ),
+          _buildLoveStatCard(
+            title: "From Advices",
+            count: _adviseCount,
+            lovePerUnit: 10,
+            color: Colors.purple,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // New detailed stat card for loves calculation
+  Widget _buildLoveStatCard({
+    required String title,
+    required int count,
+    required int lovePerUnit,
+    required Color color,
+  }) {
+    final totalLove = count * lovePerUnit;
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Pallet.colorSecondary.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            '$totalLove ❤️',
+            style: GoogleFonts.lato(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '$count x $lovePerUnit',
+            style: GoogleFonts.lato(fontSize: 12, color: Colors.white54),
+          ),
         ],
       ),
     );

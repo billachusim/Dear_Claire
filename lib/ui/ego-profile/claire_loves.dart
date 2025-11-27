@@ -3,12 +3,10 @@ import 'dart:math';
 
 import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/ui/ego-profile/love_history_chart.dart';
 import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
-import 'package:clairediary/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -183,22 +181,34 @@ class _ClaireLovesState extends State<ClaireLoves> {
     final List<Widget> primaryStats = [
       _buildStatCard("Current Loves", "$_currentLoveCount ❤️", Colors.green),
       _buildStatCard("Withdrawn Loves", "$_withdrawnLoveCount ❤️", Colors.orange),
-      _buildStatCard("Sessions", "$_sessionCount 📝", Colors.blue),
-      _buildStatCard("Advises", "$_adviseCount 💡", Colors.purple),
-      _buildStatCard("From Game Wins", "+$fromGameWins ❤️", Colors.green),
-      _buildStatCard("For Game Loses", "-$forGameLoses ❤️", Colors.red),
+      _buildLoveStatCard(
+        title: "From Sessions",
+        count: _sessionCount,
+        lovePerUnit: 10,
+        color: Colors.blue,
+      ),
+      _buildLoveStatCard(
+        title: "From Advices",
+        count: _adviseCount,
+        lovePerUnit: 10,
+        color: Colors.purple,
+      ),
+      _buildStatCard("From Ego Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
+      _buildStatCard("For Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
     ];
 
     // A list for the stats that will be hidden initially
     final List<Widget> secondaryStats = [
+      _buildStatCard("From Game Wins", "+$fromGameWins ❤️", Colors.green),
+      _buildStatCard("For Game Loses", "-$forGameLoses ❤️", Colors.red),
       _buildStatCard("From Ego Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
-      _buildStatCard("To Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
-      _buildStatCard("Love from Thanks", "+$_loveFromThanks ❤️", Colors.teal),
-      _buildStatCard("Love Sent as Thanks", "-$_loveSentForThanks ❤️", Colors.blueGrey),
+      _buildStatCard("For Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
+      _buildStatCard("From Thanks", "+$_loveFromThanks ❤️", Colors.teal),
+      _buildStatCard("For Thanks", "-$_loveSentForThanks ❤️", Colors.blueGrey),
       _buildStatCard("From Room Visits", "+$_fromRoomVisits ❤️", Colors.cyan),
       _buildStatCard("For Room Visits", "-$_forRoomVisits ❤️", Colors.indigo),
       _buildStatCard("From Reactions", "+$_loveFromReactions ❤️", Colors.amber),
-      _buildStatCard("Sent for Reactions", "-$_loveSentForReactions ❤️", Colors.brown),
+      _buildStatCard("For Reactions", "-$_loveSentForReactions ❤️", Colors.brown),
     ];
 
     return SliverPadding(
@@ -212,7 +222,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
                 crossAxisCount: 2,
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
-                childAspectRatio: 2,
+                childAspectRatio: 1.4,
               ),
               itemCount: primaryStats.length,
               itemBuilder: (context, index) => primaryStats[index],
@@ -264,6 +274,46 @@ class _ClaireLovesState extends State<ClaireLoves> {
     );
   }
 
+  // New detailed stat card for loves calculation
+  Widget _buildLoveStatCard({
+    required String title,
+    required int count,
+    required int lovePerUnit,
+    required Color color,
+  }) {
+    final totalLove = count * lovePerUnit;
+    return Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Pallet.colorSecondary.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+          Text(
+          title,
+          style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          '$totalLove ❤️',
+          style: GoogleFonts.lato(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+            const SizedBox(height: 2),
+            Text(
+              '$count x $lovePerUnit',
+              style: GoogleFonts.lato(fontSize: 12, color: Colors.white54),
+            ),
+          ],
+        ),
+    );
+  }
 
   Widget _buildStatCard(String title, String value, Color color) {
     return Container(
@@ -424,7 +474,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
         final allTransactions = snapshot.data!;
         final transactionsToShow = _showAllTransactions
             ? allTransactions
-            : allTransactions.take(5).toList();
+            : allTransactions.take(20).toList();
 
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
