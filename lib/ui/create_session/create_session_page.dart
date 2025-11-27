@@ -30,6 +30,7 @@ import '../../data/models/transaction_model.dart' as t_model;
 import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/notification_service.dart';
 import '../../services/transaction_service.dart';
+import '../../widgets/unified_media_widget.dart';
 import '../featured/model/comment_session_model.dart';
 import '../featured/model/session.dart';
 import 'create_session_controller.dart';
@@ -90,9 +91,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
 //initialize the audio record file that stores user audio record. null by default
   File? recordFile;
-  String? videoFile;
-  String? videoThumbnail;
-
+  File? videoRecordFile;
+  List<File> _videoFiles = [];
 
 //initialize the image list stores user selected images.
   List<File> imageList = <File>[];
@@ -682,7 +682,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                           SizedBox(
                             height: 10,
                           ),
-                          Text("Please Wait",
+                          Text("Please Wait your Diary Session is being created"
+                              "If you have many videos and images, be patient.",
                               style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -740,6 +741,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         SizedBox(
                           width: 15.w,
                         ),
+
+                        _buildVideoSelector(),
 
                         _buildAudioPlayer(),
 
@@ -1694,6 +1697,113 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   }
 
 
+
+
+  /// Picks multiple videos from the gallery, up to a limit of 3.
+  Future<void> pickVideo() async {
+    // 1. Enforce the max limit before even opening the picker.
+    if (_videoFiles.length >= 3) {
+      showToast("You can select a maximum of 3 videos.");
+      return;
+    }
+
+    try {
+      // 2. Use pickMultipleMedia which is the modern approach.
+      final List<XFile> pickedFiles = await ImagePicker().pickMultipleMedia();
+
+      if (!mounted || pickedFiles.isEmpty) return;
+
+      // 3. IMPORTANT: Filter for video files only.
+      final List<File> selectedVideos = pickedFiles
+          .where((file) {
+        final path = file.path.toLowerCase();
+        return path.endsWith('.mp4') ||
+            path.endsWith('.mov') ||
+            path.endsWith('.avi') ||
+            path.endsWith('.mkv');
+      })
+          .map((file) => File(file.path))
+          .toList();
+
+      if (selectedVideos.isEmpty) {
+        showToast('No video files were selected.');
+        return;
+      }
+
+      // 4. Enforce the 3 video limit after selection.
+      final totalVideos = _videoFiles.length + selectedVideos.length;
+      if (totalVideos > 3) {
+        showToast("You can only add up to 3 videos in total.");
+        final remainingSlots = 3 - _videoFiles.length;
+        _videoFiles.addAll(selectedVideos.take(remainingSlots));
+      } else {
+        _videoFiles.addAll(selectedVideos);
+      }
+
+      setState(() {}); // Refresh the UI
+
+    } catch (e) {
+      print('Error picking videos: $e');
+      showToast('An error occurred while picking videos.');
+    }
+  }
+
+
+
+
+
+
+  /// Builds the UI for video selection and preview using the UnifiedMediaViewer.
+  Widget _buildVideoSelector() {
+    if (_videoFiles.isNotEmpty) {
+      // If videos are selected, show the UnifiedMediaViewer for preview.
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: SizedBox(
+          width: double.infinity, // Prevent layout errors
+          child: UnifiedMediaViewer(
+            // A smaller aspect ratio for a less intrusive preview
+            aspectRatio: 1.4,
+            mediaItems: List.generate(_videoFiles.length, (index) { // <-- Use List.generate
+              final file = _videoFiles[index];
+              return MediaItem(
+                networkUrl: file.path,
+                type: MediaType.video,
+                onDelete: () { // <-- PROVIDE THE FUNCTION
+                  setState(() {
+                    _videoFiles.removeAt(index);
+                  });
+                },
+              );
+            }),
+          ),
+        ),
+      );
+    } else {
+      // If no video is selected, show a new, more visible button.
+      return OutlinedButton.icon(
+        onPressed: pickVideo,
+        icon: const Icon(Icons.videocam_outlined, color: Colors.white),
+        label: const Text(
+          'Add Video',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Colors.white54, width: 1.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+        ),
+      );
+    }
+  }
+
+
+
+
+  // Font selection dialog.
+
   Widget showFontSelectionDialog(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
@@ -1980,10 +2090,39 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       // Optionally, show an error message to the user here.
     }
 
-    if (videoFile != null) {
-      sessionObject.videoUrl = videoFile;
-      sessionObject.containsVideo = true;
+    // --- Multi-Video Upload Logic ---
+    List<String> videoDownloadUrls = [];
+    List<String> thumbnailDownloadUrls = [];
+
+    // Check if there are any videos to upload.
+    if (_videoFiles.isNotEmpty) {// Create a list of all upload tasks (video + thumbnail for each file).
+      List<Future<List<String>>> allUploadTasks = _videoFiles.map((videoFile) {
+        // For each video file, create a pair of futures: one for the video, one for the thumbnail.
+        return Future.wait([
+          _firebaseServices.uploadVideoToStorage(videoFile),
+          _firebaseServices.uploadVideoThumbnailToStorage(videoFile),
+        ]);
+      }).toList();
+
+      // Run all upload tasks in parallel and wait for everything to complete.
+      // `Future.wait` on the list of lists will return a List<List<String>>.
+      List<List<String>> allResults = await Future.wait(allUploadTasks);
+
+      // Process the results to separate video and thumbnail URLs.
+      for (var resultPair in allResults) {
+        videoDownloadUrls.add(resultPair[0]);   // The video URL
+        thumbnailDownloadUrls.add(resultPair[1]); // The thumbnail URL
+      }
+
+      // Assign the lists of URLs to the session object.
+      sessionObject.videoUrls = videoDownloadUrls;
+      sessionObject.videoThumbnailUrls = thumbnailDownloadUrls;
+      sessionObject.containsVideo = true; // Set the flag
+
+      print('${videoDownloadUrls.length} videos uploaded successfully.');
     }
+    // --- End of Multi-Video Upload Logic ---
+
 
     /// Adding a category tag to every session created.
 

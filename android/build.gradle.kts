@@ -1,22 +1,39 @@
+plugins {
+    id("com.google.gms.google-services") version "4.4.4" apply false
+}
+
+// This single 'allprojects' block will configure repositories and enforce the compileSdkVersion for all modules.
 allprojects {
+    // 1. Set up repositories for all modules (app and plugins).
     repositories {
         google()
         mavenCentral()
     }
+
+    // 2. 🔥 Force every Android module (like :video_thumbnail) to use the correct compileSdkVersion.
+    // This runs after the project has been configured, ensuring it overrides any defaults.
+    afterEvaluate {
+        // Check if it's an Android library project.
+        if (project.plugins.hasPlugin("com.android.library")) {
+            // Safely access the 'android' extension.
+            project.extensions.findByType<com.android.build.gradle.LibraryExtension>()?.let {
+                // Set the compileSdk. It reads from gradle.properties (e.g., flutter.compileSdkVersion=36)
+                it.compileSdk = (rootProject.property("flutter.compileSdkVersion") as String).toInt()
+            }
+        }
+    }
 }
 
+// The following blocks are standard Flutter configurations.
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
         .get()
-rootProject.layout.buildDirectory.value(newBuildDir)
+rootProject.layout.buildDirectory.set(newBuildDir)
 
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubprojectBuildDir)
-}
-
-subprojects {
+    project.layout.buildDirectory.set(newSubprojectBuildDir)
     project.evaluationDependsOn(":app")
 }
 
@@ -24,24 +41,3 @@ tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
 
-plugins {
-    id("com.google.gms.google-services") version "4.4.4" apply false
-}
-
-/**
- * 🔥 Force ALL Flutter plugin modules to use compileSdk = 36
- * Kotlin DSL version
- */
-subprojects {
-
-    // Skip the main app module
-    if (project.name == "app") return@subprojects
-
-    plugins.withId("com.android.library") {
-
-        // Configure Android library plugin safely
-        extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
-            compileSdk = 36
-        }
-    }
-}

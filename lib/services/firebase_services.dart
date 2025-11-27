@@ -24,6 +24,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 import '../data/models/transaction_model.dart' as t_model;
 import 'data/notification_model.dart' as pushNotification;
 
@@ -1064,6 +1065,87 @@ class FirebaseServices extends ChangeNotifier {
                 backgroundColor: Color(
                     int.parse(session.colorHex!.replaceAll('#', '0xff'))));
           });
+  }
+
+
+  /// Uploads a video file to Firebase Storage and returns the download URL.
+  ///
+  /// [videoFile]: The video file to be uploaded.
+  /// Returns the public download URL of the uploaded video.
+  Future<String> uploadVideoToStorage(File videoFile) async {
+    try {
+      // Create a unique file name for the video
+      String fileName = 'video_${DateTime.now().millisecondsSinceEpoch}.mp4';
+
+      // Create a reference to the 'videos' folder in Firebase Storage
+      firebase_storage.Reference ref =
+      _storage.ref().child('videos/$fileName');
+
+      // Upload the file
+      firebase_storage.UploadTask uploadTask = ref.putFile(
+        videoFile,
+        firebase_storage.SettableMetadata(contentType: 'video/mp4'),
+      );
+
+      // Await the upload to complete
+      firebase_storage.TaskSnapshot snapshot = await uploadTask;
+
+      // Get the download URL
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      logger.d('Video uploaded successfully: $downloadUrl');
+      return downloadUrl;
+    } catch (e) {
+      logger.e('Error uploading video: $e');
+      return ''; // Return an empty string on error
+    }
+  }
+
+  /// Generates a thumbnail from a video file, uploads it to Firebase Storage,
+  /// and returns the download URL.
+  ///
+  /// [videoFile]: The video file from which to generate a thumbnail.
+  /// Returns the public download URL of the uploaded thumbnail image.
+  Future<String> uploadVideoThumbnailToStorage(File videoFile) async {
+    try {
+      // Generate a thumbnail from the video file
+      final thumbnailBytes = await VideoThumbnail.thumbnailData(
+        video: videoFile.path,
+        imageFormat: ImageFormat.JPEG,
+        maxWidth: 500, // A reasonable width for a thumbnail
+        quality: 75,
+      );
+
+      if (thumbnailBytes == null) {
+        throw Exception('Failed to generate video thumbnail.');
+      }
+
+      // Create a unique file name for the thumbnail
+      String fileName = 'thumb_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      // Create a reference to the 'thumbnails' folder in Firebase Storage
+      firebase_storage.Reference ref =
+      _storage.ref().child('thumbnails/$fileName');
+
+      // Upload the thumbnail data (in bytes)
+      firebase_storage.UploadTask uploadTask = ref.putData(
+        thumbnailBytes,
+        firebase_storage.SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+
+      // Await the upload to complete
+      firebase_storage.TaskSnapshot snapshot = await uploadTask;
+
+      // Get the download URL
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      logger.d('Video thumbnail uploaded successfully: $downloadUrl');
+      return downloadUrl;
+    } catch (e) {
+      logger.e('Error uploading video thumbnail: $e');
+      return ''; // Return an empty string on error
+    }
   }
 
 

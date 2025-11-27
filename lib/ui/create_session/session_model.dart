@@ -5,7 +5,8 @@ class CreateSessionModel {
   bool? containsVideo;
   bool? archived;
   String? audioUrl;
-  String? videoUrl;
+  List<String>? videoUrls;
+  List<String>? videoThumbnailUrls;
   String? colorHex;
   bool? featured;
   bool? flagged;
@@ -36,7 +37,8 @@ class CreateSessionModel {
       this.containsAudio,
       this.containsVideo,
       this.audioUrl,
-      this.videoUrl,
+      this.videoUrls,
+      this.videoThumbnailUrls,
       this.colorHex,
       this.featured = false,
       this.flagged = false,
@@ -108,10 +110,16 @@ class CreateSessionModel {
       containsAudio = json['containsAudio'];
     }
 
-    if (json['videoUrl'] != null) {
-      videoUrl = json['videoUrl'];
+    if (json['videoUrls'] != null) {
+      videoUrls = json['videoUrls'];
       containsVideo = json['containsVideo'];
     }
+
+    if (json['videoThumbnailUrls'] != null) {
+      videoThumbnailUrls = json['videoThumbnailUrls'];
+      containsVideo = json['containsVideo'];
+    }
+
 
     message = json['message'];
     private = json['private'];
@@ -126,8 +134,11 @@ class CreateSessionModel {
     }
   }
 
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
+
+    // --- All your existing data assignments ---
     if (imageUrls != null) {
       data['imageUrls'] = imageUrls!.map((e) => e.toString()).toList();
     }
@@ -147,25 +158,29 @@ class CreateSessionModel {
     data['userAvatarUrl'] = userAvatarUrl;
     data['userId'] = userId;
     data['userNickname'] = userNickname;
-    data['repliesEnabled'] = repliesEnabled;
     data['title'] = title;
     data['archived'] = archived;
     data['colorHex'] = colorHex;
     data['featured'] = featured;
     data['flagged'] = flagged;
+
     if (font == null) {
       data['font'] = '';
     } else {
       data['font'] = font;
     }
+
     if (audioUrl != null) {
       data['audioUrl'] = audioUrl;
       data['containsAudio'] = containsAudio;
     }
 
-    if (videoUrl != null) {
-      data['videoUrl'] = videoUrl;
-      data['containsVideo'] = containsVideo;
+    if (videoUrls != null && videoUrls!.isNotEmpty) {
+      data['videoUrls'] = videoUrls;
+      data['containsVideo'] = true;
+    }
+    if (videoThumbnailUrls != null && videoThumbnailUrls!.isNotEmpty) {
+      data['videoThumbnailUrls'] = videoThumbnailUrls;
     }
 
     data['category1'] = category1;
@@ -173,13 +188,10 @@ class CreateSessionModel {
     data['category3'] = category3;
     data['category4'] = category4;
     data['followers'] = followers;
-
-
-
     data['message'] = message;
     data['private'] = private;
-    data['repliesEnabled'] = repliesEnabled;
 
     return data;
   }
+
 }

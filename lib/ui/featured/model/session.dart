@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Session {
   String? audioUrl;
+  List<String>? videoUrls;
+  List<String>? videoThumbnailUrls;
   String? colorHex;
   bool? archived;
   bool? flagged;
@@ -30,35 +32,38 @@ class Session {
   String? location;
   String? category1;
 
-  Session(
-      {this.audioUrl,
-      this.colorHex,
-      this.archived,
-      this.flagged,
-      this.featured,
-      this.imageUrls,
-      this.message,
-      this.respondentUserId,
-      this.theContext,
-      this.sessionId,
-      this.timeCreated,
-      this.timeLastActivity,
-      this.title,
-      this.userAvatarUrl,
-      this.userId,
-      this.userNickname,
-      this.private,
-      this.repliesEnabled,
-      this.font,
-      this.meTooFollowCount,
-      this.moodId,
-      this.meToos,
-      this.meLove,
-      this.meHiFive,
-      this.location,
-      this.meFlower,
-      this.followers,
-      this.category1});
+  Session({
+    this.audioUrl,
+    this.videoUrls,
+    this.videoThumbnailUrls,
+    this.colorHex,
+    this.archived,
+    this.flagged,
+    this.featured,
+    this.imageUrls,
+    this.message,
+    this.respondentUserId,
+    this.theContext,
+    this.sessionId,
+    this.timeCreated,
+    this.timeLastActivity,
+    this.title,
+    this.userAvatarUrl,
+    this.userId,
+    this.userNickname,
+    this.private,
+    this.repliesEnabled,
+    this.font,
+    this.meTooFollowCount,
+    this.moodId,
+    this.meToos,
+    this.meLove,
+    this.meHiFive,
+    this.location,
+    this.meFlower,
+    this.followers,
+    this.category1,
+  });
 
   factory Session.fromJson(json) {
     return Session(
@@ -66,6 +71,8 @@ class Session {
       flagged: json['flagged'] ?? false,
       archived: json['archived'] ?? false,
       audioUrl: json['audioUrl'] ?? '',
+      videoUrls: json['videoUrls'] != null ? List<String>.from(json['videoUrls']) : [],
+      videoThumbnailUrls: json['videoThumbnailUrls'] != null ? List<String>.from(json['videoThumbnailUrls']) : [],
       private: json['private'] ?? false,
       repliesEnabled: json['repliesEnabled'] ?? false,
       timeLastActivity: json['timeLastActivity'],
@@ -97,6 +104,7 @@ class Session {
 
   @override
   String toString() {
+    // Note: I am not adding the new fields to the toString() to avoid clutter, but you can if you wish.
     return 'Session{audioUrl: $audioUrl, location: $location, colorHex: $colorHex, archived: $archived, flagged: $flagged, featured: $featured, imageUrls: $imageUrls, message: $message, respondentUserId: $respondentUserId, theContext: $theContext,  sessionId: $sessionId, timeCreated: $timeCreated, timeLastActivity: $timeLastActivity, title: $title, userAvatarUrl: $userAvatarUrl, userId: $userId, userNickname: $userNickname, private: $private, repliesEnabled: $repliesEnabled, font: $font, meTooFollowCount: $meTooFollowCount, moodId: $moodId, followers: $followers, meToos: $meToos, meLove: $meLove, meHiFive: $meHiFive, meFlower: $meFlower, category1: $category1,}';
   }
 }
