@@ -83,6 +83,10 @@ class _MetooButtonState extends State<MetooButton>
     );
   }
 
+  // In lib/widgets/metoo_button.dart
+
+// ... (other parts of the class)
+
   // This method sets up the button's initial state from the data it receives.
   void _initializeState() {
     // Initialize counts from the widget's properties.
@@ -91,18 +95,20 @@ class _MetooButtonState extends State<MetooButton>
     hiFiveCount = widget.sorry ?? 0;
     flowerCount = widget.me2 ?? 0;
 
+    // --- CORRECTED LOGIC ---
     // Check if the current user has reacted before.
     if (currentUser != null) {
-      if (widget.session.meToos!.contains(currentUser!.uid)) {
+      // The order of checks MUST match the _buildReactions() list order
+      if (widget.session.meToos?.contains(currentUser!.uid) ?? false) { // Cheers👍 is now index 0
         hasUserReacted = true;
         userReactionIndex = 0;
-      } else if (widget.session.meLove!.contains(currentUser!.uid)) {
+      } else if (widget.session.meLove?.contains(currentUser!.uid) ?? false) { // Thanks💕 is index 1
         hasUserReacted = true;
         userReactionIndex = 1;
-      } else if (widget.session.meHiFive!.contains(currentUser!.uid)) {
+      } else if (widget.session.meHiFive?.contains(currentUser!.uid) ?? false) { // Sorry🖐 is index 2
         hasUserReacted = true;
         userReactionIndex = 2;
-      } else if (widget.session.meFlower!.contains(currentUser!.uid)) {
+      } else if (widget.session.meFlower?.contains(currentUser!.uid) ?? false) { // Me2🌺 is index 3
         hasUserReacted = true;
         userReactionIndex = 3;
       }
@@ -110,16 +116,16 @@ class _MetooButtonState extends State<MetooButton>
 
     // Determine which reaction to display initially.
     if (hasUserReacted) {
-      selectedReaction = _buildReactions()[userReactionIndex!];
+      // Safety check to prevent RangeError if userReactionIndex is null
+      if (userReactionIndex != null) {
+        selectedReaction = _buildReactions()[userReactionIndex!];
+      } else {
+        // Fallback if something goes wrong
+        selectedReaction = _reactionForMood(widget.session.moodId ?? 0);
+      }
     } else {
       selectedReaction = _reactionForMood(widget.session.moodId ?? 0);
     }
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   // This is the core logic that handles the transaction and state update.
@@ -138,10 +144,14 @@ class _MetooButtonState extends State<MetooButton>
     final String sessionOwnerId = widget.session.userId!;
     const int reactionCost = 1;
 
+    // Get the specific reaction value, e.g., 'Cheers👍'
+    final String reactionValue = _buildReactions()[index].value;
+
     // 3. Prevent self-reaction transactions.
     if (reactingUserId == sessionOwnerId) {
       showToast("You reacted to your own session.");
-      await _firebaseServices.addUsersReactionToASession(context, index,
+      // Pass the reaction string value instead of the index
+      await _firebaseServices.addUsersReactionToASession(context, reactionValue,
           session: widget.session, sender: reactingUser.nickname ?? '');
       _updateLocalUiState(index); // Just update the UI, no love transfer.
       return;
@@ -173,7 +183,8 @@ class _MetooButtonState extends State<MetooButton>
       showToast("1 ❤️ sent to the session owner!");
 
       // Update the reaction list in Firestore.
-      await _firebaseServices.addUsersReactionToASession(context, index,
+      // Pass the reaction string value instead of the index
+      await _firebaseServices.addUsersReactionToASession(context, reactionValue,
           session: widget.session, sender: reactingUser.nickname ?? '');
 
       // Permanently update the local UI state.
@@ -191,10 +202,11 @@ class _MetooButtonState extends State<MetooButton>
       setState(() {
         hasUserReacted = true;
         userReactionIndex = index;
-        if (index == 0) cheersCount++;
-        if (index == 1) loveCount++;
-        if (index == 2) hiFiveCount++;
-        if (index == 3) flowerCount++;
+        // The order of checks MUST match the _buildReactions() list order
+        if (index == 0) cheersCount++; // Cheers👍
+        if (index == 1) loveCount++; // Thanks💕
+        if (index == 2) hiFiveCount++; // Sorry🖐
+        if (index == 3) flowerCount++; // Me2🌺
         // Update the displayed reaction to the one the user just selected.
         selectedReaction = _buildReactions()[index];
       });
@@ -203,6 +215,7 @@ class _MetooButtonState extends State<MetooButton>
 
   // Builds the list of reaction widgets, now using the internal state counts.
   List<Reaction> _buildReactions() {
+    // IMPORTANT: The order here dictates the index for all other logic.
     return [
       Reaction(
         value: 'Cheers👍',

@@ -453,7 +453,7 @@ class _CustomSearchCardState extends State<CustomSearchCard> {
                         final _userModel =
                         await firebaseServices.getUserInfo();
 
-                        firebaseServices.addUsersReactionToASession(
+                        firebaseServices.addUsersReactionToASessionByIndex(
                             context, index,
                             session: widget.element,
                             sender: _userModel.nickname ?? '');

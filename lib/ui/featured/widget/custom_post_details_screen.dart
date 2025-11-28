@@ -445,7 +445,7 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
                                                 final _userModel =
                                                 await firebaseServices.getUserInfo();
 
-                                                firebaseServices.addUsersReactionToASession(
+                                                firebaseServices.addUsersReactionToASessionByIndex(
                                                     context, index,
                                                     session: _session,
                                                     sender: _userModel.nickname ?? '');

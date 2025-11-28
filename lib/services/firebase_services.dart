@@ -1617,9 +1617,67 @@ class FirebaseServices extends ChangeNotifier {
     }
   }
 
+  /// BRIDGE FUNCTION: For compatibility with old code that still passes an index.
+  Future<void> addUsersReactionToASessionByIndex(
+      BuildContext context,
+      int index, // Accepts the old integer index
+          {required Session session, required String sender}
+      ) async {
+    // This function converts the old index into the new string value.
+    String reactionType;
+    switch (index) {
+      case 0: reactionType = 'Cheers👍'; break;
+      case 1: reactionType = 'Thanks💕'; break;
+      case 2: reactionType = 'Sorry🖐'; break;
+      case 3: reactionType = 'Me2🌺'; break;
+      default:
+      // If the index is unknown, fallback to a generic 'react' type.
+        reactionType = 'react';
+        break;
+    }
+
+    // Now, call the primary, corrected function with the string value.
+    await addUsersReactionToASession(
+      context,
+      reactionType,
+      session: session,
+      sender: sender,
+    );
+  }
+
   /// add users reaction to a posts
-  Future<void>? addUsersReactionToASession(BuildContext context, int index,
-      {required Session session, required String sender}) async {
+  Future<void> addUsersReactionToASession(
+      BuildContext context,
+      String reactionType, // Keep this as String
+          {required Session session, required String sender}
+      ) async {
+    // --- This is your new logic ---
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final String userId = currentUser.uid;
+    final String sessionId = session.sessionId!;
+    final String sessionOwnerId = session.userId!;
+
+    // --- This is your existing logic, slightly adapted ---
+
+    // Map the string reaction back to an index for your ReactionHandler
+    int getIndexForReaction(String type) {
+      switch (type) {
+        case 'Cheers👍': return 0;
+        case 'Thanks💕': return 1;
+        case 'Sorry🖐': return 2;
+        case 'Me2🌺': return 3;
+        default: return -1;
+      }
+    }
+
+    final int index = getIndexForReaction(reactionType);
+    if (index == -1) {
+      logger.e("Invalid reaction type received: $reactionType");
+      return;
+    }
+
     _usersID = await getUsersId();
     final pushNotification.NotificationModel _notificationModel =
         pushNotification.NotificationModel(
@@ -1629,20 +1687,32 @@ class FirebaseServices extends ChangeNotifier {
           title: session.title ?? '', body: '$sender reacted to the session.'),
     );
 
-    ReactionHandler.reactionType(session, index).contains(_usersID)
-        ? _firebaseFirestore
-            .collection(AppString.appFeaturedSessions)
-            .doc(session.sessionId)
-            .update(ReactionHandler.returnReaction(index, _usersID!,
-                addReaction: false))
-            .then((value) => logger.d('Successfully remove reaction'))
-        : _firebaseFirestore
-            .collection(AppString.appFeaturedSessions)
-            .doc(session.sessionId)
-            .update(ReactionHandler.returnReaction(index, _usersID!,
-                addReaction: true))
-            .then((value) => notificationService
-                .sendNotification(_notificationModel.toJson()));
+    // Your existing reaction toggle logic
+    if (ReactionHandler.reactionType(session, index).contains(_usersID)) {
+      _firebaseFirestore
+          .collection(AppString.appFeaturedSessions)
+          .doc(session.sessionId)
+          .update(ReactionHandler.returnReaction(index, _usersID!, addReaction: false))
+          .then((value) => logger.d('Successfully remove reaction'));
+    } else {
+      _firebaseFirestore
+          .collection(AppString.appFeaturedSessions)
+          .doc(session.sessionId)
+          .update(ReactionHandler.returnReaction(index, _usersID!, addReaction: true))
+          .then((value) async {
+
+        // *** CORRECTED: Call the existing saveUserActivity method with the right parameters ***
+        await saveUserActivity(
+          activityMessage: 'You reacted $reactionType to a session', // The message your function expects
+          activityType: reactionType,
+          recipientId: sessionOwnerId,
+          sessionId: sessionId,
+        );
+
+        notificationService.sendNotification(_notificationModel.toJson());
+        logger.d('Successfully added reaction and saved activity');
+      });
+    }
   }
 
   /// adds reaction to users comment
@@ -1865,54 +1935,6 @@ class FirebaseServices extends ChangeNotifier {
         .collection(AppString.appFeaturedSessions)
         .doc(sessionId)
         .update({'featured': true});
-  }
-
-
-  // ADD THIS NEW METHOD inside your FirebaseServices class.
-
-  /// ONE-TIME MIGRATION SCRIPT.
-  /// This method will update old activity documents to include the new 'involvedUsers' field.
-  Future<void> backfillInvolvedUsersField() async {
-    print("MIGRATION STARTED: Backfilling 'involvedUsers' field...");
-    try {
-      final activityCollection = _firebaseFirestore.collection(AppString.userActivity);
-      final snapshot = await activityCollection.get(); // Get all documents
-
-      final WriteBatch batch = _firebaseFirestore.batch();
-      int updatedCount = 0;
-
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-
-        // Check if 'involvedUsers' field is missing or null
-        if (data['involvedUsers'] == null) {
-          final clientId = data['clientId'] as String?;
-          final userId = data['userId'] as String?;
-
-          if (clientId != null && userId != null) {
-            // Create the new array
-            final List<String> involvedUsers = [clientId];
-            if (clientId != userId) {
-              involvedUsers.add(userId);
-            }
-            // Add the update operation to the batch
-            batch.update(doc.reference, {'involvedUsers': involvedUsers});
-            updatedCount++;
-          }
-        }
-      }
-
-      // If there are documents to update, commit the batch
-      if (updatedCount > 0) {
-        await batch.commit();
-        print("✅ MIGRATION COMPLETE: Successfully updated $updatedCount documents.");
-      } else {
-        print("MIGRATION INFO: No documents needed to be updated.");
-      }
-
-    } catch (e) {
-      print("❌ MIGRATION FAILED: $e");
-    }
   }
 
 

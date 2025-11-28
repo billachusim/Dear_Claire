@@ -495,7 +495,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   if (reactingUserId == sessionOwnerId) {
                                     // User is reacting to their own post, just update the reaction locally.
                                     // The original logic handles this well.
-                                    firebaseServices.addUsersReactionToASession(
+                                    firebaseServices.addUsersReactionToASessionByIndex(
                                       context,
                                       index,
                                       session: _session,
@@ -536,7 +536,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   // --- 4. UPDATE REACTION COUNT ON SUCCESS ---
                                   if (success) {
                                     // Only after a successful transaction, update the reaction on the session.
-                                    firebaseServices.addUsersReactionToASession(
+                                    firebaseServices.addUsersReactionToASessionByIndex(
                                       context,
                                       index,
                                       session: _session,

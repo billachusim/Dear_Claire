@@ -353,7 +353,7 @@ class FeaturedSessionCard extends StatelessWidget {
                       final _userModel =
                       await firebaseServices.getUserInfo();
 
-                      firebaseServices.addUsersReactionToASession(
+                      firebaseServices.addUsersReactionToASessionByIndex(
                           context, index,
                           session: element,
                           sender: _userModel.nickname ?? '');

@@ -610,7 +610,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                     if (reactingUserId == sessionOwnerId) {
                       // User is reacting to their own post, just update the reaction locally.
                       // The original logic handles this well.
-                      firebaseServices.addUsersReactionToASession(
+                      firebaseServices.addUsersReactionToASessionByIndex(
                         context,
                         index,
                         session: widget.element,
@@ -651,7 +651,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                     // --- 4. UPDATE REACTION COUNT ON SUCCESS ---
                     if (success) {
                       // Only after a successful transaction, update the reaction on the session.
-                      firebaseServices.addUsersReactionToASession(
+                      firebaseServices.addUsersReactionToASessionByIndex(
                         context,
                         index,
                         session: widget.element,

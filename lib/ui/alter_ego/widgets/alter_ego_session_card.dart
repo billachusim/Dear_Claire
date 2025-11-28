@@ -282,7 +282,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                     color: textColor,
                   onReactionChanged: (reaction, index) async {
 
-                      firebaseServices.addUsersReactionToASession(
+                      firebaseServices.addUsersReactionToASessionByIndex(
                           context, index,
                           session: element,
                           sender: "Claire");

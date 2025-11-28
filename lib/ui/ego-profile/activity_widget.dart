@@ -1,5 +1,4 @@
 import 'package:clairediary/services/user_activity_model.dart';
-import 'package:clairediary/ui/ego-profile/profile.dart';
 import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/helper.dart';
@@ -11,7 +10,6 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../services/firebase_services.dart';
 import '../../utils/constant.dart';
 import '../../widgets/toast.dart';
 import '../chats/data/chatroompodo.dart';
@@ -152,19 +150,27 @@ class _ActivityWidgetState extends State<ActivityWidget> {
 
   // Your formatting function remains the same
   String _formatActivityType(String? type) {
-    if (type == null) return 'Unknown';
+    if (type == null) return 'Weird';
     switch (type) {
-      case 'session': return 'Sharing Diary';
+      case 'session': return 'Diary Session';
       case 'comment': return 'Advising';
-      case 'react': return 'Reacting';
-      case 'thank': return 'Giving Thanks';
+      case 'react': return 'Reacting'; // Keep old 'react' for historical data
+      case 'thank': return 'Thanksgiving';
       case 'follow': return 'Following';
-      case 'game_win': return 'Winning Games';
+      case 'game_win': return 'Playing Games';
       case 'room_join': return 'Joining Rooms';
-      case 'visit_ego': return 'Visiting an Ego';
+      case 'visit_ego': return 'Visiting Ego';
       case 'send_love': return 'Sending Love';
-      case 'cash_out': return 'Requesting Payout';
-      case 'mantra': return 'Leaving a Mantra';
+      case 'cash_out': return 'Cashing Out';
+      case 'mantra': return 'Whispering Mantra';
+
+    // Add cases for the new raw reaction values
+      case 'Cheers👍':
+      case 'Thanks💕':
+      case 'Sorry🖐':
+      case 'Me2🌺':
+        return type; // Return the raw value directly
+
       default:
         return type.replaceAll('_', ' ').split(' ').map((str) => str.isNotEmpty ? str[0].toUpperCase() + str.substring(1) : '').join(' ');
     }
@@ -402,17 +408,23 @@ class _ActivityWidgetState extends State<ActivityWidget> {
 
 
 class UserActivityCard extends StatelessWidget {
-  final UserActivityModel element;  const UserActivityCard({Key? key, required this.element}) : super(key: key);
+  final UserActivityModel element;
+  const UserActivityCard({Key? key, required this.element}) : super(key: key);
 
   IconData _getIconForActivity(String? type) {
-    // Your icon logic is already perfect.
+    // Add icons for the new reaction types
     switch (type) {
       case 'session':
         return Icons.article_outlined;
       case 'comment':
         return Icons.comment_outlined;
+    // Make all reactions use the same favorite icon
       case 'react':
-        return Icons.favorite_border;
+      case 'Cheers👍':
+      case 'Thanks💕':
+      case 'Sorry🖐':
+      case 'Me2🌺':
+        return Icons.favorite_border; // All reactions use the heart icon
       case 'thank':
         return Icons.card_giftcard;
       case 'follow':
@@ -447,9 +459,13 @@ class UserActivityCard extends StatelessWidget {
           case 'react':
           case 'thank':
           case 'follow':
+          case 'Cheers👍':
+          case 'Thanks💕':
+          case 'Sorry🖐':
+          case 'Me2🌺':
             if (element.sessionId != null && element.sessionId!.isNotEmpty) {
               PageRouter.gotoWidget(
-                  NotifiedSessionDetails(sessionId: element.sessionId), context);
+                  NotifiedSessionDetails(sessionId: element.sessionId!), context);
             }
             break;
 
@@ -497,7 +513,6 @@ class UserActivityCard extends StatelessWidget {
 
             // Default case for all other activities
           default:
-          // For 'game_win', 'mantra', etc., navigate to the user's own profile.
             Navigator.of(context).pushNamed(AppRoutes.egoPage);
             print("Navigating to Ego Profile for activity type '$activityType'.");
             break;
