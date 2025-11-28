@@ -14,6 +14,7 @@ import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/enums.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -27,17 +28,7 @@ import '../../../widgets/custom_image_widget.dart';
 import '../../../widgets/play_advise_voice_note.dart';
 import '../../../widgets/toast.dart';
 
-class ChatWidget extends StatelessWidget {
-
-  UserModel userModel = UserModel();
-  User? currentUser = FirebaseAuth.instance.currentUser;
-
-  int maxFailedLoadAttempts = 3;
-
-
-  getUser() async {
-    userModel = await firebaseServices.getUserInfo();
-  }
+class ChatWidget extends StatefulWidget {
 
   String? documentID;
   ChatModel? chatModel;
@@ -45,9 +36,6 @@ class ChatWidget extends StatelessWidget {
 
   /// use this bool value to determine when a chat is sub chat or not
   bool? isSubChat;
-  late String visitedUsersID;
-  late String visitedEgoName;
-  late UserModel _userModel;
 
   ChatWidget(
       {Key? key,
@@ -57,10 +45,33 @@ class ChatWidget extends StatelessWidget {
       this.isSubChat = false})
       : super(key: key);
 
+  @override
+  State<ChatWidget> createState() => _ChatWidgetState();
+}
 
+class _ChatWidgetState extends State<ChatWidget> {
+  UserModel userModel = UserModel();
+
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
+  int maxFailedLoadAttempts = 3;
+
+  getUser() async {
+    userModel = await firebaseServices.getUserInfo();
+  }
+
+  late String visitedUsersID;
+
+  late String visitedEgoName;
+
+  late UserModel _userModel;
 
   InterstitialAd? _leaveChatInterstitialAd;
+
   int _leaveChatInterstitialLoadAttempts = 0;
+
+  bool _isAvatarLoading = false;
+
 
   /// Create Leave Chat interstitial ad.
 
@@ -102,8 +113,6 @@ class ChatWidget extends StatelessWidget {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -122,7 +131,7 @@ class ChatWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           FutureBuilder(
-              future: firebaseServices.getUserWithId(id: chatModel!.userId),
+              future: firebaseServices.getUserWithId(id: widget.chatModel!.userId),
               builder: (_, AsyncSnapshot<UserModel> snap) {
                 if (!snap.hasData) {
                   return Container();
@@ -135,6 +144,10 @@ class ChatWidget extends StatelessWidget {
                   children: [
                     GestureDetector(
                       onTap: () async {
+                        setState(() {
+                          _isAvatarLoading = true;
+                        });
+                        try {
                         // --- 1. SETUP TRANSACTION DETAILS ---
                         final visitingUser = await firebaseServices.getUserInfo();
                         final String visitedUserId = _user.userId!;
@@ -212,27 +225,55 @@ class ChatWidget extends StatelessWidget {
                                   visitedEgoName: visitedEgoName),
                               context);
                         }
+                        } finally {
+                          // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                          // This runs no matter how the try block exits.
+                          if (mounted) {
+                            setState(() {
+                              _isAvatarLoading = false;
+                            });
+                          }
+                        }
                       },
-                      child: CachedNetworkImage(
-                          width: 40,
-                          height: 40,
-                          imageUrl: _user!.avatarUrl ?? '',
-                          imageBuilder: (context, imageProvider) => Container(
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: imageProvider,
-                                    fit: BoxFit.fill,
+                      child: Stack(
+                        children: [
+                          CachedNetworkImage(
+                              width: 40,
+                              height: 40,
+                              imageUrl: _user!.avatarUrl ?? '',
+                              imageBuilder: (context, imageProvider) => Container(
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.fill,
+                                      ),
+                                    ),
                                   ),
+                              placeholder: (context, url) =>
+                                  Center(child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) => Image.asset(
+                                "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                    width: 35,
+                                    height: 35,
+                                  ) //Icon(Icons.error),
+                              ),
+                          // --- 2. ADD THE OVERLAY LOADER ---
+                          if (_isAvatarLoading)
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: CupertinoActivityIndicator(
+                                  color: Colors.white,
                                 ),
                               ),
-                          placeholder: (context, url) =>
-                              Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) => Image.asset(
-                            "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                width: 35,
-                                height: 35,
-                              ) //Icon(Icons.error),
-                          ),
+                            ),
+                        ],
+                      ),
                     ),
                     SizedBox(
                       width: 4,
@@ -333,7 +374,7 @@ class ChatWidget extends StatelessWidget {
                               height: 2,
                             ),
                             Text(
-                                timeConverter(chatModel!.timeCreated!,
+                                timeConverter(widget.chatModel!.timeCreated!,
                                     time: TimeConverterEnum.Comment),
                                 textAlign: TextAlign.start,
                                 maxLines: 1,
@@ -349,12 +390,12 @@ class ChatWidget extends StatelessWidget {
                     Column(
                       children: [
                         Text(
-                          chatModel!.members!.length.toString() + " Joined",
+                          widget.chatModel!.members!.length.toString() + " Joined",
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
 
-                              color: _isCompleted(chatModel, chatRoomPodo)
+                              color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
                                   ? Pallet.colorPrimaryDark
                                   : Pallet.colorSplashScreen),
                         ),
@@ -363,7 +404,7 @@ class ChatWidget extends StatelessWidget {
 
                         StreamBuilder(
                             stream: firebaseServices
-                                .getSubMessages(documentID!, chatRoomPodo!, chatModel!),
+                                .getSubMessages(widget.documentID!, widget.chatRoomPodo!, widget.chatModel!),
                             builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
                               if (snapShot.hasError) {
                                 return Container();
@@ -401,19 +442,12 @@ class ChatWidget extends StatelessWidget {
               }
             },
             linkStyle: TextStyle(color: Colors.blue),
-            text: chatModel!.message!,
+            text: widget.chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
                 fontSize: 18.0,
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.normal),
-          ),
-
-          Visibility(
-            visible: chatModel?.audioUrl != '',
-            child: Container(
-              child: PlayAdviseVoiceNote(filePath: chatModel!.audioUrl),
-            ),
           ),
 
 
@@ -425,15 +459,15 @@ class ChatWidget extends StatelessWidget {
               child: Row(
                 children: [
                   Visibility(
-                      visible: chatModel!.image1 != '',
+                      visible: widget.chatModel!.image1 != '',
                       child: GestureDetector(
                         onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: chatModel!.image1.toString()), context);
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image1.toString()), context);
                         },
                         child: CachedNetworkImage(
                             height: 85,
                             width: 75,
-                            imageUrl: chatModel!.image1.toString(),
+                            imageUrl: widget.chatModel!.image1.toString(),
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),
@@ -456,15 +490,15 @@ class ChatWidget extends StatelessWidget {
                   ),
                   Visibility(
                       visible:
-                      chatModel!.image2 != '',
+                      widget.chatModel!.image2 != '',
                       child: GestureDetector(
                         onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: chatModel!.image2.toString()), context);
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image2.toString()), context);
                         },
                         child: CachedNetworkImage(
                             height: 75,
                             width: 75,
-                            imageUrl: chatModel!.image2.toString(),
+                            imageUrl: widget.chatModel!.image2.toString(),
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),
@@ -487,18 +521,25 @@ class ChatWidget extends StatelessWidget {
             ),
           ),
 
+          Visibility(
+            visible: widget.chatModel?.audioUrl != '',
+            child: Container(
+              child: PlayAdviseVoiceNote(filePath: widget.chatModel!.audioUrl),
+            ),
+          ),
+
           Row(
             children: [
 
               Visibility(
-                visible: chatModel!.userId == currentUser!.uid,
+                visible: widget.chatModel!.userId == currentUser!.uid,
                 child: GestureDetector(
                   onTap: () {
-                    if (chatModel!.userId == currentUser?.uid)
+                    if (widget.chatModel!.userId == currentUser?.uid)
                       deletedRoomAlertDialog(context);
                   },
                   child: Visibility(
-                    visible: chatModel!.userId == currentUser?.uid,
+                    visible: widget.chatModel!.userId == currentUser?.uid,
                     child: Container(
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
@@ -518,18 +559,18 @@ class ChatWidget extends StatelessWidget {
               ),
 
 
-              if (chatModel!.members!.contains(currentUser!.uid))
+              if (widget.chatModel!.members!.contains(currentUser!.uid))
               Align(
                 alignment: Alignment.bottomLeft,
                 child: InkWell(
                   onTap: () {
                     _createLeaveChatInterstitialAd();
                     visitedUsersID = _userModel.userId ?? '';
-                      showToast('Thanks for your time. Just a short ad please.');
+                      showToast('Thanks for your time. A short ad coming.');
 
                     deleteSubChat();
                     updateMembers(joining: false);
-                    firebaseServices.unsubscribeToChatRoom(chatModel!.userId.toString());
+                    firebaseServices.unsubscribeToChatRoom(widget.chatModel!.userId.toString());
 
                     Future.delayed(Duration(seconds: 4), () {
                       _showLeaveChatInterstitialAd();
@@ -560,7 +601,7 @@ class ChatWidget extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13,
                               fontWeight: FontWeight.w800,
-                              color: _isCompleted(chatModel, chatRoomPodo)
+                              color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
                                   ? Pallet.colorPrimaryDark
                                   : Pallet.colorSplashScreen),
                         ),
@@ -625,12 +666,12 @@ class ChatWidget extends StatelessWidget {
               Spacer(flex: 1,),
 
 
-              if (chatModel!.members!.contains(currentUser!.uid))
+              if (widget.chatModel!.members!.contains(currentUser!.uid))
                 Align(
                   alignment: Alignment.bottomRight,
                   child: InkWell(
                     onTap: () async { // Make sure this is async
-                      final String roomOwnerId = chatModel!.userId!;
+                      final String roomOwnerId = widget.chatModel!.userId!;
                       final String visitorId = currentUser!.uid;
 
                       // --- NEW AND CORRECTED LOGIC ---
@@ -657,7 +698,7 @@ class ChatWidget extends StatelessWidget {
                           amountToSend: entryCost,
                           taxAmount: taxAmount,
                           totalDebitAmount: totalDebit,
-                          senderTransactionDesc: "5❤️ to enter ${chatModel!.userNickname}'s room.",
+                          senderTransactionDesc: "5❤️ to enter ${widget.chatModel!.userNickname}'s room.",
                           receiverTransactionDesc: "3❤️ for ${visitorData.nickname} visiting your room.",
                           claireTransactionDesc: "2❤️ Tax from room entry.",
                           // Pass the stat increments
@@ -675,8 +716,8 @@ class ChatWidget extends StatelessWidget {
                       PageRouter.gotoWidget(
                           SubChatScreen(
                             documentID: roomOwnerId,
-                            chatModel: chatModel,
-                            chatRoomPodo: chatRoomPodo,
+                            chatModel: widget.chatModel,
+                            chatRoomPodo: widget.chatRoomPodo,
                           ),
                           context);
                     },
@@ -715,9 +756,9 @@ class ChatWidget extends StatelessWidget {
 
 
 
-              if (!chatModel!.members!.contains(currentUser!.uid))
+              if (!widget.chatModel!.members!.contains(currentUser!.uid))
                 Visibility(
-                  visible: !_isCompleted(chatModel, chatRoomPodo),
+                  visible: !_isCompleted(widget.chatModel, widget.chatRoomPodo),
                   child: Align(
                   alignment: Alignment.bottomRight,
                   child: InkWell(
@@ -725,7 +766,7 @@ class ChatWidget extends StatelessWidget {
                       visitedUsersID = _userModel.userId ?? '';
                       String thisUser = visitedUsersID;
 
-                      if (!_isCompleted(chatModel, chatRoomPodo))
+                      if (!_isCompleted(widget.chatModel, widget.chatRoomPodo))
 
                         updateMembers(joining: true);
                         showToast('Welcome. Start chatting with positive vibes.');
@@ -734,8 +775,8 @@ class ChatWidget extends StatelessWidget {
                       PageRouter.gotoWidget(
                             SubChatScreen(
                                 documentID: thisUser,
-                                chatModel: chatModel,
-                                chatRoomPodo: chatRoomPodo,
+                                chatModel: widget.chatModel,
+                                chatRoomPodo: widget.chatRoomPodo,
                             ),
                             context);
                     },
@@ -759,11 +800,11 @@ class ChatWidget extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            '${chatModel!.members!.length} JOIN',
+                            '${widget.chatModel!.members!.length} JOIN',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
-                                color: _isCompleted(chatModel, chatRoomPodo)
+                                color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
                                     ? Pallet.blueGreyBgColor
                                     : Pallet.colorSplashScreen,
                             ),
@@ -774,9 +815,9 @@ class ChatWidget extends StatelessWidget {
                 ),
 
 
-              if (!chatModel!.members!.contains(currentUser!.uid))
+              if (!widget.chatModel!.members!.contains(currentUser!.uid))
                 Visibility(
-                  visible: _isCompleted(chatModel, chatRoomPodo),
+                  visible: _isCompleted(widget.chatModel, widget.chatRoomPodo),
                   child: Align(
                     alignment: Alignment.bottomRight,
                     child: InkWell(
@@ -810,9 +851,9 @@ class ChatWidget extends StatelessWidget {
                           ),
                           child: Center(
                             child: Text(
-                              '${chatModel!.members!.length} Room Full',
+                              '${widget.chatModel!.members!.length} Room Full',
                               style: TextStyle(
-                                  color: _isCompleted(chatModel, chatRoomPodo)
+                                  color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
                                       ? Pallet.blueGreyBgColor
                                       : Pallet.colorSplashScreen,
                                   fontWeight: FontWeight.w600),
@@ -835,14 +876,13 @@ class ChatWidget extends StatelessWidget {
   void updateMembers({required bool joining}) async {
     final userID = currentUser!.uid.toString();
     if (joining) {
-      chatModel!.members!.add(userID);
+      widget.chatModel!.members!.add(userID);
     }
     if (!joining) {
-      chatModel!.members!.remove(userID);
+      widget.chatModel!.members!.remove(userID);
     }
-    firebaseServices.updateMembers(chatModel!.userId.toString(), chatRoomPodo, chatModel!);
+    firebaseServices.updateMembers(widget.chatModel!.userId.toString(), widget.chatRoomPodo, widget.chatModel!);
   }
-
 
   deletedRoomAlertDialog(BuildContext context) {
 
@@ -860,7 +900,7 @@ class ChatWidget extends StatelessWidget {
         deleteChat();
         deleteSubChat();
         showToast("You have deleted the chat. Keep the aura clean!");
-        firebaseServices.unsubscribeToChatRoom(chatRoomPodo!.id.toString());
+        firebaseServices.unsubscribeToChatRoom(widget.chatRoomPodo!.id.toString());
         Navigator.of(context).pop();
       },
     );
@@ -889,25 +929,22 @@ class ChatWidget extends StatelessWidget {
   Future<void> deleteChat() async {
     final collection = FirebaseFirestore.instance
         .collection(AppString.appChats)
-        .doc(chatRoomPodo!.id.toString())
-        .collection(chatRoomPodo!.title!);
-    await collection.doc(chatModel!.userId.toString()).delete();
-    firebaseServices.unsubscribeToChatRoom(chatModel!.userId.toString());
+        .doc(widget.chatRoomPodo!.id.toString())
+        .collection(widget.chatRoomPodo!.title!);
+    await collection.doc(widget.chatModel!.userId.toString()).delete();
+    firebaseServices.unsubscribeToChatRoom(widget.chatModel!.userId.toString());
     logger.d('Successfully deleted an chat session');
   }
-
 
   Future<void> deleteSubChat() async {
     final collection = FirebaseFirestore.instance
         .collection(AppString.appChats)
-        .doc(chatRoomPodo!.id.toString())
-        .collection(chatRoomPodo!.title!)
-        .doc(chatModel!.userId.toString())
-        .collection(chatModel!.userId.toString());
-    await collection.doc(chatModel!.userId.toString()).delete();
-    firebaseServices.unsubscribeToChatRoom(chatModel!.userId.toString());
+        .doc(widget.chatRoomPodo!.id.toString())
+        .collection(widget.chatRoomPodo!.title!)
+        .doc(widget.chatModel!.userId.toString())
+        .collection(widget.chatModel!.userId.toString());
+    await collection.doc(widget.chatModel!.userId.toString()).delete();
+    firebaseServices.unsubscribeToChatRoom(widget.chatModel!.userId.toString());
     logger.d('Successfully deleted an chat session');
   }
-
-
 }

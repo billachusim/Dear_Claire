@@ -780,16 +780,6 @@ class _CommentWidgetState extends State<CommentWidget> {
                 fontWeight: FontWeight.normal),
           ),
 
-          Visibility(
-            visible: widget.commentSessionModel!.audioUrl! != 'null',
-            child: Container(
-              child: widget.commentSessionModel!.audioUrl!.isNotEmpty
-                  ? PlayAdviseVoiceNote(
-                      filePath: widget.commentSessionModel!.audioUrl)
-                  : SizedBox.shrink(),
-            ),
-          ),
-
           SizedBox(
             height: 8,
           ),
@@ -844,6 +834,17 @@ class _CommentWidgetState extends State<CommentWidget> {
                   ),
                 );
               },
+            ),
+          ),
+
+
+          Visibility(
+            visible: widget.commentSessionModel!.audioUrl! != 'null',
+            child: Container(
+              child: widget.commentSessionModel!.audioUrl!.isNotEmpty
+                  ? PlayAdviseVoiceNote(
+                  filePath: widget.commentSessionModel!.audioUrl)
+                  : SizedBox.shrink(),
             ),
           ),
 

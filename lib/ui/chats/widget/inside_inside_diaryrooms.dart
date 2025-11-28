@@ -8,6 +8,7 @@ import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/enums.dart';
 import 'package:clairediary/utils/helper.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -18,7 +19,7 @@ import '../../../widgets/play_advise_voice_note.dart';
 import '../../../widgets/toast.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 
-class InsideInsideChatWidget extends StatelessWidget {
+class InsideInsideChatWidget extends StatefulWidget {
   String? documentID;
   ChatModel? chatModel;
   ChatRoomPodo? chatRoomPodo;
@@ -26,8 +27,6 @@ class InsideInsideChatWidget extends StatelessWidget {
   /// use this bool value to determine when a chat is sub chat or not
   bool? isSubChat;
 
-  late String visitedUsersID;
-  late String visitedEgoName;
 
   InsideInsideChatWidget(
       {Key? key,
@@ -36,6 +35,17 @@ class InsideInsideChatWidget extends StatelessWidget {
         required this.chatRoomPodo,
         this.isSubChat = false})
       : super(key: key);
+
+  @override
+  State<InsideInsideChatWidget> createState() => _InsideInsideChatWidgetState();
+}
+
+class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
+  late String visitedUsersID;
+
+  late String visitedEgoName;
+  bool _isAvatarLoading = false;
+
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +59,7 @@ class InsideInsideChatWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           FutureBuilder(
-              future: firebaseServices.getUserWithId(id: chatModel!.userId),
+              future: firebaseServices.getUserWithId(id: widget.chatModel!.userId),
               builder: (_, AsyncSnapshot<UserModel> snap) {
                 if (!snap.hasData) {
                   return Container();
@@ -61,104 +71,135 @@ class InsideInsideChatWidget extends StatelessWidget {
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        // --- 1. SETUP TRANSACTION DETAILS ---
-                        final visitingUser = await firebaseServices.getUserInfo();
-                        final String visitedUserId = _user.userId!;
-                        final String visitedEgoName = _user.nickname!;
-                        const int visitCost = 1;
-                        // --- 2. HANDLE SELF-VISIT ---
-                        if (visitingUser.userId == visitedUserId) {
-                          // If visiting self, just navigate without a transaction.
-                          PageRouter.gotoWidget(
-                              VisitedUserEgoProfilePage(
-                                  visitedUsersID: visitedUserId,
-                                  visitedEgoName: visitedEgoName),
-                              context);
-                          return;
-                        }
+                        setState(() {
+                          _isAvatarLoading = true;
+                        });
+                        try {
+                          // --- 1. SETUP TRANSACTION DETAILS ---
+                          final visitingUser = await firebaseServices.getUserInfo();
+                          final String visitedUserId = _user.userId!;
+                          final String visitedEgoName = _user.nickname!;
+                          const int visitCost = 1;
 
-                        // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
-                        // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
-                        if (visitingUser.userType == "REGULAR" &&
-                            visitingUser.currentLoveCount < 500) { // Changed from 50 to 500 for consistency
-                          showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                          return;
-                        }
-
-                        if (visitingUser.currentLoveCount < visitCost) {
-                          showToast("You need at least 1 ❤️ to visit a profile.");
-                          return;
-                        }
-
-                        // --- 4. PERFORM THE LOVE TRANSACTION ---
-                        final bool success =
-                        await firebaseServices.transferLoveBetweenUsers(
-                          senderId: visitingUser.userId!,
-                          receiverId: visitedUserId,
-                          amountToSend: visitCost,
-                          taxAmount: 0,
-                          totalDebitAmount: visitCost,
-                          senderTransactionDesc:
-                          "1❤️ for visiting ${visitedEgoName}'s Ego.",
-                          receiverTransactionDesc:
-                          "1❤️ from ${visitingUser.nickname} visiting your Ego.",
-                          claireTransactionDesc:
-                          "Tax from a profile visit.", // Will be 0, but required
-                          forProfileVisits: 1, // Stat for the sender
-                          fromProfileVisits: 1, // Stat for the receiver
-                          metadata: {
-                            'reason': 'profile_visit',
-                            'visitedUserId': visitedUserId
-                          },
-                        );
-
-                        // --- 5. NAVIGATE ON SUCCESS ---
-                        if (success) {
-                          // --- SEND NOTIFICATION ---
-                          try {
-                            await notificationService.sendNotification(
-                                push_notification.NotificationModel(
-                                    topic: visitedUserId,
-                                    data: push_notification.Data(id: visitedUserId, route: 'wallet'),
-                                    notification: push_notification.Notification(
-                                        title: "Someone Visited Your Ego!",
-                                        body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                    )
-                                ).toJson()
-                            );
-                          } catch (e) {
-                            print("Failed to send profile visit notification: $e");
-                            // Do not block navigation if notification fails
+                          // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
+                          if (visitingUser.userId == visitedUserId) {
+                            // If visiting self, just navigate without a transaction.
+                            PageRouter.gotoWidget(
+                                VisitedUserEgoProfilePage(
+                                    visitedUsersID: visitedUserId,
+                                    visitedEgoName: visitedEgoName),
+                                context);
+                            return;
                           }
 
-                          // --- NAVIGATE ---
-                          // Only navigate to the profile if the transaction was successful.
-                          PageRouter.gotoWidget(
-                              VisitedUserEgoProfilePage(
-                                  visitedUsersID: visitedUserId,
-                                  visitedEgoName: visitedEgoName),
-                              context);
+                          if (visitingUser.userType == "REGULAR" &&
+                              visitingUser.currentLoveCount < 100) {
+                            showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                            return;
+                          }
+
+                          if (visitingUser.currentLoveCount < visitCost) {
+                            showToast("You need at least 1 ❤️ to visit a profile.");
+                            return;
+                          }
+
+                          // --- 3. PERFORM THE LOVE TRANSACTION ---
+                          final bool success =
+                          await firebaseServices.transferLoveBetweenUsers(
+                            senderId: visitingUser.userId!,
+                            receiverId: visitedUserId,
+                            amountToSend: visitCost,
+                            taxAmount: 0,
+                            totalDebitAmount: visitCost,
+                            senderTransactionDesc:
+                            "1❤️ visiting ${visitedEgoName}'s Ego.",
+                            receiverTransactionDesc:
+                            "1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                            claireTransactionDesc:
+                            "Tax from a profile visit.", // Will be 0, but required
+                            forProfileVisits: 1, // Stat for the sender
+                            fromProfileVisits: 1, // Stat for the receiver
+                            metadata: {
+                              'reason': 'profile_visit',
+                              'visitedUserId': visitedUserId
+                            },
+                          );
+
+                          // --- 4. NAVIGATE ON SUCCESS ---
+                          if (success) {
+                            // --- SEND NOTIFICATION ---
+                            try {
+                              await notificationService.sendNotification(
+                                  push_notification.NotificationModel(
+                                      topic: visitedUserId,
+                                      data: push_notification.Data(id: visitedUserId, route: 'wallet'),
+                                      notification: push_notification.Notification(
+                                          title: "Someone Visited Your Ego!",
+                                          body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
+                                      )
+                                  ).toJson()
+                              );
+                            } catch (e) {
+                              print("Failed to send profile visit notification: $e");
+                              // Do not block navigation if notification fails
+                            }
+
+                            // --- NAVIGATE ---
+                            // Only navigate to the profile if the transaction was successful.
+                            PageRouter.gotoWidget(
+                                VisitedUserEgoProfilePage(
+                                    visitedUsersID: visitedUserId,
+                                    visitedEgoName: visitedEgoName),
+                                context);
+                          }
+                        } finally {
+                          // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                          // This runs no matter how the try block exits.
+                          if (mounted) {
+                            setState(() {
+                              _isAvatarLoading = false;
+                            });
+                          }
                         }
                       },
-                      child: CachedNetworkImage(
-                          width: 55,
-                          height: 55,
-                          imageUrl: _user!.avatarUrl ?? '',
-                          imageBuilder: (context, imageProvider) => Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.fill,
+                      child: Stack(
+                        children: [
+                          CachedNetworkImage(
+                              width: 40,
+                              height: 40,
+                              imageUrl: _user!.avatarUrl ?? '',
+                              imageBuilder: (context, imageProvider) => Container(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: imageProvider,
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              ),
+                              placeholder: (context, url) =>
+                                  Center(child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) => Image.asset(
+                                "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                width: 35,
+                                height: 35,
+                              ) //Icon(Icons.error),
+                          ),
+                          // --- 2. ADD THE OVERLAY LOADER ---
+                          if (_isAvatarLoading)
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: CupertinoActivityIndicator(
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
-                          ),
-                          placeholder: (context, url) =>
-                              Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) => Image.asset(
-                            "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                            width: 35,
-                            height: 35,
-                          ) //Icon(Icons.error),
+                        ],
                       ),
                     ),
                     SizedBox(
@@ -262,7 +303,7 @@ class InsideInsideChatWidget extends StatelessWidget {
                             height: 2,
                           ),
                           Text(
-                              timeConverter(chatModel!.timeCreated!,
+                              timeConverter(widget.chatModel!.timeCreated!,
                                   time: TimeConverterEnum.Comment),
                               textAlign: TextAlign.start,
                               maxLines: 1,
@@ -280,19 +321,12 @@ class InsideInsideChatWidget extends StatelessWidget {
             height: 6,
           ),
           Text(
-            chatModel!.message!,
+            widget.chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
                 fontSize: 17.0,
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.bold),
-          ),
-
-          Visibility(
-            visible: chatModel?.audioUrl != '',
-            child: Container(
-              child: PlayAdviseVoiceNote(filePath: chatModel!.audioUrl),
-            ),
           ),
 
 
@@ -303,15 +337,15 @@ class InsideInsideChatWidget extends StatelessWidget {
               child: Row(
                 children: [
                   Visibility(
-                      visible: chatModel!.image1 != '',
+                      visible: widget.chatModel!.image1 != '',
                       child: GestureDetector(
                         onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: chatModel!.image1.toString()), context);
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image1.toString()), context);
                         },
                         child: CachedNetworkImage(
                             height: 120,
                             width: 100,
-                            imageUrl: chatModel!.image1.toString(),
+                            imageUrl: widget.chatModel!.image1.toString(),
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),
@@ -334,15 +368,15 @@ class InsideInsideChatWidget extends StatelessWidget {
                   ),
                   Visibility(
                       visible:
-                      chatModel!.image2 != '',
+                      widget.chatModel!.image2 != '',
                       child: GestureDetector(
                         onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: chatModel!.image2.toString()), context);
+                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image2.toString()), context);
                         },
                         child: CachedNetworkImage(
                             height: 120,
                             width: 100,
-                            imageUrl: chatModel!.image2.toString(),
+                            imageUrl: widget.chatModel!.image2.toString(),
                             imageBuilder: (context, imageProvider) => Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(25),
@@ -365,6 +399,14 @@ class InsideInsideChatWidget extends StatelessWidget {
             ),
           ),
 
+
+          Visibility(
+            visible: widget.chatModel?.audioUrl != '',
+            child: Container(
+              child: PlayAdviseVoiceNote(filePath: widget.chatModel!.audioUrl),
+            ),
+          ),
+
           SizedBox(
             height: 2,
           ),
@@ -374,7 +416,7 @@ class InsideInsideChatWidget extends StatelessWidget {
 
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                  child: OnlineRoomVisitorsStream(roomData: chatRoomPodo!, roomModel: chatModel!, docId: documentID!,)),
+                  child: OnlineRoomVisitorsStream(roomData: widget.chatRoomPodo!, roomModel: widget.chatModel!, docId: widget.documentID!,)),
 
               Spacer(flex: 1,),
 
@@ -387,7 +429,7 @@ class InsideInsideChatWidget extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20.0),
                       border: Border.all(
-                          color: _isCompleted(chatModel, chatRoomPodo)
+                          color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
                               ? Pallet.blueGreyBgColor
                               : Pallet.colorSplashScreen),
                       gradient: LinearGradient(
@@ -404,9 +446,9 @@ class InsideInsideChatWidget extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        '${chatModel!.members!.length} Online',
+                        '${widget.chatModel!.members!.length} Online',
                         style: TextStyle(
-                            color: _isCompleted(chatModel, chatRoomPodo)
+                            color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
                                 ? Pallet.blueGreyBgColor
                                 : Pallet.colorSplashScreen),
                       ),
