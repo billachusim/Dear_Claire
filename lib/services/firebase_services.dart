@@ -183,6 +183,8 @@ class FirebaseServices extends ChangeNotifier {
     int fromThanks = 0,
     int forReactions = 0,
     int fromReactions = 0,
+    int forProfileVisits = 0,
+    int fromProfileVisits = 0,
   }) async {
     const String claireId = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
     final DocumentReference senderDoc = _firebaseFirestore.collection('users').doc(senderId);
@@ -207,6 +209,7 @@ class FirebaseServices extends ChangeNotifier {
           'forRoomVisits': FieldValue.increment(forRoomVisits),
           'loveSentForThanks': FieldValue.increment(forThanks),
           'loveSentForReactions': FieldValue.increment(forReactions),
+          'loveSentForVisits': FieldValue.increment(forProfileVisits),
         });
 
         // 2. Credit the receiver and update their stats
@@ -216,6 +219,7 @@ class FirebaseServices extends ChangeNotifier {
           'fromRoomVisits': FieldValue.increment(fromRoomVisits),
           'loveFromThanks': FieldValue.increment(fromThanks),
           'loveFromReactions': FieldValue.increment(fromReactions),
+          'profileVisitLove': FieldValue.increment(fromProfileVisits),
         });
 
         // 3. Credit Claire's treasury with the tax

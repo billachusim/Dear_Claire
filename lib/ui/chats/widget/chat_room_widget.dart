@@ -63,7 +63,7 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
           amount: roomEntryCost,
           type: t_model.TransactionType.debit,
           // User is spending
-          userTransactionDescription: "Spent 1 ❤️ to enter ${widget.element
+          userTransactionDescription: "Spent 1❤️ to enter ${widget.element
               .title}.",
           forRoomVisits: roomEntryCost,
           // Increment the 'forRoomVisits' stat

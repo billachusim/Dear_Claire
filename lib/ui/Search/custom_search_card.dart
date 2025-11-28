@@ -14,7 +14,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/firebase_services.dart';
+import '../../services/notification_service.dart';
 import '../../services/user_model.dart';
 import '../../widgets/custom_image_widget.dart';
 import '../../widgets/toast.dart';
@@ -113,9 +115,9 @@ class _CustomSearchCardState extends State<CustomSearchCard> {
                           "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                           claireTransactionDesc: "Tax from a profile visit.",
                           // Will be 0, but required
-                          forRoomVisits: 1,
+                          forProfileVisits: 1,
                           // Stat for the sender
-                          fromRoomVisits: 1,
+                          fromProfileVisits: 1,
                           // Stat for the receiver
                           metadata: {
                             'reason': 'profile_visit',
@@ -125,6 +127,24 @@ class _CustomSearchCardState extends State<CustomSearchCard> {
 
                         // --- 4. NAVIGATE ON SUCCESS ---
                         if (success) {
+                          // --- SEND NOTIFICATION ---
+                          try {
+                            await notificationService.sendNotification(
+                                push_notification.NotificationModel(
+                                    topic: visitedUserId,
+                                    data: push_notification.Data(id: visitedUserId, route: 'wallet'),
+                                    notification: push_notification.Notification(
+                                        title: "Someone Visited Your Ego!",
+                                        body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
+                                    )
+                                ).toJson()
+                            );
+                          } catch (e) {
+                            print("Failed to send profile visit notification: $e");
+                            // Do not block navigation if notification fails
+                          }
+
+                          // --- NAVIGATE ---
                           // Only navigate to the profile if the transaction was successful.
                           PageRouter.gotoWidget(
                               VisitedUserEgoProfilePage(
@@ -228,7 +248,7 @@ class _CustomSearchCardState extends State<CustomSearchCard> {
                               }
 
                               if (visitingUser.currentLoveCount < visitCost) {
-                                showToast("You need at least 1 ❤️ to visit a profile.");
+                                showToast("You need at least 1❤️ to visit a profile.");
                                 return;
                               }
 
@@ -248,9 +268,9 @@ class _CustomSearchCardState extends State<CustomSearchCard> {
                                 claireTransactionDesc:
                                 "Tax from a profile visit.",
                                 // Will be 0, but required
-                                forRoomVisits: 1,
+                                forProfileVisits: 1,
                                 // Stat for the sender
-                                fromRoomVisits: 1,
+                                fromProfileVisits: 1,
                                 // Stat for the receiver
                                 metadata: {
                                   'reason': 'profile_visit',
@@ -260,6 +280,24 @@ class _CustomSearchCardState extends State<CustomSearchCard> {
 
                               // --- 5. NAVIGATE ON SUCCESS ---
                               if (success) {
+                                // --- SEND NOTIFICATION ---
+                                try {
+                                  await notificationService.sendNotification(
+                                      push_notification.NotificationModel(
+                                          topic: visitedUserId,
+                                          data: push_notification.Data(id: visitedUserId, route: 'wallet'),
+                                          notification: push_notification.Notification(
+                                              title: "Someone Visited Your Ego!",
+                                              body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
+                                          )
+                                      ).toJson()
+                                  );
+                                } catch (e) {
+                                  print("Failed to send profile visit notification: $e");
+                                  // Do not block navigation if notification fails
+                                }
+
+                                // --- NAVIGATE ---
                                 // Only navigate to the profile if the transaction was successful.
                                 PageRouter.gotoWidget(
                                     VisitedUserEgoProfilePage(

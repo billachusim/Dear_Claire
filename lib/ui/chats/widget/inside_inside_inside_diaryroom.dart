@@ -7,11 +7,14 @@ import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/helper.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../services/data/notification_model.dart' as push_notification;
 import '../../../services/firebase_services.dart';
+import '../../../services/notification_service.dart';
 import '../../../utils/strings.dart';
 import '../../../widgets/custom_image_widget.dart';
 import '../../../widgets/play_advise_voice_note.dart';
@@ -47,6 +50,8 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
   late String visitedEgoName;
 
   String? _commentTime;
+  bool _isAvatarLoading = false;
+
 
   String timeAgo() {
     final commentTime = widget.chatModel?.timeCreated?.toDate();
@@ -85,6 +90,10 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                   children: [
                     GestureDetector(
                       onTap: () async {
+                        setState(() {
+                          _isAvatarLoading = true;
+                        });
+                        try {
                         // --- 1. SETUP TRANSACTION DETAILS ---
                         final visitingUser = await firebaseServices.getUserInfo();
                         final String visitedUserId = _user.userId!;
@@ -128,8 +137,8 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                           "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                           claireTransactionDesc:
                           "Tax from a profile visit.", // Will be 0, but required
-                          forRoomVisits: 1, // Stat for the sender
-                          fromRoomVisits: 1, // Stat for the receiver
+                          forProfileVisits: 1, // Stat for the sender
+                          fromProfileVisits: 1, // Stat for the receiver
                           metadata: {
                             'reason': 'profile_visit',
                             'visitedUserId': visitedUserId
@@ -138,6 +147,24 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
 
                         // --- 5. NAVIGATE ON SUCCESS ---
                         if (success) {
+                          // --- SEND NOTIFICATION ---
+                          try {
+                            await notificationService.sendNotification(
+                                push_notification.NotificationModel(
+                                    topic: visitedUserId,
+                                    data: push_notification.Data(id: visitedUserId, route: 'wallet'),
+                                    notification: push_notification.Notification(
+                                        title: "Someone Visited Your Ego!",
+                                        body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
+                                    )
+                                ).toJson()
+                            );
+                          } catch (e) {
+                            print("Failed to send profile visit notification: $e");
+                            // Do not block navigation if notification fails
+                          }
+
+                          // --- NAVIGATE ---
                           // Only navigate to the profile if the transaction was successful.
                           PageRouter.gotoWidget(
                               VisitedUserEgoProfilePage(
@@ -145,26 +172,54 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                                   visitedEgoName: visitedEgoName),
                               context);
                         }
+                        } finally {
+                          // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                          // This runs no matter how the try block exits.
+                          if (mounted) {
+                            setState(() {
+                              _isAvatarLoading = false;
+                            });
+                          }
+                        }
                       },
-                      child: CachedNetworkImage(
-                          width: 35,
-                          height: 35,
-                          imageUrl: _user!.avatarUrl ?? '',
-                          imageBuilder: (context, imageProvider) => Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: imageProvider,
-                                fit: BoxFit.fill,
+                      child: Stack(
+                        children: [
+                          CachedNetworkImage(
+                              width: 35,
+                              height: 35,
+                              imageUrl: _user!.avatarUrl ?? '',
+                              imageBuilder: (context, imageProvider) => Container(
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: imageProvider,
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              ),
+                              placeholder: (context, url) =>
+                                  Center(child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) => Image.asset(
+                                "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                width: 35,
+                                height: 35,
+                              ) //Icon(Icons.error),
+                          ),
+                          // --- 2. ADD THE OVERLAY LOADER ---
+                          if (_isAvatarLoading)
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: CupertinoActivityIndicator(
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
-                          ),
-                          placeholder: (context, url) =>
-                              Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) => Image.asset(
-                            "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                            width: 35,
-                            height: 35,
-                          ) //Icon(Icons.error),
+                        ],
                       ),
                     ),
                     SizedBox(
@@ -220,8 +275,8 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
                                 "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                                 claireTransactionDesc:
                                 "Tax from a profile visit.", // Will be 0, but required
-                                forRoomVisits: 1, // Stat for the sender
-                                fromRoomVisits: 1, // Stat for the receiver
+                                forProfileVisits: 1, // Stat for the sender
+                                fromProfileVisits: 1, // Stat for the receiver
                                 metadata: {
                                   'reason': 'profile_visit',
                                   'visitedUserId': visitedUserId
@@ -230,6 +285,24 @@ class _InsideInsideInsideChatWidgetState extends State<InsideInsideInsideChatWid
 
                               // --- 5. NAVIGATE ON SUCCESS ---
                               if (success) {
+                                // --- SEND NOTIFICATION ---
+                                try {
+                                  await notificationService.sendNotification(
+                                      push_notification.NotificationModel(
+                                          topic: visitedUserId,
+                                          data: push_notification.Data(id: visitedUserId, route: 'wallet'),
+                                          notification: push_notification.Notification(
+                                              title: "Someone Visited Your Ego!",
+                                              body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
+                                          )
+                                      ).toJson()
+                                  );
+                                } catch (e) {
+                                  print("Failed to send profile visit notification: $e");
+                                  // Do not block navigation if notification fails
+                                }
+
+                                // --- NAVIGATE ---
                                 // Only navigate to the profile if the transaction was successful.
                                 PageRouter.gotoWidget(
                                     VisitedUserEgoProfilePage(

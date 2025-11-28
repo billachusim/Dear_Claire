@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../data/models/transaction_model.dart' as t_model;
 import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/notification_service.dart';
 import '../../services/transaction_service.dart';

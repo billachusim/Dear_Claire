@@ -288,9 +288,9 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                             "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                                             claireTransactionDesc: "Tax from a profile visit.",
                                             // Will be 0, but required
-                                            forRoomVisits: 1,
+                                            forProfileVisits: 1,
                                             // Stat for the sender
-                                            fromRoomVisits: 1,
+                                            fromProfileVisits: 1,
                                             // Stat for the receiver
                                             metadata: {
                                               'reason': 'profile_visit',
@@ -608,7 +608,22 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                             session: _session,
                                             sender: reactingUser.nickname ?? '',
                                           );
-                                          saveUserMe2Activity(); // Your existing activity tracking
+                                          saveUserMe2Activity();
+                                          try {
+                                            await notificationService.sendNotification(
+                                                push_notification.NotificationModel(
+                                                    topic: reactingUserId,
+                                                    data: push_notification.Data(id: reactingUserId, route: 'wallet'),
+                                                    notification: push_notification.Notification(
+                                                        title: "Someone Visited Your Ego!",
+                                                        body: "${reactingUser.nickname} reacted to your session ${_session.title} with 1❤️."
+                                                    )
+                                                ).toJson()
+                                            );
+                                          } catch (e) {
+                                            print("Failed to send profile visit notification: $e");
+                                            // Do not block navigation if notification fails
+                                          }
                                           showToast("1❤️ sent to the session owner!");
                                         }
                                         // If !success, the service method already shows a toast.
@@ -709,12 +724,28 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                                 .saveUserActivity(
                                               activityType: 'follow',
                                               activityMessage:
-                                              "You started following the session: '${_session.title}'.",
+                                              "You are following the session: '${_session.title}'.",
                                               recipientId: sessionOwnerId,
                                               recipientNickname:
                                               _session.userNickname,
                                               sessionId: _session.sessionId,
                                             );
+
+                                            try {
+                                              await notificationService.sendNotification(
+                                                  push_notification.NotificationModel(
+                                                      topic: sessionOwnerId,
+                                                      data: push_notification.Data(id: sessionOwnerId, route: 'wallet'),
+                                                      notification: push_notification.Notification(
+                                                          title: "Someone reacted to your session!",
+                                                          body: "Someone reacted to your session with 1❤️."
+                                                      )
+                                                  ).toJson()
+                                              );
+                                            } catch (e) {
+                                              print("Failed to send profile visit notification: $e");
+                                              // Do not block navigation if notification fails
+                                            }
 
                                             showToast(
                                                 "Now following! 1❤️ was sent to the author.");

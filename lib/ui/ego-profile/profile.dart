@@ -24,6 +24,8 @@ import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../services/data/notification_model.dart' as push_notification;
+import '../../services/notification_service.dart';
 import '../routes/page_router_animation.dart';
 import '../splash_screen/rotate_logo.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
@@ -988,8 +990,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                               "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
                                               claireTransactionDesc:
                                               "Tax from a profile visit.", // Will be 0, but required
-                                              forRoomVisits: 1, // Stat for the sender
-                                              fromRoomVisits: 1, // Stat for the receiver
+                                              forProfileVisits: 1, // Stat for the sender
+                                              fromProfileVisits: 1, // Stat for the receiver
                                               metadata: {
                                                 'reason': 'profile_visit',
                                                 'visitedUserId': visitedUserId
@@ -998,6 +1000,24 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
                                             // --- 5. NAVIGATE ON SUCCESS ---
                                             if (success) {
+                                              // --- SEND NOTIFICATION ---
+                                              try {
+                                                await notificationService.sendNotification(
+                                                    push_notification.NotificationModel(
+                                                        topic: visitedUserId,
+                                                        data: push_notification.Data(id: visitedUserId, route: 'wallet'),
+                                                        notification: push_notification.Notification(
+                                                            title: "Someone Visited Your Ego!",
+                                                            body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
+                                                        )
+                                                    ).toJson()
+                                                );
+                                              } catch (e) {
+                                                print("Failed to send profile visit notification: $e");
+                                                // Do not block navigation if notification fails
+                                              }
+
+                                              // --- NAVIGATE ---
                                               // Only navigate to the profile if the transaction was successful.
                                               PageRouter.gotoWidget(
                                                   VisitedUserEgoProfilePage(

@@ -211,6 +211,15 @@ class _CommentWidgetState extends State<CommentWidget> {
 
         if (success) {
           showToast("...and you too!"); // Keep original toast message for regular users
+
+          // After a successful transaction, save the activity to Firestore.
+          await firebaseServices.saveUserActivity(
+            activityType: 'thank',
+            activityMessage: "You thanked ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advise on ${widget.featuredSessionModel?.title}.",
+            recipientId: thankedUserId, // The user who received the thanks
+            sessionId: widget.featuredSessionModel?.sessionId,
+          );
+
           // The 'thanks' array is updated by the service, but we update it here explicitly
           // to ensure the UI reflects the change immediately.
           await FirebaseFirestore.instance
@@ -249,7 +258,7 @@ class _CommentWidgetState extends State<CommentWidget> {
         amountToSend: thankYouCost,
         taxAmount: taxAmount,
         totalDebitAmount: totalDebit,
-        senderTransactionDesc: "3❤️ for thanks an advise from ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}.",
+        senderTransactionDesc: "3❤️ for thanks to an advise from ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}.",
         receiverTransactionDesc: "3❤️ from ${thanker.nickname} for your advise.",
         claireTransactionDesc: "No Tax from a 'Thank You' transaction.",
         forThanks: thankYouCost,
@@ -267,7 +276,7 @@ class _CommentWidgetState extends State<CommentWidget> {
         // After a successful transaction, save the activity to Firestore.
         await firebaseServices.saveUserActivity(
           activityType: 'thank',
-          activityMessage: "You thanked ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advise.",
+          activityMessage: "You thanked ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advise on ${widget.featuredSessionModel?.title}.",
           recipientId: thankedUserId, // The user who received the thanks
           sessionId: widget.featuredSessionModel?.sessionId,
         );
@@ -480,7 +489,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                     }
 
                     if (visitingUser.currentLoveCount < visitCost) {
-                      showToast("You need at least 1 ❤️ to visit a profile.");
+                      showToast("You need at least 1❤️ to visit a profile.");
                       return;
                     }
 
@@ -498,9 +507,9 @@ class _CommentWidgetState extends State<CommentWidget> {
                       "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                       claireTransactionDesc: "Tax from a profile visit.",
                       // Will be 0, but required
-                      forRoomVisits: 1,
+                      forProfileVisits: 1,
                       // Stat for the sender
-                      fromRoomVisits: 1,
+                      fromProfileVisits: 1,
                       // Stat for the receiver
                       metadata: {
                         'reason': 'profile_visit',
@@ -510,6 +519,24 @@ class _CommentWidgetState extends State<CommentWidget> {
 
                     // --- 4. NAVIGATE ON SUCCESS ---
                     if (success) {
+                      // --- SEND NOTIFICATION ---
+                      try {
+                        await notificationService.sendNotification(
+                            pushNotification.NotificationModel(
+                                topic: visitedUserId,
+                                data: pushNotification.Data(id: visitedUserId, route: 'wallet'),
+                                notification: pushNotification.Notification(
+                                    title: "Someone Visited Your Ego!",
+                                    body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
+                                )
+                            ).toJson()
+                        );
+                      } catch (e) {
+                        print("Failed to send profile visit notification: $e");
+                        // Do not block navigation if notification fails
+                      }
+
+                      // --- NAVIGATE ---
                       // Only navigate to the profile if the transaction was successful.
                       PageRouter.gotoWidget(
                           VisitedUserEgoProfilePage(
@@ -629,8 +656,8 @@ class _CommentWidgetState extends State<CommentWidget> {
                           receiverTransactionDesc:
                           "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                           claireTransactionDesc: "Tax from a profile visit.",
-                          forRoomVisits: 1, // Stat for the sender
-                          fromRoomVisits: 1, // Stat for the receiver
+                          forProfileVisits: 1, // Stat for the sender
+                          fromProfileVisits: 1, // Stat for the receiver
                           metadata: {
                             'reason': 'profile_visit',
                             'visitedUserId': visitedUserId,
@@ -640,6 +667,24 @@ class _CommentWidgetState extends State<CommentWidget> {
 
                         // --- 5. NAVIGATE ON SUCCESS ---
                         if (success) {
+                          // --- SEND NOTIFICATION ---
+                          try {
+                            await notificationService.sendNotification(
+                                pushNotification.NotificationModel(
+                                    topic: visitedUserId,
+                                    data: pushNotification.Data(id: visitedUserId, route: 'wallet'),
+                                    notification: pushNotification.Notification(
+                                        title: "Someone Visited Your Ego!",
+                                        body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
+                                    )
+                                ).toJson()
+                            );
+                          } catch (e) {
+                            print("Failed to send profile visit notification: $e");
+                            // Do not block navigation if notification fails
+                          }
+
+                          // --- NAVIGATE ---
                           // Only navigate to the profile if the transaction was successful.
                           PageRouter.gotoWidget(
                               VisitedUserEgoProfilePage(

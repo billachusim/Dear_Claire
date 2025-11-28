@@ -20,6 +20,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../services/data/notification_model.dart' as push_notification;
+import '../../../services/notification_service.dart';
 import '../../../utils/strings.dart';
 import '../../../widgets/custom_image_widget.dart';
 import '../../../widgets/play_advise_voice_note.dart';
@@ -175,8 +177,8 @@ class ChatWidget extends StatelessWidget {
                           "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                           claireTransactionDesc:
                           "Tax from a profile visit.", // Will be 0, but required
-                          forRoomVisits: 1, // Stat for the sender
-                          fromRoomVisits: 1, // Stat for the receiver
+                          forProfileVisits: 1, // Stat for the sender
+                          fromProfileVisits: 1, // Stat for the receiver
                           metadata: {
                             'reason': 'profile_visit',
                             'visitedUserId': visitedUserId
@@ -185,6 +187,24 @@ class ChatWidget extends StatelessWidget {
 
                         // --- 4. NAVIGATE ON SUCCESS ---
                         if (success) {
+                          // --- SEND NOTIFICATION ---
+                          try {
+                            await notificationService.sendNotification(
+                                push_notification.NotificationModel(
+                                    topic: visitedUserId,
+                                    data: push_notification.Data(id: visitedUserId, route: 'wallet'),
+                                    notification: push_notification.Notification(
+                                        title: "Someone Visited Your Ego!",
+                                        body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
+                                    )
+                                ).toJson()
+                            );
+                          } catch (e) {
+                            print("Failed to send profile visit notification: $e");
+                            // Do not block navigation if notification fails
+                          }
+
+                          // --- NAVIGATE ---
                           // Only navigate to the profile if the transaction was successful.
                           PageRouter.gotoWidget(
                               VisitedUserEgoProfilePage(
@@ -262,8 +282,8 @@ class ChatWidget extends StatelessWidget {
                             "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                             claireTransactionDesc:
                             "Tax from a profile visit.", // Will be 0, but required
-                            forRoomVisits: 1, // Stat for the sender
-                            fromRoomVisits: 1, // Stat for the receiver
+                            forProfileVisits: 1, // Stat for the sender
+                            fromProfileVisits: 1, // Stat for the receiver
                             metadata: {
                               'reason': 'profile_visit',
                               'visitedUserId': visitedUserId
@@ -272,6 +292,24 @@ class ChatWidget extends StatelessWidget {
 
                           // --- 4. NAVIGATE ON SUCCESS ---
                           if (success) {
+                            // --- SEND NOTIFICATION ---
+                            try {
+                              await notificationService.sendNotification(
+                                  push_notification.NotificationModel(
+                                      topic: visitedUserId,
+                                      data: push_notification.Data(id: visitedUserId, route: 'wallet'),
+                                      notification: push_notification.Notification(
+                                          title: "Someone Visited Your Ego!",
+                                          body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
+                                      )
+                                  ).toJson()
+                              );
+                            } catch (e) {
+                              print("Failed to send profile visit notification: $e");
+                              // Do not block navigation if notification fails
+                            }
+
+                            // --- NAVIGATE ---
                             // Only navigate to the profile if the transaction was successful.
                             PageRouter.gotoWidget(
                                 VisitedUserEgoProfilePage(
