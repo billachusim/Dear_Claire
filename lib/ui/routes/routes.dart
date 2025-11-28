@@ -1,4 +1,5 @@
 import 'package:clairediary/Automations/auto_diary_settings_page.dart';
+import 'package:clairediary/Automations/setup_autoDiary_widget.dart';
 import 'package:clairediary/Automations/setup_claireminder_widget.dart';
 import 'package:clairediary/ui/Categories/category_sessions.dart';
 import 'package:clairediary/ui/alter_ego/alter_ego_homepage.dart';
@@ -74,7 +75,7 @@ class AppRoutes {
   static const categorySessions = '/categorySessions';
   static const games = '/games';
   static const updatesAndAnnouncements = '/updatesAndAnnouncements';
-  static const setupClaireminder = '/setupClaireminder';
+  static const setupAutoDiary = '/setupAutoDiary';
   static const aiChat = '/aiChat';
 }
 
@@ -172,10 +173,10 @@ class AppRouter {
         );
 
 
-      case AppRoutes.setupClaireminder:
+      case AppRoutes.setupAutoDiary:
         return MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider(
-              create: (_) => HowClaireWorksProvider(), child: AutoDiarySettingsPage()),
+              create: (_) => HowClaireWorksProvider(), child: SetupAutoDiary()),
           settings: settings,
           fullscreenDialog: true,
         );

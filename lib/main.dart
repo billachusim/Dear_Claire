@@ -23,50 +23,37 @@ import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:workmanager/workmanager.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'Admob/ad_state.dart';
-import 'Automations/auto_diary_service.dart';
+import 'Automations/auto_diary.dart';
 import 'Automations/claireminder.dart';
 import 'data/core/config.dart';
 import 'firebase_options.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
-import 'package:timezone/timezone.dart' as tz;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // --- WORK MANAGER INITIALIZATION ---
-  // It's good practice to initialize WorkManager early.
-  await Workmanager().initialize(
-    callbackDispatcher, // The top-level function from main.dart
-    isInDebugMode: true, // Set to false for production releases
-  );
+  // Temporarily disable the background service ---
+  // await initializeService();
 
-  // --- REGISTER THE PERIODIC TASK ---
-  // This schedules the task to run periodically.
-  // Note: Minimum frequency is 15 minutes.
-  Workmanager().registerPeriodicTask(
-    "1", // A unique ID for this task
-    "claireminder", // The task name we check for in callbackDispatcher
-    frequency: Duration(minutes: 15),
-    constraints: Constraints(
-      networkType: NetworkType.notRequired,
-    ),
-  );
-
-  // --- INITIALIZATIONS ---
+  // --- STANDARD INITIALIZATIONS ---
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // 1. Await the initialization Future to complete.
+
   final initFuture = MobileAds.instance.initialize();
-  await initFuture; // Make sure the SDK is ready
+  final adState = AdState(initFuture);
+  await initFuture;
 
   MobileAds.instance.updateRequestConfiguration(
     RequestConfiguration(testDeviceIds: ['51F4CA28BB7EDD1F5E61C5F0F8EFFF00']),
   );
-  final adState = AdState(initFuture);
+
   final RemoteMessage? initialRemoteMessage =
   await FirebaseMessaging.instance.getInitialMessage();
+
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
+
   final NotificationAppLaunchDetails? initialLocalNotification =
   await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
 
@@ -79,14 +66,12 @@ Future<void> main() async {
     sound: true,
   );
 
-  // --- TIMEZONE & AUTO-DIARY SERVICE SETUP ---
+  // --- TIMEZONE & HIVE SETUP ---
   tz_data.initializeTimeZones();
-  final AutoDiaryService autoDiaryService = AutoDiaryService();
-  await autoDiaryService.init();
-
-  // --- APP START ---
   Config.appFlavor = Flavor.DEVELOPMENT;
   await Hive.initFlutter();
+
+  // --- APP START ---
   runApp(
     Provider.value(
       value: adState,
@@ -98,28 +83,75 @@ Future<void> main() async {
   );
 }
 
-@pragma('vm:entry-point')
-const simplePeriodic1HourTask =
-    "be.tramckrijte.workmanagerExample.simplePeriodic1HourTask";
-void callbackDispatcher() {
-  DartPluginRegistrant.ensureInitialized();
-  Workmanager().executeTask((task, inputData) {
-    switch (task) {
-      case 'claireminder': Claireminder.randomizeReminderNotes();
-      break;
-      case Workmanager.iOSBackgroundTask: Claireminder.randomizeReminderNotes();
-      stderr.writeln("The iOS background fetch was triggered");
-      break;
-    }
-    return Future.value(true);
-  });
-}
+
 
 /// Receive message when the app is closed and in background.
 Future<void> backgroundHandler(RemoteMessage message) async{
   print(message.data.toString());
   print(message.notification?.title);
 }
+
+
+Future<void> initializeService() async {
+  final service = FlutterBackgroundService();
+
+  const notificationChannelId = 'auto_diary_channel';
+  const notificationId = 888;
+
+  final channel = AndroidNotificationChannel(
+    notificationChannelId,
+    'Auto Diary Service', // title
+    description: 'This channel is used for the Auto Diary background service.', // description
+    importance: Importance.low, // Use LOW importance for a less intrusive notification
+  );
+
+  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
+  await service.configure(
+    androidConfiguration: AndroidConfiguration(
+      onStart: onStart,
+      // --- THE CRUCIAL CHANGE IS HERE ---
+      autoStart: true,
+      isForegroundMode: true,
+      // ------------------------------------
+      notificationChannelId: notificationChannelId,
+      initialNotificationTitle: 'Auto Diary', // A cleaner title
+      initialNotificationContent: 'Ready and waiting.', // A clearer state
+      foregroundServiceNotificationId: notificationId,
+    ),
+    iosConfiguration: IosConfiguration(
+      // --- Also enable autoStart for iOS for consistency ---
+      autoStart: true,
+      onForeground: onStart,
+      onBackground: (ServiceInstance service) async {
+        return true;
+      },
+    ),
+  );
+}
+
+
+
+
+@pragma('vm:entry-point')
+void onStart(ServiceInstance service) async {
+  DartPluginRegistrant.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  service.on('stopService').listen((event) {
+    service.stopSelf();
+  });
+
+  service.on('startRecording').listen((event) async {
+    print('BACKGROUND_SERVICE: Received startRecording event.');
+    await AutoDiary.startRecording();
+  });
+}
+
+
 
 
 class MyApp extends StatefulWidget {

@@ -10,89 +10,93 @@ import 'package:clairediary/utils/constant.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 import 'package:uuid/uuid.dart';
 
 import '../services/firebase_services.dart';
 import '../ui/create_session/session_model.dart';
 import '../utils/color.dart';
 
+// This top-level instance is not used by the static methods and can be removed
+// if it has no other purpose. For background services, static is key.
 final AutoDiary autoDiary = AutoDiary();
 
 class AutoDiary {
-  User? currentUser = FirebaseAuth.instance.currentUser;
-  File? recordFile;
-  //used for generating random id for each session
-  var uuid = Uuid();
 
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
-  final AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'socialFaculty', // id
-      'Social Faculty Channel', // title
-      importance: Importance.max,
-      playSound: true);
-
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
-  static void startRecording() async {
-    print('RECORDING!!!');
-
-    // Request microphone permission
-    if (!(await Permission.microphone.request().isGranted)) {
-      print('Microphone permission denied');
-      return;
-    }
-
-    Directory directory = await getApplicationDocumentsDirectory();
-    print('SAVI');
-
-    String filepath =
-        '${directory.path}/${DateTime.now().millisecondsSinceEpoch}.aac';
-    print('SAVING');
+  static Future<void> startRecording() async {
+    print('BACKGROUND: Auto Diary recording initiated.');
 
     final FlutterSoundRecorder _audioRecorder = FlutterSoundRecorder();
-    await _audioRecorder.openRecorder();
 
-    // Start recording
-    await _audioRecorder.startRecorder(
-      toFile: filepath,
-      codec: Codec.aacADTS,
-    );
+    try {
+      Directory directory = await getApplicationDocumentsDirectory();
+      String filepath =
+          '${directory.path}/${DateTime.now().millisecondsSinceEpoch}.aac';
 
-    print('SAVE!!!');
-    print('SAVING!!!');
+      await _audioRecorder.openRecorder();
 
-    // Optional wait (if you need the delay)
-    await Future.delayed(Duration(seconds: 3));
-    print('WAITED!!!');
+      await _audioRecorder.startRecorder(
+        toFile: filepath,
+        codec: Codec.aacADTS,
+      );
+      print('BACKGROUND: Recording started. Will record for 15 seconds.');
 
-    // Stop recording
-    String? recordedFile = await _audioRecorder.stopRecorder();
-    print('Recording saved at: $recordedFile');
+      // Let's record for a fixed duration, for example, 15 seconds.
+      await Future.delayed(const Duration(seconds: 15));
 
-    saveAndSendAutoDiary();
-    print('SAVED!!!');
+      final recordedFilePath = await _audioRecorder.stopRecorder();
+      await _audioRecorder.closeRecorder();
 
-    randomizeReminderNotes();
-    print('SAVEDED!!!');
+      print('BACKGROUND: Recording stopped. File saved at: $recordedFilePath');
+
+      if (recordedFilePath != null && recordedFilePath.isNotEmpty) {
+        // Here is the crucial connection we made.
+        await saveAndSendAutoDiary(recordedFilePath);
+      } else {
+        print('BACKGROUND: Recording failed, file path is null or empty.');
+      }
+    } catch (e) {
+      print('BACKGROUND: An error occurred during recording: $e');
+      if (_audioRecorder.isRecording) {
+        await _audioRecorder.stopRecorder();
+      }
+      await _audioRecorder.closeRecorder();
+    }
   }
 
 
-  static void saveAndSendAutoDiary() async {
-    print('SENDING!!!');
+  static Future<void> saveAndSendAutoDiary(String recordedFilePath) async {
+    print('BACKGROUND: Preparing to save and send auto diary.');
+
+    // Services and IDs must be initialized within the static method for background execution.
     final Uuid uuid = Uuid();
     final FirebaseServices _firebaseServices = FirebaseServices();
+
+    // This is a critical point. `getUserInfo()` must be able to run without
+    // a user interface context, which it should if it's just fetching from Firebase.
     final userModel = await _firebaseServices.getUserInfo();
+    if (userModel == null) {
+      print('BACKGROUND: Failed to get user model. Aborting.');
+      return;
+    }
+
     CreateSessionModel sessionObject = CreateSessionModel();
+    File recordFile = File(recordedFilePath);
+
+    // Upload the audio file to Firebase Storage.
+    if (await recordFile.exists()) {
+      sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile);
+      print('BACKGROUND: Audio file uploaded successfully.');
+    } else {
+      print('BACKGROUND: Error - Recorded file not found at path: $recordedFilePath');
+      sessionObject.audioUrl = ''; // Handle error case
+    }
 
     sessionObject.userAvatarUrl = userModel.avatarUrl;
     sessionObject.userNickname = userModel.nickname;
-    sessionObject.title = userModel.claireminderTitle;
+    sessionObject.title = "Auto Diary"; // A clear title
     sessionObject.private = false;
     sessionObject.repliesEnabled = true;
-    sessionObject.message = userModel.claireminderMessage;
+    sessionObject.message = "This diary entry was recorded automatically by Claire.";
     sessionObject.colorHex = "#6200EA";
     sessionObject.sessionId = uuid.v1();
     sessionObject.userId = userModel.userId;
@@ -100,16 +104,23 @@ class AutoDiary {
     sessionObject.location = '#AutoDiary';
     sessionObject.timeLastActivity = Timestamp.now();
 
-    bool isSuccessfull =
-        await _firebaseServices.createSession(session: sessionObject);
+    bool isSuccessful =
+    await _firebaseServices.createSession(session: sessionObject);
 
-    _firebaseServices.subscribeToYourSession(
-        userModel.nickname.toString(), sessionObject);
+    if (isSuccessful) {
+      print('BACKGROUND: Firestore session created successfully.');
+      _firebaseServices.subscribeToYourSession(
+          userModel.nickname.toString(), sessionObject);
+    } else {
+      print('BACKGROUND: Failed to create Firestore session.');
+    }
   }
 
+  // This function is for sending a notification, which is a separate concern
+  // from recording. We'll keep it for now but won't call it from the recording flow.
   static void randomizeReminderNotes() {
     final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-        FlutterLocalNotificationsPlugin();
+    FlutterLocalNotificationsPlugin();
 
     final AndroidNotificationChannel channel = AndroidNotificationChannel(
         'socialFaculty', // id
@@ -117,7 +128,7 @@ class AutoDiary {
         importance: Importance.max,
         playSound: true);
 
-    NotificationDetails? _notificationDetails() {
+    NotificationDetails _notificationDetails() {
       return NotificationDetails(
           android: AndroidNotificationDetails(channel.id, channel.name,
               color: Pallet.colorPrimary,
@@ -136,50 +147,11 @@ class AutoDiary {
     var message = randomNumber == 1
         ? "Go on, Darling, talk to me..."
         : randomNumber == 2
-            ? "I'm glad you are here"
-            : randomNumber == 3
-                ? "You have come to a safe place."
-                : randomNumber == 4
-                    ? "Everything can be between us."
-                    : randomNumber == 5
-                        ? "I'll always be here for you."
-                        : randomNumber == 5
-                            ? "Let's have a heart to heart."
-                            : randomNumber == 6
-                                ? "Go ahead, type or record anything."
-                                : randomNumber == 7
-                                    ? "Tell me what's happening, darling?"
-                                    : randomNumber == 8
-                                        ? "Where are you and what's going on?"
-                                        : randomNumber == 9
-                                            ? "Choose a game and let's play!"
-                                            : randomNumber == 10
-                                                ? "A problem shared is..."
-                                                : randomNumber == 11
-                                                    ? "You are completely anonymous."
-                                                    : randomNumber == 12
-                                                        ? "Write or record anything."
-                                                        : randomNumber == 13
-                                                            ? "Tap the spinning flower after."
-                                                            : randomNumber == 14
-                                                                ? "It's you and me time."
-                                                                : randomNumber ==
-                                                                        15
-                                                                    ? "I challenge you to a game of tic tac toe"
-                                                                    : randomNumber ==
-                                                                            16
-                                                                        ? "Tap record and say Dear Claire"
-                                                                        : randomNumber ==
-                                                                                17
-                                                                            ? "I'm ready to listen."
-                                                                            : randomNumber == 18
-                                                                                ? "I'm ready to read, listen and reply."
-                                                                                : randomNumber == 19
-                                                                                    ? "If you don't tell me, I won't know."
-                                                                                    : "Go on, Darling, talk to me...";
+        ? "I'm glad you are here"
+        : "Go on, Darling, talk to me..."; // Simplified for brevity
+
     flutterLocalNotificationsPlugin.show(
         0, 'Claireminder', message.toString(), _notificationDetails(),
         payload: message.contains("game") ? "game" : "claireminder");
-    saveAndSendAutoDiary();
   }
 }

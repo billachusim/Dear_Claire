@@ -537,7 +537,7 @@ class _AppDrawerState extends State<_AppDrawer> {
             children: [
               _buildDrawerHeader(context),
               const SizedBox(height: 10),
-              _buildTicTacToeGame(context),
+              //_buildTicTacToeGame(context),
               const SizedBox(height: 10),
               _buildMenuList(context),
               _buildRecentTransactions(),
@@ -774,7 +774,7 @@ class _AppDrawerState extends State<_AppDrawer> {
             icon: Icons.auto_awesome_motion_rounded,
             onTap: () async {
               if (await widget.isUserSignedIn()) {
-                Navigator.of(context).pushNamed(AppRoutes.setupClaireminder);
+                Navigator.of(context).pushNamed(AppRoutes.setupAutoDiary);
               }
             },
           ),
