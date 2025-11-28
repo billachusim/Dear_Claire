@@ -9,6 +9,7 @@ import 'package:clairediary/widgets/play_advise_voice_note.dart';
 import 'package:clairediary/widgets/thanks_button.dart';
 import 'package:clairediary/widgets/toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -47,11 +48,11 @@ class CommentWidget extends StatefulWidget {
 
 class _CommentWidgetState extends State<CommentWidget> {
   TextEditingController editAdviseController = TextEditingController();
-  final TransactionService _transactionService = TransactionService();
   User? currentUser = FirebaseAuth.instance.currentUser;
   bool? isFlagged;
   String? _commentTime;
   bool _isThanked = false;
+  bool _isAvatarLoading = false;
 
   @override
   void initState() {
@@ -336,13 +337,6 @@ class _CommentWidgetState extends State<CommentWidget> {
 
   Future<void> decrementTotalLoveCount() async {
     final userId = widget.commentSessionModel!.userId.toString();
-
-    // The old FirebaseFirestore.instance.collection('users')... call and
-    // the old _transactionService.recordTransaction call are no longer needed here.
-
-    // --- NEW TREASURY LOGIC ---
-    // A single, safe call to the new centralized method.
-    // It handles the user's debit, Claire's credit, and transaction recording.
     await firebaseServices.updateTreasuryAndUser(
       userId: userId,
       amount: 10,
@@ -456,98 +450,124 @@ class _CommentWidgetState extends State<CommentWidget> {
             children: [
               GestureDetector(
                 onTap: () async {
-                  // --- 1. SETUP TRANSACTION DETAILS ---
-                  final visitingUser = await firebaseServices.getUserInfo();
-                  final bool isVisitingAdmin = widget.commentSessionModel?.isUserAdmin == true;
+                  // --- 1. SHOW THE LOADER ---
+                  setState(() {
+                    _isAvatarLoading = true;
+                  });
+                  try {
+                    // --- 1. SETUP TRANSACTION DETAILS ---
+                    final visitingUser = await firebaseServices.getUserInfo();
+                    final String visitedUserId = widget.commentSessionModel!.userId!;
+                    final String visitedEgoName =
+                    widget.commentSessionModel!.userNickname!;
+                    const int visitCost = 1;
 
-                  final String visitedUserId = isVisitingAdmin
-                      ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2" // Claire's fixed ID
-                      : widget.commentSessionModel!.userId!;
+                    // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
+                    if (visitingUser.userId == visitedUserId) {
+                      // If visiting self, just navigate without a transaction.
+                      PageRouter.gotoWidget(
+                          VisitedUserEgoProfilePage(
+                              visitedUsersID: visitedUserId,
+                              visitedEgoName: visitedEgoName),
+                          context);
+                      return;
+                    }
 
-                  final String visitedEgoName = isVisitingAdmin
-                      ? "Claire"
-                      : widget.commentSessionModel!.userNickname!;
+                    if (visitingUser.userType == "REGULAR" &&
+                        visitingUser.currentLoveCount < 100) {
+                      showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                      return;
+                    }
 
-                  const int visitCost = 1;
+                    if (visitingUser.currentLoveCount < visitCost) {
+                      showToast("You need at least 1 ❤️ to visit a profile.");
+                      return;
+                    }
 
-                  // --- 2. HANDLE SELF-VISIT ---
-                  if (visitingUser.userId == visitedUserId) {
-                    // If visiting self, just navigate without a transaction.
-                    PageRouter.gotoWidget(
-                        VisitedUserEgoProfilePage(
-                            visitedUsersID: visitedUserId,
-                            visitedEgoName: visitedEgoName),
-                        context);
-                    return;
+                    // --- 3. PERFORM THE LOVE TRANSACTION ---
+                    final bool success =
+                    await firebaseServices.transferLoveBetweenUsers(
+                      senderId: visitingUser.userId!,
+                      receiverId: visitedUserId,
+                      amountToSend: visitCost,
+                      taxAmount: 0,
+                      totalDebitAmount: visitCost,
+                      senderTransactionDesc:
+                      "1❤️ for visiting ${visitedEgoName}'s Ego.",
+                      receiverTransactionDesc:
+                      "1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                      claireTransactionDesc: "Tax from a profile visit.",
+                      // Will be 0, but required
+                      forRoomVisits: 1,
+                      // Stat for the sender
+                      fromRoomVisits: 1,
+                      // Stat for the receiver
+                      metadata: {
+                        'reason': 'profile_visit',
+                        'visitedUserId': visitedUserId
+                      },
+                    );
+
+                    // --- 4. NAVIGATE ON SUCCESS ---
+                    if (success) {
+                      // Only navigate to the profile if the transaction was successful.
+                      PageRouter.gotoWidget(
+                          VisitedUserEgoProfilePage(
+                              visitedUsersID: visitedUserId,
+                              visitedEgoName: visitedEgoName),
+                          context);
+                    }
+                  } finally {
+                    // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                    // This runs no matter how the try block exits.
+                    if (mounted) {
+                      setState(() {
+                        _isAvatarLoading = false;
+                      });
+                    }
                   }
-
-                  // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
-                  if (visitingUser.userType == "REGULAR" &&
-                      visitingUser.currentLoveCount < 500) {
-                    showToast(
-                        "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                    return;
-                  }
-
-                  if (visitingUser.currentLoveCount < visitCost) {
-                    showToast("You need at least 1 ❤️ to visit a profile.");
-                    return;
-                  }
-
-                  // --- 4. PERFORM THE LOVE TRANSACTION ---
-                  final bool success =
-                  await firebaseServices.transferLoveBetweenUsers(
-                    senderId: visitingUser.userId!,
-                    receiverId: visitedUserId,
-                    amountToSend: visitCost,
-                    taxAmount: 0,
-                    totalDebitAmount: visitCost,
-                    senderTransactionDesc: "1❤️ for visiting ${visitedEgoName}'s Ego.",
-                    receiverTransactionDesc:
-                    "1❤️ from ${visitingUser.nickname} visiting your Ego.",
-                    claireTransactionDesc: "Tax from a profile visit.",
-                    forRoomVisits: 1, // Stat for the sender
-                    fromRoomVisits: 1, // Stat for the receiver
-                    metadata: {
-                      'reason': 'profile_visit',
-                      'visitedUserId': visitedUserId,
-                      'from': 'comment_widget'
-                    },
-                  );
-
-                  // --- 5. NAVIGATE ON SUCCESS ---
-                  if (success) {
-                    // Only navigate to the profile if the transaction was successful.
-                    PageRouter.gotoWidget(
-                        VisitedUserEgoProfilePage(
-                            visitedUsersID: visitedUserId,
-                            visitedEgoName: visitedEgoName),
-                        context);
-                  }
-                  // If !success, the service method already shows a toast.
                 },
-                child: CachedNetworkImage(
-                    width: 40,
-                    height: 40,
-                    imageUrl: widget.commentSessionModel?.isUserAdmin == true
-                        ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
-                        : widget.commentSessionModel!.userAvatarUrl ?? '',
-                    imageBuilder: (context, imageProvider) => Container(
+                child: Stack(
+                  alignment: AlignmentGeometry.center,
+                  children: [
+                    CachedNetworkImage(
+                        width: 50,
+                        height: 50,
+                        imageUrl: widget.commentSessionModel!.userAvatarUrl!,
+                        imageBuilder: (context, imageProvider) => Container(
                           decoration: BoxDecoration(
+                            shape: BoxShape.circle,
                             image: DecorationImage(
                               image: imageProvider,
-                              fit: BoxFit.fill,
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
-                    placeholder: (context, url) =>
-                        Center(child: CircularProgressIndicator()),
-                    errorWidget: (context, url, error) => Image.asset(
+                        placeholder: (context, url) =>
+                            CircularProgressIndicator(),
+                        errorWidget: (context, url, error) => Image.asset(
                           "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                          width: 40,
-                          height: 40,
-                        ) //Icon(Icons.error),
-                    ),
+                          width: 50,
+                          height: 50,
+                        )),
+
+                    // --- 2. ADD THE OVERLAY LOADER ---
+                    if (_isAvatarLoading)
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: CupertinoActivityIndicator(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               SizedBox(
                 width: 4,
@@ -729,72 +749,59 @@ class _CommentWidgetState extends State<CommentWidget> {
             height: 8,
           ),
 
-          Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Visibility(
-                  visible: widget.commentSessionModel!.image1!.isNotEmpty,
-                  child: GestureDetector(
-                    onTap: () {
-                      PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget
-                          .commentSessionModel!.image1!), context);
-                    },
-                    child: CachedNetworkImage(
-                        height: 150,
-                        width: 150,
-                        imageUrl: widget
-                                .commentSessionModel!.image1!,
-                        imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                ),
-                              ),
-                            ),
-                        placeholder: (context, url) =>
-                            Center(child: CircularProgressIndicator()),
-                        errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
-                        ),
-                  )),
-              SizedBox(
-                width: 12,
+          Visibility(
+            visible: widget.commentSessionModel!.imageUrls != null && widget.commentSessionModel!.imageUrls!.isNotEmpty,
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: widget.commentSessionModel!.imageUrls!.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: widget.commentSessionModel!.imageUrls!.length > 2 ? 5 : 2,
+                crossAxisSpacing: 4.0,
+                mainAxisSpacing: 4.0,
               ),
-              Visibility(
-                  visible: widget.commentSessionModel!.image2!.isNotEmpty,
-                  child: GestureDetector(
-                    onTap: () {
-                      PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget
-                          .commentSessionModel!.image2!), context);
-                    },
+              itemBuilder: (context, index) {
+                String image = widget.commentSessionModel!.imageUrls![index].toString();
+                return GestureDetector(
+                  onTap: () {
+                    PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15), // Smaller radius for a tighter look
+                      image: DecorationImage(
+                        image: CachedNetworkImageProvider(image), // Use provider for decoration
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                     child: CachedNetworkImage(
-                        height: 150,
-                        width: 150,
-                        imageUrl: widget.commentSessionModel!.image2!,
-                        imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                ),
-                              ),
-                            ),
-                        placeholder: (context, url) =>
-                            Center(child: CircularProgressIndicator()),
-                        errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
+                      imageUrl: image,
+                      imageBuilder: (context, imageProvider) => Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          image: DecorationImage(
+                            image: imageProvider,
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                  )),
-            ],
+                      ),
+                      placeholder: (context, url) => Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) => ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: Image.asset(
+                          "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                          fit: BoxFit.contain, // Contain to avoid stretching
+                          width: 48,
+                          height: 48,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
+
 
 
           Row(

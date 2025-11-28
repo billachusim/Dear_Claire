@@ -21,7 +21,7 @@ import '../../widgets/toast.dart';
 import '../create_session/sound/custom_play_sound_widget.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 
-class CustomSearchCard extends StatelessWidget {
+class CustomSearchCard extends StatefulWidget {
   Session element;
 
   CustomSearchCard({Key? key, required this.element, required this.visitedUsersID, required this.visitedEgoName}) : super(key: key);
@@ -29,14 +29,22 @@ class CustomSearchCard extends StatelessWidget {
   late String visitedEgoName;
 
   @override
+  State<CustomSearchCard> createState() => _CustomSearchCardState();
+}
+
+class _CustomSearchCardState extends State<CustomSearchCard> {
+  bool _isAvatarLoading = false;
+
+
+  @override
   Widget build(BuildContext context) {
-    final Color backgroundColor = HexColor.fromHex(element.colorHex!);
+    final Color backgroundColor = HexColor.fromHex(widget.element.colorHex!);
     final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
     final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
 
     return GestureDetector(
       onTap: () => PageRouter.gotoWidget(
-          EgoModeSessionDetail(featuredSessionModel: element),
+          EgoModeSessionDetail(featuredSessionModel: widget.element),
           context),
       child: Container(
         width: 270,
@@ -57,84 +65,123 @@ class CustomSearchCard extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () async {
-                      // --- 1. SETUP TRANSACTION DETAILS ---
-                      final visitingUser = await firebaseServices.getUserInfo();
-                      final String visitedUserId = element.userId!;
-                      final String visitedEgoName = element.userNickname!;
-                      const int visitCost = 1;
+                      // --- 1. SHOW THE LOADER ---
+                      setState(() {
+                        _isAvatarLoading = true;
+                      });
+                      try {
+                        // --- 1. SETUP TRANSACTION DETAILS ---
+                        final visitingUser = await firebaseServices.getUserInfo();
+                        final String visitedUserId = widget.element.userId!;
+                        final String visitedEgoName =
+                        widget.element.userNickname!;
+                        const int visitCost = 1;
 
-                      // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
-                      if (visitingUser.userId == visitedUserId) {
-                        // If visiting self, just navigate without a transaction.
-                        PageRouter.gotoWidget(
-                            VisitedUserEgoProfilePage(
-                                visitedUsersID: visitedUserId,
-                                visitedEgoName: visitedEgoName),
-                            context);
-                        return;
-                      }
+                        // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
+                        if (visitingUser.userId == visitedUserId) {
+                          // If visiting self, just navigate without a transaction.
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(
+                                  visitedUsersID: visitedUserId,
+                                  visitedEgoName: visitedEgoName),
+                              context);
+                          return;
+                        }
 
-                      if (visitingUser.userType == "REGULAR" &&
-                          visitingUser.currentLoveCount < 100) {
-                        showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
-                        return;
-                      }
+                        if (visitingUser.userType == "REGULAR" &&
+                            visitingUser.currentLoveCount < 100) {
+                          showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                          return;
+                        }
 
-                      if (visitingUser.currentLoveCount < visitCost) {
-                        showToast("You need at least 1 ❤️ to visit a profile.");
-                        return;
-                      }
+                        if (visitingUser.currentLoveCount < visitCost) {
+                          showToast("You need at least 1 ❤️ to visit a profile.");
+                          return;
+                        }
 
-                      // --- 3. PERFORM THE LOVE TRANSACTION ---
-                      final bool success =
-                      await firebaseServices.transferLoveBetweenUsers(
-                        senderId: visitingUser.userId!,
-                        receiverId: visitedUserId,
-                        amountToSend: visitCost,
-                        taxAmount: 0,
-                        totalDebitAmount: visitCost,
-                        senderTransactionDesc:
-                        "1❤️ for visiting ${visitedEgoName}'s Ego.",
-                        receiverTransactionDesc:
-                        "1❤️ from ${visitingUser.nickname} visiting your Ego.",
-                        claireTransactionDesc:
-                        "Tax from a profile visit.", // Will be 0, but required
-                        forRoomVisits: 1, // Stat for the sender
-                        fromRoomVisits: 1, // Stat for the receiver
-                        metadata: {
-                          'reason': 'profile_visit',
-                          'visitedUserId': visitedUserId
-                        },
-                      );
+                        // --- 3. PERFORM THE LOVE TRANSACTION ---
+                        final bool success =
+                        await firebaseServices.transferLoveBetweenUsers(
+                          senderId: visitingUser.userId!,
+                          receiverId: visitedUserId,
+                          amountToSend: visitCost,
+                          taxAmount: 0,
+                          totalDebitAmount: visitCost,
+                          senderTransactionDesc:
+                          "1❤️ for visiting ${visitedEgoName}'s Ego.",
+                          receiverTransactionDesc:
+                          "1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                          claireTransactionDesc: "Tax from a profile visit.",
+                          // Will be 0, but required
+                          forRoomVisits: 1,
+                          // Stat for the sender
+                          fromRoomVisits: 1,
+                          // Stat for the receiver
+                          metadata: {
+                            'reason': 'profile_visit',
+                            'visitedUserId': visitedUserId
+                          },
+                        );
 
-                      // --- 4. NAVIGATE ON SUCCESS ---
-                      if (success) {
-                        // Only navigate to the profile if the transaction was successful.
-                        PageRouter.gotoWidget(
-                            VisitedUserEgoProfilePage(
-                                visitedUsersID: visitedUserId,
-                                visitedEgoName: visitedEgoName),
-                            context);
+                        // --- 4. NAVIGATE ON SUCCESS ---
+                        if (success) {
+                          // Only navigate to the profile if the transaction was successful.
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(
+                                  visitedUsersID: visitedUserId,
+                                  visitedEgoName: visitedEgoName),
+                              context);
+                        }
+                      } finally {
+                        // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                        // This runs no matter how the try block exits.
+                        if (mounted) {
+                          setState(() {
+                            _isAvatarLoading = false;
+                          });
+                        }
                       }
                     },
-                    child: CachedNetworkImage(
-                        width: 33,
-                        height: 33,
-                        imageUrl: element.userAvatarUrl!,
-                        imageBuilder: (context, imageProvider) => Container(
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: imageProvider,
-                              fit: BoxFit.fill,
+                    child: Stack(
+                      alignment: AlignmentGeometry.center,
+                      children: [
+                        CachedNetworkImage(
+                            width: 35,
+                            height: 35,
+                            imageUrl: widget.element.userAvatarUrl!,
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                image: DecorationImage(
+                                  image: imageProvider,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            placeholder: (context, url) =>
+                                CircularProgressIndicator(),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                              width: 35,
+                              height: 35,
+                            )),
+
+                        // --- 2. ADD THE OVERLAY LOADER ---
+                        if (_isAvatarLoading)
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Center(
+                              child: CupertinoActivityIndicator(
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                        ),
-                        placeholder: (context, url) => CircularProgressIndicator(),
-                        errorWidget: (context, url, error) => Image.asset(
-                          "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                          width: 20,
-                          height: 20,
-                        ) //Icon(Icons.error),
+                      ],
                     ),
                   ),
                   SizedBox(
@@ -147,68 +194,91 @@ class CustomSearchCard extends StatelessWidget {
                       children: [
                         GestureDetector(
                           onTap: () async {
-                            // --- 1. SETUP TRANSACTION DETAILS ---
-                            final visitingUser = await firebaseServices.getUserInfo();
-                            final String visitedUserId = element.userId!;
-                            final String visitedEgoName = element.userNickname!;
-                            const int visitCost = 1;
-                            // --- 2. HANDLE SELF-VISIT ---
-                            if (visitingUser.userId == visitedUserId) {
-                              // If visiting self, just navigate without a transaction.
-                              PageRouter.gotoWidget(
-                                  VisitedUserEgoProfilePage(
-                                      visitedUsersID: visitedUserId,
-                                      visitedEgoName: visitedEgoName),
-                                  context);
-                              return;
-                            }
+                            // --- 1. SHOW THE LOADER ---
+                            setState(() {
+                              _isAvatarLoading = true;
+                            });
+                            try {
+                              // --- 1. SETUP TRANSACTION DETAILS ---
+                              final visitingUser =
+                              await firebaseServices.getUserInfo();
+                              final String visitedUserId = widget.element.userId!;
+                              final String visitedEgoName =
+                              widget.element.userNickname!;
+                              const int visitCost = 1;
 
-                            // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
-                            // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
-                            if (visitingUser.userType == "REGULAR" &&
-                                visitingUser.currentLoveCount < 500) { // Changed from 50 to 500 for consistency
-                              showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                              return;
-                            }
+                              // --- 2. HANDLE SELF-VISIT ---
+                              if (visitingUser.userId == visitedUserId) {
+                                // If visiting self, just navigate without a transaction.
+                                PageRouter.gotoWidget(
+                                    VisitedUserEgoProfilePage(
+                                        visitedUsersID: visitedUserId,
+                                        visitedEgoName: visitedEgoName),
+                                    context);
+                                return;
+                              }
 
-                            if (visitingUser.currentLoveCount < visitCost) {
-                              showToast("You need at least 1 ❤️ to visit a profile.");
-                              return;
-                            }
+                              // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
+                              // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
+                              if (visitingUser.userType == "REGULAR" &&
+                                  visitingUser.currentLoveCount < 500) {
+                                // Changed from 50 to 500 for consistency
+                                showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                                return;
+                              }
 
-                            // --- 4. PERFORM THE LOVE TRANSACTION ---
-                            final bool success =
-                            await firebaseServices.transferLoveBetweenUsers(
-                              senderId: visitingUser.userId!,
-                              receiverId: visitedUserId,
-                              amountToSend: visitCost,
-                              taxAmount: 0,
-                              totalDebitAmount: visitCost,
-                              senderTransactionDesc:
-                              "1❤️ for visiting ${visitedEgoName}'s Ego.",
-                              receiverTransactionDesc:
-                              "1❤️ from ${visitingUser.nickname} visit to your Ego.",
-                              claireTransactionDesc:
-                              "Tax from a profile visit.", // Will be 0, but required
-                              forRoomVisits: 1, // Stat for the sender
-                              fromRoomVisits: 1, // Stat for the receiver
-                              metadata: {
-                                'reason': 'profile_visit',
-                                'visitedUserId': visitedUserId
-                              },
-                            );
+                              if (visitingUser.currentLoveCount < visitCost) {
+                                showToast("You need at least 1 ❤️ to visit a profile.");
+                                return;
+                              }
 
-                            // --- 5. NAVIGATE ON SUCCESS ---
-                            if (success) {
-                              // Only navigate to the profile if the transaction was successful.
-                              PageRouter.gotoWidget(
-                                  VisitedUserEgoProfilePage(
-                                      visitedUsersID: visitedUserId,
-                                      visitedEgoName: visitedEgoName),
-                                  context);
+                              // --- 4. PERFORM THE LOVE TRANSACTION ---
+                              final bool success =
+                              await firebaseServices.transferLoveBetweenUsers(
+                                senderId: visitingUser.userId!,
+                                receiverId: visitedUserId,
+                                amountToSend: visitCost,
+                                taxAmount: 0,
+                                totalDebitAmount: visitCost,
+                                senderTransactionDesc:
+                                "1❤️ for visiting ${visitedEgoName}'s Ego.",
+                                receiverTransactionDesc:
+                                "1❤️ from ${visitingUser
+                                    .nickname} visiting your Ego.",
+                                claireTransactionDesc:
+                                "Tax from a profile visit.",
+                                // Will be 0, but required
+                                forRoomVisits: 1,
+                                // Stat for the sender
+                                fromRoomVisits: 1,
+                                // Stat for the receiver
+                                metadata: {
+                                  'reason': 'profile_visit',
+                                  'visitedUserId': visitedUserId
+                                },
+                              );
+
+                              // --- 5. NAVIGATE ON SUCCESS ---
+                              if (success) {
+                                // Only navigate to the profile if the transaction was successful.
+                                PageRouter.gotoWidget(
+                                    VisitedUserEgoProfilePage(
+                                        visitedUsersID: visitedUserId,
+                                        visitedEgoName: visitedEgoName),
+                                    context);
+                              }
+                              // If !success, the service method already shows a toast.
+                            } finally {
+                              // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                              // This runs no matter how the try block exits.
+                              if (mounted) {
+                                setState(() {
+                                  _isAvatarLoading = false;
+                                });
+                              }
                             }
                           },
-                          child: Text(element.userNickname!,
+                          child: Text(widget.element.userNickname!,
                               textAlign: TextAlign.start,
                               maxLines: 1,
                               style: GoogleFonts.lato(
@@ -219,7 +289,7 @@ class CustomSearchCard extends StatelessWidget {
                         SizedBox(
                           height: 1,
                         ),
-                        Text(timeConverter(element.timeCreated!),
+                        Text(timeConverter(widget.element.timeCreated!),
                             textAlign: TextAlign.start,
                             maxLines: 1,
                             style: GoogleFonts.lato(
@@ -235,7 +305,7 @@ class CustomSearchCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
 
-                        Text(Mood.getMood(element.moodId) ?? "${Mood.getMood(1)}",
+                        Text(Mood.getMood(widget.element.moodId) ?? "${Mood.getMood(1)}",
                             textAlign: TextAlign.end,
                             maxLines: 1,
                             style: GoogleFonts.lato(
@@ -245,7 +315,7 @@ class CustomSearchCard extends StatelessWidget {
                         SizedBox(
                           height: 1,
                         ),
-                        Text(element.location ?? "",
+                        Text(widget.element.location ?? "",
                             textAlign: TextAlign.end,
                             maxLines: 1,
                             style: GoogleFonts.lato(
@@ -263,7 +333,7 @@ class CustomSearchCard extends StatelessWidget {
               height: 3,
             ),
             Center(
-              child: Text(element.title!,
+              child: Text(widget.element.title!,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   style: GoogleFonts.lato(
@@ -277,9 +347,9 @@ class CustomSearchCard extends StatelessWidget {
             Column(
               children: [
                 Text(
-                  element.audioUrl!.isNotEmpty ? "" : element.message!,
+                  widget.element.audioUrl!.isNotEmpty ? "" : widget.element.message!,
                   textAlign: TextAlign.start,
-                  maxLines: element.imageUrls!.isNotEmpty ? 1 : 3,
+                  maxLines: widget.element.imageUrls!.isNotEmpty ? 1 : 3,
                   style: GoogleFonts.lato(
                       fontSize: 14.0,
                       color: textColor,
@@ -290,8 +360,8 @@ class CustomSearchCard extends StatelessWidget {
                   height: 3,
                 ),
                 Container(
-                  child: element.audioUrl!.isNotEmpty
-                      ? CustomPlaySoundWidget(filePath: element.audioUrl)
+                  child: widget.element.audioUrl!.isNotEmpty
+                      ? CustomPlaySoundWidget(filePath: widget.element.audioUrl)
                       : SizedBox.shrink(),
                 ),
 
@@ -301,16 +371,16 @@ class CustomSearchCard extends StatelessWidget {
                     child: Row(
                       children: [
                         Visibility(
-                            visible: element.imageUrls!.isNotEmpty,
+                            visible: widget.element.imageUrls!.isNotEmpty,
                             child: GestureDetector(
                               onTap: () {
-                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: element.imageUrls!.first.toString()), context);
+                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.element.imageUrls!.first.toString()), context);
                               },
                               child: CachedNetworkImage(
                                   height: 45,
                                   width: 45,
-                                  imageUrl: element.imageUrls!.isNotEmpty
-                                      ? element.imageUrls!.first
+                                  imageUrl: widget.element.imageUrls!.isNotEmpty
+                                      ? widget.element.imageUrls!.first
                                       : '',
                                   imageBuilder: (context, imageProvider) => Container(
                                     decoration: BoxDecoration(
@@ -333,16 +403,16 @@ class CustomSearchCard extends StatelessWidget {
                         SizedBox(width: 5,),
 
                         Visibility(
-                            visible: element.imageUrls!.isNotEmpty,
+                            visible: widget.element.imageUrls!.isNotEmpty,
                             child: GestureDetector(
                               onTap: () {
-                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: element.imageUrls!.last.toString()), context);
+                                PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.element.imageUrls!.last.toString()), context);
                               },
                               child: CachedNetworkImage(
                                   height: 45,
                                   width: 45,
-                                  imageUrl: element.imageUrls!.isNotEmpty
-                                      ? element.imageUrls!.last
+                                  imageUrl: widget.element.imageUrls!.isNotEmpty
+                                      ? widget.element.imageUrls!.last
                                       : '',
                                   imageBuilder: (context, imageProvider) => Container(
                                     decoration: BoxDecoration(
@@ -372,10 +442,10 @@ class CustomSearchCard extends StatelessWidget {
               children: [
                 Flexible(
                   child: MetooButton(
-                    cheers: element.meToos!.length,
-                    thanks: element.meLove!.length,
-                    sorry: element.meHiFive!.length,
-                    me2: element.meFlower!.length,
+                    cheers: widget.element.meToos!.length,
+                    thanks: widget.element.meLove!.length,
+                    sorry: widget.element.meHiFive!.length,
+                    me2: widget.element.meFlower!.length,
                     color: textColor,
                     onReactionChanged: (reaction, index) async {
                       if (await firebaseServices
@@ -385,20 +455,20 @@ class CustomSearchCard extends StatelessWidget {
 
                         firebaseServices.addUsersReactionToASession(
                             context, index,
-                            session: element,
+                            session: widget.element,
                             sender: _userModel.nickname ?? '');
 
                         saveUserMe2Activity();
-                        await firebaseServices.updateSessionLastTimeActivity(element.sessionId.toString());
+                        await firebaseServices.updateSessionLastTimeActivity(widget.element.sessionId.toString());
                       }
 
-                    }, session: element,
+                    }, session: widget.element,
                   ),
                 ),
                 new Spacer(),
                 StreamBuilder(
                     stream: firebaseServices
-                        .getFeaturedSessionsComments(element.sessionId!),
+                        .getFeaturedSessionsComments(widget.element.sessionId!),
                     builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
                       if (snapShot.hasError) {
                         return Container();
@@ -407,7 +477,7 @@ class CustomSearchCard extends StatelessWidget {
                         return CommentsButton(
                           count: snapShot.data!.docs.length,
                           onPressed: () => PageRouter.gotoWidget(
-                              EgoModeSessionDetail(featuredSessionModel: element),
+                              EgoModeSessionDetail(featuredSessionModel: widget.element),
                               context),);
                       }
                       return Container();
@@ -424,7 +494,7 @@ class CustomSearchCard extends StatelessWidget {
 
             StreamBuilder(
                 stream: firebaseServices
-                    .getFeaturedSessionsComments(element.sessionId!),
+                    .getFeaturedSessionsComments(widget.element.sessionId!),
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
                   if (snapShot.hasError) {
                     return Container();
@@ -481,17 +551,15 @@ class CustomSearchCard extends StatelessWidget {
     }
   }
 
-
-
   /// Save user reaction activity
 
   Future<void> saveUserMe2Activity() async {
     final UserModel _user = await firebaseServices.getUserInfo();
     final dateCreated = FieldValue.serverTimestamp();
-    final sessionId = element.sessionId;
-    final sessionOwnerId = element.userId;
-    final sessionOwnerAvatar = element.userAvatarUrl.toString();
-    final sessionOwnerNickname = element.userNickname.toString();
+    final sessionId = widget.element.sessionId;
+    final sessionOwnerId = widget.element.userId;
+    final sessionOwnerAvatar = widget.element.userAvatarUrl.toString();
+    final sessionOwnerNickname = widget.element.userNickname.toString();
     final sessionVisitorId = currentUser?.uid.toString();
     final sessionVisitorNickname = _user.nickname.toString();
     final sessionVisitorAvatar =  _user.userType != "REGULAR"
@@ -521,6 +589,4 @@ class CustomSearchCard extends StatelessWidget {
     print('Activity Message: $activityMessage');
 
   }
-
-
 }

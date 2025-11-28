@@ -12,6 +12,7 @@ import 'package:clairediary/widgets/metoo_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,19 +23,19 @@ import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:url_launcher/url_launcher.dart';
 import '../../../services/firebase_services.dart';
 import '../../../services/user_model.dart';
 import '../../../utils/strings.dart';
-import '../../../widgets/custom_image_widget.dart';
 import '../../Admob/ad_state.dart';
 import '../../data/models/transaction_model.dart' as t_model;
 import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/native_gallery_saver.dart';
 import '../../services/notification_service.dart';
-import '../../services/transaction_service.dart';
 import '../../widgets/chat_edit_field.dart';
 import '../../widgets/comment_widget.dart';
 import '../../widgets/toast.dart';
+import '../../widgets/unified_media_widget.dart';
 import '../Categories/similar_category_sessions.dart';
 import '../create_session/sound/custom_play_sound_widget.dart';
 import '../routes/page_router_animation.dart';
@@ -54,17 +55,17 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   final screenshotController = ScreenshotController();
   TextEditingController editSessionController = TextEditingController();
   User? currentUser = FirebaseAuth.instance.currentUser;
-
   bool? isFeatured;
-
   late String visitedUsersID;
   late String visitedEgoName;
-
   //initialize the audio record file that stores user audio record. null by default
   String? recordFile;
   Session? theSession;
-
   bool? isFlagged;
+  bool? isArchived;
+  int _currentPage = 0;
+  final GlobalKey<UnifiedMediaViewerState> _mediaViewerKey = GlobalKey<UnifiedMediaViewerState>();
+  bool _isAvatarLoading = false;
 
   List<CommentSessionModel> _commentList = [];
 
@@ -194,612 +195,791 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
             Screenshot(
             controller: screenshotController,
             child: Material(
-              child: SafeArea(
-                child: StreamBuilder(
-                    stream: firebaseServices.getSingleDocument(id: widget.sessionId),
-                    builder: (context,
-                        AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snaps) {
-                      if (snaps.hasData) {
-                        final _session = Session.fromJson(snaps.data!.data()!);
-                        theSession = _session;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6.0, vertical: 5),
-                          decoration: BoxDecoration(
-                              color: HexColor.fromHex(_session.colorHex!)),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () async {
-                                      // --- 1. SETUP TRANSACTION DETAILS ---
-                                      final visitingUser = await firebaseServices.getUserInfo();
-                                      final String visitedUserId = _session.userId!;
-                                      final String visitedEgoName = _session.userNickname!;
-                                      const int visitCost = 1;
+              child: GestureDetector(
+                onTap: () {
+                  // This tap is for the whole card.
+                  // We first check if a video is playing. If so, pause it.
+                  // If not, navigate to the detail page.
+                  final bool didPause = _mediaViewerKey.currentState?.pauseAllVideos() ?? false;
 
-                                      // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
-                                      if (visitingUser.userId == visitedUserId) {
-                                        // If visiting self, just navigate without a transaction.
-                                        PageRouter.gotoWidget(
-                                            VisitedUserEgoProfilePage(
-                                                visitedUsersID: visitedUserId,
-                                                visitedEgoName: visitedEgoName),
-                                            context);
-                                        return;
-                                      }
+                  // If a video was NOT paused by this tap, do something else.
+                  if (!didPause) {
 
-                                      if (visitingUser.userType == "REGULAR" &&
-                                          visitingUser.currentLoveCount < 100) {
-                                        showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
-                                        return;
-                                      }
+                  }
+                },
+                child: SafeArea(
+                  child: StreamBuilder(
+                      stream: firebaseServices.getSingleDocument(id: widget.sessionId),
+                      builder: (context,
+                          AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snaps) {
+                        if (snaps.hasData) {
+                          final _session = Session.fromJson(snaps.data!.data()!);
+                          theSession = _session;
+                          final Color backgroundColor =
+                          HexColor.fromHex(_session.colorHex!);
+                          final Color textColor =
+                          backgroundColor.computeLuminance() > 0.5
+                              ? Colors.black
+                              : Colors.white;
+                          final Color secondaryTextColor =
+                          backgroundColor.computeLuminance() > 0.5
+                              ? Colors.black54
+                              : Colors.white70;
 
-                                      if (visitingUser.currentLoveCount < visitCost) {
-                                        showToast("You need at least 1 ❤️ to visit a profile.");
-                                        return;
-                                      }
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10.0, vertical: 7),
+                            decoration: BoxDecoration(color: backgroundColor),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () async {
+                                        // --- 1. SHOW THE LOADER ---
+                                        setState(() {
+                                          _isAvatarLoading = true;
+                                        });
+                                        try {
+                                          // --- 1. SETUP TRANSACTION DETAILS ---
+                                          final visitingUser = await firebaseServices.getUserInfo();
+                                          final String visitedUserId = _session.userId!;
+                                          final String visitedEgoName =
+                                          _session.userNickname!;
+                                          const int visitCost = 1;
 
-                                      // --- 3. PERFORM THE LOVE TRANSACTION ---
-                                      final bool success =
-                                      await firebaseServices.transferLoveBetweenUsers(
-                                        senderId: visitingUser.userId!,
-                                        receiverId: visitedUserId,
-                                        amountToSend: visitCost,
-                                        taxAmount: 0,
-                                        totalDebitAmount: visitCost,
-                                        senderTransactionDesc:
-                                        "1❤️ for visiting ${visitedEgoName}'s Ego.",
-                                        receiverTransactionDesc:
-                                        "1❤️ from ${visitingUser.nickname} visiting your Ego.",
-                                        claireTransactionDesc:
-                                        "Tax from a profile visit.", // Will be 0, but required
-                                        forRoomVisits: 1, // Stat for the sender
-                                        fromRoomVisits: 1, // Stat for the receiver
-                                        metadata: {
-                                          'reason': 'profile_visit',
-                                          'visitedUserId': visitedUserId
-                                        },
-                                      );
+                                          // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
+                                          if (visitingUser.userId == visitedUserId) {
+                                            // If visiting self, just navigate without a transaction.
+                                            PageRouter.gotoWidget(
+                                                VisitedUserEgoProfilePage(
+                                                    visitedUsersID: visitedUserId,
+                                                    visitedEgoName: visitedEgoName),
+                                                context);
+                                            return;
+                                          }
 
-                                      // --- 4. NAVIGATE ON SUCCESS ---
-                                      if (success) {
-                                        // Only navigate to the profile if the transaction was successful.
-                                        PageRouter.gotoWidget(
-                                            VisitedUserEgoProfilePage(
-                                                visitedUsersID: visitedUserId,
-                                                visitedEgoName: visitedEgoName),
-                                            context);
-                                      }
-                                    },
-                                    child: CachedNetworkImage(
-                                        width: 48,
-                                        height: 48,
-                                        imageUrl: _session.userAvatarUrl!,
-                                        imageBuilder: (context, imageProvider) =>
+                                          if (visitingUser.userType == "REGULAR" &&
+                                              visitingUser.currentLoveCount < 100) {
+                                            showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                                            return;
+                                          }
+
+                                          if (visitingUser.currentLoveCount < visitCost) {
+                                            showToast("You need at least 1 ❤️ to visit a profile.");
+                                            return;
+                                          }
+
+                                          // --- 3. PERFORM THE LOVE TRANSACTION ---
+                                          final bool success =
+                                          await firebaseServices.transferLoveBetweenUsers(
+                                            senderId: visitingUser.userId!,
+                                            receiverId: visitedUserId,
+                                            amountToSend: visitCost,
+                                            taxAmount: 0,
+                                            totalDebitAmount: visitCost,
+                                            senderTransactionDesc:
+                                            "1❤️ for visiting ${visitedEgoName}'s Ego.",
+                                            receiverTransactionDesc:
+                                            "1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                                            claireTransactionDesc: "Tax from a profile visit.",
+                                            // Will be 0, but required
+                                            forRoomVisits: 1,
+                                            // Stat for the sender
+                                            fromRoomVisits: 1,
+                                            // Stat for the receiver
+                                            metadata: {
+                                              'reason': 'profile_visit',
+                                              'visitedUserId': visitedUserId
+                                            },
+                                          );
+
+                                          // --- 4. NAVIGATE ON SUCCESS ---
+                                          if (success) {
+                                            // Only navigate to the profile if the transaction was successful.
+                                            PageRouter.gotoWidget(
+                                                VisitedUserEgoProfilePage(
+                                                    visitedUsersID: visitedUserId,
+                                                    visitedEgoName: visitedEgoName),
+                                                context);
+                                          }
+                                        } finally {
+                                          // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                                          // This runs no matter how the try block exits.
+                                          if (mounted) {
+                                            setState(() {
+                                              _isAvatarLoading = false;
+                                            });
+                                          }
+                                        }
+                                      },
+                                      child: Stack(
+                                        alignment: AlignmentGeometry.center,
+                                        children: [
+                                          CachedNetworkImage(
+                                              width: 50,
+                                              height: 50,
+                                              imageUrl: _session.userAvatarUrl!,
+                                              imageBuilder: (context, imageProvider) => Container(
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  image: DecorationImage(
+                                                    image: imageProvider,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
+                                              ),
+                                              placeholder: (context, url) =>
+                                                  CircularProgressIndicator(),
+                                              errorWidget: (context, url, error) => Image.asset(
+                                                "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                                width: 50,
+                                                height: 50,
+                                              )),
+
+                                          // --- 2. ADD THE OVERLAY LOADER ---
+                                          if (_isAvatarLoading)
                                             Container(
+                                              width: 60,
+                                              height: 60,
                                               decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: imageProvider,
-                                                  fit: BoxFit.fill,
+                                                color: Colors.black.withOpacity(0.5),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Center(
+                                                child: CupertinoActivityIndicator(
+                                                  color: Colors.white,
                                                 ),
                                               ),
                                             ),
-                                        placeholder: (context, url) => Center(
-                                            child: CircularProgressIndicator()),
-                                        errorWidget: (context, url, error) =>
-                                            Image.asset(
-                                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                              width: 48,
-                                              height: 48,
-                                            ) //Icon(Icons.error),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(
-                                    width: 8,
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () async {
-                                            // --- 1. SETUP TRANSACTION DETAILS ---
-                                            final visitingUser = await firebaseServices.getUserInfo();
-                                            final String visitedUserId = _session.userId!;
-                                            final String visitedEgoName = _session.userNickname!;
-                                            const int visitCost = 1;
-                                            // --- 2. HANDLE SELF-VISIT ---
-                                            if (visitingUser.userId == visitedUserId) {
-                                              // If visiting self, just navigate without a transaction.
-                                              PageRouter.gotoWidget(
-                                                  VisitedUserEgoProfilePage(
-                                                      visitedUsersID: visitedUserId,
-                                                      visitedEgoName: visitedEgoName),
-                                                  context);
-                                              return;
-                                            }
-
-                                            // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
-                                            // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
-                                            if (visitingUser.userType == "REGULAR" &&
-                                                visitingUser.currentLoveCount < 500) { // Changed from 50 to 500 for consistency
-                                              showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                                              return;
-                                            }
-
-                                            if (visitingUser.currentLoveCount < visitCost) {
-                                              showToast("You need at least 1 ❤️ to visit a profile.");
-                                              return;
-                                            }
-
-                                            // --- 4. PERFORM THE LOVE TRANSACTION ---
-                                            final bool success =
-                                            await firebaseServices.transferLoveBetweenUsers(
-                                              senderId: visitingUser.userId!,
-                                              receiverId: visitedUserId,
-                                              amountToSend: visitCost,
-                                              taxAmount: 0,
-                                              totalDebitAmount: visitCost,
-                                              senderTransactionDesc:
-                                              "1❤️ for visiting ${visitedEgoName}'s Ego.",
-                                              receiverTransactionDesc:
-                                              "1❤️ from ${visitingUser.nickname} visiting your Ego.",
-                                              claireTransactionDesc:
-                                              "Tax from a profile visit.", // Will be 0, but required
-                                              forRoomVisits: 1, // Stat for the sender
-                                              fromRoomVisits: 1, // Stat for the receiver
-                                              metadata: {
-                                                'reason': 'profile_visit',
-                                                'visitedUserId': visitedUserId
-                                              },
-                                            );
-
-                                            // --- 5. NAVIGATE ON SUCCESS ---
-                                            if (success) {
-                                              // Only navigate to the profile if the transaction was successful.
-                                              PageRouter.gotoWidget(
-                                                  VisitedUserEgoProfilePage(
-                                                      visitedUsersID: visitedUserId,
-                                                      visitedEgoName: visitedEgoName),
-                                                  context);
-                                            }
-                                          },
-                                          child: Text(_session.userNickname!,
+                                    SizedBox(
+                                      width: 8,
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          GestureDetector(
+                                            onTap: () async {
+                                              visitedUsersID = _session.userId!;
+                                              visitedEgoName = _session.userNickname!;
+                                              String thisEgoName =
+                                              _session.userNickname.toString();
+                                              String thisUser =
+                                              _session.userId.toString();
+                                              UserModel user =
+                                              await firebaseServices.getUserInfo();
+                                              if (user.userType != "REGULAR") {
+                                                PageRouter.gotoWidget(
+                                                    VisitedUserEgoProfilePage(
+                                                        visitedUsersID: thisUser,
+                                                        visitedEgoName: thisEgoName),
+                                                    context);
+                                              } else if (user.currentLoveCount > 500) {
+                                                PageRouter.gotoWidget(
+                                                    VisitedUserEgoProfilePage(
+                                                        visitedUsersID: thisUser,
+                                                        visitedEgoName: thisEgoName),
+                                                    context);
+                                              } else {
+                                                showToast(
+                                                    "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                                              }
+                                              print(
+                                                  "Visited User ID::: $visitedUsersID");
+                                            },
+                                            child: Text(_session.userNickname!,
+                                                textAlign: TextAlign.start,
+                                                maxLines: 1,
+                                                style: GoogleFonts.lato(
+                                                    fontSize: 22.0,
+                                                    color: textColor,
+                                                    fontWeight: FontWeight.w700)),
+                                          ),
+                                          SizedBox(
+                                            height: 5,
+                                          ),
+                                          Text(timeConverter(_session.timeCreated!),
                                               textAlign: TextAlign.start,
                                               maxLines: 1,
                                               style: GoogleFonts.lato(
-                                                  fontSize: 18.0,
+                                                  fontSize: 14.0,
+                                                  color: textColor,
+                                                  fontWeight: FontWeight.normal)),
+                                        ],
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(Mood.getMood(_session.moodId).toString(),
+                                              textAlign: TextAlign.end,
+                                              maxLines: 1,
+                                              style: GoogleFonts.lato(
+                                                  fontSize: 14.0,
                                                   color: textColor,
                                                   fontWeight: FontWeight.w700)),
-                                        ),
-                                        SizedBox(
-                                          height: 5,
-                                        ),
-                                        Text(timeConverter(_session.timeCreated!),
-                                            textAlign: TextAlign.start,
-                                            maxLines: 1,
-                                            style: GoogleFonts.lato(
-                                                fontSize: 13.0,
-                                                color: textColor,
-                                                fontWeight: FontWeight.normal)),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Text(Mood.getMood(_session.moodId).toString(),
-                                            textAlign: TextAlign.end,
-                                            maxLines: 1,
-                                            style: GoogleFonts.lato(
-                                                fontSize: 13.0,
-                                                color: textColor,
-                                                fontWeight: FontWeight.w700)),
-                                        SizedBox(
-                                          height: 5,
-                                        ),
-                                        Text(_session.location ?? '',
-                                            textAlign: TextAlign.end,
-                                            maxLines: 1,
-                                            style: GoogleFonts.lato(
-                                                fontSize: 12.0,
-                                                color: secondaryTextColor,
-                                                fontWeight: FontWeight.w700)),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              ),
-                              SizedBox(
-                                height: 14,
-                              ),
-                              Center(
-                                child: Text(_session.title!,
-                                    textAlign: TextAlign.center,
-                                    maxLines: 3,
-                                    style: GoogleFonts.lato(
-                                        fontSize: 20.0,
-                                        color: textColor,
-                                        fontWeight: FontWeight.w700)),
-                              ),
-                              SizedBox(
-                                height: 12,
-                              ),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      _session.message!,
-                                      textAlign: TextAlign.left,
-                                      style: GoogleFonts.lato(
-                                          fontSize: 17.0,
-                                          color: textColor,
-                                          fontWeight: FontWeight.normal),
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              SizedBox(height: 5,),
-
-                              Container(
-                                child: _session.audioUrl!.isNotEmpty
-                                    ? CustomPlaySoundWidget(
-                                    filePath: _session.audioUrl)
-                                    : SizedBox.shrink(),
-                              ),
-
-                              Visibility(
-                                visible: _session.imageUrls!.isNotEmpty,
-                                child: GridView.count(
-                                  shrinkWrap: true,
-                                  physics: NeverScrollableScrollPhysics(),
-                                  crossAxisCount: 5,
-                                  children: List.generate(_session.imageUrls!.length, (index) {
-                                    String image = _session.imageUrls![index].toString();
-                                    return Stack(
-                                      fit: StackFit.expand,
-                                      children: <Widget>[
-                                        GestureDetector(
-                                          onTap: () {
-                                            PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
-                                          },
-                                          child: Container(
-                                            child: CachedNetworkImage(
-                                                height: 100,
-                                                width: 100,
-                                                imageUrl: image,
-                                                imageBuilder: (context, imageProvider) => Container(
-                                                  decoration: BoxDecoration(
-                                                    borderRadius: BorderRadius.circular(25),
-                                                    image: DecorationImage(
-                                                        image: imageProvider,
-                                                        fit: BoxFit.cover
-                                                    ),
-                                                  ),
-                                                ),
-                                                placeholder: (context, url) =>
-                                                    Center(child: CircularProgressIndicator()),
-                                                errorWidget: (context, url, error) => Image.asset(
-                                                  "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                                  width: 48,
-                                                  height: 48,
-                                                ) //Icon(Icons.error),
-                                            ),
-                                            margin: EdgeInsets.all(3),
+                                          SizedBox(
+                                            height: 5,
                                           ),
-                                        ),
-                                      ],
-                                    );
-                                  }),
+                                          Text(_session.location ?? '',
+                                              textAlign: TextAlign.end,
+                                              maxLines: 1,
+                                              style: GoogleFonts.lato(
+                                                  fontSize: 13.0,
+                                                  color: secondaryTextColor,
+                                                  fontWeight: FontWeight.w700)),
+                                        ],
+                                      ),
+                                    )
+                                  ],
                                 ),
-                              ),
-
-                              SizedBox(
-                                height: 10,
-                              ),
-                              Row(
-                                children: [
-                                  MetooButton(
-                                    cheers: _session.meToos!.length,
-                                    thanks: _session.meLove!.length,
-                                    sorry: _session.meHiFive!.length,
-                                    me2: _session.meFlower!.length,
-                                    onReactionChanged: (reaction, index) async {
-                                      if (await firebaseServices
-                                          .isUserSignIn(context)) {
-                                        final _userModel =
-                                        await firebaseServices.getUserInfo();
-
-                                        firebaseServices.addUsersReactionToASession(
-                                            context, index,
-                                            session: _session,
-                                            sender: _userModel.nickname ?? '');
-
-                                        saveUserMe2Activity();
-                                      }
-                                    },
-                                    color: textColor,
-                                    session: _session,
-                                  ),
-                                  new SizedBox(
-                                    width: 10,
-                                  ),
-                                  _session.userId == currentUser?.uid
-                                      ? TextButton(
-                                    onPressed: () async {
-                                      firebaseServices.followYourSession(
-                                          context,
-                                          session: _session);
-                                    },
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          _session.followers!.length.toString(),
-                                          style: TextStyle(
-                                            color: textColor,
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ),
-                                        Icon(
-                                          _session.followers!
-                                              .contains(currentUser?.uid)
-                                              ? Icons
-                                              .notifications_active_rounded
-                                              : Icons
-                                              .notifications_off_outlined,
+                                SizedBox(
+                                  height: 13,
+                                ),
+                                Center(
+                                  child: Text(_session.title!,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 3,
+                                      style: GoogleFonts.lato(
+                                          fontSize: 28.0,
                                           color: textColor,
-                                          size: 26,
-                                        ),
-                                      ],
+                                          fontWeight: FontWeight.w800)),
+                                ),
+                                SizedBox(
+                                  height: 13,
+                                ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: SelectableLinkify(
+                                        onOpen: (link) async {
+                                          final Uri url = Uri.parse("${link.url}");
+                                          if (await canLaunchUrl(url)) {
+                                            await launchUrl(url);
+                                          } else {
+                                            throw 'Could not launch $link';
+                                          }
+                                        },
+                                        linkStyle: TextStyle(color: Colors.blue),
+                                        text: _session.message!,
+                                        textAlign: TextAlign.justify,
+                                        style: GoogleFonts.lato(
+                                            fontSize: 22.0,
+                                            color: textColor,
+                                            fontWeight: FontWeight.w600),
+                                      ),
                                     ),
-                                  )
-                                      : FollowButton(
-                                    text: _session.followers!
-                                        .contains(currentUser?.uid)
-                                        ? 'Unfollow'
-                                        : 'Follow',
-                                    onPressed: () async {
-                                      if (await firebaseServices
-                                          .isUserSignIn(context)) {
-                                        final follower = await firebaseServices
-                                            .getUserInfo();
-                                        final sessionOwnerId = _session.userId;
-                                        final isAlreadyFollowing = _session
-                                            .followers!
-                                            .contains(currentUser?.uid);
-                                        if (isAlreadyFollowing) {
-                                          firebaseServices.followThisSession(
-                                              context,
-                                              session: _session);
-                                          showToast(
-                                              "You've unfollowed this session.");
-                                          return; // Stop here
+                                  ],
+                                ),
+
+
+                                // +++++++++++++ UNIFIED MEDIA VIEWER +++++++++++++
+
+                                if ((_session.imageUrls?.isNotEmpty ?? false) || (_session.videoUrls?.isNotEmpty ?? false))
+                                  Builder(
+                                      builder: (context) {
+                                        // Create a unified list of all media items.
+                                        final List<MediaItem> allMedia = [];
+
+                                        // Add images to the list.
+                                        if (_session.imageUrls != null) {
+                                          for (var imageUrl in _session.imageUrls!) {
+                                            allMedia.add(MediaItem(networkUrl: imageUrl, type: MediaType.image));
+                                          }
                                         }
-                                        if (follower.currentLoveCount < 1) {
-                                          showToast(
-                                              "You need at least 1 ❤️ to follow a session.");
+
+                                        // Add videos to the list.
+                                        if (_session.videoUrls != null) {
+                                          for (int i = 0; i < _session.videoUrls!.length; i++) {
+                                            final videoUrl = _session.videoUrls![i];
+                                            final thumbnailUrl = (_session.videoThumbnailUrls != null && _session.videoThumbnailUrls!.length > i)
+                                                ? _session.videoThumbnailUrls![i]
+                                                : '';
+                                            allMedia.add(MediaItem(networkUrl: videoUrl, thumbnailUrl: thumbnailUrl, type: MediaType.video));
+                                          }
+                                        }
+
+                                        return GestureDetector(
+                                          onTap: () {},
+                                          child: UnifiedMediaViewer(
+                                            key: _mediaViewerKey,
+                                            mediaItems: allMedia,
+                                            aspectRatio: 0.6, // A taller, more immersive ratio
+                                          ),
+                                        );
+                                      }
+                                  ),
+
+                                // End of Unified Media Viewer
+
+                                // Audio is here
+
+                                SizedBox(
+                                  height: 7,
+                                ),
+                                Container(
+                                  child: _session.audioUrl!.isNotEmpty
+                                      ? CustomPlaySoundWidget(
+                                      filePath: _session.audioUrl)
+                                      : SizedBox.shrink(),
+                                ),
+                                SizedBox(
+                                  height: 12,
+                                ),
+                                Row(
+                                  children: [
+                                    MetooButton(
+                                      cheers: _session.meToos!.length,
+                                      thanks: _session.meLove!.length,
+                                      sorry: _session.meHiFive!.length,
+                                      me2: _session.meFlower!.length,
+                                      color: textColor,
+                                      session: _session,
+                                      onReactionChanged: (reaction, index) async {
+                                        if (await firebaseServices.isUserSignIn(context) == false) {
                                           return;
                                         }
 
+                                        // --- 1. SETUP TRANSACTION DETAILS ---
+                                        final reactingUser = await firebaseServices.getUserInfo();
+                                        final String reactingUserId = reactingUser.userId!;
+                                        final String sessionOwnerId = _session.userId!;
+                                        const int reactionCost = 1;
+
+                                        // --- 2. PREVENT SELF-REACTION & INSUFFICIENT LOVES ---
+                                        if (reactingUserId == sessionOwnerId) {
+                                          // User is reacting to their own post, just update the reaction locally.
+                                          // The original logic handles this well.
+                                          firebaseServices.addUsersReactionToASession(
+                                            context,
+                                            index,
+                                            session: _session,
+                                            sender: reactingUser.nickname ?? '',
+                                          );
+                                          showToast("You reacted to your own session.");
+                                          return;
+                                        }
+
+                                        if (reactingUser.currentLoveCount < reactionCost) {
+                                          showToast("You need at least 1 ❤️ to react.");
+                                          return;
+                                        }
+
+                                        // --- 3. PERFORM THE LOVE TRANSACTION ---
                                         final bool success =
-                                        await firebaseServices
-                                            .transferLoveBetweenUsers(
-                                          senderId: follower.userId!,
-                                          receiverId: sessionOwnerId!,
-                                          amountToSend: 1,
-                                          taxAmount: 0, // No tax for following
-                                          totalDebitAmount: 1,
+                                        await firebaseServices.transferLoveBetweenUsers(
+                                          senderId: reactingUserId,
+                                          receiverId: sessionOwnerId,
+                                          amountToSend: reactionCost,
+                                          taxAmount: 0, // No tax on a 1-love transaction
+                                          totalDebitAmount: reactionCost,
                                           senderTransactionDesc:
-                                          "1❤️ to follow '${_session.title}'.",
+                                          "1❤️ for reacting to session ${_session.title}.",
                                           receiverTransactionDesc:
-                                          "1❤️ from ${follower.nickname} to follow your session '${_session.title}'.",
-                                          claireTransactionDesc:
-                                          "Follow transaction tax (0%).",
+                                          "1❤️ from reaction to your session ${_session.title} by ${reactingUser.nickname}.",
+                                          claireTransactionDesc: "Tax from a session reaction.",
+                                          // Pass the specific stat increments
+                                          forReactions: reactionCost,
+                                          fromReactions: reactionCost,
                                           metadata: {
-                                            'reason': 'follow_session',
+                                            'reason': 'session_reaction',
                                             'sessionId': _session.sessionId,
+                                            'reactionIndex': index
                                           },
                                         );
 
+                                        // --- 4. UPDATE REACTION COUNT ON SUCCESS ---
                                         if (success) {
-                                          firebaseServices.followThisSession(
-                                              context,
-                                              session: _session);
-                                          await firebaseServices
-                                              .updateSessionLastTimeActivity(
-                                              _session.sessionId
-                                                  .toString());
+                                          // Only after a successful transaction, update the reaction on the session.
+                                          firebaseServices.addUsersReactionToASession(
+                                            context,
+                                            index,
+                                            session: _session,
+                                            sender: reactingUser.nickname ?? '',
+                                          );
+                                          saveUserMe2Activity(); // Your existing activity tracking
+                                          showToast("1❤️ sent to the session owner!");
+                                        }
+                                        // If !success, the service method already shows a toast.
+                                      },
+                                    ),
+                                    new SizedBox(
+                                      width: 10,
+                                    ),
 
+                                    _session.userId == currentUser?.uid
+                                        ? TextButton(
+                                      onPressed: () async {
+                                        firebaseServices.followYourSession(
+                                            context,
+                                            session: _session);
+                                      },
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            _session.followers!.length.toString(),
+                                            style: TextStyle(
+                                              color: textColor,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                          Icon(
+                                            _session.followers!
+                                                .contains(currentUser?.uid)
+                                                ? Icons
+                                                .notifications_active_rounded
+                                                : Icons
+                                                .notifications_off_outlined,
+                                            color: textColor,
+                                            size: 26,
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                        : FollowButton(
+                                      text: _session.followers!
+                                          .contains(currentUser?.uid)
+                                          ? 'Unfollow'
+                                          : 'Follow',
+                                      onPressed: () async {
+                                        if (await firebaseServices
+                                            .isUserSignIn(context)) {
+                                          final follower = await firebaseServices
+                                              .getUserInfo();
+                                          final sessionOwnerId = _session.userId;
+                                          final isAlreadyFollowing = _session
+                                              .followers!
+                                              .contains(currentUser?.uid);
+                                          if (isAlreadyFollowing) {
+                                            firebaseServices.followThisSession(
+                                                context,
+                                                session: _session);
+                                            showToast(
+                                                "You've unfollowed this session.");
+                                            return; // Stop here
+                                          }
+                                          if (follower.currentLoveCount < 1) {
+                                            showToast(
+                                                "You need at least 1❤️ to follow a session.");
+                                            return;
+                                          }
+
+                                          final bool success =
                                           await firebaseServices
-                                              .saveUserActivity(
-                                            activityType: 'follow',
-                                            activityMessage:
-                                            "You started following the session: '${_session.title}'.",
-                                            recipientId: sessionOwnerId,
-                                            recipientNickname:
-                                            _session.userNickname,
-                                            sessionId: _session.sessionId,
+                                              .transferLoveBetweenUsers(
+                                            senderId: follower.userId!,
+                                            receiverId: sessionOwnerId!,
+                                            amountToSend: 1,
+                                            taxAmount: 0, // No tax for following
+                                            totalDebitAmount: 1,
+                                            senderTransactionDesc:
+                                            "1❤️ to follow '${_session.title}'.",
+                                            receiverTransactionDesc:
+                                            "1❤️ from followed session '${_session.title}'.",
+                                            claireTransactionDesc:
+                                            "Follow transaction tax (0%).",
+                                            metadata: {
+                                              'reason': 'follow_session',
+                                              'sessionId': _session.sessionId,
+                                            },
                                           );
 
-                                          showToast(
-                                              "Now following! 1 ❤️ was sent to the author.");
-                                        } else {
-                                          showToast(
-                                              "Could not complete the follow. Please try again.");
+                                          if (success) {
+                                            firebaseServices.followThisSession(
+                                                context,
+                                                session: _session);
+                                            await firebaseServices
+                                                .updateSessionLastTimeActivity(
+                                                _session.sessionId
+                                                    .toString());
+
+                                            await firebaseServices
+                                                .saveUserActivity(
+                                              activityType: 'follow',
+                                              activityMessage:
+                                              "You started following the session: '${_session.title}'.",
+                                              recipientId: sessionOwnerId,
+                                              recipientNickname:
+                                              _session.userNickname,
+                                              sessionId: _session.sessionId,
+                                            );
+
+                                            showToast(
+                                                "Now following! 1❤️ was sent to the author.");
+                                          } else {
+                                            showToast(
+                                                "Could not complete the follow. Please try again.");
+                                          }
                                         }
-                                      }
-                                    },
-                                    count: _session.followers!.length,
-                                  ),
+                                      },
+                                      count: _session.followers!.length,
+                                    ),
 
-                                  new Spacer(),
+                                    new Spacer(),
+                                    FutureBuilder<
+                                        DocumentSnapshot<Map<String, dynamic>>>(
+                                      future: FirebaseFirestore.instance
+                                          .collection("users")
+                                          .doc(currentUser?.uid)
+                                          .get(),
+                                      builder: (_, snapshot) {
+                                        if (snapshot.hasData) {
+                                          var data = snapshot.data!.data();
+                                          var userType = data?["userType"] ?? "0";
 
-                                  FutureBuilder<
-                                      DocumentSnapshot<Map<String, dynamic>>>(
-                                    future: FirebaseFirestore.instance
-                                        .collection("users")
-                                        .doc(currentUser?.uid)
-                                        .get(),
-                                    builder: (_, snapshot) {
-                                      if (snapshot.hasData) {
-                                        var data = snapshot.data!.data();
-                                        var userType = data?["userType"] ?? "0";
-
-                                        return
-                                          Visibility(
+                                          return Visibility(
                                             visible: userType == "SUPER_ADMIN",
                                             child: GestureDetector(
                                               onTap: () {
                                                 if (_session.featured == false)
                                                   modFeatureAlertDialog(context);
-                                                else unfeatureAlertDialog(context);
+                                                else
+                                                  unfeatureAlertDialog(context);
                                               },
                                               child: Container(
                                                 child: Visibility(
-                                                  visible: _session.repliesEnabled == true,
+                                                  visible:
+                                                  _session.repliesEnabled == true,
                                                   child: Icon(
-                                                    _session.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
+                                                    _session.featured == true
+                                                        ? Icons.lightbulb
+                                                        : Icons.lightbulb_outline,
                                                     color: Pallet.colorSecondary,
-                                                    size: 24,
+                                                    size: 26,
                                                   ),
                                                 ),
                                               ),
                                             ),
                                           );
-                                      }
+                                        }
 
-                                      return Container();
-                                    },
-                                  ),
-
-                                  new Spacer(),
-
-                                  if (_session.userId == currentUser?.uid)
-                                    CupertinoButton(
-                                        padding: EdgeInsets.zero,
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 2.5, horizontal: 7),
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color: textColor,
-                                              )),
+                                        return Container();
+                                      },
+                                    ),
+                                    new Spacer(),
+                                    if (_session.userId == currentUser?.uid)
+                                      CupertinoButton(
+                                          padding: EdgeInsets.zero,
                                           child: Row(
                                             children: [
                                               Icon(
                                                 Icons.edit,
-                                                size: 15,
+                                                size: 17,
                                                 color: textColor,
                                               ),
                                               SizedBox(
                                                 width: 2,
                                               ),
                                               Text(
-                                                'Edit',
+                                                'EDIT',
                                                 style: GoogleFonts.lato(
-                                                    fontSize: 12.0,
+                                                    fontSize: 14.0,
                                                     color: textColor,
                                                     fontWeight: FontWeight.w800),
                                               ),
                                             ],
                                           ),
+                                          onPressed: _showCardDialog),
+                                    new Spacer(),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (_session.repliesEnabled == true)
+                                          GestureDetector(
+                                            onTap: () {
+                                              if (_session.flagged == false)
+                                                showCustomDialog(context,
+                                                    message: _session.flagged == true
+                                                        ? AppString.unflag_alert_note
+                                                        : AppString.flag_alert_note,
+                                                    onPressed: () {
+                                                      PageRouter.goBack(context);
+                                                      sendToFlagged();
+                                                    });
+                                              else
+                                                showCustomDialog(context,
+                                                    message: _session.flagged == false
+                                                        ? AppString.flag_alert_note
+                                                        : AppString.unflag_alert_note,
+                                                    onPressed: () {
+                                                      PageRouter.goBack(context);
+                                                      removeFromFlagged();
+                                                    });
+                                            },
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  _session.flagged == true
+                                                      ? Icons.flag
+                                                      : Icons.flag_outlined,
+                                                  color: textColor,
+                                                  size: 22,
+                                                ),
+                                                Text(
+                                                  'Flag',
+                                                  style: GoogleFonts.lato(
+                                                      fontSize: 15.0,
+                                                      color: textColor,
+                                                      fontWeight: FontWeight.w800),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        new SizedBox(
+                                          width: 10,
                                         ),
-                                        onPressed: _showCardDialog),
-                                  new Spacer(),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (_session.repliesEnabled == true)
-                                        GestureDetector(
-                                          onTap: () {
-                                            if (_session.flagged == false)
-                                              showCustomDialog(context,
-                                                  message: _session.flagged == true
-                                                      ? AppString.unflag_alert_note
-                                                      : AppString.flag_alert_note,
-                                                  onPressed: () {
-                                                    PageRouter.goBack(context);
-                                                    sendToFlagged();
-                                                  });
-                                            else
-                                              showCustomDialog(context,
-                                                  message: _session.flagged == false
-                                                      ? AppString.flag_alert_note
-                                                      : AppString.unflag_alert_note,
-                                                  onPressed: () {
-                                                    PageRouter.goBack(context);
-                                                    removeFromFlagged();
-                                                  });
+                                        FutureBuilder<
+                                            DocumentSnapshot<Map<String, dynamic>>>(
+                                          future: FirebaseFirestore.instance
+                                              .collection("users")
+                                              .doc(currentUser?.uid)
+                                              .get(),
+                                          builder: (_, snapshot) {
+                                            if (snapshot.hasData) {
+                                              var data = snapshot.data!.data();
+                                              var userType = data?["userType"] ?? "0";
+
+                                              return Visibility(
+                                                visible: userType == "SUPER_ADMIN",
+                                                child: Visibility(
+                                                  visible: _session.flagged == true,
+                                                  child: Row(
+                                                    children: [
+                                                      GestureDetector(
+                                                        onTap: () {
+                                                          if (_session.archived ==
+                                                              false)
+                                                            showCustomDialog(context,
+                                                                message: _session
+                                                                    .archived ==
+                                                                    true
+                                                                    ? AppString
+                                                                    .unarchive_alert_note
+                                                                    : AppString
+                                                                    .archive_alert_note,
+                                                                onPressed: () {
+                                                                  sendToArchive();
+                                                                  Navigator.of(context)
+                                                                      .pop();
+                                                                  setState(() {});
+                                                                });
+                                                          else
+                                                            showCustomDialog(context,
+                                                                message: _session
+                                                                    .archived ==
+                                                                    false
+                                                                    ? AppString
+                                                                    .archive_alert_note
+                                                                    : AppString
+                                                                    .unarchive_alert_note,
+                                                                onPressed: () {
+                                                                  removeFromArchive();
+                                                                  Navigator.of(context)
+                                                                      .pop();
+                                                                  setState(() {});
+                                                                });
+                                                        },
+                                                        child: Container(
+                                                          child: Icon(
+                                                            _session.archived == true
+                                                                ? Icons.archive_rounded
+                                                                : Icons
+                                                                .archive_outlined,
+                                                            color:
+                                                            Pallet.colorSecondary,
+                                                            size: 28,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                        width: 4,
+                                                      ),
+                                                      CupertinoButton(
+                                                          padding: EdgeInsets.zero,
+                                                          child: Row(
+                                                            children: [
+                                                              Icon(
+                                                                Icons.edit,
+                                                                size: 17,
+                                                                color: Pallet
+                                                                    .colorSecondary,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 2,
+                                                              ),
+                                                              Text(
+                                                                'MOD',
+                                                                style: GoogleFonts.lato(
+                                                                    fontSize: 14.0,
+                                                                    color: Pallet
+                                                                        .colorSecondary,
+                                                                    fontWeight:
+                                                                    FontWeight
+                                                                        .w800),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          onPressed: _showCardDialog),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            }
+
+                                            return Container();
                                           },
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                _session.flagged == true
-                                                    ? Icons.flag
-                                                    : Icons.flag_outlined,
-                                                color: textColor,
-                                                size: 20,
-                                              ),
-                                              Text(
-                                                'Flag',
-                                                style: GoogleFonts.lato(
-                                                    fontSize: 13.0,
-                                                    color: textColor,
-                                                    fontWeight: FontWeight.w800),
-                                              ),
-                                            ],
-                                          ),
                                         ),
-                                      new SizedBox(
-                                        width: 10,
-                                      ),
-                                      CupertinoButton(
-                                          padding: EdgeInsets.zero,
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.share_rounded,
-                                                size: 15,
-                                                color: textColor,
-                                              ),
-                                              Text(
-                                                'Share',
-                                                style: GoogleFonts.lato(
-                                                    fontSize: 13.0,
-                                                    color: textColor,
-                                                    fontWeight: FontWeight.w800),
-                                              ),
-                                            ],
-                                          ),
-                                          onPressed: () async {
-                                            final image =
-                                            await screenshotController.capture();
-                                            if (image == null) return;
-                                            await saveImage(image);
-                                            saveAndShare(image);
-                                          }),
-                                    ],
-                                  ),
-                                ],
-                              )
-                            ],
-                          ),
-                        );
-                      }
-                      return Container();
-                    }),
+                                        new SizedBox(
+                                          width: 10,
+                                        ),
+                                        CupertinoButton(
+                                            padding: EdgeInsets.zero,
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.share_rounded,
+                                                  size: 17,
+                                                  color: textColor,
+                                                ),
+                                                Text(
+                                                  'Share',
+                                                  style: GoogleFonts.lato(
+                                                      fontSize: 15.0,
+                                                      color: textColor,
+                                                      fontWeight: FontWeight.w800),
+                                                ),
+                                              ],
+                                            ),
+                                            onPressed: () async {
+                                              final image =
+                                              await screenshotController.capture();
+                                              if (image == null) return;
+                                              await saveImage(image);
+                                              saveAndShare(image);
+                                            }),
+                                      ],
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+                          );
+                        }
+                        return Container();
+                      }),
+                ),
               ),
             ),
           ),
@@ -892,9 +1072,9 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
               left: 0,
               right: 0,
               child: Container(
-                height: egoModeSessionDetailBottomBanner!.size.height.toDouble(),
-                width: egoModeSessionDetailBottomBanner!.size.width.toDouble(),
-                child: AdWidget(ad: egoModeSessionDetailBottomBanner!),
+                height: egoModeSessionDetailBottomBanner.size.height.toDouble(),
+                width: egoModeSessionDetailBottomBanner.size.width.toDouble(),
+                child: AdWidget(ad: egoModeSessionDetailBottomBanner),
                 alignment: Alignment.center,
               ),
             ),
@@ -1492,6 +1672,38 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
     logger.d('Successfully changed archive');
     print('Is Flagged?: $value');
     isFlagged = value;
+    return value;
+  }
+
+  Future<bool?> sendToArchive() async {
+    final value = true;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(theSession?.sessionId)
+        .update(
+      {
+        "archived": value,
+      },
+    );
+    logger.d('Successfully changed archive');
+    print('Is Archived?: $value');
+    isArchived = value;
+    return value;
+  }
+
+  Future<bool?> removeFromArchive() async {
+    final value = false;
+    FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(theSession?.sessionId)
+        .update(
+      {
+        "archived": value,
+      },
+    );
+    logger.d('Successfully changed archive');
+    print('Is Archived?: $value');
+    isArchived = value;
     return value;
   }
 

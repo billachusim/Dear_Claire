@@ -55,7 +55,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
   int _currentPage = 0;
   final GlobalKey<UnifiedMediaViewerState> _mediaViewerKey =
       GlobalKey<UnifiedMediaViewerState>();
-  bool _isAvatarLoading = false; // <-- ADD THIS
+  bool _isAvatarLoading = false;
 
   @override
   void initState() {
@@ -344,75 +344,93 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                     children: [
                       GestureDetector(
                         onTap: () async {
-                          // --- 1. SETUP TRANSACTION DETAILS ---
-                          final visitingUser =
-                              await firebaseServices.getUserInfo();
-                          final String visitedUserId = widget.element.userId!;
-                          final String visitedEgoName =
-                              widget.element.userNickname!;
-                          const int visitCost = 1;
+                          // --- 1. SHOW THE LOADER ---
+                          setState(() {
+                            _isAvatarLoading = true;
+                          });
+                          try {
+                            // --- 1. SETUP TRANSACTION DETAILS ---
+                            final visitingUser =
+                            await firebaseServices.getUserInfo();
+                            final String visitedUserId = widget.element.userId!;
+                            final String visitedEgoName =
+                            widget.element.userNickname!;
+                            const int visitCost = 1;
 
-                          // --- 2. HANDLE SELF-VISIT ---
-                          if (visitingUser.userId == visitedUserId) {
-                            // If visiting self, just navigate without a transaction.
-                            PageRouter.gotoWidget(
-                                VisitedUserEgoProfilePage(
-                                    visitedUsersID: visitedUserId,
-                                    visitedEgoName: visitedEgoName),
-                                context);
-                            return;
+                            // --- 2. HANDLE SELF-VISIT ---
+                            if (visitingUser.userId == visitedUserId) {
+                              // If visiting self, just navigate without a transaction.
+                              PageRouter.gotoWidget(
+                                  VisitedUserEgoProfilePage(
+                                      visitedUsersID: visitedUserId,
+                                      visitedEgoName: visitedEgoName),
+                                  context);
+                              return;
+                            }
+
+                            // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
+                            // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
+                            if (visitingUser.userType == "REGULAR" &&
+                                visitingUser.currentLoveCount < 500) {
+                              // Changed from 50 to 500 for consistency
+                              showToast(
+                                  message:
+                                  "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                              return;
+                            }
+
+                            if (visitingUser.currentLoveCount < visitCost) {
+                              showToast(
+                                  message:
+                                  "You need at least 1 ❤️ to visit a profile.");
+                              return;
+                            }
+
+                            // --- 4. PERFORM THE LOVE TRANSACTION ---
+                            final bool success =
+                            await firebaseServices.transferLoveBetweenUsers(
+                              senderId: visitingUser.userId!,
+                              receiverId: visitedUserId,
+                              amountToSend: visitCost,
+                              taxAmount: 0,
+                              totalDebitAmount: visitCost,
+                              senderTransactionDesc:
+                              "1❤️ for visiting ${visitedEgoName}'s Ego.",
+                              receiverTransactionDesc:
+                              "1❤️ from ${visitingUser
+                                  .nickname} visiting your Ego.",
+                              claireTransactionDesc:
+                              "Tax from a profile visit.",
+                              // Will be 0, but required
+                              forRoomVisits: 1,
+                              // Stat for the sender
+                              fromRoomVisits: 1,
+                              // Stat for the receiver
+                              metadata: {
+                                'reason': 'profile_visit',
+                                'visitedUserId': visitedUserId
+                              },
+                            );
+
+                            // --- 5. NAVIGATE ON SUCCESS ---
+                            if (success) {
+                              // Only navigate to the profile if the transaction was successful.
+                              PageRouter.gotoWidget(
+                                  VisitedUserEgoProfilePage(
+                                      visitedUsersID: visitedUserId,
+                                      visitedEgoName: visitedEgoName),
+                                  context);
+                            }
+                            // If !success, the service method already shows a toast.
+                          } finally {
+                            // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                            // This runs no matter how the try block exits.
+                            if (mounted) {
+                              setState(() {
+                                _isAvatarLoading = false;
+                              });
+                            }
                           }
-
-                          // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
-                          // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
-                          if (visitingUser.userType == "REGULAR" &&
-                              visitingUser.currentLoveCount < 500) {
-                            // Changed from 50 to 500 for consistency
-                            showToast(
-                                message:
-                                    "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                            return;
-                          }
-
-                          if (visitingUser.currentLoveCount < visitCost) {
-                            showToast(
-                                message:
-                                    "You need at least 1 ❤️ to visit a profile.");
-                            return;
-                          }
-
-                          // --- 4. PERFORM THE LOVE TRANSACTION ---
-                          final bool success =
-                              await firebaseServices.transferLoveBetweenUsers(
-                            senderId: visitingUser.userId!,
-                            receiverId: visitedUserId,
-                            amountToSend: visitCost,
-                            taxAmount: 0,
-                            totalDebitAmount: visitCost,
-                            senderTransactionDesc:
-                                "1❤️ for visiting ${visitedEgoName}'s Ego.",
-                            receiverTransactionDesc:
-                                "1❤️ from ${visitingUser.nickname} visiting your Ego.",
-                            claireTransactionDesc:
-                                "Tax from a profile visit.", // Will be 0, but required
-                            forRoomVisits: 1, // Stat for the sender
-                            fromRoomVisits: 1, // Stat for the receiver
-                            metadata: {
-                              'reason': 'profile_visit',
-                              'visitedUserId': visitedUserId
-                            },
-                          );
-
-                          // --- 5. NAVIGATE ON SUCCESS ---
-                          if (success) {
-                            // Only navigate to the profile if the transaction was successful.
-                            PageRouter.gotoWidget(
-                                VisitedUserEgoProfilePage(
-                                    visitedUsersID: visitedUserId,
-                                    visitedEgoName: visitedEgoName),
-                                context);
-                          }
-                          // If !success, the service method already shows a toast.
                         },
                         child: Text(widget.element.userNickname!,
                             textAlign: TextAlign.start,
@@ -421,6 +439,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                                 fontSize: 18.0,
                                 color: textColor,
                                 fontWeight: FontWeight.w800)),
+
                       ),
                       SizedBox(
                         height: 4,

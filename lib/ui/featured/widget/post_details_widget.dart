@@ -246,32 +246,89 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   children: [
                                     GestureDetector(
                                       onTap: () async {
-                                        visitedUsersID = _session.userId!;
-                                        visitedEgoName = _session.userNickname!;
-                                        String thisEgoName =
-                                            _session.userNickname.toString();
-                                        String thisUser =
-                                            _session.userId.toString();
-                                        UserModel user =
-                                            await firebaseServices.getUserInfo();
-                                        if (user.userType != "REGULAR") {
-                                          PageRouter.gotoWidget(
-                                              VisitedUserEgoProfilePage(
-                                                  visitedUsersID: thisUser,
-                                                  visitedEgoName: thisEgoName),
-                                              context);
-                                        } else if (user.currentLoveCount > 500) {
-                                          PageRouter.gotoWidget(
-                                              VisitedUserEgoProfilePage(
-                                                  visitedUsersID: thisUser,
-                                                  visitedEgoName: thisEgoName),
-                                              context);
-                                        } else {
-                                          showToast(
-                                              "Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                                        // --- 1. SHOW THE LOADER ---
+                                        setState(() {
+                                          _isAvatarLoading = true;
+                                        });
+                                        try {
+                                          // --- 1. SETUP TRANSACTION DETAILS ---
+                                          final visitingUser =
+                                          await firebaseServices.getUserInfo();
+                                          final String visitedUserId = _session.userId!;
+                                          final String visitedEgoName =
+                                          _session.userNickname!;
+                                          const int visitCost = 1;
+
+                                          // --- 2. HANDLE SELF-VISIT ---
+                                          if (visitingUser.userId == visitedUserId) {
+                                            // If visiting self, just navigate without a transaction.
+                                            PageRouter.gotoWidget(
+                                                VisitedUserEgoProfilePage(
+                                                    visitedUsersID: visitedUserId,
+                                                    visitedEgoName: visitedEgoName),
+                                                context);
+                                            return;
+                                          }
+
+                                          // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
+                                          // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
+                                          if (visitingUser.userType == "REGULAR" &&
+                                              visitingUser.currentLoveCount < 500) {
+                                            // Changed from 50 to 500 for consistency
+                                            showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                                            return;
+                                          }
+
+                                          if (visitingUser.currentLoveCount < visitCost) {
+                                            showToast("You need at least 1 ❤️ to visit a profile.");
+                                            return;
+                                          }
+
+                                          // --- 4. PERFORM THE LOVE TRANSACTION ---
+                                          final bool success =
+                                          await firebaseServices.transferLoveBetweenUsers(
+                                            senderId: visitingUser.userId!,
+                                            receiverId: visitedUserId,
+                                            amountToSend: visitCost,
+                                            taxAmount: 0,
+                                            totalDebitAmount: visitCost,
+                                            senderTransactionDesc:
+                                            "1❤️ for visiting ${visitedEgoName}'s Ego.",
+                                            receiverTransactionDesc:
+                                            "1❤️ from ${visitingUser
+                                                .nickname} visiting your Ego.",
+                                            claireTransactionDesc:
+                                            "Tax from a profile visit.",
+                                            // Will be 0, but required
+                                            forRoomVisits: 1,
+                                            // Stat for the sender
+                                            fromRoomVisits: 1,
+                                            // Stat for the receiver
+                                            metadata: {
+                                              'reason': 'profile_visit',
+                                              'visitedUserId': visitedUserId
+                                            },
+                                          );
+
+                                          // --- 5. NAVIGATE ON SUCCESS ---
+                                          if (success) {
+                                            // Only navigate to the profile if the transaction was successful.
+                                            PageRouter.gotoWidget(
+                                                VisitedUserEgoProfilePage(
+                                                    visitedUsersID: visitedUserId,
+                                                    visitedEgoName: visitedEgoName),
+                                                context);
+                                          }
+                                          // If !success, the service method already shows a toast.
+                                        } finally {
+                                          // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                                          // This runs no matter how the try block exits.
+                                          if (mounted) {
+                                            setState(() {
+                                              _isAvatarLoading = false;
+                                            });
+                                          }
                                         }
-                                        print(
-                                            "Visited User ID::: $visitedUsersID");
                                       },
                                       child: Text(_session.userNickname!,
                                           textAlign: TextAlign.start,
@@ -421,31 +478,75 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                 thanks: _session.meLove!.length,
                                 sorry: _session.meHiFive!.length,
                                 me2: _session.meFlower!.length,
+                                color: textColor,
+                                session: _session,
                                 onReactionChanged: (reaction, index) async {
-                                  if (await firebaseServices
-                                      .isUserSignIn(context)) {
-                                    final _userModel =
-                                        await firebaseServices.getUserInfo();
+                                  if (await firebaseServices.isUserSignIn(context) == false) {
+                                    return;
+                                  }
 
+                                  // --- 1. SETUP TRANSACTION DETAILS ---
+                                  final reactingUser = await firebaseServices.getUserInfo();
+                                  final String reactingUserId = reactingUser.userId!;
+                                  final String sessionOwnerId = _session.userId!;
+                                  const int reactionCost = 1;
+
+                                  // --- 2. PREVENT SELF-REACTION & INSUFFICIENT LOVES ---
+                                  if (reactingUserId == sessionOwnerId) {
+                                    // User is reacting to their own post, just update the reaction locally.
+                                    // The original logic handles this well.
                                     firebaseServices.addUsersReactionToASession(
                                       context,
                                       index,
                                       session: _session,
-                                      sender: _userModel.userType == 'ADMIN'
-                                          ? 'Claire'
-                                          : _userModel.userType == 'SUPER_ADMIN'
-                                              ? 'Claire'
-                                              : _userModel.nickname.toString(),
+                                      sender: reactingUser.nickname ?? '',
                                     );
-
-                                    saveUserMe2Activity();
-                                    await firebaseServices
-                                        .updateSessionLastTimeActivity(
-                                            _session.sessionId.toString());
+                                    showToast("You reacted to your own session.");
+                                    return;
                                   }
+
+                                  if (reactingUser.currentLoveCount < reactionCost) {
+                                    showToast("You need at least 1 ❤️ to react.");
+                                    return;
+                                  }
+
+                                  // --- 3. PERFORM THE LOVE TRANSACTION ---
+                                  final bool success =
+                                  await firebaseServices.transferLoveBetweenUsers(
+                                    senderId: reactingUserId,
+                                    receiverId: sessionOwnerId,
+                                    amountToSend: reactionCost,
+                                    taxAmount: 0, // No tax on a 1-love transaction
+                                    totalDebitAmount: reactionCost,
+                                    senderTransactionDesc:
+                                    "1❤️ for reacting to session ${_session.title}.",
+                                    receiverTransactionDesc:
+                                    "1❤️ from reaction to your session ${_session.title} by ${reactingUser.nickname}.",
+                                    claireTransactionDesc: "Tax from a session reaction.",
+                                    // Pass the specific stat increments
+                                    forReactions: reactionCost,
+                                    fromReactions: reactionCost,
+                                    metadata: {
+                                      'reason': 'session_reaction',
+                                      'sessionId': _session.sessionId,
+                                      'reactionIndex': index
+                                    },
+                                  );
+
+                                  // --- 4. UPDATE REACTION COUNT ON SUCCESS ---
+                                  if (success) {
+                                    // Only after a successful transaction, update the reaction on the session.
+                                    firebaseServices.addUsersReactionToASession(
+                                      context,
+                                      index,
+                                      session: _session,
+                                      sender: reactingUser.nickname ?? '',
+                                    );
+                                    saveUserMe2Activity(); // Your existing activity tracking
+                                    showToast("1❤️ sent to the session owner!");
+                                  }
+                                  // If !success, the service method already shows a toast.
                                 },
-                                color: textColor,
-                                session: _session,
                               ),
                               new SizedBox(
                                 width: 10,
