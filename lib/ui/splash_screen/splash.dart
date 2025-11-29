@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:clairediary/Automations/setup_autoDiary_widget.dart';
 import 'package:clairediary/ui/routes/routes.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,7 +8,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import '../../Automations/auto_diary_recorder_page.dart';
 import '../featured/notified_session_details.dart';
 
 class SplashPage extends StatefulWidget {
@@ -59,7 +59,7 @@ class _SplashPageState extends State<SplashPage>
           widget.initialLocalNotification!.notificationResponse?.payload;
       if (payload == 'auto_diary_record') {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => AutoDiaryRecorderPage()),
+          MaterialPageRoute(builder: (context) => SetupAutoDiary()),
         );
         return; // We handled a notification, so we're done.
       }

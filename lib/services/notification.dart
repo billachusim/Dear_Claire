@@ -1,15 +1,12 @@
 import 'dart:math';
 
-import 'package:clairediary/services/firebase_services.dart';
+import 'package:clairediary/Automations/setup_autoDiary_widget.dart';
 import 'package:clairediary/ui/routes/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
-import '../Automations/auto_diary_recorder_page.dart';
 import '../utils/color.dart';
 
 class ClairNotification {
@@ -48,7 +45,7 @@ class ClairNotification {
 
         if (payload == 'auto_diary_record') {
           NavigationService.navigationKey.currentState?.push(
-              MaterialPageRoute(builder: (context) => AutoDiaryRecorderPage()));
+              MaterialPageRoute(builder: (context) => SetupAutoDiary()));
         } else if (payload != null) {
           // Your existing FCM logic
           switch (payload) {

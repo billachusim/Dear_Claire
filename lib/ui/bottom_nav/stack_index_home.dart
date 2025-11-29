@@ -537,7 +537,7 @@ class _AppDrawerState extends State<_AppDrawer> {
             children: [
               _buildDrawerHeader(context),
               const SizedBox(height: 10),
-              //_buildTicTacToeGame(context),
+              _buildTicTacToeGame(context),
               const SizedBox(height: 10),
               _buildMenuList(context),
               _buildRecentTransactions(),
@@ -554,12 +554,6 @@ class _AppDrawerState extends State<_AppDrawer> {
       margin: EdgeInsets.zero,
       decoration: BoxDecoration(
         color: Pallet.colorPrimary,
-        image: DecorationImage(
-          image: const AssetImage("assets/images/claire_bg_2.jpeg"),
-          fit: BoxFit.cover,
-          colorFilter:
-          ColorFilter.mode(Pallet.colorPrimary.withOpacity(0.6), BlendMode.darken),
-        ),
       ),
       accountEmail: const Text(
         "You'll never be not truly loved.",
