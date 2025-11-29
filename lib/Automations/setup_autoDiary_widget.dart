@@ -1,5 +1,5 @@
-// 1. REMOVE background service import, ADD auto_diary import
-import 'package:clairediary/Automations/auto_diary.dart';
+// 1. Re-add background service import, remove unused constant import
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/widgets/toast.dart';
@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../utils/constant.dart';
+// We no longer call AutoDiary directly from here
+// import 'package:clairediary/Automations/auto_diary.dart';
 
 class SetupAutoDiary extends StatefulWidget {
   const SetupAutoDiary({Key? key}) : super(key: key);
@@ -17,8 +18,8 @@ class SetupAutoDiary extends StatefulWidget {
 }
 
 class _SetupAutoDiaryState extends State<SetupAutoDiary> {
-  // 2. NEW STATE VARIABLE for the loading indicator
-  bool _isRecording = false;
+  // 2. State variable to track the service status
+  bool isServiceRunning = false;
 
   /// Asks for microphone permission. Returns true if granted, false otherwise.
   Future<bool> _requestMicPermission() async {
@@ -36,8 +37,17 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary> {
   @override
   void initState() {
     super.initState();
-    // Just request permission on init. No need to check service status now.
-    _requestMicPermission();
+    _checkServiceStatus();
+  }
+
+  void _checkServiceStatus() async {
+    final service = FlutterBackgroundService();
+    bool isRunning = await service.isRunning();
+    if (mounted) {
+      setState(() {
+        isServiceRunning = isRunning;
+      });
+    }
   }
 
   @override
@@ -63,39 +73,45 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Auto Diary Foreground Test',
+                'Auto Diary will automatically record moments for you in the background.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.lato(
+                    fontSize: 16.0, color: Colors.black87),
+              ),
+              const SizedBox(height: 8),
+              // Display the current status of the service
+              Text(
+                isServiceRunning ? "Service is RUNNING" : "Service is STOPPED",
                 textAlign: TextAlign.center,
                 style: GoogleFonts.lato(
                     fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87),
+                    color: isServiceRunning ? Colors.green : Colors.red,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 32),
 
-              // --- BUTTON 1: ACTIVATE (FOREGROUND TEST) ---
+              // --- BUTTON 1: ACTIVATE (Background Task) ---
               OutlinedButton(
-                // 3. COMPLETELY NEW onPressed LOGIC
-                onPressed: _isRecording
-                    ? null // Disable button while recording
-                    : () async {
+                onPressed: () async {
                   if (!await _requestMicPermission()) return;
 
-                  // Start loading indicator
-                  setState(() {
-                    _isRecording = true;
-                  });
+                  final service = FlutterBackgroundService();
+                  var isRunning = await service.isRunning();
+                  if (!isRunning) {
+                    showToast("Starting background service...");
+                    await service.startService();
+                  }
 
-                  showToast("Recording started... please wait 15 seconds.");
+                  // Give the service a moment to be ready before invoking
+                  await Future.delayed(const Duration(seconds: 2));
 
-                  // Call the recording method directly
-                  await AutoDiary.startRecording();
+                  // Send the command to start recording
+                  service.invoke('startRecording');
 
-                  showToast("Process complete! A new diary session has been created.");
+                  if (mounted) setState(() { isServiceRunning = true; });
 
-                  // Stop loading indicator
-                  setState(() {
-                    _isRecording = false;
-                  });
+                  Navigator.of(context).pop();
+                  showToast("Auto Diary has been activated!");
                 },
                 style: OutlinedButton.styleFrom(
                   backgroundColor: Pallet.colorSecondary,
@@ -103,19 +119,35 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25)),
                 ),
-                // 4. Show loading indicator or text
-                child: _isRecording
-                    ? const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                )
-                    : Text("START FOREGROUND TEST 🌺",
+                child: Text("ACTIVATE ONCE 🌺",
                     style: GoogleFonts.lato(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w700,
                         color: Colors.white)),
               ),
               const SizedBox(height: 20),
-              // We can hide the STOP button as it's not needed for this test
+
+              // --- BUTTON 2: STOP ---
+              OutlinedButton(
+                onPressed: () {
+                  final service = FlutterBackgroundService();
+                  // Invoke our custom 'stopService' event
+                  service.invoke('stopService');
+                  if (mounted) setState(() { isServiceRunning = false; });
+                  showToast("Auto Diary service stopped.");
+                },
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.red.shade400,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25)),
+                ),
+                child: Text("STOP SERVICE",
+                    style: GoogleFonts.lato(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white)),
+              ),
             ],
           ),
         ),
@@ -123,3 +155,4 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary> {
     );
   }
 }
+

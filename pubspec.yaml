@@ -15,7 +15,6 @@ dependencies:
   flutter_svg: ^2.2.3
   dio: ^5.9.0
   cached_network_image: ^3.4.1
-  permission_handler: ^11.4.0
   image_picker: ^1.2.1
 
   # Updated Firebase dependencies
@@ -72,6 +71,8 @@ dependencies:
   animated_text_kit: ^4.3.0
   workmanager: ^0.9.0+3
   flutter_background_service: ^5.1.0
+  record: ^6.1.2
+  permission_handler: ^12.0.1
   webview_flutter: ^4.13.0
   path: ^1.9.1
   velocity_x: ^4.3.1

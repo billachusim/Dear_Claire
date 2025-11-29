@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:async';
 import 'dart:ui';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/services/notification.dart';
@@ -24,18 +24,17 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
-import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'Admob/ad_state.dart';
 import 'Automations/auto_diary.dart';
-import 'Automations/claireminder.dart';
 import 'data/core/config.dart';
 import 'firebase_options.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Temporarily disable the background service ---
-  // await initializeService();
+
+  // Configure and start the service from main()
+  await initializeService();
 
   // --- STANDARD INITIALIZATIONS ---
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -85,6 +84,7 @@ Future<void> main() async {
 
 
 
+
 /// Receive message when the app is closed and in background.
 Future<void> backgroundHandler(RemoteMessage message) async{
   print(message.data.toString());
@@ -97,14 +97,11 @@ Future<void> initializeService() async {
 
   const notificationChannelId = 'auto_diary_channel';
   const notificationId = 888;
-
   final channel = AndroidNotificationChannel(
-    notificationChannelId,
-    'Auto Diary Service', // title
-    description: 'This channel is used for the Auto Diary background service.', // description
-    importance: Importance.low, // Use LOW importance for a less intrusive notification
+    notificationChannelId, 'Auto Diary Service',
+    description: 'This channel is used for the Auto Diary background service.',
+    importance: Importance.low,
   );
-
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
@@ -113,17 +110,14 @@ Future<void> initializeService() async {
   await service.configure(
     androidConfiguration: AndroidConfiguration(
       onStart: onStart,
-      // --- THE CRUCIAL CHANGE IS HERE ---
       autoStart: true,
       isForegroundMode: true,
-      // ------------------------------------
       notificationChannelId: notificationChannelId,
-      initialNotificationTitle: 'Auto Diary', // A cleaner title
-      initialNotificationContent: 'Ready and waiting.', // A clearer state
+      initialNotificationTitle: 'Auto Diary',
+      initialNotificationContent: 'Ready and waiting.',
       foregroundServiceNotificationId: notificationId,
     ),
     iosConfiguration: IosConfiguration(
-      // --- Also enable autoStart for iOS for consistency ---
       autoStart: true,
       onForeground: onStart,
       onBackground: (ServiceInstance service) async {
@@ -131,7 +125,13 @@ Future<void> initializeService() async {
       },
     ),
   );
+
+  service.startService();
 }
+
+
+
+
 
 
 
@@ -141,15 +141,36 @@ void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // This timer will control the recording duration.
+  Timer? recordingTimer;
+
+  // Listen for the 'stopService' event to clean up resources.
   service.on('stopService').listen((event) {
-    service.stopSelf();
+    recordingTimer?.cancel(); // Cancel any active timer.
+    AutoDiary.stopRecording(); // Ensure any active recording is stopped and processed.
+    service.stopSelf(); // Stop the background service itself.
   });
 
+  // Listen for the 'startRecording' event from your UI.
   service.on('startRecording').listen((event) async {
     print('BACKGROUND_SERVICE: Received startRecording event.');
+
+    // Start the recording immediately.
     await AutoDiary.startRecording();
+
+    // Cancel any previous timer to avoid overlapping recordings.
+    recordingTimer?.cancel();
+
+    // Schedule the stop command to run after 15 seconds.
+    recordingTimer = Timer(const Duration(seconds: 15), () async {
+      print('BACKGROUND_SERVICE: 15-second timer elapsed. Stopping recording.');
+      await AutoDiary.stopRecording();
+    });
   });
 }
+
+
+
 
 
 
