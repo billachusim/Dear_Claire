@@ -75,8 +75,7 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
         // --- ADD THIS LINE TO SAVE THE JOIN ROOM ACTIVITY ---
         await firebaseServices.saveUserActivity(
           activityType: 'room_join',
-          activityMessage: "You joined the room: ${widget.element.title}.",
-          // We will use the 'sessionId' field to store the room's ID.
+          activityMessage: "This room was joined: ${widget.element.title}.",
           sessionId: widget.element.id.toString(),
         );
 

@@ -127,22 +127,8 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
 
                           // --- 4. NAVIGATE ON SUCCESS ---
                           if (success) {
-                            // --- SEND NOTIFICATION ---
-                            try {
-                              await notificationService.sendNotification(
-                                  push_notification.NotificationModel(
-                                      topic: visitedUserId,
-                                      data: push_notification.Data(id: visitedUserId, route: 'wallet'),
-                                      notification: push_notification.Notification(
-                                          title: "Someone Visited Your Ego!",
-                                          body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                      )
-                                  ).toJson()
-                              );
-                            } catch (e) {
-                              print("Failed to send profile visit notification: $e");
-                              // Do not block navigation if notification fails
-                            }
+                            showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
+
 
                             // --- NAVIGATE ---
                             // Only navigate to the profile if the transaction was successful.
@@ -187,8 +173,8 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
                           // --- 2. ADD THE OVERLAY LOADER ---
                           if (_isAvatarLoading)
                             Container(
-                              width: 50,
-                              height: 50,
+                              width: 40,
+                              height: 40,
                               decoration: BoxDecoration(
                                 color: Colors.black.withOpacity(0.5),
                                 shape: BoxShape.circle,
@@ -212,6 +198,10 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
                         children: [
                           GestureDetector(
                             onTap: () async {
+                              setState(() {
+                                _isAvatarLoading = true;
+                              });
+                              try {
                               // --- 1. SETUP TRANSACTION DETAILS ---
                               final visitingUser = await firebaseServices.getUserInfo();
                               final String visitedUserId = _user.userId!;
@@ -265,22 +255,7 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
 
                               // --- 5. NAVIGATE ON SUCCESS ---
                               if (success) {
-                                // --- SEND NOTIFICATION ---
-                                try {
-                                  await notificationService.sendNotification(
-                                      push_notification.NotificationModel(
-                                          topic: visitedUserId,
-                                          data: push_notification.Data(id: visitedUserId, route: 'wallet'),
-                                          notification: push_notification.Notification(
-                                              title: "Someone Visited Your Ego!",
-                                              body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                          )
-                                      ).toJson()
-                                  );
-                                } catch (e) {
-                                  print("Failed to send profile visit notification: $e");
-                                  // Do not block navigation if notification fails
-                                }
+                                showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
                                 // --- NAVIGATE ---
                                 // Only navigate to the profile if the transaction was successful.
@@ -289,6 +264,15 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
                                         visitedUsersID: visitedUserId,
                                         visitedEgoName: visitedEgoName),
                                     context);
+                              }
+                              } finally {
+                                // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                                // This runs no matter how the try block exits.
+                                if (mounted) {
+                                  setState(() {
+                                    _isAvatarLoading = false;
+                                  });
+                                }
                               }
                             },
                             child: Text(_user.nickname ?? '',

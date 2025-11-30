@@ -554,31 +554,6 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
 
   }
 
-  void _updateReaction(
-      CommentSessionModel? commentSessionModel, Session session) async {
-    if (commentSessionModel!.commentId!.isEmpty) {
-      showToast('You cann\'t react to this post at this time.');
-      return;
-    }
-    if (!await firebaseServices.isUserSignIn(context)) return;
-
-    final _userModel = await firebaseServices.getUserInfo();
-    firebaseServices.addThanksReaction(
-        commentID: commentSessionModel.commentId!,
-        docId: session.sessionId!,
-        session: session,
-        sender: _userModel.userType == 'ADMIN'? 'Claire' :
-        _userModel.userType == 'SUPER_ADMIN'? 'Claire' :
-        _userModel.nickname.toString(),
-        map: commentSessionModel.thanks!.contains(_userModel.userId)
-            ? {
-          'thanks': FieldValue.arrayRemove([_userModel.userId])
-        }
-            : {
-          'thanks': FieldValue.arrayUnion([_userModel.userId])
-        });
-    saveUserThanksActivity(commentSessionModel);
-  }
 
   _share(String? message) {
     String _message = '''

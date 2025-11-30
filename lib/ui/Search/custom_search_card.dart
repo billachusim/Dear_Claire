@@ -127,22 +127,7 @@ class _CustomSearchCardState extends State<CustomSearchCard> {
 
                         // --- 4. NAVIGATE ON SUCCESS ---
                         if (success) {
-                          // --- SEND NOTIFICATION ---
-                          try {
-                            await notificationService.sendNotification(
-                                push_notification.NotificationModel(
-                                    topic: visitedUserId,
-                                    data: push_notification.Data(id: visitedUserId, route: 'wallet'),
-                                    notification: push_notification.Notification(
-                                        title: "Someone Visited Your Ego!",
-                                        body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                    )
-                                ).toJson()
-                            );
-                          } catch (e) {
-                            print("Failed to send profile visit notification: $e");
-                            // Do not block navigation if notification fails
-                          }
+                          showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
                           // --- NAVIGATE ---
                           // Only navigate to the profile if the transaction was successful.
@@ -280,22 +265,8 @@ class _CustomSearchCardState extends State<CustomSearchCard> {
 
                               // --- 5. NAVIGATE ON SUCCESS ---
                               if (success) {
-                                // --- SEND NOTIFICATION ---
-                                try {
-                                  await notificationService.sendNotification(
-                                      push_notification.NotificationModel(
-                                          topic: visitedUserId,
-                                          data: push_notification.Data(id: visitedUserId, route: 'wallet'),
-                                          notification: push_notification.Notification(
-                                              title: "Someone Visited Your Ego!",
-                                              body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                          )
-                                      ).toJson()
-                                  );
-                                } catch (e) {
-                                  print("Failed to send profile visit notification: $e");
-                                  // Do not block navigation if notification fails
-                                }
+                                showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
+
 
                                 // --- NAVIGATE ---
                                 // Only navigate to the profile if the transaction was successful.

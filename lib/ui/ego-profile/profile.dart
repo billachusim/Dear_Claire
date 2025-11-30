@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:clairediary/ui/create_session/sound/custom_play_sound_widget.dart';
 import 'package:clairediary/widgets/audio_recorder.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/firebase_services.dart';
@@ -39,7 +40,7 @@ class EgoProfilePage extends StatefulWidget {
   @override
   _EgoProfilePageState createState() => _EgoProfilePageState();
 }
-
+bool _isAvatarLoading = false;
 const int maxFailedLoadAttempts = 3;
 
 
@@ -947,6 +948,10 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                       leading: ClipOval(
                                         child: GestureDetector(
                                           onTap: () async {
+                                            setState(() {
+                                              _isAvatarLoading = true;
+                                            });
+                                            try {
                                             // --- 1. SETUP TRANSACTION DETAILS ---
                                             final visitingUser = await firebaseServices.getUserInfo();
                                             final String visitedUserId = data['senderId'].toString();
@@ -1000,24 +1005,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
                                             // --- 5. NAVIGATE ON SUCCESS ---
                                             if (success) {
-                                              // --- SEND NOTIFICATION ---
-                                              try {
-                                                await notificationService.sendNotification(
-                                                    push_notification.NotificationModel(
-                                                        topic: visitedUserId,
-                                                        data: push_notification.Data(id: visitedUserId, route: 'wallet'),
-                                                        notification: push_notification.Notification(
-                                                            title: "Someone Visited Your Ego!",
-                                                            body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                                        )
-                                                    ).toJson()
-                                                );
-                                              } catch (e) {
-                                                print("Failed to send profile visit notification: $e");
-                                                // Do not block navigation if notification fails
-                                              }
+                                              showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
-                                              // --- NAVIGATE ---
                                               // Only navigate to the profile if the transaction was successful.
                                               PageRouter.gotoWidget(
                                                   VisitedUserEgoProfilePage(
@@ -1025,26 +1014,55 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                                       visitedEgoName: visitedEgoName),
                                                   context);
                                             }
+                                            } finally {
+                                              // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                                              // This runs no matter how the try block exits.
+                                              if (mounted) {
+                                                setState(() {
+                                                  _isAvatarLoading = false;
+                                                });
+                                              }
+                                            }
                                           },
-                                          child: CachedNetworkImage(
-                                            width: 40,
-                                            height: 40,
-                                            imageUrl: data['egoImage'],
-                                            imageBuilder: (context, imageProvider) => Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: imageProvider,
-                                                  fit: BoxFit.fill,
+                                          child: Stack(
+                                            children: [
+                                              CachedNetworkImage(
+                                                width: 40,
+                                                height: 40,
+                                                imageUrl: data['egoImage'],
+                                                imageBuilder: (context, imageProvider) => Container(
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                      image: imageProvider,
+                                                      fit: BoxFit.fill,
+                                                    ),
+                                                  ),
+                                                ),
+                                                placeholder: (context, url) =>
+                                                    CircularProgressIndicator(),
+                                                errorWidget: (context, url, error) => Image.asset(
+                                                  "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                                  width: 30,
+                                                  height: 30,
                                                 ),
                                               ),
-                                            ),
-                                            placeholder: (context, url) =>
-                                                CircularProgressIndicator(),
-                                            errorWidget: (context, url, error) => Image.asset(
-                                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                              width: 30,
-                                              height: 30,
-                                            ),
+                                              if (_isAvatarLoading)
+                                                Container(
+                                                  width: 40,
+                                                  height: 40,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black
+                                                        .withOpacity(0.5),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Center(
+                                                    child:
+                                                    CupertinoActivityIndicator(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                         ),
                                       ),

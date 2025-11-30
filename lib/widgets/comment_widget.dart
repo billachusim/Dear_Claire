@@ -215,7 +215,7 @@ class _CommentWidgetState extends State<CommentWidget> {
           // After a successful transaction, save the activity to Firestore.
           await firebaseServices.saveUserActivity(
             activityType: 'thank',
-            activityMessage: "You thanked ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advise on ${widget.featuredSessionModel?.title}. and gave 1❤️",
+            activityMessage: "Thanks with ❤️ to ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advice.",
             recipientId: thankedUserId, // The user who received the thanks
             sessionId: widget.featuredSessionModel?.sessionId,
           );
@@ -276,7 +276,7 @@ class _CommentWidgetState extends State<CommentWidget> {
         // After a successful transaction, save the activity to Firestore.
         await firebaseServices.saveUserActivity(
           activityType: 'thank',
-          activityMessage: "You thanked ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advise on ${widget.featuredSessionModel?.title}.",
+          activityMessage: "Thanks with ❤️ to ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advice.",
           recipientId: thankedUserId, // The user who received the thanks
           sessionId: widget.featuredSessionModel?.sessionId,
         );
@@ -297,8 +297,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                 topic: thankedUserId,
                 data: pushNotification.Data(id: thankedUserId, route: 'wallet'),
                 notification: pushNotification.Notification(
-                    title: "You Received a Thank You!",
-                    body: "${thanker.nickname} thanked your advise and sent you 3❤️."
+                    title: "A Thank You With 3❤️!",
                 )
             ).toJson()
         );
@@ -364,7 +363,7 @@ class _CommentWidgetState extends State<CommentWidget> {
           data: pushNotification.Data(id: userId, route: 'wallet'),
           notification: pushNotification.Notification(
               title: 'An Advise Was Deleted',
-              body: "Your advise was deleted, and you lost 10 ❤️."));
+              body: "Your advise was deleted, and you lost 10❤️."));
       await notificationService.sendNotification(notificationModel.toJson());
     } catch (e) {
       print("Failed to send 'Advise Deleted' push notification: $e");
@@ -465,31 +464,45 @@ class _CommentWidgetState extends State<CommentWidget> {
                   });
                   try {
                     // --- 1. SETUP TRANSACTION DETAILS ---
-                    final visitingUser = await firebaseServices.getUserInfo();
-                    final String visitedUserId = widget.commentSessionModel!.userId!;
-                    final String visitedEgoName =
-                    widget.commentSessionModel!.userNickname!;
+                    widget.visitedUsersID =
+                    widget.commentSessionModel?.isUserAdmin == true
+                        ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                        : widget.commentSessionModel!.userId ?? '';
+                    widget.visitedEgoName =
+                    widget.commentSessionModel?.isUserAdmin == true
+                        ? "Claire"
+                        : widget.commentSessionModel!.userNickname ?? '';
+                    String thisEgoName = widget.visitedEgoName;
+                    String thisUserID = widget.commentSessionModel?.isUserAdmin == true
+                        ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                        : widget.commentSessionModel!.userId ?? '';
+                    UserModel visitingUser = await firebaseServices.getUserInfo();
                     const int visitCost = 1;
 
                     // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
-                    if (visitingUser.userId == visitedUserId) {
+                    if (visitingUser.userId == thisUserID) {
                       // If visiting self, just navigate without a transaction.
                       PageRouter.gotoWidget(
                           VisitedUserEgoProfilePage(
-                              visitedUsersID: visitedUserId,
-                              visitedEgoName: visitedEgoName),
+                              visitedUsersID: thisUserID,
+                              visitedEgoName: thisEgoName),
                           context);
                       return;
                     }
 
                     if (visitingUser.userType == "REGULAR" &&
                         visitingUser.currentLoveCount < 100) {
-                      showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                      showToast("Need up to 100 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
                       return;
                     }
 
                     if (visitingUser.currentLoveCount < visitCost) {
-                      showToast("You need at least 1❤️ to visit a profile.");
+                      showToast("You need at least 1❤️ to visit an ego.");
+                      return;
+                    }
+
+                    if (currentUser == null) {
+                      showToast("You must be logged in to visit an ego.");
                       return;
                     }
 
@@ -497,12 +510,12 @@ class _CommentWidgetState extends State<CommentWidget> {
                     final bool success =
                     await firebaseServices.transferLoveBetweenUsers(
                       senderId: visitingUser.userId!,
-                      receiverId: visitedUserId,
+                      receiverId: thisUserID,
                       amountToSend: visitCost,
                       taxAmount: 0,
                       totalDebitAmount: visitCost,
                       senderTransactionDesc:
-                      "1❤️ for visiting ${visitedEgoName}'s Ego.",
+                      "1❤️ for visiting ${thisEgoName}'s Ego.",
                       receiverTransactionDesc:
                       "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                       claireTransactionDesc: "Tax from a profile visit.",
@@ -513,35 +526,21 @@ class _CommentWidgetState extends State<CommentWidget> {
                       // Stat for the receiver
                       metadata: {
                         'reason': 'profile_visit',
-                        'visitedUserId': visitedUserId
+                        'visitedUserId': thisUserID
                       },
                     );
 
                     // --- 4. NAVIGATE ON SUCCESS ---
                     if (success) {
-                      // --- SEND NOTIFICATION ---
-                      try {
-                        await notificationService.sendNotification(
-                            pushNotification.NotificationModel(
-                                topic: visitedUserId,
-                                data: pushNotification.Data(id: visitedUserId, route: 'wallet'),
-                                notification: pushNotification.Notification(
-                                    title: "Someone Visited Your Ego!",
-                                    body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                )
-                            ).toJson()
-                        );
-                      } catch (e) {
-                        print("Failed to send profile visit notification: $e");
-                        // Do not block navigation if notification fails
-                      }
+                      showToast("You are visiting ${thisEgoName} with a kola of 1❤️.");
+
 
                       // --- NAVIGATE ---
                       // Only navigate to the profile if the transaction was successful.
                       PageRouter.gotoWidget(
                           VisitedUserEgoProfilePage(
-                              visitedUsersID: visitedUserId,
-                              visitedEgoName: visitedEgoName),
+                              visitedUsersID: thisUserID,
+                              visitedEgoName: thisEgoName),
                           context);
                     }
                   } finally {
@@ -558,9 +557,11 @@ class _CommentWidgetState extends State<CommentWidget> {
                   alignment: AlignmentGeometry.center,
                   children: [
                     CachedNetworkImage(
-                        width: 50,
-                        height: 50,
-                        imageUrl: widget.commentSessionModel!.userAvatarUrl!,
+                        width: 40,
+                        height: 40,
+                        imageUrl: widget.commentSessionModel?.isUserAdmin == true?
+                        "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691" :
+                        widget.commentSessionModel!.userAvatarUrl ?? '',
                         imageBuilder: (context, imageProvider) => Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
@@ -574,15 +575,15 @@ class _CommentWidgetState extends State<CommentWidget> {
                             CircularProgressIndicator(),
                         errorWidget: (context, url, error) => Image.asset(
                           "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                          width: 50,
-                          height: 50,
+                          width: 40,
+                          height: 40,
                         )),
 
                     // --- 2. ADD THE OVERLAY LOADER ---
                     if (_isAvatarLoading)
                       Container(
-                        width: 50,
-                        height: 50,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.5),
                           shape: BoxShape.circle,
@@ -606,27 +607,35 @@ class _CommentWidgetState extends State<CommentWidget> {
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        // --- 1. SETUP TRANSACTION DETAILS ---
-                        final visitingUser = await firebaseServices.getUserInfo();
-                        final bool isVisitingAdmin = widget.commentSessionModel?.isUserAdmin == true;
-
-                        final String visitedUserId = isVisitingAdmin
-                            ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2" // Claire's fixed ID
-                            : widget.commentSessionModel!.userId!;
-
-                        final String visitedEgoName = isVisitingAdmin
-                            ? "Claire"
-                            : widget.commentSessionModel!.userNickname!;
+                        setState(() {
+                          _isAvatarLoading = true;
+                        });
+                        try {
+                        widget.visitedUsersID =
+                        widget.commentSessionModel?.isUserAdmin == true
+                            ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                            : widget.commentSessionModel!.userId ?? '';
+                        widget.visitedEgoName =
+                        widget.commentSessionModel?.isUserAdmin == true
+                            ? "Oh, Yes, It's Me, Claire!"
+                            : widget.commentSessionModel!.userNickname ??
+                            '';
+                        String thisEgoName = widget.visitedEgoName;
+                        String thisUserID =
+                        widget.commentSessionModel?.isUserAdmin == true
+                            ? "PbRuh3FmtESK57j3PM1Tc9RvPKh2"
+                            : widget.commentSessionModel!.userId ?? '';
+                        UserModel visitingUser = await firebaseServices.getUserInfo();
 
                         const int visitCost = 1;
 
                         // --- 2. HANDLE SELF-VISIT ---
-                        if (visitingUser.userId == visitedUserId) {
+                        if (visitingUser.userId == thisUserID) {
                           // If visiting self, just navigate without a transaction.
                           PageRouter.gotoWidget(
                               VisitedUserEgoProfilePage(
-                                  visitedUsersID: visitedUserId,
-                                  visitedEgoName: visitedEgoName),
+                                  visitedUsersID: thisUserID,
+                                  visitedEgoName: thisEgoName),
                               context);
                           return;
                         }
@@ -648,11 +657,11 @@ class _CommentWidgetState extends State<CommentWidget> {
                         final bool success =
                         await firebaseServices.transferLoveBetweenUsers(
                           senderId: visitingUser.userId!,
-                          receiverId: visitedUserId,
+                          receiverId: thisUserID,
                           amountToSend: visitCost,
                           taxAmount: 0,
                           totalDebitAmount: visitCost,
-                          senderTransactionDesc: "1❤️ for visiting ${visitedEgoName}'s Ego.",
+                          senderTransactionDesc: "1❤️ for visiting ${thisEgoName}'s Ego.",
                           receiverTransactionDesc:
                           "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                           claireTransactionDesc: "Tax from a profile visit.",
@@ -660,44 +669,37 @@ class _CommentWidgetState extends State<CommentWidget> {
                           fromProfileVisits: 1, // Stat for the receiver
                           metadata: {
                             'reason': 'profile_visit',
-                            'visitedUserId': visitedUserId,
+                            'visitedUserId': thisUserID,
                             'from': 'comment_widget'
                           },
                         );
 
                         // --- 5. NAVIGATE ON SUCCESS ---
                         if (success) {
-                          // --- SEND NOTIFICATION ---
-                          try {
-                            await notificationService.sendNotification(
-                                pushNotification.NotificationModel(
-                                    topic: visitedUserId,
-                                    data: pushNotification.Data(id: visitedUserId, route: 'wallet'),
-                                    notification: pushNotification.Notification(
-                                        title: "Someone Visited Your Ego!",
-                                        body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                    )
-                                ).toJson()
-                            );
-                          } catch (e) {
-                            print("Failed to send profile visit notification: $e");
-                            // Do not block navigation if notification fails
-                          }
+                          showToast("You are visiting ${thisEgoName} with a kola of 1❤️.");
 
-                          // --- NAVIGATE ---
                           // Only navigate to the profile if the transaction was successful.
                           PageRouter.gotoWidget(
                               VisitedUserEgoProfilePage(
-                                  visitedUsersID: visitedUserId,
-                                  visitedEgoName: visitedEgoName),
+                                  visitedUsersID: thisUserID,
+                                  visitedEgoName: thisUserID),
                               context);
                         }
                         // If !success, the service method already shows a toast.
+                        } finally {
+                          // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                          // This runs no matter how the try block exits.
+                          if (mounted) {
+                            setState(() {
+                              _isAvatarLoading = false;
+                            });
+                          }
+                        }
                       },
                       child: Text(
-                          widget.commentSessionModel?.isUserAdmin == true
+                          widget.commentSessionModel!.isUserAdmin == true
                               ? "Claire"
-                              : widget.commentSessionModel!.userNickname ?? '',
+                              : widget.commentSessionModel!.userNickname ?? 'Anon Ego',
                           textAlign: TextAlign.start,
                           maxLines: 1,
                           style: GoogleFonts.lato(

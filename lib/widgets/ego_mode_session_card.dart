@@ -276,21 +276,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                       // --- 4. NAVIGATE ON SUCCESS ---
                       if (success) {
                         // --- SEND NOTIFICATION ---
-                        try {
-                          await notificationService.sendNotification(
-                              push_notification.NotificationModel(
-                                  topic: visitedUserId,
-                                  data: push_notification.Data(id: visitedUserId, route: 'wallet'),
-                                  notification: push_notification.Notification(
-                                      title: "Someone Visited Your Ego!",
-                                      body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                  )
-                              ).toJson()
-                          );
-                        } catch (e) {
-                          print("Failed to send profile visit notification: $e");
-                          // Do not block navigation if notification fails
-                        }
+                        showToast(message: "You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
                         // --- NAVIGATE ---
                         // Only navigate to the profile if the transaction was successful.
@@ -404,6 +390,11 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                               return;
                             }
 
+                            if (currentUser == null) {
+                              showToast(message: "You must be logged in to visit an ego.");
+                              return;
+                            }
+
                             // --- 4. PERFORM THE LOVE TRANSACTION ---
                             final bool success =
                             await firebaseServices.transferLoveBetweenUsers(
@@ -432,22 +423,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
 
                             // --- 5. NAVIGATE ON SUCCESS ---
                             if (success) {
-                              // --- SEND NOTIFICATION ---
-                              try {
-                                await notificationService.sendNotification(
-                                    push_notification.NotificationModel(
-                                        topic: visitedUserId,
-                                        data: push_notification.Data(id: visitedUserId, route: 'wallet'),
-                                        notification: push_notification.Notification(
-                                            title: "Someone Visited Your Ego!",
-                                            body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                        )
-                                    ).toJson()
-                                );
-                              } catch (e) {
-                                print("Failed to send profile visit notification: $e");
-                                // Do not block navigation if notification fails
-                              }
+                              showToast(message: "You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
                               // --- NAVIGATE ---
                               // Only navigate to the profile if the transaction was successful.
@@ -657,7 +633,12 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                     }
 
                     if (reactingUser.currentLoveCount < reactionCost) {
-                      showToast(message: "You need at least 1 ❤️ to react.");
+                      showToast(message: "You need at least 1❤️ to react.");
+                      return;
+                    }
+
+                    if (currentUser == null) {
+                      showToast(message: "You must be logged in to react to a session.");
                       return;
                     }
 

@@ -703,29 +703,6 @@ class _EgoModeSessionDetailState
   }
 
 
-  void _updateReaction(commentSessionModel, session) async {
-    if (!await firebaseServices.isUserSignIn(context)) {
-      showToast('You have to login first before reacting.');
-      return;
-    }
-    final _user = await firebaseServices.getUserInfo();
-    final String commentId = commentSessionModel!.commentId.toString();
-    final String docId = session.sessionId.toString();
-    final String sender = _user.nickname.toString();
-    firebaseServices.addThanksReaction(
-        session: session,
-        commentID: commentId,
-        docId: docId,
-        sender: sender,
-        map: commentSessionModel!.thanks!.contains(currentUser?.uid)
-            ? {
-                'thanks': FieldValue.arrayRemove([currentUser?.uid])
-              }
-            : {
-                'thanks': FieldValue.arrayUnion([currentUser?.uid])
-              });
-    saveUserThanksActivity(commentSessionModel);
-  }
 
   _share(String? message) {
     String _message = '''

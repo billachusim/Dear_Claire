@@ -267,6 +267,7 @@ class _RequestClaireLovesFormState extends State<RequestClaireLovesForm> {
       await firebaseServices.updateTreasuryAndUser(
         userId: widget.userId,
         amount: widget.loveAmount,
+        forLoveTransfer: widget.loveAmount,
         type: t_model.TransactionType.debit,
         userTransactionDescription: 'Debit: ${widget.loveAmount}❤️ withdrawn by you',
         metadata: metadata,
@@ -277,7 +278,7 @@ class _RequestClaireLovesFormState extends State<RequestClaireLovesForm> {
         activityMessage: "You requested a cash out of ${widget.loveAmount}❤️.",
       );
 
-      // 2. Send a push notification to the admin
+      // 2. Send a push notification to the admin and sender
       final adminNotification = push_notification.NotificationModel(
         topic: 'PbRuh3FmtESK57j3PM1Tc9RvPKh2', // Targeting the admin topic
         notification: push_notification.Notification(
@@ -289,6 +290,15 @@ class _RequestClaireLovesFormState extends State<RequestClaireLovesForm> {
             id: widget.userId, route: 'admin_transactions'),
       );
       await notificationService.sendNotification(adminNotification.toJson());
+
+      // Notify the sender (confirmation)
+      final senderNotification = push_notification.NotificationModel(
+          topic: widget.userId,
+          data: push_notification.Data(id: widget.userId, route: 'wallet'),
+          notification: push_notification.Notification(
+              title: "Cashout Love Request!",
+              body: "Your request to withdraw ${widget.loveAmount}❤️ is processing."));
+      await notificationService.sendNotification(senderNotification.toJson());
 
       // 3. Launch email as a secondary step
       final String payload = _getPayload();

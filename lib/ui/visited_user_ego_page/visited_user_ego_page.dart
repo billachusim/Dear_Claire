@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:clairediary/widgets/audio_recorder.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/firebase_services.dart';
@@ -46,21 +47,23 @@ class VisitedUserEgoProfilePage extends StatefulWidget {
       : super(key: key);
 
   @override
-  _VisitedUserEgoProfilePageState createState() => _VisitedUserEgoProfilePageState();
+  _VisitedUserEgoProfilePageState createState() =>
+      _VisitedUserEgoProfilePageState();
 }
 
+bool _isAvatarLoading = false;
 const int maxFailedLoadAttempts = 3;
-
-
 
 class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     with SingleTickerProviderStateMixin {
   late Future<List<UserActivityModel>> _userActivitiesFuture;
   late Stream<QuerySnapshot<Map<String, dynamic>>> _userSessionsStream;
   late TabController _tabController;
-  final TextEditingController _visitorMantraController = TextEditingController();
+  final TextEditingController _visitorMantraController =
+      TextEditingController();
   GlobalKey<FlipCardState> cardKey = GlobalKey<FlipCardState>();
   GlobalKey<FlipCardState> cardKey2 = GlobalKey<FlipCardState>();
+
   /// create instance of FirebaseMessaging
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
 
@@ -76,7 +79,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   String? _recordedAudioPath;
   bool _isUploadingAudio = false;
 
-
   @override
   void initState() {
     super.initState();
@@ -85,8 +87,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     _userSessionsStream = visitedUsersSessions();
     _createEgoMantraInterstitialAd();
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-    });
+    _tabController.addListener(() {});
   }
 
   @override
@@ -95,8 +96,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     super.dispose();
     _interstitialAd2?.dispose();
   }
-
-
 
   // Admob Ad Units.
   BannerAd? visitedUserTopOfSessionsBanner;
@@ -133,8 +132,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                 print('Ad failed to load: ${ad.adUnitId}, error: $error');
                 ad.dispose();
               },
-            )
-        )
+            ))
           ..load();
 
         // --- Load Bottom of Sessions Banner ---
@@ -153,8 +151,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                 print('Ad failed to load: ${ad.adUnitId}, error: $error');
                 ad.dispose();
               },
-            )
-        )
+            ))
           ..load();
 
         // --- Load Top of Activities Banner ---
@@ -173,8 +170,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                 print('Ad failed to load: ${ad.adUnitId}, error: $error');
                 ad.dispose();
               },
-            )
-        )
+            ))
           ..load();
 
         // --- Load Bottom of Activities Banner ---
@@ -193,15 +189,11 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                 print('Ad failed to load: ${ad.adUnitId}, error: $error');
                 ad.dispose();
               },
-            )
-        )
+            ))
           ..load();
       });
     });
   }
-
-
-
 
   Future<void> _fetchInitialData() async {
     try {
@@ -214,15 +206,15 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
       // Safely cast the results
       final UserModel fetchedVisitingUser = results[0] as UserModel;
-      final VisitedUserModel fetchedVisitedUser = results[1] as VisitedUserModel;
+      final VisitedUserModel fetchedVisitedUser =
+          results[1] as VisitedUserModel;
 
       // --- 2. SAVE THE VISIT ACTIVITY ---
       // Now you have the visiting user's nickname to use in the message.
       await firebaseServices.saveUserActivity(
         activityType: 'visit_ego',
         activityMessage:
-        "${fetchedVisitingUser.nickname ?? 'Someone'} visited ${widget
-            .visitedEgoName}'s Ego.",
+            "A visit to ${widget.visitedEgoName}'s Ego",
         recipientId: widget.visitedUsersID,
         recipientNickname: widget.visitedEgoName,
       );
@@ -247,8 +239,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     }
   }
 
-
-
   /// Get Visiting Ego User info
   Future<UserModel> getVisitingUserInfo() async {
     DocumentSnapshot response = await FirebaseFirestore.instance
@@ -257,17 +247,14 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
         .get();
 
     var visitingUser =
-    UserModel.fromFirestore(response.data() as Map<String, dynamic>);
+        UserModel.fromFirestore(response.data() as Map<String, dynamic>);
     logger.d('Successfully got the visiting user model');
     return visitingUser;
   }
 
-
-
   /// Query Ego stream from Firestore
 
   Stream<QuerySnapshot<Map<String, dynamic>>> getVisitedUserEgoStream() {
-
     return FirebaseFirestore.instance
         .collection('ego_stream')
         .where("userId", isEqualTo: widget.visitedUsersID)
@@ -275,8 +262,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
         .orderBy('egoTime', descending: true)
         .snapshots();
   }
-
-
 
   /// Save Ego mantra
 
@@ -287,16 +272,15 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     final egoImage = _visitingUser?.avatarUrl;
     final userId = widget.visitedUsersID;
     final senderId = currentUser?.uid;
-    FirebaseFirestore.instance
-        .collection('ego_stream')
-        .add({
-      "egoMessage": egoMessage,
-      "egoTime": egoTime,
-      "egoName": egoName,
-      "egoImage": egoImage,
-      "userId": userId,
-      "senderId": senderId,
-    },
+    FirebaseFirestore.instance.collection('ego_stream').add(
+      {
+        "egoMessage": egoMessage,
+        "egoTime": egoTime,
+        "egoName": egoName,
+        "egoImage": egoImage,
+        "userId": userId,
+        "senderId": senderId,
+      },
     );
     logger.d('Successfully sent an Ego message to $egoName');
     await firebaseServices.saveUserActivity(
@@ -315,27 +299,26 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     final egoImage = _visitingUser?.avatarUrl;
     final userId = widget.visitedUsersID;
     final senderId = currentUser?.uid;
-    FirebaseFirestore.instance
-        .collection('ego_stream')
-        .add({
-      "egoAudioMessage": audioPath,
-      "egoTime": egoTime,
-      "egoName": egoName,
-      "egoImage": egoImage,
-      "userId": userId,
-      "senderId": senderId,
-    },
+    FirebaseFirestore.instance.collection('ego_stream').add(
+      {
+        "egoAudioMessage": audioPath,
+        "egoTime": egoTime,
+        "egoName": egoName,
+        "egoImage": egoImage,
+        "userId": userId,
+        "senderId": senderId,
+      },
       //SetOptions(merge: true)
     );
     logger.d('Successfully sent an Ego audio message to $egoName');
     await firebaseServices.saveUserActivity(
       activityType: 'mantra', // Same activity type
-      activityMessage: "You left a new audio mantra for ${widget.visitedEgoName}.",
+      activityMessage:
+          "You left a new audio mantra for ${widget.visitedEgoName}.",
       recipientId: widget.visitedUsersID,
       recipientNickname: widget.visitedEgoName,
     );
   }
-
 
   Future<void> pushMantraNotification() async {
     final egoMessage = _visitorMantraController.text;
@@ -346,12 +329,13 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     await _firebaseMessaging.subscribeToTopic(userId);
 
     final pushNotification.NotificationModel _notificationModel =
-    pushNotification.NotificationModel(
-        topic: userId,
-        data: pushNotification.Data(id: senderId, route: 'wallet'),
-        notification: pushNotification.Notification(
-            title: "Ego Mantra",
-            body: '$egoName sent a new mantra to your ego stream.\n$egoMessage'));
+        pushNotification.NotificationModel(
+            topic: userId,
+            data: pushNotification.Data(id: senderId, route: 'wallet'),
+            notification: pushNotification.Notification(
+                title: "Ego Mantra",
+                body:
+                    '$egoName sent a new mantra to your ego stream.\n$egoMessage'));
     notificationService.sendNotification(_notificationModel.toJson());
 
     logger.d('Successfully pushed an Ego message notification to $egoName');
@@ -366,18 +350,17 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     await _firebaseMessaging.subscribeToTopic(userId);
 
     final pushNotification.NotificationModel _notificationModel =
-    pushNotification.NotificationModel(
-        topic: userId,
-        data: pushNotification.Data(id: senderId, route: 'wallet'),
-        notification: pushNotification.Notification(
-            title: "Ego Mantra",
-            body: '$egoName sent a new audio mantra to your ego stream.'));
+        pushNotification.NotificationModel(
+            topic: userId,
+            data: pushNotification.Data(id: senderId, route: 'wallet'),
+            notification: pushNotification.Notification(
+                title: "Ego Mantra",
+                body: '$egoName sent a new audio mantra to your ego stream.'));
     notificationService.sendNotification(_notificationModel.toJson());
 
-    logger.d('Successfully pushed an Ego audio message notification to $egoName');
+    logger
+        .d('Successfully pushed an Ego audio message notification to $egoName');
   }
-
-
 
   /// Delete an ego message
 
@@ -387,15 +370,14 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
           .collection('ego_stream')
           .doc(documentId)
           .delete();
-      logger.d('Successfully deleted ego stream message from visited profile: $documentId');
+      logger.d(
+          'Successfully deleted ego stream message from visited profile: $documentId');
       CustomToast.showToast(message: "Message deleted");
     } catch (e) {
       logger.e('Error deleting ego stream message: $e');
       CustomToast.showToast(message: "Failed to delete message");
     }
   }
-
-
 
   /// Get Visited Ego User info
   Future<VisitedUserModel> getVisitedUserInfo() async {
@@ -404,12 +386,11 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
         .doc(widget.visitedUsersID)
         .get();
 
-    var visitedUser = VisitedUserModel.fromFirestore(response.data() as Map<String, dynamic>);
+    var visitedUser =
+        VisitedUserModel.fromFirestore(response.data() as Map<String, dynamic>);
     logger.d('Successfully got the visited user model');
     return visitedUser;
   }
-
-
 
   /// Get visited user's sessions that have been featured or marked for replies.
   Stream<QuerySnapshot<Map<String, dynamic>>> visitedUsersSessions() {
@@ -420,7 +401,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(AppString.appSessionLength)
-    //.orderBy('timeLastActivity', descending: true)
+        //.orderBy('timeLastActivity', descending: true)
         .snapshots();
   }
 
@@ -438,7 +419,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
       _value.docs
           .map((e) =>
-          _userActivityList.addAll([UserActivityModel.fromJson(e.data())]))
+              _userActivityList.addAll([UserActivityModel.fromJson(e.data())]))
           .toList();
     } catch (e) {
       logger.e(e);
@@ -446,18 +427,16 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     return _userActivityList;
   }
 
-
-
-
   InterstitialAd? _interstitialAd2;
   int _interstitialLoadAttempts = 0;
 
-
   void _createEgoMantraInterstitialAd() {
     InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/2338869057" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/5936716173" :
-      '',
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/2338869057"
+          : Platform.isIOS
+              ? "ca-app-pub-2404156870680632/5936716173"
+              : '',
       request: AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
@@ -476,8 +455,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     );
   }
 
-
-
   void _showEgoMantraInterstitialAd() {
     if (_interstitialAd2 != null) {
       _interstitialAd2!.fullScreenContentCallback = FullScreenContentCallback(
@@ -494,34 +471,29 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     }
   }
 
-
-
   /// Block a user only by Super Ego
 
   Future<void> blockUser() async {
     final userId = visitedUser?.userId;
-    final userToBlock = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId);
+    final userToBlock =
+        FirebaseFirestore.instance.collection('users').doc(userId);
     await userToBlock.delete();
     logger.d('Successfully blocked a user');
     print("The Blocked User Is: $userId");
   }
 
-
   flagEgoAlertDialog(BuildContext context) {
-
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text("Cancel"),
-      onPressed:  () {
+      onPressed: () {
         Navigator.of(context).pop();
       },
     );
 
     Widget continueButton = TextButton(
       child: Text("Flag"),
-      onPressed:  () {
+      onPressed: () {
         sendToFlagged();
         showToast("Thank You!\n Claire will check this Ego for violations.");
         Navigator.pushReplacementNamed(context, AppRoutes.home);
@@ -552,12 +524,10 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   Future<bool?> sendToFlagged() async {
     final userId = visitedUser?.userId;
     final value = true;
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .set({
-      "flagged": value,
-    },
+    FirebaseFirestore.instance.collection('users').doc(userId).set(
+      {
+        "flagged": value,
+      },
       SetOptions(merge: true),
     );
     logger.d('Successfully flagged a user');
@@ -566,20 +536,17 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     return value;
   }
 
-
-
-
   unflagEgoAlertDialog(BuildContext context) {
-
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text("Back"),
-      onPressed:  () {
-        Navigator.of(context).pop();      },
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
     );
     Widget continueButton = TextButton(
       child: Text("Unflag"),
-      onPressed:  () {
+      onPressed: () {
         removeFromFlagged();
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       },
@@ -609,12 +576,10 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   Future<bool?> removeFromFlagged() async {
     final userId = visitedUser?.userId;
     final value = false;
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .set({
-      "flagged": value,
-    },
+    FirebaseFirestore.instance.collection('users').doc(userId).set(
+      {
+        "flagged": value,
+      },
       SetOptions(merge: true),
     );
     logger.d('Successfully unflagged a user');
@@ -623,17 +588,13 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     return value;
   }
 
-
   /// Visited User Ego Profile Info Here
 
-
-  Future<VisitedEgoProfileInfo> getVisitedUserEgoProfileInfo()async{
+  Future<VisitedEgoProfileInfo> getVisitedUserEgoProfileInfo() async {
     VisitedEgoProfileInfo visitedProfileInfo = VisitedEgoProfileInfo();
     visitedUser = await getVisitedUserInfo();
 
     visitedProfileInfo = VisitedEgoProfileInfo(visitedUserModel: visitedUser);
-
-
 
     //get user session count
     List<Session> _sessionList = [];
@@ -641,9 +602,8 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       final _value = await FirebaseFirestore.instance
           .collection(AppString.appFeaturedSessions)
           .where("userId", isEqualTo: widget.visitedUsersID)
-      // .limit(AppString.appSessionLength)
+          // .limit(AppString.appSessionLength)
           .get();
-
 
       debugPrint(
           " This is the number of sessions by date for this visited user ${_value.docs.length}");
@@ -657,24 +617,22 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       debugPrint(e.toString());
     }
 
-
     //get advises count
 
     List<CommentSessionModel> _advisesList = [];
-
 
     try {
       final _value = await FirebaseFirestore.instance
           .collection("user_comment_counters")
           .where("userId", isEqualTo: widget.visitedUsersID)
-      //  .limit(AppString.appSessionLength)
+          //  .limit(AppString.appSessionLength)
           .get();
-
 
       debugPrint(
           " This is the number of advises given by this visited user ${_value.docs.length}");
       _value.docs
-          .map((e) => _advisesList.addAll([CommentSessionModel.fromJson(e.data())]))
+          .map((e) =>
+              _advisesList.addAll([CommentSessionModel.fromJson(e.data())]))
           .toList();
 
       debugPrint(
@@ -683,24 +641,22 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       debugPrint(e.toString());
     }
 
-
     //get follows count
 
     List<VisitedUserModel> _followsList = [];
-
 
     try {
       final _value = await FirebaseFirestore.instance
           .collection(AppString.users)
           .where("userId", isEqualTo: widget.visitedUsersID)
-      // .limit(AppString.appCommentLength)
+          // .limit(AppString.appCommentLength)
           .get();
-
 
       debugPrint(
           " This is the number of follows given to this visited user ${_value.docs.length}");
       _value.docs
-          .map((e) => _followsList.addAll([VisitedUserModel.fromJson(e.data())]))
+          .map(
+              (e) => _followsList.addAll([VisitedUserModel.fromJson(e.data())]))
           .toList();
 
       debugPrint(
@@ -709,8 +665,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       debugPrint(e.toString());
     }
 
-
-
     visitedProfileInfo = VisitedEgoProfileInfo(
       visitedUserModel: visitedUser,
       sessionCount: _sessionList.length,
@@ -718,11 +672,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       followCount: _followsList.length,
     );
     return visitedProfileInfo;
-
   }
-
-
-
 
   /// Profile Cover header
   Widget _visitedPageHeader({required VisitedUserModel? visitedUser}) {
@@ -737,19 +687,21 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     Color getCardBackgroundColor() {
       if (visitedUser.userType == 'REGULAR') {
         return isDarkMode ? Pallet.colorPrimary : Colors.white;
-      } else if (visitedUser.userType == 'ADMIN' || visitedUser.userType == 'SUPER_ADMIN') {
+      } else if (visitedUser.userType == 'ADMIN' ||
+          visitedUser.userType == 'SUPER_ADMIN') {
         return isDarkMode ? Pallet.colorSecondary : Colors.white;
       }
       // Default fallback
       return isDarkMode ? Color(0xFF2C2C2E) : Colors.white;
     }
 
-    final cardBackgroundColor = getCardBackgroundColor();    final cardTextColor = isDarkMode ? Colors.white : Colors.black;
+    final cardBackgroundColor = getCardBackgroundColor();
+    final cardTextColor = isDarkMode ? Colors.white : Colors.black;
     final hintTextColor = isDarkMode ? Colors.white54 : Colors.black54;
 
-
     return Material(
-      color: Colors.transparent, // Use transparent to show the container's decoration
+      color: Colors
+          .transparent, // Use transparent to show the container's decoration
       child: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -777,20 +729,23 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                       // Edit Clairevatar icon is here
                       Container(
                         decoration: BoxDecoration(
-                            color: visitedUser.userType == 'REGULAR'? Pallet.colorPrimary
-                                : visitedUser.userType == 'ADMIN'? Pallet.colorSecondary
-                                : visitedUser.userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                                :Pallet.colorBlue,
-                            borderRadius: BorderRadius.circular(100)
-                        ),
+                            color: visitedUser.userType == 'REGULAR'
+                                ? Pallet.colorPrimary
+                                : visitedUser.userType == 'ADMIN'
+                                    ? Pallet.colorSecondary
+                                    : visitedUser.userType == 'SUPER_ADMIN'
+                                        ? Pallet.colorSecondary
+                                        : Pallet.colorBlue,
+                            borderRadius: BorderRadius.circular(100)),
                         height: 22,
                         width: 20,
                         margin: EdgeInsets.only(left: 4),
-
                         child: Icon(
-                          visitedUser.userType == "ADMIN" ? Icons.star_half_rounded
-                          : visitedUser.userType == "SUPER_ADMIN" ? Icons.star
-                              : Icons.star_border_rounded,
+                          visitedUser.userType == "ADMIN"
+                              ? Icons.star_half_rounded
+                              : visitedUser.userType == "SUPER_ADMIN"
+                                  ? Icons.star
+                                  : Icons.star_border_rounded,
                           color: Pallet.colorWhite,
                           size: 20,
                         ),
@@ -799,10 +754,13 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                       //Clairevatar Container is here
                       Container(
                         decoration: BoxDecoration(
-                          color: visitedUser.userType == 'REGULAR'? Pallet.colorPrimary
-                              : visitedUser.userType == 'ADMIN'? Pallet.colorSecondary
-                              : visitedUser.userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                              :Pallet.colorBlue,
+                          color: visitedUser.userType == 'REGULAR'
+                              ? Pallet.colorPrimary
+                              : visitedUser.userType == 'ADMIN'
+                                  ? Pallet.colorSecondary
+                                  : visitedUser.userType == 'SUPER_ADMIN'
+                                      ? Pallet.colorSecondary
+                                      : Pallet.colorBlue,
                           borderRadius: BorderRadius.circular(100),
                         ),
                         margin: EdgeInsets.only(left: 0),
@@ -813,30 +771,30 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                           child: CachedNetworkImage(
                               width: 70,
                               height: 70,
-                              imageUrl: visitedUser.avatarUrl ??"",
-                              imageBuilder: (context, imageProvider) => Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(100),
-                                  image: DecorationImage(
-                                    image: imageProvider,
-                                    fit: BoxFit.fill,
+                              imageUrl: visitedUser.avatarUrl ?? "",
+                              imageBuilder: (context, imageProvider) =>
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(100),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.fill,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
                               placeholder: (context, url) =>
                                   CircularProgressIndicator(),
                               errorWidget: (context, url, error) => Image.asset(
-                                "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                width: 50,
-                                height: 50,
-                              ) //Icon(Icons.error),
-                          ),
+                                    "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                    width: 50,
+                                    height: 50,
+                                  ) //Icon(Icons.error),
+                              ),
                         ),
                       ),
                     ],
                   ),
-
 
                   // The count columns (stats cards) are here
                   Expanded(
@@ -861,12 +819,12 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                       ],
                     ),
                   ),
-                  SizedBox(width: 6,),
+                  SizedBox(
+                    width: 6,
+                  ),
                 ],
               ),
             ),
-
-
 
             /// Nickname and edit nickname FlipCard method
 
@@ -874,61 +832,64 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-
                 Container(
                   margin: EdgeInsets.all(4),
                   height: 40,
                   width: 250,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.circular(25)),
-                    color: visitedUser.userType == 'REGULAR'? Pallet.colorPrimary
-                        : visitedUser.userType == 'ADMIN'? Pallet.colorSecondary
-                        : visitedUser.userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                        :Pallet.colorBlue,
+                    color: visitedUser.userType == 'REGULAR'
+                        ? Pallet.colorPrimary
+                        : visitedUser.userType == 'ADMIN'
+                            ? Pallet.colorSecondary
+                            : visitedUser.userType == 'SUPER_ADMIN'
+                                ? Pallet.colorSecondary
+                                : Pallet.colorBlue,
                   ),
                   child: Stack(
-                      alignment: Alignment.centerLeft,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Pallet.colorWhite,
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          margin: EdgeInsets.only(left: 17, right: 4, top: 4, bottom: 4),
-                          alignment: Alignment.centerLeft,
-                          width: 250,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-
-                              SizedBox(width: 4,),
-
-                              Text(
-                                visitedUser.nickname ??"",
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w700),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        Icon(
-                          visitedUser.userType == "ADMIN" ? Icons.star_half_rounded
-                              : visitedUser.userType == "SUPER_ADMIN" ? Icons.star
-                          : Icons.star_border_rounded,
-
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
                           color: Pallet.colorWhite,
-                          size: 20,
+                          borderRadius: BorderRadius.circular(25),
                         ),
-
-                      ],
-                    ),
+                        margin: EdgeInsets.only(
+                            left: 17, right: 4, top: 4, bottom: 4),
+                        alignment: Alignment.centerLeft,
+                        width: 250,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 4,
+                            ),
+                            Text(
+                              visitedUser.nickname ?? "",
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        visitedUser.userType == "ADMIN"
+                            ? Icons.star_half_rounded
+                            : visitedUser.userType == "SUPER_ADMIN"
+                                ? Icons.star
+                                : Icons.star_border_rounded,
+                        color: Pallet.colorWhite,
+                        size: 20,
+                      ),
+                    ],
+                  ),
                 ),
 
-                Spacer(flex: 1,),
-
+                Spacer(
+                  flex: 1,
+                ),
 
                 /// Here is the Ego badge showing user's usertype
 
@@ -942,21 +903,31 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                         Container(
                           margin: EdgeInsets.only(right: 6),
                           padding: EdgeInsets.only(
-                              left: 8, right: 4, top: 4, bottom: 4,),
+                            left: 8,
+                            right: 4,
+                            top: 4,
+                            bottom: 4,
+                          ),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            color: visitedUser.userType == 'REGULAR'? Pallet.colorPrimary
-                                : visitedUser.userType == 'ADMIN'? Pallet.colorSecondary
-                                : visitedUser.userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                                :Pallet.colorBlue,
+                            color: visitedUser.userType == 'REGULAR'
+                                ? Pallet.colorPrimary
+                                : visitedUser.userType == 'ADMIN'
+                                    ? Pallet.colorSecondary
+                                    : visitedUser.userType == 'SUPER_ADMIN'
+                                        ? Pallet.colorSecondary
+                                        : Pallet.colorBlue,
                           ),
                           child: Row(
                             children: [
                               Text(
-                                visitedUser.userType == 'REGULAR'? 'Ego' :
-                                visitedUser.userType == 'ADMIN'? 'Alter Ego' :
-                                visitedUser.userType == 'SUPER_ADMIN'? 'Super Ego' :
-                                'Ego',
+                                visitedUser.userType == 'REGULAR'
+                                    ? 'Ego'
+                                    : visitedUser.userType == 'ADMIN'
+                                        ? 'Alter Ego'
+                                        : visitedUser.userType == 'SUPER_ADMIN'
+                                            ? 'Super Ego'
+                                            : 'Ego',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -969,65 +940,75 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                       ],
                     ),
 
-                      SizedBox(height: 3,),
+                    SizedBox(
+                      height: 3,
+                    ),
 
-                      /// Flagged user label
+                    /// Flagged user label
 
-                      GestureDetector(
-                        onTap: () {
-                          if (visitedUser.flagged == false)
-                            showCustomDialog(context,
-                                message: visitedUser.flagged == true
-                                    ? AppString.unflag_ego_alert_note
-                                    : AppString.flag_ego_alert_note,
-                                onPressed: () {
-                              setState(() {
-                                PageRouter.goBack(context);
-                                sendToFlagged();
-                              });
-                                });
-                          else
-                            showCustomDialog(context,
-                                message: visitedUser.flagged == false
-                                    ? AppString.flag_ego_alert_note
-                                    : AppString.unflag_ego_alert_note,
-                                onPressed: () {
-                              setState(() {
-                                PageRouter.goBack(context);
-                                removeFromFlagged();
-                              });
-                                });
-                        },
-                        child: Container(
-                          margin: EdgeInsets.only(right: 6),
-                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 5),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Pallet.colorPrimaryDark,
-                              )),
-                          child: Row(
-                            children: [
-                              Icon(
-                                visitedUser.flagged == true ? Icons.flag : Icons.flag_outlined,
-                                color: Pallet.colorPrimaryDark,
-                                size: 15,
-                              ),
-                              SizedBox(width: 2,),
-                              Text(
-                                visitedUser.userType == 'REGULAR'? 'Flag Ego' :
-                                visitedUser.userType == 'ADMIN'? 'Flag Alter Ego' :
-                                visitedUser.userType == 'SUPER_ADMIN'? 'Flag Super Ego' :
-                                '',
-                                style: GoogleFonts.lato(
-                                    fontSize: 11.0,
-                                    color: Pallet.colorPrimaryDark,
-                                    fontWeight: FontWeight.w800),
-                              ),
-                            ],
-                          ),
+                    GestureDetector(
+                      onTap: () {
+                        if (visitedUser.flagged == false)
+                          showCustomDialog(context,
+                              message: visitedUser.flagged == true
+                                  ? AppString.unflag_ego_alert_note
+                                  : AppString.flag_ego_alert_note,
+                              onPressed: () {
+                            setState(() {
+                              PageRouter.goBack(context);
+                              sendToFlagged();
+                            });
+                          });
+                        else
+                          showCustomDialog(context,
+                              message: visitedUser.flagged == false
+                                  ? AppString.flag_ego_alert_note
+                                  : AppString.unflag_ego_alert_note,
+                              onPressed: () {
+                            setState(() {
+                              PageRouter.goBack(context);
+                              removeFromFlagged();
+                            });
+                          });
+                      },
+                      child: Container(
+                        margin: EdgeInsets.only(right: 6),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 0, horizontal: 5),
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: Pallet.colorPrimaryDark,
+                            )),
+                        child: Row(
+                          children: [
+                            Icon(
+                              visitedUser.flagged == true
+                                  ? Icons.flag
+                                  : Icons.flag_outlined,
+                              color: Pallet.colorPrimaryDark,
+                              size: 15,
+                            ),
+                            SizedBox(
+                              width: 2,
+                            ),
+                            Text(
+                              visitedUser.userType == 'REGULAR'
+                                  ? 'Flag Ego'
+                                  : visitedUser.userType == 'ADMIN'
+                                      ? 'Flag Alter Ego'
+                                      : visitedUser.userType == 'SUPER_ADMIN'
+                                          ? 'Flag Super Ego'
+                                          : '',
+                              style: GoogleFonts.lato(
+                                  fontSize: 11.0,
+                                  color: Pallet.colorPrimaryDark,
+                                  fontWeight: FontWeight.w800),
+                            ),
+                          ],
                         ),
                       ),
+                    ),
                   ],
                 ),
               ],
@@ -1037,15 +1018,13 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
               height: 2,
             ),
 
-
-
             /// Front card: Write Ego mantra and send to stream
-
 
             Container(
               width: getDeviceWidth(context),
               height: 100,
-              margin: EdgeInsets.only(left: 4, right: 4, bottom: 4), // Added bottom margin
+              margin: EdgeInsets.only(
+                  left: 4, right: 4, bottom: 4), // Added bottom margin
               child: FlipCard(
                 key: cardKey,
                 direction: FlipDirection.HORIZONTAL, // default
@@ -1057,10 +1036,13 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                       Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(25),
-                          color: visitedUser.userType == 'REGULAR'? Pallet.colorPrimary
-                              : visitedUser.userType == 'ADMIN'? Pallet.colorSecondary
-                              : visitedUser.userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                              :Pallet.colorBlue,
+                          color: visitedUser.userType == 'REGULAR'
+                              ? Pallet.colorPrimary
+                              : visitedUser.userType == 'ADMIN'
+                                  ? Pallet.colorSecondary
+                                  : visitedUser.userType == 'SUPER_ADMIN'
+                                      ? Pallet.colorSecondary
+                                      : Pallet.colorBlue,
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -1069,10 +1051,14 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                               Align(
                                 alignment: Alignment.topLeft,
                                 child: Text(
-                                  visitedUser.userType == 'REGULAR'? 'Ego Stream:' :
-                                  visitedUser.userType == 'ADMIN'? 'Alter Ego Stream:' :
-                                  visitedUser.userType == 'SUPER_ADMIN'? 'Super Ego Stream:' :
-                                  '',
+                                  visitedUser.userType == 'REGULAR'
+                                      ? 'Ego Stream:'
+                                      : visitedUser.userType == 'ADMIN'
+                                          ? 'Alter Ego Stream:'
+                                          : visitedUser.userType ==
+                                                  'SUPER_ADMIN'
+                                              ? 'Super Ego Stream:'
+                                              : '',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -1080,11 +1066,14 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                   ),
                                 ),
                               ),
-                              SizedBox(height: 3,),
+                              SizedBox(
+                                height: 3,
+                              ),
                               Row(
                                 children: [
                                   AudioRecorder(
-                                    onStart: () {        // When recording starts, clear old paths and update the hint
+                                    onStart: () {
+                                      // When recording starts, clear old paths and update the hint
                                       setState(() {
                                         _recordedAudioPath = null;
                                         _audioStatusHint = "Recording audio...";
@@ -1096,14 +1085,16 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                       // When recording stops, store the path and update the hint
                                       setState(() {
                                         _recordedAudioPath = path;
-                                        _audioStatusHint = "Audio recorded! Hit send.";
+                                        _audioStatusHint =
+                                            "Audio recorded! Hit send.";
                                       });
                                     },
                                     onCancel: () {
                                       // If recording is cancelled, reset everything
                                       setState(() {
                                         _recordedAudioPath = null;
-                                        _audioStatusHint = "...write a new ego mantra...";
+                                        _audioStatusHint =
+                                            "...write a new ego mantra...";
                                       });
                                     },
                                   ),
@@ -1119,20 +1110,31 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                         child: Container(
                                           padding: EdgeInsets.zero,
                                           decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(30),
+                                            borderRadius:
+                                                BorderRadius.circular(30),
                                             color: cardBackgroundColor,
                                           ),
                                           child: TextField(
                                             // The text field is now read-only when an audio path is set
-                                            readOnly: _recordedAudioPath != null || _isUploadingAudio,
-                                            cursorColor: Pallet.colorSplashScreen,
-                                            keyboardType: TextInputType.multiline,
-                                            style: TextStyle(color: cardTextColor),
+                                            readOnly:
+                                                _recordedAudioPath != null ||
+                                                    _isUploadingAudio,
+                                            cursorColor:
+                                                Pallet.colorSplashScreen,
+                                            keyboardType:
+                                                TextInputType.multiline,
+                                            style:
+                                                TextStyle(color: cardTextColor),
                                             maxLines: 2,
-                                            controller: _visitorMantraController,
+                                            controller:
+                                                _visitorMantraController,
                                             decoration: InputDecoration(
                                               border: InputBorder.none,
-                                              contentPadding: EdgeInsets.only(left: 13.0, right: 13.0, top: 10, bottom: 10),
+                                              contentPadding: EdgeInsets.only(
+                                                  left: 13.0,
+                                                  right: 13.0,
+                                                  top: 10,
+                                                  bottom: 10),
                                               // USE THE DYNAMIC HINT TEXT
                                               hintText: _audioStatusHint,
                                               hintStyle: TextStyle(
@@ -1157,77 +1159,92 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
                                           setState(() {
                                             _isUploadingAudio = true;
-                                            _audioStatusHint = "Uploading audio...";
+                                            _audioStatusHint =
+                                                "Uploading audio...";
                                           });
 
                                           // Use the path we stored in the state
-                                          saveEgoAudioMessage(_recordedAudioPath!).then((_) {
+                                          saveEgoAudioMessage(
+                                                  _recordedAudioPath!)
+                                              .then((_) {
                                             // After saving is complete
                                             pushAudioMantraNotification();
-                                            showToast(AppString.sent_ego_message);
+                                            showToast(
+                                                AppString.sent_ego_message);
 
                                             setState(() {
                                               _isUploadingAudio = false;
-                                              _recordedAudioPath = null; // Reset path
-                                              _audioStatusHint = "...write a new ego mantra..."; // Reset hint
+                                              _recordedAudioPath =
+                                                  null; // Reset path
+                                              _audioStatusHint =
+                                                  "...write a new ego mantra..."; // Reset hint
                                             });
 
                                             // Flip card and show ad
-                                            if (cardKey.currentState?.isFront == false) {
-                                              cardKey.currentState!.toggleCard();
+                                            if (cardKey.currentState?.isFront ==
+                                                false) {
+                                              cardKey.currentState!
+                                                  .toggleCard();
                                             }
-                                            Future.delayed(Duration(seconds: 4), () {
+                                            Future.delayed(Duration(seconds: 4),
+                                                () {
                                               _showEgoMantraInterstitialAd();
                                             });
                                           });
-
                                         }
                                         // Check if we are sending a TEXT message
-                                        else if (_visitorMantraController.text.trim().isNotEmpty) {
+                                        else if (_visitorMantraController.text
+                                            .trim()
+                                            .isNotEmpty) {
                                           if (_visitingUser?.nickname != null) {
                                             saveEgoMessage();
                                             pushMantraNotification();
                                             _visitorMantraController.clear();
 
-                                            if (cardKey.currentState?.isFront == false) {
-                                              cardKey.currentState!.toggleCard();
+                                            if (cardKey.currentState?.isFront ==
+                                                false) {
+                                              cardKey.currentState!
+                                                  .toggleCard();
                                             }
-                                            showToast(AppString.sent_ego_message);
-                                            Future.delayed(Duration(seconds: 4), () {
+                                            showToast(
+                                                AppString.sent_ego_message);
+                                            Future.delayed(Duration(seconds: 4),
+                                                () {
                                               _showEgoMantraInterstitialAd();
                                             });
                                           } else {
-                                            CustomToast.showToast(message: "Could not identify sender.");
+                                            CustomToast.showToast(
+                                                message:
+                                                    "Could not identify sender.");
                                           }
                                         }
                                         // If neither audio is recorded nor text is written
                                         else {
-                                          CustomToast.showToast(message: "Write a mantra or record audio.");
+                                          CustomToast.showToast(
+                                              message:
+                                                  "Write a mantra or record audio.");
                                         }
                                       },
                                       mini: true,
                                       backgroundColor: Pallet.colorWhite,
                                       child: SvgPicture.asset(
                                         AppImages.appSend,
-                                        colorFilter: ColorFilter.mode(Pallet.colorPrimary, BlendMode.srcIn),
+                                        colorFilter: ColorFilter.mode(
+                                            Pallet.colorPrimary,
+                                            BlendMode.srcIn),
                                         height: 20,
-                                      )
-                                  ),
-
+                                      )),
                                 ],
                               ),
                             ],
                           ),
                         ),
                       ),
-
                     ],
                   ),
                 ),
 
-
                 /// Back of card is Ego Stream for display
-
 
                 front: Stack(
                   alignment: Alignment.center,
@@ -1235,10 +1252,13 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(25)),
-                        color: visitedUser.userType == 'REGULAR'? Pallet.colorPrimary
-                            : visitedUser.userType == 'ADMIN'? Pallet.colorSecondary
-                            : visitedUser.userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                            :Pallet.colorBlue,
+                        color: visitedUser.userType == 'REGULAR'
+                            ? Pallet.colorPrimary
+                            : visitedUser.userType == 'ADMIN'
+                                ? Pallet.colorSecondary
+                                : visitedUser.userType == 'SUPER_ADMIN'
+                                    ? Pallet.colorSecondary
+                                    : Pallet.colorBlue,
                       ),
                     ),
 
@@ -1251,67 +1271,123 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                           Expanded(
                             child: StreamBuilder<QuerySnapshot>(
                               stream: getVisitedUserEgoStream(),
-                              builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                              builder: (BuildContext context,
+                                  AsyncSnapshot<QuerySnapshot> snapshot) {
                                 if (snapshot.hasError) {
                                   return Text('Something went wrong');
                                 }
                                 if (!snapshot.hasData) {
-                                  return Text('Write a mantra by currently by tapping on this space',
-                                    style: TextStyle(color: Colors.white),);
+                                  return Text(
+                                    'Write a mantra by currently by tapping on this space',
+                                    style: TextStyle(color: Colors.white),
+                                  );
                                 }
 
-                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
                                   return Text("Loading");
                                 }
 
                                 return ListView(
-                                  children: snapshot.data!.docs.map((DocumentSnapshot document) {
-                                    Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
+                                  children: snapshot.data!.docs
+                                      .map((DocumentSnapshot document) {
+                                    Map<String, dynamic> data = document.data()!
+                                        as Map<String, dynamic>;
                                     return ListTile(
                                       leading: ClipOval(
                                         child: GestureDetector(
-                                          onTap: (){
-                                            final String _mantraUserId = data['senderId'].toString();
-                                            final String _mantraEgoName = data['egoName'].toString();
-                                            PageRouter.gotoWidget(
-                                                VisitedUserEgoProfilePage(visitedUsersID: _mantraUserId, visitedEgoName: _mantraEgoName),
-                                                context);
-                                            print("Visited User ID::: $_mantraUserId");
+                                          onTap: () async {
+                                            setState(() {
+                                              _isAvatarLoading = true;
+                                            });
+                                            try {
+                                              final String _mantraUserId =
+                                                  data['senderId'].toString();
+                                              final String _mantraEgoName =
+                                                  data['egoName'].toString();
+                                              PageRouter.gotoWidget(
+                                                  VisitedUserEgoProfilePage(
+                                                      visitedUsersID:
+                                                          _mantraUserId,
+                                                      visitedEgoName:
+                                                          _mantraEgoName),
+                                                  context);
+                                              print(
+                                                  "Visited User ID::: $_mantraUserId");
+                                            } finally {
+                                              // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                                              // This runs no matter how the try block exits.
+                                              if (mounted) {
+                                                setState(() {
+                                                  _isAvatarLoading = false;
+                                                });
+                                              }
+                                            }
                                           },
-                                          child: CachedNetworkImage(
-                                            width: 40,
-                                            height: 40,
-                                            imageUrl: data['egoImage'].toString(),
-                                            imageBuilder: (context, imageProvider) => Container(
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: imageProvider,
-                                                  fit: BoxFit.fill,
+                                          child: Stack(
+                                            children: [
+                                              CachedNetworkImage(
+                                                width: 40,
+                                                height: 40,
+                                                imageUrl:
+                                                    data['egoImage'].toString(),
+                                                imageBuilder:
+                                                    (context, imageProvider) =>
+                                                        Container(
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                      image: imageProvider,
+                                                      fit: BoxFit.fill,
+                                                    ),
+                                                  ),
+                                                ),
+                                                placeholder: (context, url) =>
+                                                    CircularProgressIndicator(),
+                                                errorWidget:
+                                                    (context, url, error) =>
+                                                        Image.asset(
+                                                  "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                                  width: 30,
+                                                  height: 30,
                                                 ),
                                               ),
-                                            ),
-                                            placeholder: (context, url) =>
-                                                CircularProgressIndicator(),
-                                            errorWidget: (context, url, error) => Image.asset(
-                                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                              width: 30,
-                                              height: 30,
-                                            ),
+                                              if (_isAvatarLoading)
+                                                Container(
+                                                  width: 40,
+                                                  height: 40,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black
+                                                        .withOpacity(0.5),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Center(
+                                                    child:
+                                                        CupertinoActivityIndicator(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                         ),
                                       ),
                                       // UPDATED TITLE WIDGET
                                       title: Row(
                                         // Use baseline alignment for perfect vertical text alignment
-                                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                                        textBaseline: TextBaseline.alphabetic, // Required for baseline alignment
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.baseline,
+                                        textBaseline: TextBaseline
+                                            .alphabetic, // Required for baseline alignment
                                         children: [
                                           Text(
                                             data['egoName'].toString(),
-                                            style: GoogleFonts.lato( // Using GoogleFonts.lato for consistency
-                                              color: Colors.white, // Increased contrast for better readability
+                                            style: GoogleFonts.lato(
+                                              // Using GoogleFonts.lato for consistency
+                                              color: Colors
+                                                  .white, // Increased contrast for better readability
                                               fontSize: 14,
-                                              fontWeight: FontWeight.bold, // Make the name stand out
+                                              fontWeight: FontWeight
+                                                  .bold, // Make the name stand out
                                             ),
                                           ),
                                           SizedBox(width: 8),
@@ -1320,11 +1396,14 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                             child: Text(
                                               // Check if egoTime exists and is a Timestamp
                                               (data['egoTime'] is Timestamp)
-                                                  ? formatFirestoreTimestamp(data['egoTime'])
+                                                  ? formatFirestoreTimestamp(
+                                                      data['egoTime'])
                                                   : '', // Show nothing if data is invalid
                                               overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.lato( // Using GoogleFonts.lato
-                                                color: Colors.white60, // Slightly dimmed for hierarchy
+                                              style: GoogleFonts.lato(
+                                                // Using GoogleFonts.lato
+                                                color: Colors
+                                                    .white60, // Slightly dimmed for hierarchy
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.normal,
                                               ),
@@ -1332,29 +1411,39 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                           ),
                                         ],
                                       ),
-                                      subtitle: data.containsKey('egoAudioMessage') ? CustomPlaySoundWidget(filePath: data['egoAudioMessage']) :
-                                      Text(data['egoMessage'] ?? '',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
+                                      subtitle: data
+                                              .containsKey('egoAudioMessage')
+                                          ? CustomPlaySoundWidget(
+                                              filePath: data['egoAudioMessage'])
+                                          : Text(
+                                              data['egoMessage'] ?? '',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
                                       trailing: Visibility(
                                         // Show the delete icon ONLY if the current user is the sender of the message.
-                                        visible: _visitingUser?.userType == "SUPER_ADMIN" || _visitingUser?.userId == data['senderId'],
+                                        visible: _visitingUser?.userType ==
+                                                "SUPER_ADMIN" ||
+                                            _visitingUser?.userId ==
+                                                data['senderId'],
                                         child: GestureDetector(
                                           onTap: () {
                                             // Get the unique document ID
-                                            final String documentId = document.id;
+                                            final String documentId =
+                                                document.id;
 
                                             showCustomDialog(context,
-                                                message: AppString.delete_mantra_alert_note,
+                                                message: AppString
+                                                    .delete_mantra_alert_note,
                                                 onPressed: () {
-                                                  PageRouter.goBack(context);
-                                                  // Call the new universal delete method
-                                                  deleteEgoStreamMessage(documentId);
-                                                });
+                                              PageRouter.goBack(context);
+                                              // Call the new universal delete method
+                                              deleteEgoStreamMessage(
+                                                  documentId);
+                                            });
                                           },
                                           child: Icon(
                                             Icons.delete_forever_rounded,
@@ -1383,7 +1472,8 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   }
 
 // Helper widget for the stat cards
-  Widget _buildStatCard(var count, String label, String? userType, BuildContext context) {
+  Widget _buildStatCard(
+      var count, String label, String? userType, BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     Color getCardBackgroundColor() {
@@ -1433,12 +1523,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     );
   }
 
-
-
-
-
-
-
   @override
   Widget build(BuildContext context) {
     print("User nickname::: ${visitedUserModel.nickname}");
@@ -1448,14 +1532,17 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       child: Scaffold(
         backgroundColor: Pallet.colorSecondaryDark,
         appBar: AppBar(
-          backgroundColor: visitedUser?.userType == 'REGULAR' ? Pallet.colorPrimary : Pallet.colorSecondary,
+          backgroundColor: visitedUser?.userType == 'REGULAR'
+              ? Pallet.colorPrimary
+              : Pallet.colorSecondary,
           centerTitle: true,
-          title: Text(widget.visitedEgoName.toString(),
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w600,
-            color: Pallet.colorWhite,
-          ),
+          title: Text(
+            widget.visitedEgoName.toString(),
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w600,
+              color: Pallet.colorWhite,
+            ),
           ),
           elevation: 0,
         ),
@@ -1468,265 +1555,279 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
               ),
             ),
 
-
-
             /// The three Ego page tabs are here
             /// First tab is Sessions Tab
 
             Expanded(
                 child: DefaultTabController(
-                  length: 3, child:
-                Column(
-                    children: [
-                  SizedBox(height: 7.h),
-                  Container(
-                    // margin: EdgeInsets.all(4),
-                    decoration: BoxDecoration(
+              length: 3,
+              child: Column(children: [
+                SizedBox(height: 7.h),
+                Container(
+                  // margin: EdgeInsets.all(4),
+                  decoration: BoxDecoration(
                       //border: Border.all(color: Pallet.colorPrimary, width: 1),
-                    ),
-                    child: Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _tabController.animateTo(0);
-                                  currentTabIndex = 0;
-                                });
-                              },
-                              child: Container(
-                                margin: EdgeInsets.only(bottom: 8),
-                                height: 43,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                    border: currentTabIndex != 0
-                                        ? Border.all(
-                                        color: Pallet.deepGreen, width: 3)
-                                        : Border.all(
-                                        color: Pallet.deepGreen, width: 6),
-                                    borderRadius: BorderRadius.circular(25),
-                                    color: currentTabIndex != 0
-                                        ? Pallet.colorWhite
-                                        : Pallet.colorWhite),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        "Sessions",
-                                        style: TextStyle(
-                                          color: currentTabIndex != 1
-                                              ? Pallet.deepGreen
-                                              : Pallet.deepGreen,
-                                          fontWeight: currentTabIndex != 1
-                                              ? FontWeight.w500
-                                              : FontWeight.w700,
-                                          fontSize: currentTabIndex != 1 ? 14 : 14,
-                                        ),
-                                      ),
-                                      SizedBox(width: 14),
-                                      currentTabIndex != 0
-                                          ? SizedBox.shrink()
-                                          : Icon(Icons.archive_rounded,
-                                          color: Pallet.deepGreen)
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-
-
-                          /// Second tab is Activities Tab
-
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _tabController.animateTo(1);
-                                  currentTabIndex = 1;
-                                });
-                              },
-                              child: Container(
-                                margin: EdgeInsets.only(bottom: 8),
-                                height: 43,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                    border: currentTabIndex != 1
-                                        ? Border.all(
-                                        color: Pallet.colorPrimary, width: 3)
-                                        : Border.all(
-                                        color: Pallet.colorPrimary, width: 6),
-                                    borderRadius: BorderRadius.circular(25),
+                      ),
+                  child: Row(children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _tabController.animateTo(0);
+                            currentTabIndex = 0;
+                          });
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: 8),
+                          height: 43,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              border: currentTabIndex != 0
+                                  ? Border.all(
+                                      color: Pallet.deepGreen, width: 3)
+                                  : Border.all(
+                                      color: Pallet.deepGreen, width: 6),
+                              borderRadius: BorderRadius.circular(25),
+                              color: currentTabIndex != 0
+                                  ? Pallet.colorWhite
+                                  : Pallet.colorWhite),
+                          child: Padding(
+                            padding: const EdgeInsets.all(3.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "Sessions",
+                                  style: TextStyle(
                                     color: currentTabIndex != 1
-                                        ? Pallet.colorWhite
-                                        : Pallet.colorWhite),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        "Activities",
-                                        style: TextStyle(
-                                          color: currentTabIndex != 0
-                                              ? Pallet.colorPrimary
-                                              : Pallet.colorPrimary,
-                                          fontWeight: currentTabIndex != 0
-                                              ? FontWeight.w500
-                                              : FontWeight.w700,
-                                          fontSize: currentTabIndex != 0 ? 14 : 14,
-                                        ),
-                                      ),
-                                      SizedBox(width: 14),
-                                      currentTabIndex != 1
-                                          ? SizedBox.shrink()
-                                          : Icon(Icons.circle_notifications,
-                                          color: Pallet.colorPrimary)
-                                    ],
+                                        ? Pallet.deepGreen
+                                        : Pallet.deepGreen,
+                                    fontWeight: currentTabIndex != 1
+                                        ? FontWeight.w500
+                                        : FontWeight.w700,
+                                    fontSize: currentTabIndex != 1 ? 14 : 14,
                                   ),
                                 ),
-                              ),
+                                SizedBox(width: 14),
+                                currentTabIndex != 0
+                                    ? SizedBox.shrink()
+                                    : Icon(Icons.archive_rounded,
+                                        color: Pallet.deepGreen)
+                              ],
                             ),
                           ),
-
-                          /// Third tab is Claire Love Tab
-
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _tabController.animateTo(2);
-                                  currentTabIndex = 2;
-                                });
-                              },
-                              child: Container(
-                                margin: EdgeInsets.only(bottom: 8),
-                                height: 43,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                    border: currentTabIndex != 2
-                                        ? Border.all(
-                                        color: Pallet.colorSecondary, width: 3)
-                                        : Border.all(
-                                        color: Pallet.colorSecondary, width: 6),
-                                    borderRadius: BorderRadius.circular(25),
-                                    color: currentTabIndex != 2
-                                        ? Pallet.colorWhite
-                                        : Pallet.colorWhite),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        "Wallet",
-                                        style: TextStyle(
-                                          color: currentTabIndex != 2
-                                              ? Pallet.colorSecondary
-                                              : Pallet.colorSecondary,
-                                          fontWeight: currentTabIndex != 2
-                                              ? FontWeight.w500
-                                              : FontWeight.w700,
-                                          fontSize: currentTabIndex != 2 ? 14 : 14,
-                                        ),
-                                      ),
-                                      SizedBox(width: 14),
-                                      currentTabIndex != 2
-                                          ? SizedBox.shrink()
-                                          : Icon(Icons.monetization_on_rounded,
-                                          color: Pallet.colorSecondary)
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ]
-                    ),
-                  ),
-
-                  Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-
-                        StreamBuilder(
-                          stream: _userSessionsStream,
-                          builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                            if (session.connectionState == ConnectionState.waiting) {
-                              return RotateImage(70, 70);
-                            }
-                            if (!session.hasData) {
-                              return Center(
-                                child: Text("No Session data",
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.lato(
-                                        fontSize: 15.0,
-                                        color: Pallet.colorBlack,
-                                        //fontStyle: FontStyle.normal,
-                                        fontWeight: FontWeight.w600)),
-                              );
-                            }
-                            if (session.hasData) {
-                              // clear list
-                              _sessionList!.clear();
-
-                              session.data!.docs.map((e) {
-                                _sessionList!.add(Session.fromJson(e.data()));
-                              }).toList();
-
-                              return Scrollbar(
-                                child: ListView(
-                                  children: [
-
-                                    // Top ad unit is here
-                                    if (visitedUserTopOfSessionsBanner != null && _isTopOfSessionsBannerLoaded)
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                        child: Container(
-                                          height: visitedUserTopOfSessionsBanner!.size.height.toDouble(),
-                                          width: visitedUserTopOfSessionsBanner!.size.width.toDouble(),
-                                          child: AdWidget(ad: visitedUserTopOfSessionsBanner!),
-                                          alignment: Alignment.center,
-                                        ),
-                                      ),
-
-                                    ..._sessionList!
-                                        .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                                        .toList(),
-
-                                    // Bottom ad unit is here
-                                    if (visitedUserBottomOfSessionsBanner != null && _isBottomOfSessionsBannerLoaded)
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                        child: Container(
-                                          height: visitedUserBottomOfSessionsBanner!.size.height.toDouble(),
-                                          width: visitedUserBottomOfSessionsBanner!.size.width.toDouble(),
-                                          child: AdWidget(ad: visitedUserBottomOfSessionsBanner!),
-                                          alignment: Alignment.center,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              );
-
-                            }
-                            return Container();
-                          },
                         ),
-
-                        ActivityWidget(userId: widget.visitedUsersID),
-
-                        VisitedUserClaireLoves(visitedEgoName: visitedUser?.nickname.toString() ?? '', visitedUsersID: visitedUser?.userId.toString() ?? '',),
-                      ],
+                      ),
                     ),
-                  )
-                ]),
-                ))
+
+                    /// Second tab is Activities Tab
+
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _tabController.animateTo(1);
+                            currentTabIndex = 1;
+                          });
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: 8),
+                          height: 43,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              border: currentTabIndex != 1
+                                  ? Border.all(
+                                      color: Pallet.colorPrimary, width: 3)
+                                  : Border.all(
+                                      color: Pallet.colorPrimary, width: 6),
+                              borderRadius: BorderRadius.circular(25),
+                              color: currentTabIndex != 1
+                                  ? Pallet.colorWhite
+                                  : Pallet.colorWhite),
+                          child: Padding(
+                            padding: const EdgeInsets.all(3.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "Activities",
+                                  style: TextStyle(
+                                    color: currentTabIndex != 0
+                                        ? Pallet.colorPrimary
+                                        : Pallet.colorPrimary,
+                                    fontWeight: currentTabIndex != 0
+                                        ? FontWeight.w500
+                                        : FontWeight.w700,
+                                    fontSize: currentTabIndex != 0 ? 14 : 14,
+                                  ),
+                                ),
+                                SizedBox(width: 14),
+                                currentTabIndex != 1
+                                    ? SizedBox.shrink()
+                                    : Icon(Icons.circle_notifications,
+                                        color: Pallet.colorPrimary)
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    /// Third tab is Claire Love Tab
+
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _tabController.animateTo(2);
+                            currentTabIndex = 2;
+                          });
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(bottom: 8),
+                          height: 43,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              border: currentTabIndex != 2
+                                  ? Border.all(
+                                      color: Pallet.colorSecondary, width: 3)
+                                  : Border.all(
+                                      color: Pallet.colorSecondary, width: 6),
+                              borderRadius: BorderRadius.circular(25),
+                              color: currentTabIndex != 2
+                                  ? Pallet.colorWhite
+                                  : Pallet.colorWhite),
+                          child: Padding(
+                            padding: const EdgeInsets.all(3.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "Wallet",
+                                  style: TextStyle(
+                                    color: currentTabIndex != 2
+                                        ? Pallet.colorSecondary
+                                        : Pallet.colorSecondary,
+                                    fontWeight: currentTabIndex != 2
+                                        ? FontWeight.w500
+                                        : FontWeight.w700,
+                                    fontSize: currentTabIndex != 2 ? 14 : 14,
+                                  ),
+                                ),
+                                SizedBox(width: 14),
+                                currentTabIndex != 2
+                                    ? SizedBox.shrink()
+                                    : Icon(Icons.monetization_on_rounded,
+                                        color: Pallet.colorSecondary)
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ]),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      StreamBuilder(
+                        stream: _userSessionsStream,
+                        builder:
+                            (context, AsyncSnapshot<QuerySnapshot> session) {
+                          if (session.connectionState ==
+                              ConnectionState.waiting) {
+                            return RotateImage(70, 70);
+                          }
+                          if (!session.hasData) {
+                            return Center(
+                              child: Text("No Session data",
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.lato(
+                                      fontSize: 15.0,
+                                      color: Pallet.colorBlack,
+                                      //fontStyle: FontStyle.normal,
+                                      fontWeight: FontWeight.w600)),
+                            );
+                          }
+                          if (session.hasData) {
+                            // clear list
+                            _sessionList!.clear();
+
+                            session.data!.docs.map((e) {
+                              _sessionList!.add(Session.fromJson(e.data()));
+                            }).toList();
+
+                            return Scrollbar(
+                              child: ListView(
+                                children: [
+                                  // Top ad unit is here
+                                  if (visitedUserTopOfSessionsBanner != null &&
+                                      _isTopOfSessionsBannerLoaded)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0),
+                                      child: Container(
+                                        height: visitedUserTopOfSessionsBanner!
+                                            .size.height
+                                            .toDouble(),
+                                        width: visitedUserTopOfSessionsBanner!
+                                            .size.width
+                                            .toDouble(),
+                                        child: AdWidget(
+                                            ad: visitedUserTopOfSessionsBanner!),
+                                        alignment: Alignment.center,
+                                      ),
+                                    ),
+
+                                  ..._sessionList!
+                                      .map((element) => EgoModeSessionCard(
+                                            element: element,
+                                            visitedUsersID: '',
+                                            visitedEgoName: '',
+                                          ))
+                                      .toList(),
+
+                                  // Bottom ad unit is here
+                                  if (visitedUserBottomOfSessionsBanner !=
+                                          null &&
+                                      _isBottomOfSessionsBannerLoaded)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0),
+                                      child: Container(
+                                        height:
+                                            visitedUserBottomOfSessionsBanner!
+                                                .size.height
+                                                .toDouble(),
+                                        width:
+                                            visitedUserBottomOfSessionsBanner!
+                                                .size.width
+                                                .toDouble(),
+                                        child: AdWidget(
+                                            ad: visitedUserBottomOfSessionsBanner!),
+                                        alignment: Alignment.center,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            );
+                          }
+                          return Container();
+                        },
+                      ),
+                      ActivityWidget(userId: widget.visitedUsersID),
+                      VisitedUserClaireLoves(
+                        visitedEgoName: visitedUser?.nickname.toString() ?? '',
+                        visitedUsersID: visitedUser?.userId.toString() ?? '',
+                      ),
+                    ],
+                  ),
+                )
+              ]),
+            ))
           ],
         ),
       ),
@@ -1737,7 +1838,8 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 class AudioPlayerWidget extends StatefulWidget {
   final String audioPath;
 
-  const AudioPlayerWidget({Key? key, required this.audioPath}) : super(key: key);
+  const AudioPlayerWidget({Key? key, required this.audioPath})
+      : super(key: key);
 
   @override
   _AudioPlayerWidgetState createState() => _AudioPlayerWidgetState();
@@ -1759,8 +1861,6 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       }
     });
   }
-
-
 
   @override
   void dispose() {
@@ -1805,6 +1905,3 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     );
   }
 }
-
-
-

@@ -153,6 +153,11 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       return;
                                     }
 
+                                    if (currentUser == null) {
+                                      showToast("You must be logged in to visit an ego.");
+                                      return;
+                                    }
+
                                     // --- 3. PERFORM THE LOVE TRANSACTION ---
                                     final bool success =
                                     await firebaseServices.transferLoveBetweenUsers(
@@ -179,22 +184,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
                                     // --- 4. NAVIGATE ON SUCCESS ---
                                     if (success) {
-                                      // --- SEND NOTIFICATION ---
-                                      try {
-                                        await notificationService.sendNotification(
-                                            push_notification.NotificationModel(
-                                                topic: visitedUserId,
-                                                data: push_notification.Data(id: visitedUserId, route: 'wallet'),
-                                                notification: push_notification.Notification(
-                                                    title: "Someone Visited Your Ego!",
-                                                    body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                                )
-                                            ).toJson()
-                                        );
-                                      } catch (e) {
-                                        print("Failed to send profile visit notification: $e");
-                                        // Do not block navigation if notification fails
-                                      }
+                                      showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
                                       // --- NAVIGATE ---
                                       // Only navigate to the profile if the transaction was successful.
@@ -332,22 +322,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
                                           // --- 5. NAVIGATE ON SUCCESS ---
                                           if (success) {
-                                            // --- SEND NOTIFICATION ---
-                                            try {
-                                              await notificationService.sendNotification(
-                                                  push_notification.NotificationModel(
-                                                      topic: visitedUserId,
-                                                      data: push_notification.Data(id: visitedUserId, route: 'wallet'),
-                                                      notification: push_notification.Notification(
-                                                          title: "Someone Visited Your Ego!",
-                                                          body: "${visitingUser.nickname} visited your Ego Profile with a kola of 1❤️."
-                                                      )
-                                                  ).toJson()
-                                              );
-                                            } catch (e) {
-                                              print("Failed to send profile visit notification: $e");
-                                              // Do not block navigation if notification fails
-                                            }
+                                            showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
                                             // --- NAVIGATE ---
                                             // Only navigate to the profile if the transaction was successful.
@@ -681,7 +656,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                                 .saveUserActivity(
                                               activityType: 'follow',
                                               activityMessage:
-                                                  "You started following the session: '${_session.title}'.",
+                                                  "Following the session: '${_session.title}'.",
                                               recipientId: sessionOwnerId,
                                               recipientNickname:
                                                   _session.userNickname,

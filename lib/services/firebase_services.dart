@@ -112,9 +112,9 @@ class FirebaseServices extends ChangeNotifier {
         });
         await claireDoc.update({
           'currentLoveCount': FieldValue.increment(-amount),
-          'withdrawnLoveCount': FieldValue.increment(amount),
-          'fromLoveTransfer': FieldValue.increment(amount),
-          'fromRoomVisits': FieldValue.increment(fromRoomVisits),
+          'forLoveTransfer': FieldValue.increment(transactionTax),
+          'forGameLoses': FieldValue.increment(forGameLoses),
+          'forRoomVisits': FieldValue.increment(forRoomVisits),
         });
 
         await transactionService.recordTransaction(
@@ -135,15 +135,15 @@ class FirebaseServices extends ChangeNotifier {
       try {
         await userDoc.update({
           'currentLoveCount': FieldValue.increment(-amount),
-          'withdrawnLoveCount': FieldValue.increment(amount),
+          'withdrawnLoveCount': FieldValue.increment(forLoveTransfer),
           'forLoveTransfer': FieldValue.increment(forLoveTransfer),
           'forGameLoses': FieldValue.increment(forGameLoses),
           'forRoomVisits': FieldValue.increment(forRoomVisits),
         });
         // Update Claire's balances everytime with transaction tax
         await claireDoc.update({
-          'currentLoveCount': FieldValue.increment(amount),
-          'totalLoveCount': FieldValue.increment(amount),
+          'currentLoveCount': FieldValue.increment(transactionTax),
+          'totalLoveCount': FieldValue.increment(transactionTax),
           'forLoveTransfer': FieldValue.increment(transactionTax),
           'forRoomVisits': FieldValue.increment(forRoomVisits),
 
@@ -212,7 +212,6 @@ class FirebaseServices extends ChangeNotifier {
       // 1. Debit the sender (spendable loves only)
       await senderDoc.update({
         'currentLoveCount': FieldValue.increment(-totalDebitAmount),
-        'withdrawnLoveCount': FieldValue.increment(totalDebitAmount),
         'forLoveTransfer': FieldValue.increment(forLoveTransfer),
         'forRoomVisits': FieldValue.increment(forRoomVisits),
         'loveSentForThanks': FieldValue.increment(forThanks),
@@ -235,7 +234,9 @@ class FirebaseServices extends ChangeNotifier {
       await claireDoc.update({
         'currentLoveCount': FieldValue.increment(taxAmount),
         'totalLoveCount': FieldValue.increment(taxAmount),
-        'loveFromThanks': FieldValue.increment(taxAmount),
+        'loveFromThanks': FieldValue.increment(fromThanks),
+        'fromRoomVisits': FieldValue.increment(fromRoomVisits),
+        'fromLoveTransfer': FieldValue.increment(taxAmount),
       });
 
       // If the transaction is successful, record the individual transaction logs.
@@ -312,13 +313,13 @@ class FirebaseServices extends ChangeNotifier {
   Future<void> notifyClaireForSession(String sender, CreateSessionModel session) async {
     _usersID = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
 
-    await _firebaseMessaging.subscribeToTopic(session.sessionId!);
+    await _firebaseMessaging.subscribeToTopic("PbRuh3FmtESK57j3PM1Tc9RvPKh2");
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
-      topic: session.sessionId!,
+      topic: "PbRuh3FmtESK57j3PM1Tc9RvPKh2",
       data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
       notification: pushNotification.Notification(
-          title: session.title ?? '', body: '$sender started a new session'),
+          title: 'New Diary Session ${session.title}' ?? '', body: '$sender started a new session, please advice it'),
     );
     notificationService.sendNotification(_notificationModel.toJson());
     logger.d('Notified for this session: ${session.title!}');
@@ -1318,8 +1319,8 @@ class FirebaseServices extends ChangeNotifier {
         // Add the new field
         involvedUsers: involvedUsers,
       );
-
       await docRef.set(activity.toJson());
+
       print('✅ Activity Saved: $activityType');
 
     } catch (e) {
@@ -1548,7 +1549,7 @@ class FirebaseServices extends ChangeNotifier {
             data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
             notification: pushNotification.Notification(
                 title: chatRoomPodo.title!,
-                body: '$sender started a new corner inside $roomTitle.'));
+                body: 'A new corner has been started inside $roomTitle.'));
 
     _firebaseFirestore
         .collection(AppString.appChats)
@@ -1589,7 +1590,7 @@ class FirebaseServices extends ChangeNotifier {
             data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
             notification: pushNotification.Notification(
               title: chatRoomPodo!.title!,
-              body: '$sender sent something to your corner of the room',
+              body: 'There is a new message in your corner of the room',
             ));
     _firebaseFirestore
         .collection(AppString.appChats)
@@ -1699,7 +1700,7 @@ class FirebaseServices extends ChangeNotifier {
       topic: session.sessionId!,
       data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
       notification: pushNotification.Notification(
-          title: session.title ?? '', body: '$sender reacted to the session.'),
+          title: session.title ?? '', body: 'A $reactionType to this session'),
     );
 
     // Your existing reaction toggle logic
@@ -1718,7 +1719,7 @@ class FirebaseServices extends ChangeNotifier {
 
         // *** CORRECTED: Call the existing saveUserActivity method with the right parameters ***
         await saveUserActivity(
-          activityMessage: 'You reacted $reactionType to a session', // The message your function expects
+          activityMessage: ' A $reactionType to this session: ${session.title}', // The message your function expects
           activityType: reactionType,
           recipientId: sessionOwnerId,
           sessionId: sessionId,
@@ -1730,29 +1731,6 @@ class FirebaseServices extends ChangeNotifier {
     }
   }
 
-  /// adds reaction to users comment
-  void addThanksReaction(
-      {required String commentID,
-      required String docId,
-      required Session session,
-      required String sender,
-      required Map<String, dynamic> map}) {
-    final pushNotification.NotificationModel _notificationModel =
-    pushNotification.NotificationModel(
-      topic: docId,
-      data: pushNotification.Data(id: sender, route: docId.toString()),
-      notification: pushNotification.Notification(
-          title: session.title, body: '$sender thanked a response on the session.'),
-    );
-    notificationService.sendNotification(_notificationModel.toJson());
-
-    _firebaseFirestore
-        .collection(AppString.appFeaturedSessions)
-        .doc(docId.toString())
-        .collection(AppString.appFeaturedSessionsComments)
-        .doc(commentID.toString())
-        .update(map);
-  }
 
 
 

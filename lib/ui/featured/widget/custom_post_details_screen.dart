@@ -866,7 +866,7 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
               data: push_notification.Data(id: currentUser!.uid, route: 'wallet'),
               notification: push_notification.Notification(
                   title: "You've Earned Love!",
-                  body: "You received 10 ❤️ for posting an original advise."));
+                  body: "You received 10❤️ for posting an original advise."));
           await notificationService.sendNotification(notificationModel.toJson());
         } catch (e) {
           print("Failed to send 'Original Advise' push notification: $e");
@@ -1045,29 +1045,6 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
     logger.d('Successfully updated time of last activity');
   }
 
-
-  void _updateReaction(commentSessionModel, session) async {
-    if (!await firebaseServices.isUserSignIn(context)) {
-      showToast('You have to login first before reacting.');
-      return;
-    }
-    final String commentId = commentSessionModel!.commentId.toString();
-    final String docId = session.sessionId.toString();
-    final String sender = commentSessionModel.userNickname.toString();
-    firebaseServices.addThanksReaction(
-        session: session,
-        commentID: commentId,
-        docId: docId,
-        sender: sender,
-        map: commentSessionModel!.thanks!.contains(currentUser?.uid)
-            ? {
-          'thanks': FieldValue.arrayRemove([currentUser?.uid])
-        }
-            : {
-          'thanks': FieldValue.arrayUnion([currentUser?.uid])
-        });
-    saveUserThanksActivity(commentSessionModel);
-  }
 
   _share(String? message) {
     String _message = '''

@@ -180,7 +180,7 @@ class _MetooButtonState extends State<MetooButton>
 
     // 6. If the transaction is successful, update the database and the UI.
     if (success) {
-      showToast("1 ❤️ sent to the session owner!");
+      showToast("1❤️ sent to the session owner!");
 
       // Update the reaction list in Firestore.
       // Pass the reaction string value instead of the index

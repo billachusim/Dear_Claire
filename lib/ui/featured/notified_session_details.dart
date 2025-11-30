@@ -615,7 +615,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                                     topic: reactingUserId,
                                                     data: push_notification.Data(id: reactingUserId, route: 'wallet'),
                                                     notification: push_notification.Notification(
-                                                        title: "Someone Visited Your Ego!",
+                                                        title: "${_session.title}",
                                                         body: "${reactingUser.nickname} reacted to your session ${_session.title} with 1❤️."
                                                     )
                                                 ).toJson()
@@ -1406,30 +1406,6 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
     logger.d('Successfully updated time of last activity');
   }
 
-
-  void _updateReaction(commentSessionModel, session) async {
-    if (!await firebaseServices.isUserSignIn(context)) {
-      showToast('You have to login first before reacting.');
-      return;
-    }
-    final _user = await firebaseServices.getUserInfo();
-    final String commentId = commentSessionModel!.commentId.toString();
-    final String docId = session.sessionId.toString();
-    final String sender = _user.userType != "REGULAR" ? "Alter Ego" : _user.nickname.toString();
-    firebaseServices.addThanksReaction(
-        session: session,
-        commentID: commentId,
-        docId: docId,
-        sender: sender,
-        map: commentSessionModel!.thanks!.contains(currentUser?.uid)
-            ? {
-          'thanks': FieldValue.arrayRemove([currentUser?.uid])
-        }
-            : {
-          'thanks': FieldValue.arrayUnion([currentUser?.uid])
-        });
-    saveUserThanksActivity(commentSessionModel);
-  }
 
   _share(String? message) {
     String _message = '''

@@ -13,7 +13,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/notification_service.dart';
-import '../../services/transaction_service.dart';
 import '../../services/user_model.dart';
 
 class VisitedUserClaireLoves extends StatefulWidget {
@@ -42,7 +41,6 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
   double _rate = 1.5;
   double _convertedAmount = 0.0;
   bool _isLoading = true;
-  final TransactionService _transactionService = TransactionService();
   final FirebaseServices _firebaseServices = FirebaseServices();
   final TextEditingController _amountController = TextEditingController();
   User? currentUser = FirebaseAuth.instance.currentUser;
@@ -109,7 +107,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
 
 
 
-  Future<void> _sendGiftNotifications({
+  Future<void> _sendLoveNotifications({
     required String senderName,
     required String receiverId,
     required int amount,
@@ -121,7 +119,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
           data: push_notification.Data(id: receiverId, route: 'wallet'),
           notification: push_notification.Notification(
               title: "You've Received Love!",
-              body: "$senderName has sent you $amount ❤️"));
+              body: "$senderName has sent you $amount❤️"));
       await notificationService.sendNotification(receiverNotification.toJson());
 
       // Notify the sender (confirmation)
@@ -130,7 +128,7 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
           data: push_notification.Data(id: currentUser!.uid, route: 'wallet'),
           notification: push_notification.Notification(
               title: "Love Sent!",
-              body: "You successfully sent loves to ${widget.visitedEgoName}."));
+              body: "You successfully sent $amount❤️ to ${widget.visitedEgoName}."));
       await notificationService.sendNotification(senderNotification.toJson());
 
     } catch (e) {
@@ -456,7 +454,7 @@ Timestamp: ${DateTime.now().toIso8601String()}
           backgroundColor: Pallet.colorSecondary,
           shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text("Confirm Your Love",
+          title: Text("Confirm Sending Love",
               style: TextStyle(color: Colors.white)),
           content: SingleChildScrollView(
             child: Column(
@@ -534,6 +532,8 @@ Timestamp: ${DateTime.now().toIso8601String()}
                     receiverId: receiverId,
                     amountToSend: amountToReceive,
                     taxAmount: taxAmount,
+                    forLoveTransfer: totalDebitAmount,
+                    fromLoveTransfer: amountToReceive,
                     totalDebitAmount: totalDebitAmount,
                     senderTransactionDesc: senderDesc,
                     receiverTransactionDesc: receiverDesc,
@@ -545,27 +545,22 @@ Timestamp: ${DateTime.now().toIso8601String()}
                     // Save  as activity
                     await _firebaseServices.saveUserActivity(
                       activityType: 'send_love',
-                      activityMessage: "You sent $amount❤️ to ${widget.visitedEgoName}.",
+                      activityMessage: "Love transfer of $amount❤️ to ${widget.visitedEgoName}.",
                       recipientId: widget.visitedUsersID,
                       recipientNickname: widget.visitedEgoName,
                     );
 
-                    // Send notification
-                      final notificationModel = push_notification.NotificationModel(
-                          topic: widget.visitedUsersID,
-                          data: push_notification.Data(id: widget.visitedUsersID, route: 'wallet'),
-                          notification: push_notification.Notification(
-                              title: "You've Received Love!",
-                              body: "$sender.nickname has sent you ${_amountController.text} ❤️"));
-                      await notificationService.sendNotification(notificationModel.toJson());
-
                       // Show toast
-                    AppToast.show("$totalDebitAmount ❤️ Love sent successfully!");
-                    await _sendGiftNotifications(
+                    AppToast.show("$totalDebitAmount❤️ Love sent successfully!");
+
+                    // Send notification
+                    await _sendLoveNotifications(
                       senderName: sender.nickname ?? 'An Ego',
                       receiverId: receiverId,
                       amount: amountToReceive,
                     );
+
+                    // Send email
                     await _sendAdminEmail(
                       sender: sender,
                       receiverName: widget.visitedEgoName,

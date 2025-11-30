@@ -169,7 +169,7 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
           userId: _currentUser!.uid,
           amount: 1000,
           type: t_model.TransactionType.debit,
-          userTransactionDescription: "1000 ❤️ paid to feature a session.",
+          userTransactionDescription: "1000❤️ paid to feature a session.",
           metadata: {
             'sessionId': widget.session.sessionId,
             'sessionTitle': widget.session.title,
