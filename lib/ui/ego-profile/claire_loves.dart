@@ -42,6 +42,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
   int _forRoomVisits = 0;
   int _loveFromReactions = 0;
   int _loveSentForReactions = 0;
+  int _forLoveTransfer = 0;
+  int _fromLoveTransfer = 0;
   bool _showMoreStats = false;
   bool _showAllTransactions = false;
 
@@ -94,6 +96,9 @@ class _ClaireLovesState extends State<ClaireLoves> {
           _forRoomVisits = data["forRoomVisits"] ?? 0;
           _loveFromReactions = data["loveFromReactions"] ?? 0;
           _loveSentForReactions = data["loveSentForReactions"] ?? 0;
+          _forLoveTransfer = data["forLoveTransfer"] ?? 0;
+          _fromLoveTransfer = data["fromLoveTransfer"] ?? 0;
+
           _userId = data["userId"] ?? "";
           _rate = userType == 'SUPER_ADMIN'
               ? 3.0
@@ -195,6 +200,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
       ),
       _buildStatCard("From Ego Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
       _buildStatCard("For Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
+      _buildStatCard("For Love Transfer", "-$_forLoveTransfer ❤️", Colors.blueGrey),
+      _buildStatCard("From Love Transfer", "+$_fromLoveTransfer ❤️", Colors.teal),
     ];
 
     // A list for the stats that will be hidden initially
@@ -451,7 +458,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
     );
   }
 
-  // REPLACE the existing _buildRecentTransactions method with this one.
+
   Widget _buildRecentTransactions() {
     return FutureBuilder<List<TransactionModel>>(
       future: firebaseServices.getTransactionsForUser(

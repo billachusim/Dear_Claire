@@ -215,7 +215,7 @@ class _CommentWidgetState extends State<CommentWidget> {
           // After a successful transaction, save the activity to Firestore.
           await firebaseServices.saveUserActivity(
             activityType: 'thank',
-            activityMessage: "You thanked ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advise on ${widget.featuredSessionModel?.title}.",
+            activityMessage: "You thanked ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advise on ${widget.featuredSessionModel?.title}. and gave 1❤️",
             recipientId: thankedUserId, // The user who received the thanks
             sessionId: widget.featuredSessionModel?.sessionId,
           );
@@ -242,7 +242,7 @@ class _CommentWidgetState extends State<CommentWidget> {
 
     // --- 3B. ALTER EGO: PROCEED WITH 3-LOVE TRANSACTION VIA SERVICE ---
     const int thankYouCost = 3;
-    const int taxAmount = 0; // No tax for a 3-love transaction
+    const int taxAmount = 2;
     const int totalDebit = thankYouCost + taxAmount;
 
     try {
@@ -258,8 +258,8 @@ class _CommentWidgetState extends State<CommentWidget> {
         amountToSend: thankYouCost,
         taxAmount: taxAmount,
         totalDebitAmount: totalDebit,
-        senderTransactionDesc: "3❤️ for thanks to an advise from ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}.",
-        receiverTransactionDesc: "3❤️ from ${thanker.nickname} for your advise.",
+        senderTransactionDesc: "5❤️ for thanks to an advise from ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}.",
+        receiverTransactionDesc: "5❤️ from ${thanker.nickname} for your advise.",
         claireTransactionDesc: "No Tax from a 'Thank You' transaction.",
         forThanks: thankYouCost,
         fromThanks: thankYouCost,
@@ -271,7 +271,7 @@ class _CommentWidgetState extends State<CommentWidget> {
       );
 
       if (success) {
-        showToast("3❤️ sent to ${thankedAdvise.userNickname} as thanks!");
+        showToast("5❤️ sent to ${thankedAdvise.userNickname} as thanks!");
 
         // After a successful transaction, save the activity to Firestore.
         await firebaseServices.saveUserActivity(

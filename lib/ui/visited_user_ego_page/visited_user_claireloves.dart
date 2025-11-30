@@ -36,6 +36,8 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
   int _adviseCount = 0;
   int _loveSentForVisits = 0;
   int _profileVisitLove = 0;
+  int _forLoveTransfer = 0;
+  int _fromLoveTransfer = 0;
   String _rateBadge = 'Ego Rate';
   double _rate = 1.5;
   double _convertedAmount = 0.0;
@@ -77,6 +79,8 @@ class _VisitedUserClaireLovesState extends State<VisitedUserClaireLoves> {
           _adviseCount = data["adviseCount"] ?? 0;
           _loveSentForVisits = data["loveSentForVisits"] ?? 0;
           _profileVisitLove = data["profileVisitLove"] ?? 0;
+          _forLoveTransfer = data["forLoveTransfer"] ?? 0;
+          _fromLoveTransfer = data["fromLoveTransfer"] ?? 0;
           _rate = userType == 'SUPER_ADMIN'
               ? 3.0
               : userType == 'ADMIN'
@@ -254,6 +258,8 @@ Timestamp: ${DateTime.now().toIso8601String()}
           ),
           _buildStatCard("From Ego Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
           _buildStatCard("For Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
+          _buildStatCard("For Love Transfer", "-$_forLoveTransfer ❤️", Colors.blueGrey),
+          _buildStatCard("From Love Transfer", "+$_fromLoveTransfer ❤️", Colors.teal),
         ],
       ),
     );
@@ -450,7 +456,7 @@ Timestamp: ${DateTime.now().toIso8601String()}
           backgroundColor: Pallet.colorSecondary,
           shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text("Confirm Your Gift",
+          title: Text("Confirm Your Love",
               style: TextStyle(color: Colors.white)),
           content: SingleChildScrollView(
             child: Column(
@@ -459,22 +465,24 @@ Timestamp: ${DateTime.now().toIso8601String()}
               children: [
                 // --- Updated Dialog Text ---
                 Text(
-                  "You are sending $amount ❤️ to ${widget.visitedEgoName}.",
+                  "You are sending $amount❤️ to ${widget.visitedEgoName}.",
                   style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8),
                 Text(
-                  "They will receive: $amountToReceive ❤️",
+                  "${widget.visitedEgoName} will receive: $amountToReceive❤️"
+                      " because Claire multiplies every gift by the receiver's Ego rate."
+                      "...Claire is just too good.",
                   style: TextStyle(color: Colors.greenAccent, fontSize: 14),
                 ),
                 SizedBox(height: 8),
                 Text(
-                  "Claire's Tax (10%): $taxAmount ❤️",
+                  "Claire's Tax (10%): $taxAmount❤️",
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 SizedBox(height: 8),
                 Text(
-                  "Total Debit: $totalDebitAmount ❤️",
+                  "Total Debit: $totalDebitAmount❤️",
                   style: TextStyle(color: Colors.redAccent, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 // --- End of Updated Text ---
@@ -516,9 +524,9 @@ Timestamp: ${DateTime.now().toIso8601String()}
                   final note = noteController.text.trim();
 
                   final noteText = note.isNotEmpty ? ' for "$note"' : '.';
-                  final senderDesc = "Out: $totalDebitAmount ❤️ ($amount to ${widget.visitedEgoName} + $taxAmount tax)$noteText";
-                  final receiverDesc = "Credit: $amountToReceive ❤️ received from ${sender.nickname}$noteText";
-                  final claireDesc = "Credit: $taxAmount ❤️ tax from transfer: ${sender.nickname} -> ${widget.visitedEgoName}";
+                  final senderDesc = "Debit: $totalDebitAmount❤️ ($amount to ${widget.visitedEgoName} + $taxAmount tax)$noteText";
+                  final receiverDesc = "Credit: $amountToReceive❤️ received from ${sender.nickname}$noteText";
+                  final claireDesc = "Credit: $taxAmount❤️ tax from transfer: ${sender.nickname} -> ${widget.visitedEgoName}";
 
                   // --- SINGLE, CORRECT CALL to the new transfer method ---
                   bool success = await _firebaseServices.transferLoveBetweenUsers(
@@ -537,11 +545,21 @@ Timestamp: ${DateTime.now().toIso8601String()}
                     // Save  as activity
                     await _firebaseServices.saveUserActivity(
                       activityType: 'send_love',
-                      activityMessage: "You sent $amount ❤️ to ${widget.visitedEgoName}.",
+                      activityMessage: "You sent $amount❤️ to ${widget.visitedEgoName}.",
                       recipientId: widget.visitedUsersID,
                       recipientNickname: widget.visitedEgoName,
                     );
 
+                    // Send notification
+                      final notificationModel = push_notification.NotificationModel(
+                          topic: widget.visitedUsersID,
+                          data: push_notification.Data(id: widget.visitedUsersID, route: 'wallet'),
+                          notification: push_notification.Notification(
+                              title: "You've Received Love!",
+                              body: "$sender.nickname has sent you ${_amountController.text} ❤️"));
+                      await notificationService.sendNotification(notificationModel.toJson());
+
+                      // Show toast
                     AppToast.show("$totalDebitAmount ❤️ Love sent successfully!");
                     await _sendGiftNotifications(
                       senderName: sender.nickname ?? 'An Ego',

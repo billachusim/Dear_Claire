@@ -53,16 +53,8 @@ class FirebaseServices extends ChangeNotifier {
 
 
   /// Handles all love transactions between a user and the Claire Treasury.
-  ///
-  /// [userId]: The ID of the user performing the action.
-  /// [amount]: The number of loves to be transacted.
-  /// [type]: 'credit' if the user is receiving loves, 'debit' if they are spending.
-  /// [userTransactionDescription]: The description for the user's transaction list.
-  /// [metadata]: Optional data for the transaction record.
-  /// [fromGameWins]: Optional amount to increment for game wins.
-  /// [forGameLoses]: Optional amount to increment for game losses.
-  ///
-  /// Returns `true` if the transaction was processed, `false` if it was set to pending.
+  /// This logic follows the rule that `totalLoveCount` only ever increases for any user,
+  /// including Claire. Outgoing payments are reflected in `withdrawnLoveCount`.
   Future<bool> updateTreasuryAndUser({
     required String userId,
     required int amount,
@@ -73,9 +65,12 @@ class FirebaseServices extends ChangeNotifier {
     int forGameLoses = 0,
     int fromRoomVisits = 0,
     int forRoomVisits = 0,
+    int forLoveTransfer = 0,
+    int fromLoveTransfer = 0,
   }) async {
     const String claireId = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
     const int treasuryMinBalance = 4000000;
+    final int transactionTax = (amount * 0.10).round();
     final DocumentReference claireDoc = _firebaseFirestore
         .collection('users')
         .doc(claireId);
@@ -87,10 +82,10 @@ class FirebaseServices extends ChangeNotifier {
       // USER is RECEIVING loves (deduct from Claire)
       try {
         final claireSnapshot = await claireDoc.get();
-        final claireLoves = (claireSnapshot.data() as Map<String,
-            dynamic>?)?['totalLoveCount'] ?? 0;
+        final claireCurrentLoves = (claireSnapshot.data() as Map<String,
+            dynamic>?)?['currentLoveCount'] ?? 0;
 
-        if (claireLoves < treasuryMinBalance) {
+        if (claireCurrentLoves < treasuryMinBalance) {
           // Treasury is too low, mark as pending and DO NOT process.
           await transactionService.recordTransaction(
             userId: userId,
@@ -104,17 +99,23 @@ class FirebaseServices extends ChangeNotifier {
               'treasury_status': 'pending_low_balance'
             },
           );
-          return false; // Indicate that the transaction is pending
+          return false;
         }
 
         // Treasury has enough, process the transaction for both.
         await userDoc.update({
           'currentLoveCount': FieldValue.increment(amount),
-          'totalLoveCount': FieldValue.increment(-amount),
+          'totalLoveCount': FieldValue.increment(amount), // User's lifetime total increases
           'fromGameWins': FieldValue.increment(fromGameWins),
           'fromRoomVisits': FieldValue.increment(fromRoomVisits),
+          'fromLoveTransfer': FieldValue.increment(fromLoveTransfer),
         });
-        await claireDoc.update({'totalLoveCount': FieldValue.increment(-amount)});
+        await claireDoc.update({
+          'currentLoveCount': FieldValue.increment(-amount),
+          'withdrawnLoveCount': FieldValue.increment(amount),
+          'fromLoveTransfer': FieldValue.increment(amount),
+          'fromRoomVisits': FieldValue.increment(fromRoomVisits),
+        });
 
         await transactionService.recordTransaction(
           userId: userId,
@@ -130,27 +131,35 @@ class FirebaseServices extends ChangeNotifier {
         return false;
       }
     } else {
-      // USER is SPENDING loves (add to Claire)
+      // USER is SPENDING/WITHDRAWING loves (debit)
       try {
-        // No need to check Claire's balance when user is paying.
         await userDoc.update({
           'currentLoveCount': FieldValue.increment(-amount),
+          'withdrawnLoveCount': FieldValue.increment(amount),
+          'forLoveTransfer': FieldValue.increment(forLoveTransfer),
           'forGameLoses': FieldValue.increment(forGameLoses),
           'forRoomVisits': FieldValue.increment(forRoomVisits),
         });
-        await claireDoc.update({'totalLoveCount': FieldValue.increment(amount)});
+        // Update Claire's balances everytime with transaction tax
+        await claireDoc.update({
+          'currentLoveCount': FieldValue.increment(amount),
+          'totalLoveCount': FieldValue.increment(amount),
+          'forLoveTransfer': FieldValue.increment(transactionTax),
+          'forRoomVisits': FieldValue.increment(forRoomVisits),
 
+        });
         await transactionService.recordTransaction(
           userId: userId,
           amount: amount,
           type: type,
           description: userTransactionDescription,
-          status: t_model.TransactionStatus.approved,
+          status: t_model.TransactionStatus.pending, // Always pending for withdrawals
           metadata: metadata,
         );
-        return true; // Transaction approved
+
+        return false;
       } catch (e) {
-        print("Error in treasury debit transaction: $e");
+        print("Error in treasury debit (withdrawal) transaction: $e");
         return false;
       }
     }
@@ -160,12 +169,10 @@ class FirebaseServices extends ChangeNotifier {
 
 
   /// Handles a direct user-to-user love transfer with a 10% tax for Claire.
-  ///
   /// This is a three-way transaction:
   /// 1. Debits the sender for the amount + tax.
   /// 2. Credits the receiver for the amount.
   /// 3. Credits Claire's treasury for the tax.
-  ///
   /// Returns `true` if successful, `false` otherwise.
   Future<bool> transferLoveBetweenUsers({
     required String senderId,
@@ -185,6 +192,8 @@ class FirebaseServices extends ChangeNotifier {
     int fromReactions = 0,
     int forProfileVisits = 0,
     int fromProfileVisits = 0,
+    int forLoveTransfer = 0,
+    int fromLoveTransfer = 0,
   }) async {
     const String claireId = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
     final DocumentReference senderDoc = _firebaseFirestore.collection('users').doc(senderId);
@@ -193,38 +202,40 @@ class FirebaseServices extends ChangeNotifier {
     final TransactionService transactionService = TransactionService();
 
     try {
-      await _firebaseFirestore.runTransaction((transaction) async {
-        // Get sender's data to ensure they have enough loves
-        final senderSnapshot = await transaction.get(senderDoc);
-        final senderLoves = (senderSnapshot.data() as Map<String,
-            dynamic>?)?['currentLoveCount'] ?? 0;
-        if (senderLoves < totalDebitAmount) {
-          throw Exception('Insufficient funds');
-        }
+      final senderSnapshot = await senderDoc.get();
+      final senderLoves = (senderSnapshot.data() as Map<String, dynamic>?)?['currentLoveCount'] ?? 0;
+      if (senderLoves < totalDebitAmount) {
+        print('Insufficient funds');
+        return false;
+      }
 
-        // 1. Debit the sender and update their stats
-        transaction.update(senderDoc, {
-          'currentLoveCount': FieldValue.increment(-totalDebitAmount),
-          'totalLoveCount': FieldValue.increment(-totalDebitAmount),
-          'forRoomVisits': FieldValue.increment(forRoomVisits),
-          'loveSentForThanks': FieldValue.increment(forThanks),
-          'loveSentForReactions': FieldValue.increment(forReactions),
-          'loveSentForVisits': FieldValue.increment(forProfileVisits),
-        });
+      // 1. Debit the sender (spendable loves only)
+      await senderDoc.update({
+        'currentLoveCount': FieldValue.increment(-totalDebitAmount),
+        'withdrawnLoveCount': FieldValue.increment(totalDebitAmount),
+        'forLoveTransfer': FieldValue.increment(forLoveTransfer),
+        'forRoomVisits': FieldValue.increment(forRoomVisits),
+        'loveSentForThanks': FieldValue.increment(forThanks),
+        'loveSentForReactions': FieldValue.increment(forReactions),
+        'loveSentForVisits': FieldValue.increment(forProfileVisits),
+      });
 
-        // 2. Credit the receiver and update their stats
-        transaction.update(receiverDoc, {
-          'currentLoveCount': FieldValue.increment(amountToSend),
-          'totalLoveCount': FieldValue.increment(amountToSend),
-          'fromRoomVisits': FieldValue.increment(fromRoomVisits),
-          'loveFromThanks': FieldValue.increment(fromThanks),
-          'loveFromReactions': FieldValue.increment(fromReactions),
-          'profileVisitLove': FieldValue.increment(fromProfileVisits),
-        });
+      // 2. Credit the receiver (current and total loves)
+      await receiverDoc.update({
+        'currentLoveCount': FieldValue.increment(amountToSend),
+        'totalLoveCount': FieldValue.increment(amountToSend), // Receiver's lifetime total increases
+        'fromLoveTransfer': FieldValue.increment(fromLoveTransfer),
+        'fromRoomVisits': FieldValue.increment(fromRoomVisits),
+        'loveFromThanks': FieldValue.increment(fromThanks),
+        'loveFromReactions': FieldValue.increment(fromReactions),
+        'profileVisitLove': FieldValue.increment(fromProfileVisits),
+      });
 
-        // 3. Credit Claire's treasury with the tax
-        transaction.update(
-            claireDoc, {'totalLoveCount': FieldValue.increment(taxAmount)});
+      // 3. Immediately credit Claire's treasury with the tax (current and total loves)
+      await claireDoc.update({
+        'currentLoveCount': FieldValue.increment(taxAmount),
+        'totalLoveCount': FieldValue.increment(taxAmount),
+        'loveFromThanks': FieldValue.increment(taxAmount),
       });
 
       // If the transaction is successful, record the individual transaction logs.
