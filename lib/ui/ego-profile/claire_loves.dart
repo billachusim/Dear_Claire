@@ -195,74 +195,207 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
 
   void _showReceiveLoveDialog() {
+    bool isAwaitingPayment = false;
+    Stream<QuerySnapshot>? transactionStream;
+    DateTime awaitStartTime = DateTime.now();
+
     showDialog(
       context: context,
       builder: (context) {
-        return Dialog(
-          backgroundColor: Pallet.colorSecondary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("Receive Love", style: GoogleFonts.lato(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                SizedBox(height: 20),
-                Text("Share your User ID or QR Code", style: GoogleFonts.lato(color: Colors.white70, fontSize: 16)),
-                SizedBox(height: 20),
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(_userId, style: GoogleFonts.lato(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            if (isAwaitingPayment) {
+              // --- AWAITING PAYMENT & SUCCESS UI ---
+              return Dialog(
+                backgroundColor: Pallet.colorSecondary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: transactionStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      final newTransactions = snapshot.data!.docs.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final timestamp = (data['timestamp'] as Timestamp).toDate();
+                        final type = data['type'] as String;
+                        return type == 'credit' && timestamp.isAfter(awaitStartTime);
+                      }).toList();
+
+                      if (newTransactions.isNotEmpty) {
+                        // --- SUCCESS UI ---
+                        final latestTransaction = TransactionModel.fromFirestore(newTransactions.first);
+                        final amount = latestTransaction.amount;
+                        final description = latestTransaction.description;
+
+                        // --- PARSE SENDER AND NOTE ---
+                        String senderInfo = "";
+                        String note = "";
+
+                        if (description.contains("from user")) {
+                          try {
+                            // Extract sender
+                            senderInfo = " from " + description.split("from user ")[1].split(".")[0];
+
+                            // Extract note if it exists
+                            if (description.contains("Note:")) {
+                              note = description.split('Note: "')[1].split('"')[0];
+                            }
+                          } catch (e) {
+                            // ignore if parsing fails
+                          }
+                        }
+                        // --- END PARSING ---
+
+                        _fetchUserData();
+
+                        return Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_circle, color: Colors.green, size: 60),
+                              SizedBox(height: 16),
+                              Text("Payment Received!", style: GoogleFonts.lato(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                              SizedBox(height: 8),
+                              Text("You received $amount ❤️$senderInfo", style: GoogleFonts.lato(color: Colors.white70, fontSize: 16), textAlign: TextAlign.center),
+                              // --- DISPLAY NOTE ---
+                              if (note.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 16.0),
+                                  child: Container(
+                                    padding: EdgeInsets.all(12),
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8)
+                                    ),
+                                    child: Text(
+                                      '"$note"',
+                                      style: TextStyle(color: Colors.white, fontStyle: FontStyle.italic),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              // --- END DISPLAY NOTE ---
+                              SizedBox(height: 20),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text("Close", style: TextStyle(color: Colors.white)),
+                              )
+                            ],
+                          ),
+                        );
+                      }
+                    }
+
+                    // --- WAITING UI ---
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RotateImage(50, 50),
+                          SizedBox(height: 16),
+                          Text("Awaiting payment...", style: TextStyle(color: Colors.white70, fontSize: 16)),
+                          SizedBox(height: 20),
+                          Text(
+                            "Keep this screen open. It will update automatically upon receiving love.",
+                            style: TextStyle(color: Colors.white54, fontSize: 12),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-                SizedBox(height: 20),
-                Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
-                  child: QrImageView(
-                    data: _userId,
-                    version: QrVersions.auto,
-                    size: 150.0,
+              );
+            } else {
+              // --- INITIAL "RECEIVE" UI (No changes here) ---
+              return Dialog(
+                backgroundColor: Pallet.colorSecondary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text("Receive Love", style: GoogleFonts.lato(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 20),
+                      Text("Share your User ID or QR Code", style: GoogleFonts.lato(color: Colors.white70, fontSize: 16)),
+                      SizedBox(height: 20),
+                      Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: Colors.black.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                        child: Text(_userId, style: GoogleFonts.lato(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                      SizedBox(height: 20),
+                      Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                        child: QrImageView(data: _userId, version: QrVersions.auto, size: 150.0),
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextButton.icon(
+                            icon: Icon(Icons.copy, color: Colors.white70),
+                            label: Text("Copy ID", style: TextStyle(color: Colors.white70)),
+                            onPressed: () {
+                              Clipboard.setData(ClipboardData(text: _userId));
+                              AppToast.show("User ID copied to clipboard!");
+                            },
+                          ),
+                          TextButton.icon(
+                            icon: Icon(Icons.share, color: Colors.white70),
+                            label: Text("Share", style: TextStyle(color: Colors.white70)),
+                            onPressed: () {
+                              final shareText = "Here's my Dear Claire App User ID to send Love❤️ to me instantly: $_userId";
+                              Share.share(shareText);
+                            },
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          minimumSize: Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            isAwaitingPayment = true;
+                            awaitStartTime = DateTime.now();
+                            transactionStream = FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(currentUser!.uid)
+                                .collection('transactions')
+                                .orderBy('timestamp', descending: true)
+                                .limit(1)
+                                .snapshots();
+                          });
+                        },
+                        child: Text('Receive Now', style: TextStyle(color: Colors.white, fontSize: 16)),
+                      )
+                    ],
                   ),
                 ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton.icon(
-                      icon: Icon(Icons.copy, color: Colors.white70),
-                      label: Text("Copy ID", style: TextStyle(color: Colors.white70)),
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: _userId));
-                        AppToast.show("User ID copied to clipboard!");
-                      },
-                    ),
-                    TextButton.icon(
-                      icon: Icon(Icons.share, color: Colors.white70),
-                      label: Text("Share", style: TextStyle(color: Colors.white70)),
-                      onPressed: () {
-                        final shareText = "Here's my Dear Claire App User ID to send Love❤️ to me instantly: $_userId";
-                        Share.share(shareText);
-                      },
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
+              );
+            }
+          },
         );
       },
     );
   }
 
 
+
+
   void _showSendLoveDialog() {
     final _formKey = GlobalKey<FormState>();
     final _recipientIdController = TextEditingController();
     final _amountController = TextEditingController();
+    final _noteController = TextEditingController(); // Add this controller
     bool _isProcessing = false;
 
     showDialog(
@@ -274,92 +407,111 @@ class _ClaireLovesState extends State<ClaireLoves> {
             return Dialog(
               backgroundColor: Pallet.colorSecondary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text("Send Love", style: GoogleFonts.lato(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 20),
-                      if (_isProcessing)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 40.0),
-                          child: Column(
+              child: SingleChildScrollView( // Wrap with SingleChildScrollView
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text("Send Love Instantly", style: GoogleFonts.lato(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                        SizedBox(height: 20),
+                        if (_isProcessing)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40.0),
+                            child: Column(
+                              children: [
+                                RotateImage(50, 50),
+                                SizedBox(height: 16),
+                                Text("Processing transaction...", style: TextStyle(color: Colors.white70)),
+                              ],
+                            ),
+                          )
+                        else
+                          Column(
                             children: [
-                              RotateImage(50, 50),
-                              SizedBox(height: 16),
-                              Text("Processing transaction...", style: TextStyle(color: Colors.white70)),
+                              TextFormField(
+                                controller: _recipientIdController,
+                                style: TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  labelText: "Recipient's User ID",
+                                  labelStyle: TextStyle(color: Colors.white70),
+                                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(Icons.paste, color: Colors.white70),
+                                    onPressed: () async {
+                                      final clipboardData = await Clipboard.getData('text/plain');
+                                      if (clipboardData != null) {
+                                        _recipientIdController.text = clipboardData.text ?? '';
+                                      }
+                                    },
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) return 'Recipient ID cannot be empty.';
+                                  if (value == _userId) return "You can't send love to yourself.";
+                                  return null;
+                                },
+                              ),
+                              SizedBox(height: 20),
+                              TextFormField(
+                                controller: _amountController,
+                                style: TextStyle(color: Colors.white),
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: 'Amount of Love❤️',
+                                  labelStyle: TextStyle(color: Colors.white70),
+                                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) return 'Amount cannot be empty.';
+                                  final amount = int.tryParse(value);
+                                  if (amount == null || amount <= 0) return 'Please enter a valid amount.';
+                                  final tax = (amount * 0.10).ceil();
+                                  if (_currentLoveCount < (amount + tax)) return 'Insufficient love for amount + tax.';
+                                  return null;
+                                },
+                              ),
+                              SizedBox(height: 20),
+                              // New Optional Note Field
+                              TextFormField(
+                                controller: _noteController,
+                                style: TextStyle(color: Colors.white),
+                                decoration: InputDecoration(
+                                  labelText: 'Add a note (optional)',
+                                  labelStyle: TextStyle(color: Colors.white70),
+                                  enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                                  focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                                ),
+                                maxLength: 100, // Optional: limit note length
+                              ),
+                              SizedBox(height: 20),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                  minimumSize: Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                onPressed: () async {
+                                  if (_formKey.currentState!.validate()) {
+                                    setDialogState(() => _isProcessing = true);
+                                    await _processLoveTransfer(
+                                      _recipientIdController.text,
+                                      int.parse(_amountController.text),
+                                      _noteController.text, // Pass the note
+                                    );
+                                    Navigator.of(context).pop();
+                                  }
+                                },
+                                child: Text('Send Love', style: TextStyle(color: Colors.white, fontSize: 16)),
+                              ),
                             ],
                           ),
-                        )
-                      else
-                        Column(
-                          children: [
-                            TextFormField(
-                              controller: _recipientIdController,
-                              style: TextStyle(color: Colors.white),
-                              decoration: InputDecoration(
-                                labelText: "Recipient's User ID",
-                                labelStyle: TextStyle(color: Colors.white70),
-                                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-                                suffixIcon: IconButton(
-                                  icon: Icon(Icons.paste, color: Colors.white70),
-                                  onPressed: () async {
-                                    final clipboardData = await Clipboard.getData('text/plain');
-                                    if (clipboardData != null) {
-                                      _recipientIdController.text = clipboardData.text ?? '';
-                                    }
-                                  },
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) return 'Recipient ID cannot be empty.';
-                                if (value == _userId) return "You can't send love to yourself.";
-                                return null;
-                              },
-                            ),
-                            SizedBox(height: 20),
-                            TextFormField(
-                              controller: _amountController,
-                              style: TextStyle(color: Colors.white),
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: 'Amount of Love ❤️',
-                                labelStyle: TextStyle(color: Colors.white70),
-                                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) return 'Amount cannot be empty.';
-                                final amount = int.tryParse(value);
-                                if (amount == null || amount <= 0) return 'Please enter a valid amount.';
-                                final tax = (amount * 0.10).ceil();
-                                if (_currentLoveCount < (amount + tax)) return 'Insufficient love for amount + tax.';
-                                return null;
-                              },
-                            ),
-                            SizedBox(height: 20),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.redAccent,
-                                minimumSize: Size(double.infinity, 50),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              onPressed: () async {
-                                if (_formKey.currentState!.validate()) {
-                                  setDialogState(() => _isProcessing = true);
-                                  await _processLoveTransfer(_recipientIdController.text, int.parse(_amountController.text));
-                                  Navigator.of(context).pop();
-                                }
-                              },
-                              child: Text('Send Love', style: TextStyle(color: Colors.white, fontSize: 16)),
-                            ),
-                          ],
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -370,10 +522,14 @@ class _ClaireLovesState extends State<ClaireLoves> {
     );
   }
 
-  Future<void> _processLoveTransfer(String recipientId, int amount) async {
+
+  Future<void> _processLoveTransfer(String recipientId, int amount, String note) async { // Add note parameter
     final firebaseServices = FirebaseServices();
     final taxAmount = (amount * 0.10).ceil();
     final totalDebitAmount = amount + taxAmount;
+
+    // Add the note to the transaction descriptions if it exists
+    final noteSuffix = note.isNotEmpty ? ' Note: "$note"' : '';
 
     final success = await firebaseServices.transferLoveBetweenUsers(
       senderId: currentUser!.uid,
@@ -381,20 +537,22 @@ class _ClaireLovesState extends State<ClaireLoves> {
       amountToSend: amount,
       taxAmount: taxAmount,
       totalDebitAmount: totalDebitAmount,
-      senderTransactionDesc: 'Sent $amount❤️ to user $recipientId.',
-      receiverTransactionDesc: 'Received $amount ️ from user $_userId.',
-      claireTransactionDesc: 'Tax ($taxAmount❤️) from transfer between $_userId and $recipientId.',
+      senderTransactionDesc: 'Sent $amount ❤️ to user $recipientId.$noteSuffix', // Updated
+      receiverTransactionDesc: 'Received $amount ❤️ from user $_userId.$noteSuffix', // Updated
+      claireTransactionDesc: 'Tax ($taxAmount ❤️) from transfer between $_userId and $recipientId.',
       forLoveTransfer: totalDebitAmount,
       fromLoveTransfer: amount,
+      metadata: note.isNotEmpty ? {'note': note} : {}, // Also save note to metadata
     );
 
     if (success) {
-      AppToast.show("Love transferred successfully!");
+      AppToast.show("Love sent successfully!");
       await _fetchUserData(); // Refresh UI
     } else {
       AppToast.showError("Transaction failed. Check recipient ID & balance.");
     }
   }
+
 
 
   Widget _buildHeader() {
