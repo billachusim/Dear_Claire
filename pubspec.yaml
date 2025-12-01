@@ -16,6 +16,7 @@ dependencies:
   dio: ^5.9.0
   cached_network_image: ^3.4.1
   image_picker: ^1.2.1
+  qr_flutter: ^4.1.0
 
   # Updated Firebase dependencies
   firebase_core: ^4.1.1

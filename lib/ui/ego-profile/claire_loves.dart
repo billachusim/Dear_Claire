@@ -10,9 +10,13 @@ import 'package:clairediary/utils/constant.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:clairediary/data/models/transaction_model.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../services/firebase_services.dart';
 import '../../utils/helper.dart' as Helper;
 import 'request_claire_love_form.dart';
 
@@ -138,6 +142,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
                   SliverToBoxAdapter(child: SizedBox(height: 20)),
                   _buildStatsSection(),
                   SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  _buildLoveTransferActionButtons(),
+                  SliverToBoxAdapter(child: SizedBox(height: 10)),
                   _buildRecentTransactions(),
                   _buildWithdrawSection(),
                 ],
@@ -145,6 +151,251 @@ class _ClaireLovesState extends State<ClaireLoves> {
       ),
     );
   }
+
+  Widget _buildLoveTransferActionButtons() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.arrow_upward_rounded, color: Colors.white),
+                label: Text('Send Love', style: TextStyle(color: Colors.white)),
+                onPressed: _showSendLoveDialog,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent.withOpacity(0.8),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.arrow_downward_rounded, color: Colors.white),
+                label: Text('Receive Love', style: TextStyle(color: Colors.white)),
+                onPressed: _showReceiveLoveDialog,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.withOpacity(0.8),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  void _showReceiveLoveDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Pallet.colorSecondary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("Receive Love", style: GoogleFonts.lato(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                SizedBox(height: 20),
+                Text("Share your User ID or QR Code", style: GoogleFonts.lato(color: Colors.white70, fontSize: 16)),
+                SizedBox(height: 20),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(_userId, style: GoogleFonts.lato(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                ),
+                SizedBox(height: 20),
+                Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+                  child: QrImageView(
+                    data: _userId,
+                    version: QrVersions.auto,
+                    size: 150.0,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton.icon(
+                      icon: Icon(Icons.copy, color: Colors.white70),
+                      label: Text("Copy ID", style: TextStyle(color: Colors.white70)),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: _userId));
+                        AppToast.show("User ID copied to clipboard!");
+                      },
+                    ),
+                    TextButton.icon(
+                      icon: Icon(Icons.share, color: Colors.white70),
+                      label: Text("Share", style: TextStyle(color: Colors.white70)),
+                      onPressed: () {
+                        final shareText = "Here's my Dear Claire App User ID to send Love❤️ to me instantly: $_userId";
+                        Share.share(shareText);
+                      },
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+  void _showSendLoveDialog() {
+    final _formKey = GlobalKey<FormState>();
+    final _recipientIdController = TextEditingController();
+    final _amountController = TextEditingController();
+    bool _isProcessing = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: !_isProcessing,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              backgroundColor: Pallet.colorSecondary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text("Send Love", style: GoogleFonts.lato(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                      SizedBox(height: 20),
+                      if (_isProcessing)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40.0),
+                          child: Column(
+                            children: [
+                              RotateImage(50, 50),
+                              SizedBox(height: 16),
+                              Text("Processing transaction...", style: TextStyle(color: Colors.white70)),
+                            ],
+                          ),
+                        )
+                      else
+                        Column(
+                          children: [
+                            TextFormField(
+                              controller: _recipientIdController,
+                              style: TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                labelText: "Recipient's User ID",
+                                labelStyle: TextStyle(color: Colors.white70),
+                                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                                suffixIcon: IconButton(
+                                  icon: Icon(Icons.paste, color: Colors.white70),
+                                  onPressed: () async {
+                                    final clipboardData = await Clipboard.getData('text/plain');
+                                    if (clipboardData != null) {
+                                      _recipientIdController.text = clipboardData.text ?? '';
+                                    }
+                                  },
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return 'Recipient ID cannot be empty.';
+                                if (value == _userId) return "You can't send love to yourself.";
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: 20),
+                            TextFormField(
+                              controller: _amountController,
+                              style: TextStyle(color: Colors.white),
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: 'Amount of Love ❤️',
+                                labelStyle: TextStyle(color: Colors.white70),
+                                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return 'Amount cannot be empty.';
+                                final amount = int.tryParse(value);
+                                if (amount == null || amount <= 0) return 'Please enter a valid amount.';
+                                final tax = (amount * 0.10).ceil();
+                                if (_currentLoveCount < (amount + tax)) return 'Insufficient love for amount + tax.';
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: 20),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.redAccent,
+                                minimumSize: Size(double.infinity, 50),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  setDialogState(() => _isProcessing = true);
+                                  await _processLoveTransfer(_recipientIdController.text, int.parse(_amountController.text));
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                              child: Text('Send Love', style: TextStyle(color: Colors.white, fontSize: 16)),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _processLoveTransfer(String recipientId, int amount) async {
+    final firebaseServices = FirebaseServices();
+    final taxAmount = (amount * 0.10).ceil();
+    final totalDebitAmount = amount + taxAmount;
+
+    final success = await firebaseServices.transferLoveBetweenUsers(
+      senderId: currentUser!.uid,
+      receiverId: recipientId,
+      amountToSend: amount,
+      taxAmount: taxAmount,
+      totalDebitAmount: totalDebitAmount,
+      senderTransactionDesc: 'Sent $amount❤️ to user $recipientId.',
+      receiverTransactionDesc: 'Received $amount ️ from user $_userId.',
+      claireTransactionDesc: 'Tax ($taxAmount❤️) from transfer between $_userId and $recipientId.',
+      forLoveTransfer: totalDebitAmount,
+      fromLoveTransfer: amount,
+    );
+
+    if (success) {
+      AppToast.show("Love transferred successfully!");
+      await _fetchUserData(); // Refresh UI
+    } else {
+      AppToast.showError("Transaction failed. Check recipient ID & balance.");
+    }
+  }
+
 
   Widget _buildHeader() {
     return Container(
@@ -555,7 +806,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Convert Loves",
+              "Convert and Cashout Loves",
               style: GoogleFonts.lato(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -564,7 +815,9 @@ class _ClaireLovesState extends State<ClaireLoves> {
             ),
             SizedBox(height: 8),
             Text(
-              "Earn Loves by sharing new diary sessions, sending positive advises, playing games and anonymous tips from users.",              style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
+              "Earn Loves by sharing new diary sessions, sending positive advises, playing games and anonymous tips from users. "
+                  "Claire multiplies your love by your ego and converts the amount to your local currency.",
+              style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
             ),
             SizedBox(height: 20),
             Container(
