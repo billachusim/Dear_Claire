@@ -48,8 +48,8 @@ class _AudioStatusPlayingState extends State<AudioStatusPlaying>
           );
         },
         child: Container(
-          width: 75,
-          height: 75,
+          width: 60,
+          height: 60,
           margin: EdgeInsets.all(2),
           child: GestureDetector(
             onTap: (){
@@ -65,12 +65,12 @@ class _AudioStatusPlayingState extends State<AudioStatusPlaying>
               ),
               margin: EdgeInsets.only(left: 0),
               child: Container(
-                height: 75,
-                width: 75,
+                height: 60,
+                width: 60,
                 margin: EdgeInsets.all(4),
                 child: CachedNetworkImage(
-                    width: 70,
-                    height: 70,
+                    width: 45,
+                    height: 45,
                     imageUrl: widget.element.userAvatarUrl!,
                     imageBuilder: (context, imageProvider) => Container(
                       decoration: BoxDecoration(

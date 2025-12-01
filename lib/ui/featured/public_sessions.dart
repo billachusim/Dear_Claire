@@ -324,7 +324,7 @@ class FeaturedStatusStreams extends StatelessWidget {
                   }).toList();
 
                   return Scrollbar(
-                    child: SizedBox(height: 82,
+                    child: SizedBox(height: 64,
                       child: ListView(
                         shrinkWrap: true,
                         scrollDirection: Axis.horizontal,
