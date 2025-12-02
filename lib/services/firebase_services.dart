@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:clairediary/services/transaction_service.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-import 'package:get/get_navigation/src/root/parse_route.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/data/models/profile_page_model.dart';
@@ -1475,57 +1474,33 @@ class FirebaseServices extends ChangeNotifier {
         .snapshots();
   }
 
-
   /// send alter ego sub-message
   void addAlterEgoSubMessage(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
-    // --- 1. SETUP & WRITE TO DATABASE ---
-    final _user = await getUserInfo(); // This is the Alter Ego WRITING the message
-    final senderName = _user.alterEgoId; // Using Alter Ego ID/Name
-    final cornerOwnerId = chatModel.userId!; // This is the user who OWNS the corner
-
+    final _user = await getUserInfo();
+    final sender = _user.alterEgoId;
+    final pushNotification.NotificationModel _notificationModel =
+    pushNotification.NotificationModel(
+        topic: chatModel.userId!,
+        data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
+        notification: pushNotification.Notification(
+          title: chatRoomPodo!.title!,
+          body: '$sender sent something to your corner of the room',
+        ));
     _firebaseFirestore
         .collection("alterEgoChats")
-        .doc(chatRoomPodo!.id.toString())
+        .doc(chatRoomPodo.id.toString())
         .collection(chatRoomPodo.title!)
-        .doc(key) // The parent message/corner ID
-        .collection(cornerOwnerId) // CORRECTED: Collection is named after the corner owner
-        .doc() // Create a new document for the sub-message
+        .doc(key.toString())
+        .collection(key.toString())
+        .doc(_user.userId)
         .set(chatModel.toJson())
-        .whenComplete(() async {
-      // --- 2. SEND TARGETED NOTIFICATION ---
-      // Only send a notification if the replier is not the corner owner.
-      if (_user.userId != cornerOwnerId) {
-        try {
-          // Fetch the corner owner's user document to get their FCM token
-          final receiverDoc = await _firebaseFirestore.collection('users').doc(cornerOwnerId).get();
-          if (receiverDoc.exists) {
-            final receiverToken = receiverDoc.data()?['fcmId'] as String?;
-
-            if (receiverToken != null && receiverToken.isNotEmpty) {
-              await notificationService.sendNotification({
-                "token": receiverToken,
-                "notification": {
-                  "title": "New reply in your Alter Ego corner!",
-                  "body": "${senderName ?? 'An Alter Ego'} replied in your corner inside the room: '${chatRoomPodo.title!}'"
-                },
-                "data": {
-                  // This route will navigate the user to the specific room
-                  "route": chatRoomPodo.id.toString()
-                }
-              });
-              logger.d('AlterEgo SubMessage Targeted Notification Sent to $cornerOwnerId');
-            }
-          }
-        } catch (e) {
-          logger.e("Error sending targeted Alter Ego sub-message notification: $e");
-        }
-      }
-
-      logger.d('AlterEgo SubMessage saved to Firestore: ${chatModel.toJson()}');
+        .whenComplete(() {
+      _subscribeToChatRoom(key);
+      notificationService.sendNotification(_notificationModel.toJson());
+      logger.d('SubMessage sent ${chatModel.toJson()}');
     });
   }
-
 
   void updateAlterEgoMembers(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
@@ -1564,7 +1539,7 @@ class FirebaseServices extends ChangeNotifier {
             data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
             notification: pushNotification.Notification(
                 title: chatRoomPodo.title!,
-                body: 'A new corner has been started inside $roomTitle.'));
+                body: '$sender started a new corner inside $roomTitle.'));
 
     _firebaseFirestore
         .collection(AppString.appChats)
@@ -1580,7 +1555,7 @@ class FirebaseServices extends ChangeNotifier {
     });
   }
 
-  /// get chats
+  /// get sub chats
   Stream<QuerySnapshot<Map<String, dynamic>>> getSubMessages(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) {
     return _firebaseFirestore
@@ -1594,57 +1569,33 @@ class FirebaseServices extends ChangeNotifier {
         .snapshots();
   }
 
-
   /// send sub-message
   void addSubMessage(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
-    // --- 1. SETUP & WRITE TO DATABASE (This part remains the same) ---
-    final _user = await getUserInfo(); // This is the user WRITING the message
-    final senderName = _user.nickname;
-    final cornerOwnerId = chatModel.userId!; // This is the user who OWNS the corner
-
+    final _user = await getUserInfo();
+    final sender = _user.nickname;
+    final pushNotification.NotificationModel _notificationModel =
+        pushNotification.NotificationModel(
+            topic: chatModel.userId!,
+            data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
+            notification: pushNotification.Notification(
+              title: chatRoomPodo!.title!,
+              body: '$sender sent something to your corner of the room',
+            ));
     _firebaseFirestore
         .collection(AppString.appChats)
-        .doc(chatRoomPodo!.id.toString())
+        .doc(chatRoomPodo.id.toString())
         .collection(chatRoomPodo.title!)
-        .doc(key) // The parent message/corner ID
-        .collection(cornerOwnerId) // The collection named after the corner owner
-        .doc() // Create a new document for the sub-message
+        .doc(key.toString())
+        .collection(key.toString())
+        .doc(_user.userId)
         .set(chatModel.toJson())
-        .whenComplete(() async {
-      // --- 2. SEND TARGETED NOTIFICATION (This is the new logic) ---
-      // Only send a notification if the replier is not the corner owner.
-      if (_user.userId != cornerOwnerId) {
-        try {
-          // Fetch the corner owner's user document to get their FCM token
-          final receiverDoc = await _firebaseFirestore.collection('users').doc(cornerOwnerId).get();
-          if (receiverDoc.exists) {
-            final receiverToken = receiverDoc.data()?['fcmId'] as String?;
-
-            if (receiverToken != null && receiverToken.isNotEmpty) {
-              await notificationService.sendNotification({
-                "token": receiverToken,
-                "notification": {
-                  "title": "New reply in your corner!",
-                  "body": "${senderName ?? 'Someone'} replied in your corner inside the room: '${chatRoomPodo.title!}'"
-                },
-                "data": {
-                  // This route will navigate the user to the specific session/room
-                  "route": chatRoomPodo.id.toString()
-                }
-              });
-              logger.d('SubMessage Targeted Notification Sent to $cornerOwnerId');
-            }
-          }
-        } catch (e) {
-          logger.e("Error sending targeted sub-message notification: $e");
-        }
-      }
-
-      logger.d('SubMessage saved to Firestore: ${chatModel.toJson()}');
+        .whenComplete(() {
+      _subscribeToChatRoom(key);
+      notificationService.sendNotification(_notificationModel.toJson());
+      logger.d('SubMessage sent ${chatModel.toJson()}');
     });
   }
-
 
   void updateMembers(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
