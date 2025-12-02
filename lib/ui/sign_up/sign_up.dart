@@ -225,7 +225,7 @@ class _SignUpPage extends State<SignUpPage> {
                                 onChanged: (value) {},
                                 validator: (value) {
                                   if (value!.isEmpty) {
-                                    return "Enter mantra";
+                                    return "Enter nickname";
                                   }
                                   return null;
                                 },

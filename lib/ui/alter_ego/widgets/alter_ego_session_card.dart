@@ -16,7 +16,9 @@ import 'package:clairediary/ui/featured/model/session.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:flutter/cupertino.dart';
 
+import '../../../helpers/toast_helper.dart';
 import '../../../services/firebase_services.dart';
+import '../../../services/notification_service.dart';
 import '../../../services/user_model.dart';
 import '../../../widgets/custom_image_widget.dart';
 import '../../create_session/sound/custom_play_sound_widget.dart';
@@ -275,21 +277,114 @@ class AlterEgoModeSessionCard extends StatelessWidget {
             Row(
               children: [
                 MetooButton(
-                    cheers: element.meToos!.length,
-                    thanks: element.meLove!.length,
-                    sorry: element.meHiFive!.length,
-                    me2: element.meFlower!.length,
-                    color: textColor,
+                  cheers: element.meToos!.length,
+                  thanks: element.meLove!.length,
+                  sorry: element.meHiFive!.length,
+                  me2: element.meFlower!.length,
+                  color: textColor,
+                  session: element,
                   onReactionChanged: (reaction, index) async {
+                    if (await firebaseServices.isUserSignIn(context) == false) {
+                      return;
+                    }
 
+                    // --- 1. SETUP TRANSACTION DETAILS ---
+                    final reactingUser = await firebaseServices.getUserInfo();
+                    final String reactingUserId = reactingUser.userId!;
+                    final String sessionOwnerId = element.userId!;
+                    const int reactionCost = 1;
+
+                    // --- 2. PREVENT SELF-REACTION & INSUFFICIENT LOVES ---
+                    if (reactingUserId == sessionOwnerId) {
+                      // User is reacting to their own post, just update the reaction locally.
+                      // The original logic handles this well.
                       firebaseServices.addUsersReactionToASessionByIndex(
-                          context, index,
-                          session: element,
-                          sender: "Claire");
+                        context,
+                        index,
+                        session: element,
+                        sender: reactingUser.nickname ?? '',
+                      );
+                      showToast(message: "You reacted to your own session.");
+                      return;
+                    }
 
-                      saveAlterEgoMe2Activity();
-                      await firebaseServices.updateSessionLastTimeActivity(element.sessionId.toString());
-                  }, session: element,
+                    if (reactingUser.currentLoveCount < reactionCost) {
+                      showToast(message: "You need at least 1❤️ to react.");
+                      return;
+                    }
+
+                    if (currentUser == null) {
+                      showToast(message: "You must be logged in to react to a session.");
+                      return;
+                    }
+
+                    // --- 3. PERFORM THE LOVE TRANSACTION ---
+                    final bool success =
+                    await firebaseServices.transferLoveBetweenUsers(
+                      senderId: reactingUserId,
+                      receiverId: sessionOwnerId,
+                      amountToSend: reactionCost,
+                      taxAmount: 0, // No tax on a 1-love transaction
+                      totalDebitAmount: reactionCost,
+                      senderTransactionDesc:
+                      "1❤️ for reacting to session ${element.title}.",
+                      receiverTransactionDesc:
+                      "1❤️ from reaction to your session ${element.title} by ${reactingUser.nickname}.",
+                      claireTransactionDesc: "Tax from a session reaction.",
+                      // Pass the specific stat increments
+                      forReactions: reactionCost,
+                      fromReactions: reactionCost,
+                      metadata: {
+                        'reason': 'session_reaction',
+                        'sessionId': element.sessionId,
+                        'reactionIndex': index
+                      },
+                    );
+
+                    // --- 4. UPDATE REACTION COUNT ON SUCCESS ---
+                    if (success) {
+                      // Only after a successful transaction, update the reaction on the session.
+                      firebaseServices.addUsersReactionToASessionByIndex(
+                        context,
+                        index,
+                        session: element,
+                        sender: reactingUser.nickname ?? '',
+                      );
+                      saveAlterEgoMe2Activity(); // Your existing activity tracking
+                      // --- C. START: NEW TARGETED NOTIFICATION LOGIC ---
+                      try {
+                        final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(sessionOwnerId).get();
+                        if (receiverDoc.exists) {
+                          final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                          final senderName = reactingUser.nickname ?? 'Someone';
+                          final sessionTitle = element.title ?? 'your session';
+                          final truncatedTitle = sessionTitle.length > 30 ? sessionTitle.substring(0, 30) + '...' : sessionTitle;
+
+                          // Note: 'reaction' is the Reaction object passed by the MetooButton
+                          final reactionValue = reaction.value;
+
+                          if (receiverToken != null && receiverToken.isNotEmpty) {
+                            await notificationService.sendNotification({
+                              "token": receiverToken,
+                              "notification": {
+                                "title": "Someone reacted to your session!",
+                                "body": "$senderName reacted with '$reactionValue' to your session: \"$truncatedTitle\""
+                              },
+                              "data": {
+                                "route": element.sessionId
+                              }
+                            });
+                            logger.d("Successfully sent 'new reaction' notification.");
+                          }
+                        }
+                      } catch (e) {
+                        print("Error sending 'new reaction' notification: $e");
+                      }
+                      // --- END: NEW TARGETED NOTIFICATION LOGIC ---
+                      showToast(message: "1❤️ sent to the session owner!");
+                    }
+                    // If !success, the service method already shows a toast.
+                  },
                 ),
                 new Spacer(),
 

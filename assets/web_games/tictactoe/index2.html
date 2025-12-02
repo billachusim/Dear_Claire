@@ -182,7 +182,10 @@
                     } else if (outcome === 'loss') {
                         if (window.Vibration) window.Vibration.postMessage('vibrate');
                         if (window.Score) window.Score.postMessage('claire_wins');
-                    }
+
+                        } else if (outcome === 'draw') {
+                            if (window.Score) window.Score.postMessage('draw');
+                        }
 
                     setTimeout(() => {
                         $('#popup').css('display', 'none');

@@ -300,6 +300,37 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
 
                                           // --- 4. NAVIGATE ON SUCCESS ---
                                           if (success) {
+                                            showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
+
+                                            // --- START TARGETED NOTIFICATION LOGIC ---
+                                            try {
+                                              // We already have the visiting user's info, now get the visited user's token.
+                                              final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(visitedUserId).get();
+                                              if (receiverDoc.exists) {
+                                                final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                                                final senderName = visitingUser.nickname ?? 'A user';
+
+                                                if (receiverToken != null && receiverToken.isNotEmpty) {
+                                                  await notificationService.sendNotification({
+                                                    "token": receiverToken,
+                                                    "notification": {
+                                                      "title": "Your Ego profile has a visitor!",
+                                                      "body": "$senderName just visited your profile with a kola of 1❤️."
+                                                    },
+                                                    "data": {
+                                                      // Navigate the user to their own profile page to see the updated stats.
+                                                      "route": "egoPage"
+                                                    }
+                                                  });
+                                                }
+                                              }
+                                            } catch (e) {
+                                              print("Error sending profile visit notification: $e");
+                                              // Don't block the user flow if notifications fail.
+                                            }
+                                            // --- END TARGETED NOTIFICATION LOGIC ---
+
+                                            // --- NAVIGATE ---
                                             // Only navigate to the profile if the transaction was successful.
                                             PageRouter.gotoWidget(
                                                 VisitedUserEgoProfilePage(
@@ -560,7 +591,6 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                         // --- 2. PREVENT SELF-REACTION & INSUFFICIENT LOVES ---
                                         if (reactingUserId == sessionOwnerId) {
                                           // User is reacting to their own post, just update the reaction locally.
-                                          // The original logic handles this well.
                                           firebaseServices.addUsersReactionToASessionByIndex(
                                             context,
                                             index,
@@ -577,19 +607,15 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                         }
 
                                         // --- 3. PERFORM THE LOVE TRANSACTION ---
-                                        final bool success =
-                                        await firebaseServices.transferLoveBetweenUsers(
+                                        final bool success = await firebaseServices.transferLoveBetweenUsers(
                                           senderId: reactingUserId,
                                           receiverId: sessionOwnerId,
                                           amountToSend: reactionCost,
                                           taxAmount: 0, // No tax on a 1-love transaction
                                           totalDebitAmount: reactionCost,
-                                          senderTransactionDesc:
-                                          "1❤️ for reacting to session ${_session.title}.",
-                                          receiverTransactionDesc:
-                                          "1❤️ from reaction to your session ${_session.title} by ${reactingUser.nickname}.",
+                                          senderTransactionDesc: "1❤️ for reacting to session ${_session.title}.",
+                                          receiverTransactionDesc: "1❤️ from a reaction to your session by ${reactingUser.nickname}.",
                                           claireTransactionDesc: "Tax from a session reaction.",
-                                          // Pass the specific stat increments
                                           forReactions: reactionCost,
                                           fromReactions: reactionCost,
                                           metadata: {
@@ -599,31 +625,51 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                           },
                                         );
 
-                                        // --- 4. UPDATE REACTION COUNT ON SUCCESS ---
+                                        // --- 4. HANDLE SUCCESS (UPDATE DB, NOTIFY, LOG ACTIVITY) ---
                                         if (success) {
-                                          // Only after a successful transaction, update the reaction on the session.
+                                          // A. Update the reaction array in Firestore
                                           firebaseServices.addUsersReactionToASessionByIndex(
                                             context,
                                             index,
                                             session: _session,
                                             sender: reactingUser.nickname ?? '',
                                           );
-                                          saveUserMe2Activity();
+
+                                          // B. Save the user activity
+                                          saveUserMe2Activity(); // Your existing activity tracking
+
+                                          // --- C. START: NEW TARGETED NOTIFICATION LOGIC ---
                                           try {
-                                            await notificationService.sendNotification(
-                                                push_notification.NotificationModel(
-                                                    topic: reactingUserId,
-                                                    data: push_notification.Data(id: reactingUserId, route: 'wallet'),
-                                                    notification: push_notification.Notification(
-                                                        title: "${_session.title}",
-                                                        body: "${reactingUser.nickname} reacted to your session ${_session.title} with 1❤️."
-                                                    )
-                                                ).toJson()
-                                            );
+                                            final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(sessionOwnerId).get();
+                                            if (receiverDoc.exists) {
+                                              final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                                              final senderName = reactingUser.nickname ?? 'Someone';
+                                              final sessionTitle = _session.title ?? 'your session';
+                                              final truncatedTitle = sessionTitle.length > 30 ? sessionTitle.substring(0, 30) + '...' : sessionTitle;
+
+                                              // Note: 'reaction' is the Reaction object passed by the MetooButton
+                                              final reactionValue = reaction.value;
+
+                                              if (receiverToken != null && receiverToken.isNotEmpty) {
+                                                await notificationService.sendNotification({
+                                                  "token": receiverToken,
+                                                  "notification": {
+                                                    "title": "Someone reacted to your session!",
+                                                    "body": "$senderName reacted with '$reactionValue' to your session: \"$truncatedTitle\""
+                                                  },
+                                                  "data": {
+                                                    "route": _session.sessionId
+                                                  }
+                                                });
+                                                logger.d("Successfully sent 'new reaction' notification.");
+                                              }
+                                            }
                                           } catch (e) {
-                                            print("Failed to send profile visit notification: $e");
-                                            // Do not block navigation if notification fails
+                                            print("Error sending 'new reaction' notification: $e");
                                           }
+                                          // --- END: NEW TARGETED NOTIFICATION LOGIC ---
+
+                                          // D. Show confirmation to the user
                                           showToast("1❤️ sent to the session owner!");
                                         }
                                         // If !success, the service method already shows a toast.
@@ -724,7 +770,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                                 .saveUserActivity(
                                               activityType: 'follow',
                                               activityMessage:
-                                              "You are following the session: '${_session.title}'.",
+                                              "${follower.nickname} followed the session: '${_session.title}'.",
                                               recipientId: sessionOwnerId,
                                               recipientNickname:
                                               _session.userNickname,

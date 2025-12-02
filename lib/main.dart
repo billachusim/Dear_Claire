@@ -4,6 +4,7 @@ import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/services/notification.dart';
 import 'package:clairediary/ui/chats/chatrooms.dart';
 import 'package:clairediary/ui/create_session/create_session_controller.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:clairediary/ui/create_session/create_session_page.dart';
 import 'package:clairediary/ui/ego-profile/profile.dart';
@@ -38,7 +39,7 @@ Future<void> main() async {
 
   // --- STANDARD INITIALIZATIONS ---
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
+  await _updateFcmTokenOnAppStart();
   final initFuture = MobileAds.instance.initialize();
   final adState = AdState(initFuture);
   await initFuture;
@@ -81,6 +82,52 @@ Future<void> main() async {
     ),
   );
 }
+
+
+
+/// Checks for a logged-in user and updates their FCM token in Firestore if needed.
+/// This ensures existing users get a token and all users have the latest one.
+Future<void> _updateFcmTokenOnAppStart() async {
+  // Wait until Firebase is initialized.
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
+  // Only proceed if a user is actually logged in.
+  if (currentUser == null) {
+    print("No user logged in, skipping FCM token update on app start.");
+    return;
+  }
+
+  try {
+    // 1. Get the latest token from the device.
+    String? newFcmToken = await FirebaseMessaging.instance.getToken();
+    if (newFcmToken == null) {
+      print("Could not get FCM token. Device may not support it.");
+      return;
+    }
+
+    // 2. Get the user's current document from Firestore.
+    final userDocRef = FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
+    final userDoc = await userDocRef.get();
+
+    if (userDoc.exists) {
+      final oldFcmToken = userDoc.data()?['fcmId'] as String?;
+
+      // 3. Compare the new token with the old one. If different or missing, update it.
+      if (oldFcmToken == null || oldFcmToken.isEmpty || oldFcmToken != newFcmToken) {
+        print("FCM token is new or outdated. Updating in Firestore...");
+        await userDocRef.update({'fcmId': newFcmToken});
+        print("FCM token successfully updated for user ${currentUser.uid}.");
+      } else {
+        print("FCM token is already up-to-date.");
+      }
+    }
+  } catch (e) {
+    print("Error updating FCM token on app start: $e");
+    // This process should not block the app from starting.
+  }
+}
+
 
 
 

@@ -165,12 +165,14 @@ class _CommentWidgetState extends State<CommentWidget> {
 
 
 
+// Replace the entire method in lib/widgets/comment_widget.dart
 
   Future<void> _handleThanksTransaction() async {
     if (currentUser == null) {
       showToast("You must be logged in to thank an advise.");
       return;
-    }  final thankerId = currentUser!.uid;
+    }
+    final thankerId = currentUser!.uid;
     final thankedAdvise = widget.commentSessionModel!;
     final thankedUserId = thankedAdvise.userId!;
 
@@ -179,29 +181,30 @@ class _CommentWidgetState extends State<CommentWidget> {
       showToast("You cannot thank your own advise.");
       return;
     }
-    if (thankedAdvise.thanks!.contains(thankerId)) {
+    if (thankedAdvise.thanks?.contains(thankerId) ?? false) {
       showToast("You have already thanked this advise.");
       return;
     }
 
-    // --- 2. CHECK IF THE THANKED USER IS AN ALTER EGO ---
+    // --- 2. SETUP ---
     final isAlterEgo = thankedAdvise.alterEgoId != null && thankedAdvise.alterEgoId!.isNotEmpty;
     final thanker = await firebaseServices.getUserInfo(); // Fetch thanker info early
 
+    // --- 3. HANDLE REGULAR USER TRANSACTION ---
     if (!isAlterEgo) {
-      // --- 3A. REGULAR USER: 1-LOVE TRANSACTION ---
+      const int thankYouCost = 1;
       try {
         final bool success = await firebaseServices.transferLoveBetweenUsers(
           senderId: thankerId,
           receiverId: thankedUserId,
-          amountToSend: 1, // Give 1 love
+          amountToSend: thankYouCost,
           taxAmount: 0,
-          totalDebitAmount: 1, // Debit 1 love from the thanker
+          totalDebitAmount: thankYouCost,
           senderTransactionDesc: "1❤️ for thanks to an advise from ${thankedAdvise.userNickname}.",
           receiverTransactionDesc: "1❤️ from thanks to your advise by ${thanker.nickname}.",
           claireTransactionDesc: "No Tax from a regular user 'Thank You' transaction.",
-          forThanks: 1,
-          fromThanks: 1,
+          forThanks: thankYouCost,
+          fromThanks: thankYouCost,
           metadata: {
             'reason': 'thank_advise_regular',
             'sessionId': widget.featuredSessionModel?.sessionId,
@@ -210,37 +213,24 @@ class _CommentWidgetState extends State<CommentWidget> {
         );
 
         if (success) {
-          showToast("...and you too!"); // Keep original toast message for regular users
+          showToast("...and you too!");
 
-          // After a successful transaction, save the activity to Firestore.
-          await firebaseServices.saveUserActivity(
-            activityType: 'thank',
-            activityMessage: "Thanks with ❤️ to ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advice.",
-            recipientId: thankedUserId, // The user who received the thanks
-            sessionId: widget.featuredSessionModel?.sessionId,
+          // --- POST-TRANSACTION LOGIC (NOTIFICATION & ACTIVITY) ---
+          _performPostThanksActions(
+            thanker: thanker,
+            thankedUser: thankedAdvise,
+            amount: thankYouCost,
           );
-
-          // The 'thanks' array is updated by the service, but we update it here explicitly
-          // to ensure the UI reflects the change immediately.
-          await FirebaseFirestore.instance
-              .collection('sessions')
-              .doc(widget.featuredSessionModel?.sessionId)
-              .collection('comments')
-              .doc(thankedAdvise.commentId)
-              .update({
-            'thanks': FieldValue.arrayUnion([thankerId])
-          });
+          // --- END POST-TRANSACTION LOGIC ---
         }
-        // If 'success' is false, the service method handles showing an error toast.
       } catch (e) {
         print("Error during regular user thanks transaction: $e");
-        showToast("An error occurred while thanking. Please try again.");
+        showToast("An error occurred. Please try again.");
       }
       return;
     }
 
-
-    // --- 3B. ALTER EGO: PROCEED WITH 3-LOVE TRANSACTION VIA SERVICE ---
+    // --- 4. HANDLE ALTER EGO TRANSACTION ---
     const int thankYouCost = 3;
     const int taxAmount = 2;
     const int totalDebit = thankYouCost + taxAmount;
@@ -251,64 +241,93 @@ class _CommentWidgetState extends State<CommentWidget> {
         return;
       }
 
-      // Use the centralized user-to-user transfer method
       final bool success = await firebaseServices.transferLoveBetweenUsers(
         senderId: thankerId,
         receiverId: thankedUserId,
         amountToSend: thankYouCost,
         taxAmount: taxAmount,
         totalDebitAmount: totalDebit,
-        senderTransactionDesc: "5❤️ for thanks to an advise from ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}.",
-        receiverTransactionDesc: "5❤️ from ${thanker.nickname} for your advise.",
-        claireTransactionDesc: "No Tax from a 'Thank You' transaction.",
+        senderTransactionDesc: "$totalDebit❤️ for thanks to an advise from ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}.",
+        receiverTransactionDesc: "$thankYouCost❤️ from ${thanker.nickname} for your advise.",
+        claireTransactionDesc: "$taxAmount❤️ tax from a 'Thank You' transaction.",
         forThanks: thankYouCost,
         fromThanks: thankYouCost,
         metadata: {
-          'reason': 'thank_advise',
+          'reason': 'thank_advise_alterego',
           'sessionId': widget.featuredSessionModel?.sessionId,
           'commentId': thankedAdvise.commentId,
         },
       );
 
       if (success) {
-        showToast("5❤️ sent to ${thankedAdvise.userNickname} as thanks!");
+        showToast("$totalDebit❤️ sent to ${thankedAdvise.userNickname} as thanks!");
 
-        // After a successful transaction, save the activity to Firestore.
-        await firebaseServices.saveUserActivity(
-          activityType: 'thank',
-          activityMessage: "Thanks with ❤️ to ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname}'s advice.",
-          recipientId: thankedUserId, // The user who received the thanks
-          sessionId: widget.featuredSessionModel?.sessionId,
+        // --- POST-TRANSACTION LOGIC (NOTIFICATION & ACTIVITY) ---
+        _performPostThanksActions(
+          thanker: thanker,
+          thankedUser: thankedAdvise,
+          amount: thankYouCost,
         );
-
-        // Explicitly update the 'thanks' array to be safe.
-        await FirebaseFirestore.instance
-            .collection('sessions')
-            .doc(widget.featuredSessionModel?.sessionId)
-            .collection('comments')
-            .doc(thankedAdvise.commentId)
-            .update({
-          'thanks': FieldValue.arrayUnion([thankerId])
-        });
-
-        // Notify the thanked user
-        await notificationService.sendNotification(
-            pushNotification.NotificationModel(
-                topic: thankedUserId,
-                data: pushNotification.Data(id: thankedUserId, route: 'wallet'),
-                notification: pushNotification.Notification(
-                    title: "A Thank You With 3❤️!",
-                )
-            ).toJson()
-        );
+        // --- END POST-TRANSACTION LOGIC ---
       }
-      // If 'success' is false, the service method already shows an error toast.
-
     } catch (e) {
-      print("Error during thanks transaction: $e");
+      print("Error during Alter Ego thanks transaction: $e");
       showToast("An error occurred. Please try again.");
     }
   }
+
+// --- NEW HELPER METHOD FOR CLEANLINESS ---
+  Future<void> _performPostThanksActions({
+    required UserModel thanker,
+    required CommentSessionModel thankedUser,
+    required int amount,
+  }) async {
+    try {
+      // 1. SAVE USER ACTIVITY (as you wanted)
+      await firebaseServices.saveUserActivity(
+        activityType: 'thank',
+        activityMessage: "${thanker.nickname ?? 'An Ego'} gave thanks with ❤️ to ${thankedUser.alterEgoId ?? thankedUser.userNickname}'s advice.",
+        recipientId: thankedUser.userId!,
+        sessionId: widget.featuredSessionModel?.sessionId,
+      );
+      logger.d("User activity for 'thank' saved successfully.");
+
+      // 2. SEND TARGETED NOTIFICATION
+      final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(thankedUser.userId!).get();
+      if (receiverDoc.exists) {
+        final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+        if (receiverToken != null && receiverToken.isNotEmpty) {
+          await notificationService.sendNotification({
+            "token": receiverToken,
+            "notification": {
+              "title": "Someone thanked your advise!",
+              "body": "${thanker.nickname ?? 'A user'} gave thanks with $amount❤️ for your advise."
+            },
+            "data": {
+              // Navigate user to the session where they were thanked
+              "route": widget.featuredSessionModel?.sessionId
+            }
+          });
+          logger.d("Targeted 'thank you' notification sent successfully.");
+        }
+      }
+
+      // 3. UPDATE LOCAL UI by updating the 'thanks' array in Firestore
+      await FirebaseFirestore.instance
+          .collection('sessions')
+          .doc(widget.featuredSessionModel?.sessionId)
+          .collection('comments')
+          .doc(thankedUser.commentId)
+          .update({
+        'thanks': FieldValue.arrayUnion([thanker.userId])
+      });
+
+    } catch (e) {
+      print("Error during post-thanks actions (activity/notification): $e");
+      // Don't block the user, but log the error.
+    }
+  }
+
 
 
 
@@ -678,11 +697,40 @@ class _CommentWidgetState extends State<CommentWidget> {
                         if (success) {
                           showToast("You are visiting ${thisEgoName} with a kola of 1❤️.");
 
+                          // --- START TARGETED NOTIFICATION LOGIC ---
+                          try {
+                            // We already have the visiting user's info, now get the visited user's token.
+                            final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(thisUserID).get();
+                            if (receiverDoc.exists) {
+                              final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                              final senderName = visitingUser.nickname ?? 'A user';
+
+                              if (receiverToken != null && receiverToken.isNotEmpty) {
+                                await notificationService.sendNotification({
+                                  "token": receiverToken,
+                                  "notification": {
+                                    "title": "Your Ego profile has a visitor!",
+                                    "body": "$senderName just visited your profile with a kola of 1❤️."
+                                  },
+                                  "data": {
+                                    // Navigate the user to their own profile page to see the updated stats.
+                                    "route": "egoPage"
+                                  }
+                                });
+                              }
+                            }
+                          } catch (e) {
+                            print("Error sending profile visit notification: $e");
+                            // Don't block the user flow if notifications fail.
+                          }
+                          // --- END TARGETED NOTIFICATION LOGIC ---
+
+                          // --- NAVIGATE ---
                           // Only navigate to the profile if the transaction was successful.
                           PageRouter.gotoWidget(
                               VisitedUserEgoProfilePage(
                                   visitedUsersID: thisUserID,
-                                  visitedEgoName: thisUserID),
+                                  visitedEgoName: thisEgoName),
                               context);
                         }
                         // If !success, the service method already shows a toast.

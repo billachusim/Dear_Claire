@@ -186,6 +186,34 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                     if (success) {
                                       showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
+                                      // --- START TARGETED NOTIFICATION LOGIC ---
+                                      try {
+                                        // We already have the visiting user's info, now get the visited user's token.
+                                        final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(visitedUserId).get();
+                                        if (receiverDoc.exists) {
+                                          final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                                          final senderName = visitingUser.nickname ?? 'A user';
+
+                                          if (receiverToken != null && receiverToken.isNotEmpty) {
+                                            await notificationService.sendNotification({
+                                              "token": receiverToken,
+                                              "notification": {
+                                                "title": "Your Ego profile has a visitor!",
+                                                "body": "$senderName just visited your profile with a kola of 1❤️."
+                                              },
+                                              "data": {
+                                                // Navigate the user to their own profile page to see the updated stats.
+                                                "route": "egoPage"
+                                              }
+                                            });
+                                          }
+                                        }
+                                      } catch (e) {
+                                        print("Error sending profile visit notification: $e");
+                                        // Don't block the user flow if notifications fail.
+                                      }
+                                      // --- END TARGETED NOTIFICATION LOGIC ---
+
                                       // --- NAVIGATE ---
                                       // Only navigate to the profile if the transaction was successful.
                                       PageRouter.gotoWidget(
@@ -507,7 +535,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   // --- 2. PREVENT SELF-REACTION & INSUFFICIENT LOVES ---
                                   if (reactingUserId == sessionOwnerId) {
                                     // User is reacting to their own post, just update the reaction locally.
-                                    // The original logic handles this well.
                                     firebaseServices.addUsersReactionToASessionByIndex(
                                       context,
                                       index,
@@ -524,19 +551,15 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   }
 
                                   // --- 3. PERFORM THE LOVE TRANSACTION ---
-                                  final bool success =
-                                  await firebaseServices.transferLoveBetweenUsers(
+                                  final bool success = await firebaseServices.transferLoveBetweenUsers(
                                     senderId: reactingUserId,
                                     receiverId: sessionOwnerId,
                                     amountToSend: reactionCost,
                                     taxAmount: 0, // No tax on a 1-love transaction
                                     totalDebitAmount: reactionCost,
-                                    senderTransactionDesc:
-                                    "1❤️ for reacting to session ${_session.title}.",
-                                    receiverTransactionDesc:
-                                    "1❤️ from reaction to your session ${_session.title} by ${reactingUser.nickname}.",
+                                    senderTransactionDesc: "1❤️ for reacting to session ${_session.title}.",
+                                    receiverTransactionDesc: "1❤️ from a reaction to your session by ${reactingUser.nickname}.",
                                     claireTransactionDesc: "Tax from a session reaction.",
-                                    // Pass the specific stat increments
                                     forReactions: reactionCost,
                                     fromReactions: reactionCost,
                                     metadata: {
@@ -546,21 +569,57 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                     },
                                   );
 
-                                  // --- 4. UPDATE REACTION COUNT ON SUCCESS ---
+                                  // --- 4. HANDLE SUCCESS (UPDATE DB, NOTIFY, LOG ACTIVITY) ---
                                   if (success) {
-                                    // Only after a successful transaction, update the reaction on the session.
+                                    // A. Update the reaction array in Firestore
                                     firebaseServices.addUsersReactionToASessionByIndex(
                                       context,
                                       index,
                                       session: _session,
                                       sender: reactingUser.nickname ?? '',
                                     );
+
+                                    // B. Save the user activity
                                     saveUserMe2Activity(); // Your existing activity tracking
+
+                                    // --- C. START: NEW TARGETED NOTIFICATION LOGIC ---
+                                    try {
+                                      final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(sessionOwnerId).get();
+                                      if (receiverDoc.exists) {
+                                        final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                                        final senderName = reactingUser.nickname ?? 'Someone';
+                                        final sessionTitle = _session.title ?? 'your session';
+                                        final truncatedTitle = sessionTitle.length > 30 ? sessionTitle.substring(0, 30) + '...' : sessionTitle;
+
+                                        // Note: 'reaction' is the Reaction object passed by the MetooButton
+                                        final reactionValue = reaction.value;
+
+                                        if (receiverToken != null && receiverToken.isNotEmpty) {
+                                          await notificationService.sendNotification({
+                                            "token": receiverToken,
+                                            "notification": {
+                                              "title": "Someone reacted to your session!",
+                                              "body": "$senderName reacted with '$reactionValue' to your session: \"$truncatedTitle\""
+                                            },
+                                            "data": {
+                                              "route": _session.sessionId
+                                            }
+                                          });
+                                          logger.d("Successfully sent 'new reaction' notification.");
+                                        }
+                                      }
+                                    } catch (e) {
+                                      print("Error sending 'new reaction' notification: $e");
+                                    }
+                                    // --- END: NEW TARGETED NOTIFICATION LOGIC ---
+
+                                    // D. Show confirmation to the user
                                     showToast("1❤️ sent to the session owner!");
                                   }
                                   // If !success, the service method already shows a toast.
                                 },
                               ),
+
                               new SizedBox(
                                 width: 10,
                               ),
@@ -596,83 +655,109 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       ),
                                     )
                                   : FollowButton(
-                                      text: _session.followers!
-                                              .contains(currentUser?.uid)
-                                          ? 'Unfollow'
-                                          : 'Follow',
-                                      onPressed: () async {
-                                        if (await firebaseServices
-                                            .isUserSignIn(context)) {
-                                          final follower = await firebaseServices
-                                              .getUserInfo();
-                                          final sessionOwnerId = _session.userId;
-                                          final isAlreadyFollowing = _session
-                                              .followers!
-                                              .contains(currentUser?.uid);
-                                          if (isAlreadyFollowing) {
-                                            firebaseServices.followThisSession(
-                                                context,
-                                                session: _session);
-                                            showToast(
-                                                "You've unfollowed this session.");
-                                            return; // Stop here
-                                          }
-                                          if (follower.currentLoveCount < 1) {
-                                            showToast(
-                                                "You need at least 1❤️ to follow a session.");
-                                            return;
-                                          }
+                                text: _session.followers!.contains(currentUser?.uid)
+                                    ? 'Unfollow'
+                                    : 'Follow',
+                                onPressed: () async {
+                                  if (await firebaseServices.isUserSignIn(context)) {
+                                    final follower = await firebaseServices.getUserInfo();
+                                    final sessionOwnerId = _session.userId;
+                                    final isAlreadyFollowing =
+                                    _session.followers!.contains(currentUser?.uid);
 
-                                          final bool success =
-                                              await firebaseServices
-                                                  .transferLoveBetweenUsers(
-                                            senderId: follower.userId!,
-                                            receiverId: sessionOwnerId!,
-                                            amountToSend: 1,
-                                            taxAmount: 0, // No tax for following
-                                            totalDebitAmount: 1,
-                                            senderTransactionDesc:
-                                                "1❤️ to follow '${_session.title}'.",
-                                            receiverTransactionDesc:
-                                                "1❤️ from followed session '${_session.title}'.",
-                                            claireTransactionDesc:
-                                                "Follow transaction tax (0%).",
-                                            metadata: {
-                                              'reason': 'follow_session',
-                                              'sessionId': _session.sessionId,
-                                            },
-                                          );
+                                    // --- UNFOLLOW LOGIC ---
+                                    if (isAlreadyFollowing) {
+                                      firebaseServices.followThisSession(context, session: _session);
+                                      showToast("You've unfollowed this session.");
+                                      return; // Stop here
+                                    }
 
-                                          if (success) {
-                                            firebaseServices.followThisSession(
-                                                context,
-                                                session: _session);
-                                            await firebaseServices
-                                                .updateSessionLastTimeActivity(
-                                                    _session.sessionId
-                                                        .toString());
+                                    // --- FOLLOW LOGIC ---
+                                    if (follower.currentLoveCount < 1) {
+                                      showToast("You need at least 1❤️ to follow a session.");
+                                      return;
+                                    }
 
-                                            await firebaseServices
-                                                .saveUserActivity(
-                                              activityType: 'follow',
-                                              activityMessage:
-                                                  "Following the session: '${_session.title}'.",
-                                              recipientId: sessionOwnerId,
-                                              recipientNickname:
-                                                  _session.userNickname,
-                                              sessionId: _session.sessionId,
-                                            );
+                                    // 1. PERFORM THE LOVE TRANSACTION
+                                    final bool success =
+                                    await firebaseServices.transferLoveBetweenUsers(
+                                      senderId: follower.userId!,
+                                      receiverId: sessionOwnerId!,
+                                      amountToSend: 1,
+                                      taxAmount: 0, // No tax for following
+                                      totalDebitAmount: 1,
+                                      senderTransactionDesc: "1❤️ to follow '${_session.title}'.",
+                                      receiverTransactionDesc: "1❤️ from a new follower on session '${_session.title}'.",
+                                      claireTransactionDesc: "Follow transaction tax (0%).",
+                                      metadata: {
+                                        'reason': 'follow_session',
+                                        'sessionId': _session.sessionId,
+                                      },
+                                    );
 
-                                            showToast(
-                                                "Now following! 1❤️ was sent to the author.");
-                                          } else {
-                                            showToast(
-                                                "Could not complete the follow. Please try again.");
+                                    // 2. HANDLE SUCCESS (UPDATE DB, NOTIFY, LOG ACTIVITY)
+                                    if (success) {
+                                      // A. Update Firestore and timestamp (your existing logic)
+                                      firebaseServices.followThisSession(context, session: _session);
+                                      await firebaseServices
+                                          .updateSessionLastTimeActivity(_session.sessionId.toString());
+
+                                      // B. Save the user activity (your existing logic)
+                                      await firebaseServices.saveUserActivity(
+                                        activityType: 'follow',
+                                        activityMessage: "${follower.nickname} followed the session: '${_session.title}'.",
+                                        recipientId: sessionOwnerId,
+                                        recipientNickname: _session.userNickname,
+                                        sessionId: _session.sessionId,
+                                      );
+
+                                      // --- C. START: NEW TARGETED NOTIFICATION LOGIC ---
+                                      try {
+                                        // Fetch the session owner's document to get their FCM token
+                                        final receiverDoc = await FirebaseFirestore.instance
+                                            .collection('users')
+                                            .doc(sessionOwnerId)
+                                            .get();
+                                        if (receiverDoc.exists) {
+                                          final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                                          final followerName = follower.nickname ?? 'A user';
+                                          final sessionTitle = _session.title ?? 'your session';
+                                          final truncatedTitle = sessionTitle.length > 30
+                                              ? sessionTitle.substring(0, 30) + '...'
+                                              : sessionTitle;
+
+                                          if (receiverToken != null && receiverToken.isNotEmpty) {
+                                            await notificationService.sendNotification({
+                                              "token": receiverToken,
+                                              "notification": {
+                                                "title": "You have a new follower!",
+                                                "body":
+                                                "$followerName is now following your session: \"$truncatedTitle\""
+                                              },
+                                              "data": {
+                                                // Navigate the session owner to the session that was followed
+                                                "route": _session.sessionId
+                                              }
+                                            });
+                                            logger.d("Successfully sent 'new follower' notification.");
                                           }
                                         }
-                                      },
-                                      count: _session.followers!.length,
-                                    ),
+                                      } catch (e) {
+                                        print("Error sending 'new follower' notification: $e");
+                                        // Do not block the user flow if notifications fail
+                                      }
+                                      // --- END: NEW TARGETED NOTIFICATION LOGIC ---
+
+                                      // D. Show confirmation toast to the user
+                                      showToast("Now following! 1❤️ was sent to the author.");
+
+                                    } else {
+                                      showToast("Could not complete the follow. Please try again.");
+                                    }
+                                  }
+                                },
+                                count: _session.followers!.length,
+                              ),
 
                               new Spacer(),
                               FutureBuilder<

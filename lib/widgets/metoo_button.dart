@@ -1,9 +1,11 @@
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/widgets/toast.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:clairediary/utils/color.dart';
+import '../services/notification_service.dart';
 import '../ui/featured/model/session.dart';
 
 // The Reaction class remains the same.
@@ -128,7 +130,8 @@ class _MetooButtonState extends State<MetooButton>
     }
   }
 
-  // This is the core logic that handles the transaction and state update.
+
+// This is the core logic that handles the transaction and state update.
   Future<void> _handleReactionTransaction(int index) async {
     // 1. If user has already reacted, stop everything.
     if (hasUserReacted) {
@@ -145,14 +148,24 @@ class _MetooButtonState extends State<MetooButton>
     const int reactionCost = 1;
 
     // Get the specific reaction value, e.g., 'Cheers👍'
-    final String reactionValue = _buildReactions()[index].value;
+    final Reaction selectedReaction = _buildReactions()[index];
+    final String reactionValue = selectedReaction.value;
 
     // 3. Prevent self-reaction transactions.
     if (reactingUserId == sessionOwnerId) {
       showToast("You reacted to your own session.");
-      // Pass the reaction string value instead of the index
       await _firebaseServices.addUsersReactionToASession(context, reactionValue,
           session: widget.session, sender: reactingUser.nickname ?? '');
+
+      // *** SAVE USER ACTIVITY FOR SELF-REACTION ***
+      await _firebaseServices.saveUserActivity(
+        activityMessage: 'You reacted with $reactionValue to your own session: "${widget.session.title}"',
+        activityType: 'Self-Reaction',
+        recipientId: sessionOwnerId, // The recipient is still the session owner (oneself)
+        sessionId: widget.session.sessionId!,
+      );
+      // *** END OF ACTIVITY LOGIC ***
+
       _updateLocalUiState(index); // Just update the UI, no love transfer.
       return;
     }
@@ -168,22 +181,56 @@ class _MetooButtonState extends State<MetooButton>
       senderId: reactingUserId,
       receiverId: sessionOwnerId,
       amountToSend: reactionCost,
-      taxAmount: 0,
+      taxAmount: 0, // Reactions have 0 tax
       totalDebitAmount: reactionCost,
-      senderTransactionDesc: "1❤️ for reacting to a session.",
-      receiverTransactionDesc: "1❤️ from a reaction to your session by ${reactingUser.nickname}.",
+      senderTransactionDesc: "1❤️ for reacting '${reactionValue}' to a session.",
+      receiverTransactionDesc: "1❤️ from a '${reactionValue}' reaction by ${reactingUser.nickname}.",
       claireTransactionDesc: "Tax from a session reaction.",
       forReactions: reactionCost,
       fromReactions: reactionCost,
       metadata: {'sessionId': widget.session.sessionId, 'reactionIndex': index},
     );
 
-    // 6. If the transaction is successful, update the database and the UI.
+    // 6. If the transaction is successful, log activity, send notification, update DB, and update UI.
     if (success) {
       showToast("1❤️ sent to the session owner!");
 
+      // --- START ACTIVITY AND NOTIFICATION LOGIC ---
+      try {
+        // *** SAVE USER ACTIVITY FOR THE REACTION ***
+        await _firebaseServices.saveUserActivity(
+          activityMessage: 'You reacted with $reactionValue to the session: "${widget.session.title}"',
+          activityType: reactionValue, // Use the specific reaction as the activity type
+          recipientId: sessionOwnerId,
+          sessionId: widget.session.sessionId!,
+        );
+        // *** END OF ACTIVITY LOGIC ***
+
+        // Get session owner's doc to find their FCM token
+        final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(sessionOwnerId).get();
+        if (receiverDoc.exists) {
+          final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+          final senderName = reactingUser.nickname ?? 'Someone';
+          final sessionTitle = widget.session.title ?? 'your session';
+          final truncatedTitle = sessionTitle.length > 30 ? sessionTitle.substring(0, 30) + '...' : sessionTitle;
+
+          if (receiverToken != null && receiverToken.isNotEmpty) {
+            await notificationService.sendNotification({
+              "token": receiverToken,
+              "notification": {
+                "title": "Someone reacted to your session!",
+                "body": "$senderName reacted with '$reactionValue' to your session: \"$truncatedTitle\""
+              },
+              "data": { "route": widget.session.sessionId }
+            });
+          }
+        }
+      } catch (e) {
+        print("Error during post-reaction logic (activity/notification): $e");
+      }
+      // --- END ACTIVITY AND NOTIFICATION LOGIC ---
+
       // Update the reaction list in Firestore.
-      // Pass the reaction string value instead of the index
       await _firebaseServices.addUsersReactionToASession(context, reactionValue,
           session: widget.session, sender: reactingUser.nickname ?? '');
 
@@ -191,10 +238,10 @@ class _MetooButtonState extends State<MetooButton>
       _updateLocalUiState(index);
 
       // Notify the parent widget if it provided a callback.
-      final reaction = _buildReactions()[index];
-      widget.onReactionChanged?.call(reaction, _countForReaction(reaction.value));
+      widget.onReactionChanged?.call(selectedReaction, _countForReaction(reactionValue));
     }
   }
+
 
   // This method tells Flutter to redraw the widget with the new, permanent state.
   void _updateLocalUiState(int index) {

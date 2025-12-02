@@ -256,8 +256,8 @@ Timestamp: ${DateTime.now().toIso8601String()}
           ),
           _buildStatCard("From Ego Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
           _buildStatCard("For Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
-          _buildStatCard("For Love Transfer", "-$_forLoveTransfer ❤️", Colors.blueGrey),
           _buildStatCard("From Love Transfer", "+$_fromLoveTransfer ❤️", Colors.teal),
+          _buildStatCard("For Love Transfer", "-$_forLoveTransfer ❤️", Colors.blueGrey),
         ],
       ),
     );
@@ -553,12 +553,42 @@ Timestamp: ${DateTime.now().toIso8601String()}
                       // Show toast
                     AppToast.show("$totalDebitAmount❤️ Love sent successfully!");
 
-                    // Send notification
-                    await _sendLoveNotifications(
-                      senderName: sender.nickname ?? 'An Ego',
-                      receiverId: receiverId,
-                      amount: amountToReceive,
-                    );
+                    // --- START: NEW TARGETED NOTIFICATION LOGIC ---
+                    try {
+                      // A. Notify the Receiver
+                      final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(receiverId).get();
+                      if (receiverDoc.exists) {
+                        final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                        if (receiverToken != null && receiverToken.isNotEmpty) {
+                          await notificationService.sendNotification({
+                            "token": receiverToken,
+                            "notification": {
+                              "title": "You've Received Love! ❤️",
+                              "body": "${sender.nickname ?? 'A user'} just sent you $amountToReceive❤️. ${note.isNotEmpty ? 'Note: $note' : ''}"
+                            },
+                            "data": {"route": "egoPage"}
+                          });
+                        }
+                      }
+
+                      // B. Notify the Sender (Confirmation)
+                      // The 'sender' object from `_firebaseServices.getUserInfo()` already contains the fcmId
+                      if (sender.fcmId != null && sender.fcmId!.isNotEmpty) {
+                        await notificationService.sendNotification({
+                          "token": sender.fcmId,
+                          "notification": {
+                            "title": "Love Sent Successfully!",
+                            "body": "You successfully sent $totalDebitAmount❤️ to ${widget.visitedEgoName}."
+                          },
+                          "data": {"route": "egoPage"}
+                        });
+                      }
+
+                    } catch (e) {
+                      print("Error sending manual love transfer notification: $e");
+                      // Don't block the UI flow if notifications fail
+                    }
+
 
                     // Send email
                     await _sendAdminEmail(

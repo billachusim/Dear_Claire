@@ -828,86 +828,77 @@ class FirebaseServices extends ChangeNotifier {
     return _data;
   }
 
+
   /// SignUp user
   Future<bool> register(
       BuildContext context, String email, String secretCode, String nickname) async {
-    final _user = await FirebaseAuth.instance
-        .createUserWithEmailAndPassword(email: email, password: secretCode);
-    setUsersId(_user.user!.uid);
-    final _email = email;
-    final _secretCode = secretCode;
-    final _nickname = nickname;
     try {
-      final alterEgoAccessCode = "";
-      final alterEgoId = "";
-      final email = _email;
-      final fcmId = "";
-      final secretCode = _secretCode;
-      final timeLastUnlocked = FieldValue.serverTimestamp();
-      final timeRegistered = FieldValue.serverTimestamp();
-      final userType = "REGULAR";
-      final nickname = _nickname;
-      final avatarUrl = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2FSpeak_No_Evil_Monkey_Emoji.png?alt=media&token=88242e3b-ee93-4b76-9d91-a24c112ef4f2";
-      final userId = _user.user?.uid;
-      final sessionCount = 0;
-      final adviseCount = 0;
-      final totalLoveCount = 0;
-      final currentLoveCount = 0;
-      final withdrawnLoveCount = 0;
-      FirebaseFirestore.instance
+      // 1. Create the user with Firebase Auth
+      final _user = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: secretCode);
+      setUsersId(_user.user!.uid);
+
+      // 2. *** GET THE FCM TOKEN *** (This is the critical new step)
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+      print('FCM Token for new user: $fcmToken'); // Good for debugging
+
+      // 3. Prepare the user data for Firestore
+      final userData = {
+        "nickname": nickname,
+        "avatarUrl": "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2FSpeak_No_Evil_Monkey_Emoji.png?alt=media&token=88242e3b-ee93-4b76-9d91-a24c112ef4f2",
+        "userId": _user.user?.uid,
+        "alterEgoAccessCode": "",
+        "alterEgoId": "",
+        "email": email,
+        "fcmId": fcmToken ?? '', // *** SAVE THE TOKEN HERE ***
+        "secretCode": secretCode,
+        "timeLastUnlocked": FieldValue.serverTimestamp(),
+        "timeRegistered": FieldValue.serverTimestamp(),
+        "userType": "REGULAR",
+        "sessionCount": 0,
+        "adviseCount": 0,
+        "totalLoveCount": 10, // Give some starting love
+        "currentLoveCount": 10, // Give some starting love
+        "withdrawnLoveCount": 0,
+        // Initialize other love transfer fields
+        "forLoveTransfer": 0,
+        "fromLoveTransfer": 0,
+      };
+
+      // 4. Create the user document in Firestore
+      await FirebaseFirestore.instance
           .collection("users")
           .doc(_user.user!.uid)
-          .set({
-        "nickname": nickname,
-        "avatarUrl": avatarUrl,
-        "userId": userId,
-        "alterEgoAccessCode": alterEgoAccessCode,
-        "alterEgoId": alterEgoId,
-        "email": email,
-        "fcmId": fcmId,
-        "secretCode": secretCode,
-        "timeLastUnlocked": timeLastUnlocked,
-        "timeRegistered": timeRegistered,
-        "userType": userType,
-        "sessionCount": sessionCount,
-        "adviseCount": adviseCount,
-        "totalLoveCount": totalLoveCount,
-        "currentLoveCount": currentLoveCount,
-        "withdrawnLoveCount": withdrawnLoveCount,
-      },
-      );
-      logger.d('Completely created new ego');
-      print('Email: $email');
-      print('User Id: $userId');
-      print('Secret Code: $secretCode');
+          .set(userData);
 
+      logger.d('Completely created new ego for userId: ${_user.user?.uid}');
+
+      // 5. Automatically sign in the user
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: secretCode)
-          .then((value) => {
-        setUsersId(value.user!.uid),
-      });
+          .then((value) => setUsersId(value.user!.uid));
 
       showToast(message: AppString.create_ego_complete_toast);
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
       return true;
+
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         showToast(message: 'The password provided is too weak.');
-      } else if (e.code.length < 4) {
-        showToast(message: 'secret code should be up to 4 digits');
       } else if (e.code == 'email-already-in-use') {
-        showToast(message: 'The account already exists for that email.');
-      } else if (!isValidEmail(email)) {
-        showToast(message: 'email is not invalid');
+        showToast(message: 'An account already exists for that email.');
+      } else {
+        showToast(message: 'An error occurred during sign up.');
       }
       logger.e(e);
-      showToast(message: AppString.open_up_error);
       return false;
     } catch (e) {
-      logger.e(e);
+      logger.e("A general error occurred in register method: $e");
+      showToast(message: AppString.open_up_error);
       return false;
     }
   }
+
 
 
 
@@ -1484,33 +1475,57 @@ class FirebaseServices extends ChangeNotifier {
         .snapshots();
   }
 
+
   /// send alter ego sub-message
   void addAlterEgoSubMessage(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
-    final _user = await getUserInfo();
-    final sender = _user.alterEgoId;
-    final pushNotification.NotificationModel _notificationModel =
-    pushNotification.NotificationModel(
-        topic: chatModel.userId!,
-        data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
-        notification: pushNotification.Notification(
-          title: chatRoomPodo!.title!,
-          body: '$sender sent something to your corner of the room',
-        ));
+    // --- 1. SETUP & WRITE TO DATABASE ---
+    final _user = await getUserInfo(); // This is the Alter Ego WRITING the message
+    final senderName = _user.alterEgoId; // Using Alter Ego ID/Name
+    final cornerOwnerId = chatModel.userId!; // This is the user who OWNS the corner
+
     _firebaseFirestore
         .collection("alterEgoChats")
-        .doc(chatRoomPodo.id.toString())
+        .doc(chatRoomPodo!.id.toString())
         .collection(chatRoomPodo.title!)
-        .doc(key.toString())
-        .collection(key.toString())
-        .doc(_user.userId)
+        .doc(key) // The parent message/corner ID
+        .collection(cornerOwnerId) // CORRECTED: Collection is named after the corner owner
+        .doc() // Create a new document for the sub-message
         .set(chatModel.toJson())
-        .whenComplete(() {
-      _subscribeToChatRoom(key);
-      notificationService.sendNotification(_notificationModel.toJson());
-      logger.d('SubMessage sent ${chatModel.toJson()}');
+        .whenComplete(() async {
+      // --- 2. SEND TARGETED NOTIFICATION ---
+      // Only send a notification if the replier is not the corner owner.
+      if (_user.userId != cornerOwnerId) {
+        try {
+          // Fetch the corner owner's user document to get their FCM token
+          final receiverDoc = await _firebaseFirestore.collection('users').doc(cornerOwnerId).get();
+          if (receiverDoc.exists) {
+            final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+
+            if (receiverToken != null && receiverToken.isNotEmpty) {
+              await notificationService.sendNotification({
+                "token": receiverToken,
+                "notification": {
+                  "title": "New reply in your Alter Ego corner!",
+                  "body": "${senderName ?? 'An Alter Ego'} replied in your corner inside the room: '${chatRoomPodo.title!}'"
+                },
+                "data": {
+                  // This route will navigate the user to the specific room
+                  "route": chatRoomPodo.id.toString()
+                }
+              });
+              logger.d('AlterEgo SubMessage Targeted Notification Sent to $cornerOwnerId');
+            }
+          }
+        } catch (e) {
+          logger.e("Error sending targeted Alter Ego sub-message notification: $e");
+        }
+      }
+
+      logger.d('AlterEgo SubMessage saved to Firestore: ${chatModel.toJson()}');
     });
   }
+
 
   void updateAlterEgoMembers(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
@@ -1579,33 +1594,57 @@ class FirebaseServices extends ChangeNotifier {
         .snapshots();
   }
 
+
   /// send sub-message
   void addSubMessage(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
-    final _user = await getUserInfo();
-    final sender = _user.nickname;
-    final pushNotification.NotificationModel _notificationModel =
-        pushNotification.NotificationModel(
-            topic: chatModel.userId!,
-            data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
-            notification: pushNotification.Notification(
-              title: chatRoomPodo!.title!,
-              body: 'There is a new message in your corner of the room',
-            ));
+    // --- 1. SETUP & WRITE TO DATABASE (This part remains the same) ---
+    final _user = await getUserInfo(); // This is the user WRITING the message
+    final senderName = _user.nickname;
+    final cornerOwnerId = chatModel.userId!; // This is the user who OWNS the corner
+
     _firebaseFirestore
         .collection(AppString.appChats)
-        .doc(chatRoomPodo.id.toString())
+        .doc(chatRoomPodo!.id.toString())
         .collection(chatRoomPodo.title!)
-        .doc(key.toString())
-        .collection(key.toString())
-        .doc(_user.userId)
+        .doc(key) // The parent message/corner ID
+        .collection(cornerOwnerId) // The collection named after the corner owner
+        .doc() // Create a new document for the sub-message
         .set(chatModel.toJson())
-        .whenComplete(() {
-      _subscribeToChatRoom(key);
-      notificationService.sendNotification(_notificationModel.toJson());
-      logger.d('SubMessage sent ${chatModel.toJson()}');
+        .whenComplete(() async {
+      // --- 2. SEND TARGETED NOTIFICATION (This is the new logic) ---
+      // Only send a notification if the replier is not the corner owner.
+      if (_user.userId != cornerOwnerId) {
+        try {
+          // Fetch the corner owner's user document to get their FCM token
+          final receiverDoc = await _firebaseFirestore.collection('users').doc(cornerOwnerId).get();
+          if (receiverDoc.exists) {
+            final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+
+            if (receiverToken != null && receiverToken.isNotEmpty) {
+              await notificationService.sendNotification({
+                "token": receiverToken,
+                "notification": {
+                  "title": "New reply in your corner!",
+                  "body": "${senderName ?? 'Someone'} replied in your corner inside the room: '${chatRoomPodo.title!}'"
+                },
+                "data": {
+                  // This route will navigate the user to the specific session/room
+                  "route": chatRoomPodo.id.toString()
+                }
+              });
+              logger.d('SubMessage Targeted Notification Sent to $cornerOwnerId');
+            }
+          }
+        } catch (e) {
+          logger.e("Error sending targeted sub-message notification: $e");
+        }
+      }
+
+      logger.d('SubMessage saved to Firestore: ${chatModel.toJson()}');
     });
   }
+
 
   void updateMembers(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
@@ -1661,21 +1700,20 @@ class FirebaseServices extends ChangeNotifier {
     );
   }
 
+
   /// add users reaction to a posts
   Future<void> addUsersReactionToASession(
       BuildContext context,
       String reactionType, // Keep this as String
           {required Session session, required String sender}
       ) async {
-    // --- This is your new logic ---
     User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) return;
+    if (currentUser == null) {
+      logger.w("Cannot add reaction, user is not signed in.");
+      return;
+    }
 
     final String userId = currentUser.uid;
-    final String sessionId = session.sessionId!;
-    final String sessionOwnerId = session.userId!;
-
-    // --- This is your existing logic, slightly adapted ---
 
     // Map the string reaction back to an index for your ReactionHandler
     int getIndexForReaction(String type) {
@@ -1694,42 +1732,25 @@ class FirebaseServices extends ChangeNotifier {
       return;
     }
 
-    _usersID = await getUsersId();
-    final pushNotification.NotificationModel _notificationModel =
-        pushNotification.NotificationModel(
-      topic: session.sessionId!,
-      data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
-      notification: pushNotification.Notification(
-          title: session.title ?? '', body: 'A $reactionType to this session'),
-    );
+    // This method now ONLY updates the Firestore document with the reaction.
+    // It no longer handles notifications or love transactions.
+    // We don't even need the reaction toggle logic, as the UI in metoo_button
+    // already prevents a user from reacting more than once.
 
-    // Your existing reaction toggle logic
-    if (ReactionHandler.reactionType(session, index).contains(_usersID)) {
-      _firebaseFirestore
+    try {
+      await _firebaseFirestore
           .collection(AppString.appFeaturedSessions)
           .doc(session.sessionId)
-          .update(ReactionHandler.returnReaction(index, _usersID!, addReaction: false))
-          .then((value) => logger.d('Successfully remove reaction'));
-    } else {
-      _firebaseFirestore
-          .collection(AppString.appFeaturedSessions)
-          .doc(session.sessionId)
-          .update(ReactionHandler.returnReaction(index, _usersID!, addReaction: true))
-          .then((value) async {
+          .update(ReactionHandler.returnReaction(index, userId, addReaction: true));
 
-        // *** CORRECTED: Call the existing saveUserActivity method with the right parameters ***
-        await saveUserActivity(
-          activityMessage: ' A $reactionType to this session: ${session.title}', // The message your function expects
-          activityType: reactionType,
-          recipientId: sessionOwnerId,
-          sessionId: sessionId,
-        );
-
-        notificationService.sendNotification(_notificationModel.toJson());
-        logger.d('Successfully added reaction and saved activity');
-      });
+      logger.d('Successfully updated reaction array for session ${session.sessionId}');
+    } catch (e) {
+      logger.e("Failed to update reaction in Firestore: $e");
+      // Optionally show a toast to the user if the DB update fails.
+      showToast(message: "Failed to save your reaction. Please try again.");
     }
   }
+
 
 
 

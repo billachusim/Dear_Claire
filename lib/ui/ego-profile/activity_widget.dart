@@ -157,7 +157,7 @@ class _ActivityWidgetState extends State<ActivityWidget> {
       case 'react': return 'Reacting'; // Keep old 'react' for historical data
       case 'thank': return 'Thanksgiving';
       case 'follow': return 'Following';
-      case 'game_win': return 'Playing Games';
+      case 'game_win': return 'Winning Games';
       case 'room_join': return 'Joining Rooms';
       case 'visit_ego': return 'Visiting Ego';
       case 'send_love': return 'Sending Love';

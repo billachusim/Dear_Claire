@@ -60,6 +60,7 @@ class _HomeDashboardPageState extends State<HomePage>
   bool isWon = false;
   int _playerScore = 0;
   int _claireScore = 0;
+  int _drawCount = 0;
 
   late final AnimationController _controller = AnimationController(
     duration: const Duration(seconds: 15),
@@ -176,6 +177,8 @@ class _HomeDashboardPageState extends State<HomePage>
   }
 
 
+  // In lib/ui/bottom_nav/stack_index_home.dart -> _HomeDashboardPageState
+
   @override
   void initState() {
     super.initState();
@@ -183,41 +186,123 @@ class _HomeDashboardPageState extends State<HomePage>
     _title = "Dear Claire";
     shakeDevice();
     AppTrackingTransparency.requestTrackingAuthorization();
+
     // Initialize WebViewController for TicTacToe
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+    // --- CHANNEL 1: VIBRATION ---
       ..addJavaScriptChannel(
-        'Vibration', // Channel to trigger vibration
+        'Vibration',
         onMessageReceived: (JavaScriptMessage message) async {
           if (await Vibration.hasVibrator()) {
             Vibration.vibrate(duration: 200);
           }
         },
       )
-    // --- NEW: Channel to update the score ---
+    // --- CHANNEL 2: SOUND ---
+      ..addJavaScriptChannel(
+        'Sound',
+        onMessageReceived: (JavaScriptMessage message) async {
+          if (message.message == 'win') {
+            try {
+              if (_audioPlayer.playing) await _audioPlayer.stop();
+              await _audioPlayer.setAsset('assets/audio/win_sound.mp3');
+              _audioPlayer.play();
+            } catch (e) {
+              print("Error playing win sound: $e");
+            }
+          }
+        },
+      )
+    // --- CHANNEL 3: SCORE & GAME LOGIC ---
       ..addJavaScriptChannel(
         'Score',
         onMessageReceived: (JavaScriptMessage message) {
-          if (mounted) {
-            setState(() {
-              if (message.message == 'player_wins') {
-                _playerScore++;
-              } else if (message.message == 'claire_wins') {
-                _claireScore++;
-              }
-            });
+          if (!mounted) return;if (message.message == 'player_wins') {
+            setState(() => _playerScore++);
+          } else if (message.message == 'claire_wins') {
+            setState(() => _claireScore++);
+          } else if (message.message == 'draw') {
+            // A draw occurred, increment the draw counter
+            // and handle the reward immediately.
+            setState(() => _drawCount++);
+            _handleDrawReward();
           }
         },
       );
 
-    // --- FIX for Twitter/X feed loading ---
+    // Initialize Twitter/X WebView
     _twitterWebViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted);
-    // Load TicTacToe HTML after WebView creation
+
+    // Load game and social feed
     _loadHtmlFromAssets();
-    // Load Twitter URL here
     _twitterWebViewController.loadRequest(Uri.parse('https://x.com/dearclaireapp'));
   }
+
+
+
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+
+  // Add this new method inside the _AppDrawerState class
+  Future<void> _handleDrawReward() async {
+    if (currentUser == null) return;
+    const int rewardAmount = 2;
+
+    // 1. Credit the user with 2 Loves
+    final bool wasApproved = await firebaseServices.updateTreasuryAndUser(
+      userId: currentUser!.uid,
+      amount: rewardAmount,
+      type: t_model.TransactionType.credit,
+      userTransactionDescription: "$rewardAmount❤️ won from a Tic-Tac-Toe draw.",
+      metadata: {'game': 'tic-tac-toe', 'reason': 'player_draw'},
+      fromGameWins: rewardAmount,
+    );
+
+    if (!wasApproved) {
+      showToast(message: "Draw! Your 2❤️ reward is pending admin approval.");
+      return;
+    }
+
+    // 2. Save User Activity for the Draw
+    try {
+      await firebaseServices.saveUserActivity(
+        activityType: 'game_draw', // A specific type for draws
+        activityMessage: 'You had a draw with Claire in Tic-Tac-Toe and earned 2❤️.',
+        // No recipientId needed as it's a system transaction
+      );
+      logger.d("User activity for 'game_draw' saved successfully.");
+    } catch (e) {
+      print("Failed to save 'Game Draw' user activity: $e");
+    }
+
+    // 3. Send the targeted notification for the draw
+    try {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).get();
+      if (userDoc.exists) {
+        final userToken = userDoc.data()?['fcmId'] as String?;
+        if (userToken != null && userToken.isNotEmpty) {
+          await notificationService.sendNotification({
+            "token": userToken,
+            "notification": {
+              "title": 'It\'s a Draw!',
+              "body": "Well played! You earned 2❤️ from your draw with Claire."
+            },
+            "data": {"route": "wallet"} // Navigate user to wallet
+          });
+        }
+      }
+    } catch (e) {
+      print("Failed to send 'Game Draw' push notification: $e");
+    }
+
+    // 4. Give immediate feedback to the user
+    showToast(message: "It's a draw! You earned 2❤️.");
+  }
+
+
+
 
   void shakeDevice() {
     detector = ShakeDetector.autoStart(
@@ -373,6 +458,7 @@ class _HomeDashboardPageState extends State<HomePage>
         twitterController: _twitterWebViewController,
         playerScore: _playerScore,
         claireScore: _claireScore,
+        drawCount: _drawCount,
       ),
     );
   }
@@ -445,6 +531,7 @@ class _AppDrawer extends StatefulWidget {
   final WebViewController twitterController;
   final int playerScore;
   final int claireScore;
+  final int drawCount;
 
   const _AppDrawer
       (
@@ -466,6 +553,7 @@ class _AppDrawer extends StatefulWidget {
         required this.twitterController,
         required this.playerScore,
         required this.claireScore,
+        required this.drawCount,
       }) : super(key: key);
 
   @override
@@ -518,6 +606,9 @@ class _AppDrawerState extends State<_AppDrawer> {
     if (widget.playerScore != oldWidget.playerScore ||
         widget.claireScore != oldWidget.claireScore) {
       _handleGameResult();
+    }
+    if (widget.drawCount != oldWidget.drawCount) {
+      _handleDrawReward();
     }
   }
 
@@ -870,9 +961,55 @@ class _AppDrawerState extends State<_AppDrawer> {
 // }
 
 
+  // Add this new method inside _AppDrawerState
+
+  Future<void> _handleDrawReward() async {
+    if (_currentUser == null) return;
+    const int rewardAmount = 2;
+
+    // 1. Credit the user with 2 Loves
+    final bool wasApproved = await firebaseServices.updateTreasuryAndUser(
+      userId: _currentUser!.uid,
+      amount: rewardAmount,
+      type: t_model.TransactionType.credit,
+      userTransactionDescription: "$rewardAmount ❤️ won from a Tic-Tac-Toe draw.",
+      metadata: {'game': 'tic-tac-toe', 'reason': 'player_draw'},
+      fromGameWins: rewardAmount,
+    );
+
+    if (!wasApproved) {
+      showToast(message: "Draw! Your 2❤️ reward is pending admin approval.");
+      return;
+    }
+
+    // 2. Send the targeted notification for the draw
+    try {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).get();
+      if (userDoc.exists) {
+        final userToken = userDoc.data()?['fcmId'] as String?;
+        if (userToken != null && userToken.isNotEmpty) {
+          await notificationService.sendNotification({
+            "token": userToken,
+            "notification": {
+              "title": 'It\'s a Draw!',
+              "body": "Well played! You earned 2❤️ from your draw with Claire."
+            },
+            "data": {"route": "wallet"} // Navigate user to wallet
+          });
+        }
+      }
+    } catch (e) {
+      print("Failed to send 'Game Draw' push notification: $e");
+    }
+
+    // 3. Give immediate feedback to the user
+    showToast(message: "It's a draw! You earned 2❤️.");
+  }
+
+
   Future<void> _handleGameResult() async {
     // Stop if a reward has already been processed for this milestone or if the user is not logged in
-    if (_isGameRewardProcessed || _currentUser == null) return;
+    if (_isGameRewardProcessed || currentUser == null) return;
 
     int rewardAmount = 0;
     int lossAmount = 50;
@@ -881,41 +1018,30 @@ class _AppDrawerState extends State<_AppDrawer> {
     bool isGameOver = false;
 
     // --- MILESTONE LOGIC ---
-    // Milestone 1: Player reaches 10 wins
     if (widget.playerScore == 10) {
       rewardAmount = 50;
       winMessage = "You reached 10 wins! 50 ❤️ have been added to your wallet.";
-    }
-    // Milestone 2: Player reaches 20 wins (Game Over)
-    else if (widget.playerScore >= 20) {
+    } else if (widget.playerScore >= 20) {
       rewardAmount = 100;
       winMessage = "CONGRATS! You beat Claire with 20 wins and won 100 ❤️!";
       isGameOver = true;
-    }
-    // Milestone 1: Claire reaches 10 wins
-    else if (widget.claireScore == 10) {
+    } else if (widget.claireScore == 10) {
       lossMessage = "Claire reached 10 wins! You lose 50 ❤️. But the game isn't over!";
-    }
-    // Milestone 2: Claire reaches 20 wins (Game Over)
-    else if (widget.claireScore >= 20) {
+    } else if (widget.claireScore >= 20) {
       lossMessage = "Claire beat you with 20 wins! You lose another 50 ❤️.";
       isGameOver = true;
     }
 
     // --- HANDLE WIN CONDITION ---
     if (rewardAmount > 0) {
-      setState(() {
-        _isGameRewardProcessed = true; // Mark milestone as processed
-      });
+      setState(() => _isGameRewardProcessed = true);
 
-      // --- NEW TREASURY LOGIC FOR WIN ---
       final bool wasApproved = await firebaseServices.updateTreasuryAndUser(
-        userId: _currentUser!.uid,
+        userId: currentUser!.uid,
         amount: rewardAmount,
         type: t_model.TransactionType.credit,
         userTransactionDescription: "$rewardAmount Loves won from Tic-Tac-Toe.",
         metadata: {'game': 'tic-tac-toe', 'reason': 'player_won_milestone'},
-        // Also update the specific game win fields
         fromGameWins: rewardAmount,
       );
 
@@ -924,73 +1050,93 @@ class _AppDrawerState extends State<_AppDrawer> {
         return;
       }
 
-      // --- Send Push Notification ---
+      // Save User Activity for the Win
       try {
-        final notificationModel = push_notification.NotificationModel(
-            topic: _currentUser!.uid,
-            data: push_notification.Data(id: _currentUser!.uid, route: 'wallet'),
-            notification: push_notification.Notification(
-                title: 'You Won!',
-                body: "You beat Claire in Tic-Tac-Toe and won $rewardAmount ❤️."));
-        await notificationService.sendNotification(notificationModel.toJson());
+        await firebaseServices.saveUserActivity(
+          activityType: 'game_win',
+          activityMessage: 'You won $rewardAmount❤️ from a Tic-Tac-Toe milestone!',
+        );
+        logger.d("User activity for 'game_win' saved successfully.");
+      } catch (e) {
+        print("Failed to save 'Game Win' user activity: $e");
+      }
+
+      // --- START: NEW TARGETED NOTIFICATION LOGIC FOR WIN ---
+      try {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).get();
+        final userToken = userDoc.data()?['fcmId'] as String?;
+        if (userToken != null && userToken.isNotEmpty) {
+          await notificationService.sendNotification({
+            "token": userToken,
+            "notification": {
+              "title": 'You Won!',
+              "body": "You beat Claire in Tic-Tac-Toe and won $rewardAmount ❤️."
+            },
+            "data": {"route": "wallet"}
+          });
+        }
       } catch (e) {
         print("Failed to send 'Game Won' push notification: $e");
       }
+      // --- END: NEW NOTIFICATION LOGIC ---
 
       showToast(message: winMessage);
-
-      // Play win sound
-      try {
-        if (_audioPlayer.playing) await _audioPlayer.stop();
-        await _audioPlayer.setAsset('assets/audio/win_sound.mp3');
-        _audioPlayer.play();
-      } catch (e) {
-        print("Error playing win sound: $e");
-      }
     }
     // --- HANDLE LOSS CONDITION ---
     else if (lossMessage.isNotEmpty) {
-      setState(() {
-        _isGameRewardProcessed = true; // Mark milestone as processed
-      });
+      setState(() => _isGameRewardProcessed = true);
 
-      // --- NEW TREASURY LOGIC FOR LOSS ---
       await firebaseServices.updateTreasuryAndUser(
-        userId: _currentUser!.uid,
+        userId: currentUser!.uid,
         amount: lossAmount,
         type: t_model.TransactionType.debit,
         userTransactionDescription: "$lossAmount Loves lost in Tic-Tac-Toe.",
         metadata: {'game': 'tic-tac-toe', 'reason': 'player_lost_milestone'},
-        // Also update the specific game loss fields
         forGameLoses: lossAmount,
       );
 
-      // --- Send Push Notification ---
+      // Save User Activity for the Loss
       try {
-        final notificationModel = push_notification.NotificationModel(
-            topic: _currentUser!.uid,
-            data: push_notification.Data(id: _currentUser!.uid, route: 'wallet'),
-            notification: push_notification.Notification(
-                title: 'Claire Won!',
-                body: "Claire beat you in Tic-Tac-Toe. You lost $lossAmount ❤️."));
-        await notificationService.sendNotification(notificationModel.toJson());
+        await firebaseServices.saveUserActivity(
+          activityType: 'game_loss',
+          activityMessage: 'You lost $lossAmount❤️ in a Tic-Tac-Toe milestone.',
+        );
+        logger.d("User activity for 'game_loss' saved successfully.");
+      } catch (e) {
+        print("Failed to save 'Game Loss' user activity: $e");
+      }
+
+      // --- START: NEW TARGETED NOTIFICATION LOGIC FOR LOSS ---
+      try {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).get();
+        final userToken = userDoc.data()?['fcmId'] as String?;
+        if (userToken != null && userToken.isNotEmpty) {
+          await notificationService.sendNotification({
+            "token": userToken,
+            "notification": {
+              "title": 'Claire Won!',
+              "body": "Claire beat you in Tic-Tac-Toe. You lost $lossAmount ❤️."
+            },
+            "data": {"route": "wallet"}
+          });
+        }
       } catch (e) {
         print("Failed to send 'Game Lost' push notification: $e");
       }
+      // --- END: NEW NOTIFICATION LOGIC ---
 
       showToast(message: lossMessage);
     }
 
-    // --- RESET GAME if a 20-win milestone was hit ---
+    // --- RESET GAME LOGIC ---
     if (isGameOver) {
-      // Here you would call a function to reset the game state.
-      // This function would likely live in your parent widget (the one holding the state for playerScore and claireScore)
-      // and be passed down to `stack_index_home.dart`.
-      // For example: widget.onGameReset();
       print("GAME OVER: Resetting scores now.");
-      // You can also show a dialog here celebrating the final winner.
+      // NOTE: You need to implement the actual score reset logic.
+      // For example, by calling a method passed down from a parent widget.
+      // widget.onGameReset?.call();
     }
   }
+
 
 
 }

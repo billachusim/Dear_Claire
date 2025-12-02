@@ -128,6 +128,8 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
 
   // In /lib/ui/featured/request_feature_form.dart
 
+  // In /lib/ui/featured/request_feature_form.dart
+
   Future<void> _submitRequest() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -138,7 +140,8 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
       final _user = await firebaseServices.getUserInfo();
       if (_user.currentLoveCount < 1000) {
         showToast(
-            message: 'You need at least 1000 Loves to submit a feature request.');
+            message:
+            'You need at least 1000 Loves to submit a feature request.');
         setState(() {
           _isProcessing = false;
         });
@@ -162,10 +165,8 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
       }
 
       if (_currentUser != null) {
-        // --- NEW TREASURY LOGIC ---
-        // A single, safe call to the new centralized method.
-        // It handles user debit, Claire's credit, and transaction recording.
-        await firebaseServices.updateTreasuryAndUser(
+        // --- 1. PERFORM THE TREASURY TRANSACTION ---
+        final bool success = await firebaseServices.updateTreasuryAndUser(
           userId: _currentUser!.uid,
           amount: 1000,
           type: t_model.TransactionType.debit,
@@ -175,39 +176,57 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
             'sessionTitle': widget.session.title,
             'reason': 'feature_request'
           },
+          forLoveTransfer: 1000, // Stat tracking
         );
-        // --- END OF NEW TREASURY LOGIC ---
 
+        // --- 2. PROCEED ONLY IF TRANSACTION WAS SUCCESSFUL ---
+        if (success) {
+          // --- START: NEW TARGETED NOTIFICATION LOGIC ---
+          try {
+            // Fetch the current user's document to get their FCM token.
+            // The `_user` object from `getUserInfo()` already has it.
+            final userToken = _user.fcmId;
 
-        // --- Send Push Notification ---
-        try {
-          final notificationModel = push_notification.NotificationModel(
-              topic: _currentUser!.uid, // Send to the user's personal topic
-              data: push_notification.Data(id: _currentUser!.uid, route: 'wallet'),
-              notification: push_notification.Notification(
-                  title: "Session Featured!",
-                  body:
-                  "1000 ❤️ were successfully used to feature your session."));
-          await notificationService.sendNotification(notificationModel.toJson());
-        } catch (e) {
-          print("Failed to send 'Feature Session' push notification: $e");
+            if (userToken != null && userToken.isNotEmpty) {
+              await notificationService.sendNotification({
+                "token": userToken,
+                "notification": {
+                  "title": "Session Feature Request Submitted!",
+                  "body":
+                  "1000 ❤️ were successfully used to feature your session."
+                },
+                "data": {
+                  // Navigate user to their wallet to see the deduction
+                  "route": "wallet"
+                }
+              });
+              logger.d("Successfully sent 'Feature Session' notification.");
+            }
+          } catch (e) {
+            print("Failed to send 'Feature Session' push notification: $e");
+          }
+          // --- END: NEW TARGETED NOTIFICATION LOGIC ---
+
+          // 3. Feature the session and provide feedback.
+          await firebaseServices.featureSession(widget.session.sessionId!);
+          showToast(message: 'Your session has been featured successfully!');
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        } else {
+          showToast(
+              message: "Transaction failed. Please check your Love balance.");
         }
-        // --- End of Push Notification ---
       }
 
-      // This line already exists and features the session.
-      await firebaseServices.featureSession(widget.session.sessionId!);
-
-      showToast(message: 'Your session has been featured successfully!');
       if (mounted) {
-        Navigator.pop(context);
+        setState(() {
+          _isProcessing = false;
+        });
       }
-
-      setState(() {
-        _isProcessing = false;
-      });
     }
   }
+
 
 
 

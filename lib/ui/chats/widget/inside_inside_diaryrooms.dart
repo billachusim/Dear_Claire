@@ -8,6 +8,7 @@ import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/enums.dart';
 import 'package:clairediary/utils/helper.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -129,6 +130,33 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
                           if (success) {
                             showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
+                            // --- START TARGETED NOTIFICATION LOGIC ---
+                            try {
+                              // We already have the visiting user's info, now get the visited user's token.
+                              final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(visitedUserId).get();
+                              if (receiverDoc.exists) {
+                                final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                                final senderName = visitingUser.nickname ?? 'A user';
+
+                                if (receiverToken != null && receiverToken.isNotEmpty) {
+                                  await notificationService.sendNotification({
+                                    "token": receiverToken,
+                                    "notification": {
+                                      "title": "Your Ego profile has a visitor!",
+                                      "body": "$senderName just visited your profile with a kola of 1❤️."
+                                    },
+                                    "data": {
+                                      // Navigate the user to their own profile page to see the updated stats.
+                                      "route": "egoPage"
+                                    }
+                                  });
+                                }
+                              }
+                            } catch (e) {
+                              print("Error sending profile visit notification: $e");
+                              // Don't block the user flow if notifications fail.
+                            }
+                            // --- END TARGETED NOTIFICATION LOGIC ---
 
                             // --- NAVIGATE ---
                             // Only navigate to the profile if the transaction was successful.
@@ -256,6 +284,34 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
                               // --- 5. NAVIGATE ON SUCCESS ---
                               if (success) {
                                 showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
+
+                                // --- START TARGETED NOTIFICATION LOGIC ---
+                                try {
+                                  // We already have the visiting user's info, now get the visited user's token.
+                                  final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(visitedUserId).get();
+                                  if (receiverDoc.exists) {
+                                    final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                                    final senderName = visitingUser.nickname ?? 'A user';
+
+                                    if (receiverToken != null && receiverToken.isNotEmpty) {
+                                      await notificationService.sendNotification({
+                                        "token": receiverToken,
+                                        "notification": {
+                                          "title": "Your Ego profile has a visitor!",
+                                          "body": "$senderName just visited your profile with a kola of 1❤️."
+                                        },
+                                        "data": {
+                                          // Navigate the user to their own profile page to see the updated stats.
+                                          "route": "egoPage"
+                                        }
+                                      });
+                                    }
+                                  }
+                                } catch (e) {
+                                  print("Error sending profile visit notification: $e");
+                                  // Don't block the user flow if notifications fail.
+                                }
+                                // --- END TARGETED NOTIFICATION LOGIC ---
 
                                 // --- NAVIGATE ---
                                 // Only navigate to the profile if the transaction was successful.

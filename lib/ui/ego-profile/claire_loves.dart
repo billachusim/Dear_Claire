@@ -17,6 +17,7 @@ import 'package:clairediary/data/models/transaction_model.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../services/firebase_services.dart';
+import '../../services/notification_service.dart';
 import '../../utils/helper.dart' as Helper;
 import 'request_claire_love_form.dart';
 
@@ -50,6 +51,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
   int _fromLoveTransfer = 0;
   bool _showMoreStats = false;
   bool _showAllTransactions = false;
+  late String _userName;
+  late String _userFCMToken;
 
   final TextEditingController _amountController = TextEditingController();
   User? currentUser = FirebaseAuth.instance.currentUser;
@@ -85,6 +88,9 @@ class _ClaireLovesState extends State<ClaireLoves> {
         var data = userDoc.data()!;
         final userType = data['userType'];
         setState(() {
+          _userName = data['nickname'] ?? 'A User';
+          _userFCMToken = data['fcmId'] ?? ''; // This will now have a value
+          _userId = data["userId"] ?? "";
           _totalLoveCount = data["totalLoveCount"] ?? 0;
           _currentLoveCount = data["currentLoveCount"] ?? 0;
           _withdrawnLoveCount = data["withdrawnLoveCount"] ?? 0;
@@ -523,12 +529,10 @@ class _ClaireLovesState extends State<ClaireLoves> {
   }
 
 
-  Future<void> _processLoveTransfer(String recipientId, int amount, String note) async { // Add note parameter
+  Future<void> _processLoveTransfer(String recipientId, int amount, String note) async {
     final firebaseServices = FirebaseServices();
     final taxAmount = (amount * 0.10).ceil();
     final totalDebitAmount = amount + taxAmount;
-
-    // Add the note to the transaction descriptions if it exists
     final noteSuffix = note.isNotEmpty ? ' Note: "$note"' : '';
 
     final success = await firebaseServices.transferLoveBetweenUsers(
@@ -537,17 +541,57 @@ class _ClaireLovesState extends State<ClaireLoves> {
       amountToSend: amount,
       taxAmount: taxAmount,
       totalDebitAmount: totalDebitAmount,
-      senderTransactionDesc: 'Sent $amount ❤️ to user $recipientId.$noteSuffix', // Updated
-      receiverTransactionDesc: 'Received $amount ❤️ from user $_userId.$noteSuffix', // Updated
-      claireTransactionDesc: 'Tax ($taxAmount ❤️) from transfer between $_userId and $recipientId.',
+      senderTransactionDesc: 'Sent $amount❤️ to user $recipientId.$noteSuffix',
+      receiverTransactionDesc: 'Received $amount❤️ from user $_userId.$noteSuffix',
+      claireTransactionDesc: 'Tax ($taxAmount❤️) from transfer between $_userId and $recipientId.',
       forLoveTransfer: totalDebitAmount,
       fromLoveTransfer: amount,
-      metadata: note.isNotEmpty ? {'note': note} : {}, // Also save note to metadata
+      metadata: note.isNotEmpty ? {'note': note} : {},
     );
 
     if (success) {
       AppToast.show("Love sent successfully!");
-      await _fetchUserData(); // Refresh UI
+
+      // --- Start Targeted Notification Logic ---
+      try {
+        final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(recipientId).get();
+        if (receiverDoc.exists) {
+          final receiverData = receiverDoc.data()!;
+          final receiverToken = receiverData['fcmId'] as String?; // Use the correct field name
+          final senderName = _userName.isNotEmpty ? _userName : 'A user';
+          final receiverName = receiverData['nickname'] ?? 'user $recipientId';
+
+          // 1. Send notification to the RECEIVER
+          if (receiverToken != null && receiverToken.isNotEmpty) {
+            await notificationService.sendNotification({
+              "token": receiverToken,
+              "notification": {
+                "title": "You've Received Love! ❤️",
+                "body": "$senderName sent you $amount❤️. ${note.isNotEmpty ? 'Note: $note' : ''}"
+              },
+              "data": {"route": "love_transfer_received", "senderId": currentUser!.uid}
+            });
+          }
+
+          // 2. Send confirmation notification back to the SENDER
+          if (_userFCMToken.isNotEmpty) {
+            await notificationService.sendNotification({
+              "token": _userFCMToken,
+              "notification": {
+                "title": "Love Sent Successfully!",
+                "body": "You successfully sent $amount❤️ to $receiverName."
+              },
+              "data": {"route": "love_transfer_sent", "receiverId": recipientId}
+            });
+          }
+        }
+      } catch (e) {
+        print("Error sending notification: $e");
+        // Don't block user flow if notifications fail
+      }
+      // --- End Targeted Notification Logic ---
+
+      await _fetchUserData();
     } else {
       AppToast.showError("Transaction failed. Check recipient ID & balance.");
     }
@@ -609,8 +653,8 @@ class _ClaireLovesState extends State<ClaireLoves> {
       ),
       _buildStatCard("From Ego Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
       _buildStatCard("For Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
-      _buildStatCard("For Love Transfer", "-$_forLoveTransfer ❤️", Colors.blueGrey),
       _buildStatCard("From Love Transfer", "+$_fromLoveTransfer ❤️", Colors.teal),
+      _buildStatCard("For Love Transfer", "-$_forLoveTransfer ❤️", Colors.blueGrey),
     ];
 
     // A list for the stats that will be hidden initially

@@ -1,6 +1,7 @@
 import 'package:clairediary/services/notification_service.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -245,12 +246,12 @@ class _RequestClaireLovesFormState extends State<RequestClaireLovesForm> {
     );
   }
 
+  // In lib/ui/ego-profile/request_claire_love_form.dart
+
   void _sendRequest() async {
     if (_isProcessing) return; // Prevent multiple submissions
-    setState(() => _isProcessing = true);
-
-    final firebaseServices = FirebaseServices();
-    final notificationService = NotificationService();
+    setState(() => _isProcessing = true);final firebaseServices = FirebaseServices();
+    // NotificationService is already a global singleton, no need to instantiate.
 
     // Define the transaction details
     final metadata = {
@@ -264,7 +265,8 @@ class _RequestClaireLovesFormState extends State<RequestClaireLovesForm> {
 
     try {
       // 1. Call the firebase method to create the pending transaction
-      await firebaseServices.updateTreasuryAndUser(
+      // This is now a boolean to check for success
+      final bool success = await firebaseServices.updateTreasuryAndUser(
         userId: widget.userId,
         amount: widget.loveAmount,
         forLoveTransfer: widget.loveAmount,
@@ -273,34 +275,68 @@ class _RequestClaireLovesFormState extends State<RequestClaireLovesForm> {
         metadata: metadata,
       );
 
+      // Only proceed if the initial debit transaction was recorded successfully
+      if (!success) {
+        AppToast.showError("Failed to process transaction. Please check your love balance.");
+        setState(() => _isProcessing = false);
+        return;
+      }
+
       await firebaseServices.saveUserActivity(
         activityType: 'cash_out',
         activityMessage: "You requested a cash out of ${widget.loveAmount}❤️.",
       );
 
-      // 2. Send a push notification to the admin and sender
-      final adminNotification = push_notification.NotificationModel(
-        topic: 'PbRuh3FmtESK57j3PM1Tc9RvPKh2', // Targeting the admin topic
-        notification: push_notification.Notification(
-          title: 'New Withdrawal Request',
-          body:
-          'A user has requested to withdraw ${widget.loveAmount}❤️. Please review.',
-        ),
-        data: push_notification.Data(
-            id: widget.userId, route: 'admin_transactions'),
-      );
-      await notificationService.sendNotification(adminNotification.toJson());
+      // --- 2. START: NEW TARGETED NOTIFICATION LOGIC ---
+      try {
+        const String adminId = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
 
-      // Notify the sender (confirmation)
-      final senderNotification = push_notification.NotificationModel(
-          topic: widget.userId,
-          data: push_notification.Data(id: widget.userId, route: 'wallet'),
-          notification: push_notification.Notification(
-              title: "Cashout Love Request!",
-              body: "Your request to withdraw ${widget.loveAmount}❤️ is processing."));
-      await notificationService.sendNotification(senderNotification.toJson());
+        // Fetch both user and admin documents in parallel for efficiency
+        final docs = await Future.wait([
+          FirebaseFirestore.instance.collection('users').doc(widget.userId).get(),
+          FirebaseFirestore.instance.collection('users').doc(adminId).get(),
+        ]);
+        final userDoc = docs[0];
+        final adminDoc = docs[1];
 
-      // 3. Launch email as a secondary step
+        // A. Notify the Admin
+        if (adminDoc.exists) {
+          final adminToken = adminDoc.data()?['fcmId'] as String?;
+          if (adminToken != null && adminToken.isNotEmpty) {
+            await notificationService.sendNotification({
+              "token": adminToken,
+              "notification": {
+                "title": 'New Withdrawal Request',
+                "body": 'A user has requested to withdraw ${widget.loveAmount}❤️. Please review.'
+              },
+              "data": {"route": 'admin_transactions'} // A route for admin deep-linking
+            });
+            logger.d("Successfully sent withdrawal request notification to admin.");
+          }
+        }
+
+        // B. Notify the User (Confirmation)
+        if (userDoc.exists) {
+          final userToken = userDoc.data()?['fcmId'] as String?;
+          if (userToken != null && userToken.isNotEmpty) {
+            await notificationService.sendNotification({
+              "token": userToken,
+              "notification": {
+                "title": "Cashout Request Processing",
+                "body": "Your request to withdraw ${widget.loveAmount}❤️ has been submitted for review."
+              },
+              "data": {"route": "wallet"}
+            });
+            logger.d("Successfully sent withdrawal confirmation notification to user.");
+          }
+        }
+      } catch (e) {
+        print("Failed to send withdrawal notifications: $e");
+        // Don't block the main flow if notifications fail
+      }
+      // --- END: NEW TARGETED NOTIFICATION LOGIC ---
+
+      // 3. Launch email as a secondary step (Your existing logic)
       final String payload = _getPayload();
       final Uri emailLaunchUri = Uri(
         scheme: 'mailto',
@@ -319,9 +355,12 @@ class _RequestClaireLovesFormState extends State<RequestClaireLovesForm> {
     } catch (e) {
       AppToast.showError("An error occurred: ${e.toString()}");
     } finally {
-      setState(() => _isProcessing = false); // Re-enable the button
+      if (mounted) {
+        setState(() => _isProcessing = false); // Re-enable the button
+      }
     }
   }
+
 
   String _getPayload() {
     return """

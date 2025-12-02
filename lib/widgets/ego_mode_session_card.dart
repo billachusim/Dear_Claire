@@ -103,58 +103,79 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
     isFeatured = value;
     return value;
   }
+// In lib/widgets/ego_mode_session_card.dart
 
   /// Archive a session
   Future<bool?> sendToArchive() async {
-    final value = true;
+    if (currentUser == null) {
+      showToast(message: "You must be logged in to archive a session.");
+      return false;
+    }
 
-    if (currentUser != null) {
-      // --- NEW TREASURY LOGIC ---
-      // A single, safe call to the new centralized method.
-      // It handles the user's debit, Claire's credit, and the transaction recording.
-      await firebaseServices.updateTreasuryAndUser(
-        userId: currentUser!.uid,
-        amount: 10,
-        type: t_model.TransactionType.debit,
-        userTransactionDescription:
-            "10 Loves deducted for archiving a session.",
-        metadata: {
-          'sessionId': widget.element.sessionId,
-          'sessionTitle': widget.element.title
-        },
-      );
-      // --- END OF NEW TREASURY LOGIC ---
+    // --- 1. PERFORM THE TREASURY TRANSACTION ---
+    // This handles the 10 love deduction.
+    final bool success = await firebaseServices.updateTreasuryAndUser(
+      userId: currentUser!.uid,
+      amount: 10,
+      type: t_model.TransactionType.debit,
+      userTransactionDescription: "10 Loves deducted for archiving session: '${widget.element.title}'.",
+      metadata: {
+        'sessionId': widget.element.sessionId,
+        'sessionTitle': widget.element.title
+      },
+      // We add this stat to track where loves are spent.
+      forLoveTransfer: 10,
+    );
 
-      // --- Send Push Notification ---
+    // --- 2. PROCEED ONLY IF THE TRANSACTION WAS SUCCESSFUL ---
+    if (success) {
+      // --- START: NEW TARGETED NOTIFICATION LOGIC ---
       try {
-        final notificationModel = push_notification.NotificationModel(
-            topic: currentUser!.uid, // Send to the user's personal topic
-            data: push_notification.Data(id: currentUser!.uid, route: 'wallet'),
-            notification: push_notification.Notification(
-                title: "Session Archived",
-                body: "Your session has been archived. 10 ❤️ were deducted."));
-        await notificationService.sendNotification(notificationModel.toJson());
+        // Fetch the current user's document to get their up-to-date FCM token.
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).get();
+        if (userDoc.exists) {
+          final userToken = userDoc.data()?['fcmId'] as String?;
+
+          if (userToken != null && userToken.isNotEmpty) {
+            await notificationService.sendNotification({
+              "token": userToken,
+              "notification": {
+                "title": "Session Archived",
+                "body": "Your session has been archived. 10❤️ were deducted from your wallet."
+              },
+              "data": {
+                // Navigate the user to their own profile page to see the updated balance.
+                "route": widget.element.sessionId
+              }
+            });
+            logger.d("Successfully sent 'Archive Session' notification.");
+          }
+        }
       } catch (e) {
         print("Failed to send 'Archive Session' push notification: $e");
       }
-      // --- End of Push Notification ---
+      // --- END: NEW TARGETED NOTIFICATION LOGIC ---
+
+      // --- 3. UPDATE THE SESSION DOCUMENT IN FIRESTORE ---
+      FirebaseFirestore.instance
+          .collection('sessions')
+          .doc(widget.element.sessionId)
+          .update({"archived": true});
+
+      logger.d('Successfully changed archive status');
+      setState(() {
+        isArchived = true;
+      });
+      showToast(message: "Session archived. 10 Loves deducted.");
+      return true;
+
+    } else {
+      // If the treasury transaction failed (e.g., insufficient funds).
+      showToast(message: "Could not archive session. Please check your Love balance.");
+      return false;
     }
-
-    // This part remains the same: update the session document itself.
-    FirebaseFirestore.instance
-        .collection('sessions')
-        .doc(widget.element.sessionId)
-        .update({
-      "archived": value,
-    });
-
-    logger.d('Successfully changed archive');
-    print('Is Archived?: $value');
-    isArchived = value;
-    showToast(message: "Session archived. 10 Loves deducted.");
-
-    return value;
   }
+
 
   Future<bool?> removeFromArchive() async {
     final value = false;
@@ -273,10 +294,37 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                         },
                       );
 
-                      // --- 4. NAVIGATE ON SUCCESS ---
+                      // ---4. NAVIGATE AND NOTIFY ON SUCCESS ---
                       if (success) {
-                        // --- SEND NOTIFICATION ---
                         showToast(message: "You are visiting ${visitedEgoName} with a kola of 1❤️.");
+
+                        // --- START TARGETED NOTIFICATION LOGIC ---
+                        try {
+                          // We already have the visiting user's info, now get the visited user's token.
+                          final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(visitedUserId).get();
+                          if (receiverDoc.exists) {
+                            final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                            final senderName = visitingUser.nickname ?? 'A user';
+
+                            if (receiverToken != null && receiverToken.isNotEmpty) {
+                              await notificationService.sendNotification({
+                                "token": receiverToken,
+                                "notification": {
+                                  "title": "Your Ego profile has a visitor!",
+                                  "body": "$senderName just visited your profile with a kola of 1❤️."
+                                },
+                                "data": {
+                                  // Navigate the user to their own profile page to see the updated stats.
+                                  "route": "egoPage"
+                                }
+                              });
+                            }
+                          }
+                        } catch (e) {
+                          print("Error sending profile visit notification: $e");
+                          // Don't block the user flow if notifications fail.
+                        }
+                        // --- END TARGETED NOTIFICATION LOGIC ---
 
                         // --- NAVIGATE ---
                         // Only navigate to the profile if the transaction was successful.
@@ -424,6 +472,34 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                             // --- 5. NAVIGATE ON SUCCESS ---
                             if (success) {
                               showToast(message: "You are visiting ${visitedEgoName} with a kola of 1❤️.");
+
+                              // --- START TARGETED NOTIFICATION LOGIC ---
+                              try {
+                                // We already have the visiting user's info, now get the visited user's token.
+                                final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(visitedUserId).get();
+                                if (receiverDoc.exists) {
+                                  final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                                  final senderName = visitingUser.nickname ?? 'A user';
+
+                                  if (receiverToken != null && receiverToken.isNotEmpty) {
+                                    await notificationService.sendNotification({
+                                      "token": receiverToken,
+                                      "notification": {
+                                        "title": "Your Ego profile has a visitor!",
+                                        "body": "$senderName just visited your profile with a kola of 1❤️."
+                                      },
+                                      "data": {
+                                        // Navigate the user to their own profile page to see the updated stats.
+                                        "route": "egoPage"
+                                      }
+                                    });
+                                  }
+                                }
+                              } catch (e) {
+                                print("Error sending profile visit notification: $e");
+                                // Don't block the user flow if notifications fail.
+                              }
+                              // --- END TARGETED NOTIFICATION LOGIC ---
 
                               // --- NAVIGATE ---
                               // Only navigate to the profile if the transaction was successful.
@@ -675,6 +751,36 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                         sender: reactingUser.nickname ?? '',
                       );
                       saveUserMe2Activity(); // Your existing activity tracking
+                      // --- C. START: NEW TARGETED NOTIFICATION LOGIC ---
+                      try {
+                        final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(sessionOwnerId).get();
+                        if (receiverDoc.exists) {
+                          final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                          final senderName = reactingUser.nickname ?? 'Someone';
+                          final sessionTitle = widget.element.title ?? 'your session';
+                          final truncatedTitle = sessionTitle.length > 30 ? sessionTitle.substring(0, 30) + '...' : sessionTitle;
+
+                          // Note: 'reaction' is the Reaction object passed by the MetooButton
+                          final reactionValue = reaction.value;
+
+                          if (receiverToken != null && receiverToken.isNotEmpty) {
+                            await notificationService.sendNotification({
+                              "token": receiverToken,
+                              "notification": {
+                                "title": "Someone reacted to your session!",
+                                "body": "$senderName reacted with '$reactionValue' to your session: \"$truncatedTitle\""
+                              },
+                              "data": {
+                                "route": widget.element.sessionId
+                              }
+                            });
+                            logger.d("Successfully sent 'new reaction' notification.");
+                          }
+                        }
+                      } catch (e) {
+                        print("Error sending 'new reaction' notification: $e");
+                      }
+                      // --- END: NEW TARGETED NOTIFICATION LOGIC ---
                       showToast(message: "1❤️ sent to the session owner!");
                     }
                     // If !success, the service method already shows a toast.
