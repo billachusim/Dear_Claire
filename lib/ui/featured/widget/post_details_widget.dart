@@ -976,31 +976,34 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   new SizedBox(
                                     width: 10,
                                   ),
-                                  CupertinoButton(
-                                      padding: EdgeInsets.zero,
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.share_rounded,
-                                            size: 17,
-                                            color: textColor,
-                                          ),
-                                          Text(
-                                            'Share',
-                                            style: GoogleFonts.lato(
-                                                fontSize: 15.0,
-                                                color: textColor,
-                                                fontWeight: FontWeight.w800),
-                                          ),
-                                        ],
-                                      ),
-                                      onPressed: () async {
-                                        final image =
-                                            await screenshotController.capture();
-                                        if (image == null) return;
-                                        await saveImage(image);
-                                        saveAndShare(image);
-                                      }),
+                                  Visibility(
+                                    visible: _session.flagged == false,
+                                    child: CupertinoButton(
+                                        padding: EdgeInsets.zero,
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.share_rounded,
+                                              size: 17,
+                                              color: textColor,
+                                            ),
+                                            Text(
+                                              'Share',
+                                              style: GoogleFonts.lato(
+                                                  fontSize: 15.0,
+                                                  color: textColor,
+                                                  fontWeight: FontWeight.w800),
+                                            ),
+                                          ],
+                                        ),
+                                        onPressed: () async {
+                                          final image =
+                                              await screenshotController.capture();
+                                          if (image == null) return;
+                                          await saveImage(image);
+                                          saveAndShare(image);
+                                        }),
+                                  ),
                                 ],
                               ),
                             ],
