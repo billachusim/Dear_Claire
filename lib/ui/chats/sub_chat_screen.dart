@@ -334,6 +334,7 @@ class _SubChatScreenState extends State<SubChatScreen> {
       "data": {
         'route': 'diaryRooms',
         'roomId': widget.chatRoomPodo!.id.toString(),
+        'cornerId': widget.documentID,
       },
     });
     showToast(message: 'Message Sent. Remember, positive vibes only.');
@@ -380,59 +381,6 @@ class _SubChatScreenState extends State<SubChatScreen> {
     },
     );
     logger.d('Successfully updated time of last activity');
-  }
-
-
-
-  /// Sends a notification to all members of this specific chat corner,
-  /// excluding the person who sent the message.
-  Future<void> _notifyChatCornerMembers({
-    required ChatModel chatCorner, // The specific corner (e.g., widget.chatModel)
-    required String senderId,
-    required String senderNickname,
-    required String message,
-  }) async {
-    // 1. Get the correct list of members for this specific corner.
-    // The 'members' list on the ChatModel is the source of truth.
-    final List<dynamic> memberIds = chatCorner.members ?? [];
-    if (memberIds.length <= 1) return; // No one else to notify
-
-    // 2. Fetch the FCM tokens for all members in a single efficient query.
-    try {
-      final tokensSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where(FieldPath.documentId, whereIn: memberIds)
-          .get();
-
-      // 3. Iterate through the results and send notifications.
-      for (var userDoc in tokensSnapshot.docs) {
-        final String memberId = userDoc.id;
-
-        // CRITICAL: Do not send a notification to the person who sent the message.
-        if (memberId == senderId) {
-          continue;
-        }
-
-        final fcmToken = userDoc.data()['fcmId'] as String?;
-
-        if (fcmToken != null && fcmToken.isNotEmpty) {
-          await notificationService.sendNotification({
-            "token": fcmToken,
-            "notification": {
-              "title": "New message dropped in the corner of'${widget.chatRoomPodo?.title}'",
-              "body": "$senderNickname: $message",
-            },
-            "data": {
-              'route': 'chatRoom',
-              'roomId': widget.chatRoomPodo!.id,
-            },
-          });
-        }
-      }
-    } catch (e) {
-      print("Error sending chat corner notifications: $e");
-      // Don't block the UI if notifications fail.
-    }
   }
 
 

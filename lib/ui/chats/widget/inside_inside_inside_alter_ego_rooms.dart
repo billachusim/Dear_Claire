@@ -159,7 +159,7 @@ class _InsideInsideInsideAlterEgoChatWidgetState
               "title": "Your Alter Ego profile has a visitor!",
               "body": "${visitingUser.alterEgoId ?? 'An Alter Ego'} just visited your profile with a kola of 1❤️."
             },
-            "data": {"route": "alterEgoPage"}
+            "data": {"route": "egoPage"}
           });
         }
         PageRouter.gotoWidget(

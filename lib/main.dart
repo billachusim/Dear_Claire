@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/services/notification.dart';
+import 'package:clairediary/ui/alter_ego/alter_ego_homepage.dart';
 import 'package:clairediary/ui/alter_ego/chatrooms.dart';
 import 'package:clairediary/ui/chats/chatrooms.dart';
-import 'package:clairediary/ui/chats/widget/alter_ego_diaryrooms_widget.dart';
 import 'package:clairediary/ui/create_session/create_session_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
@@ -249,6 +249,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     clairNotification.init();
     clairNotification.randomizeNewAppSessionToast();
+    clairNotification.randomizeReminderNotes();
   }
 
   @override
@@ -278,29 +279,22 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             "createSession": (_) => CreateSessionPage(),
             "diaryRooms": (_) => ChatRoomsPage(title: 'Dear Claire'),
             "egoPage": (_) => EgoProfilePage(title: 'Dear Claire'),
+            "alterEgoHomepage": (_) => AlterEgoHomePage(),
+            "alterEgoDiaryRooms": (_) => ChatRooms(),
           },
           onGenerateRoute: (RouteSettings settings) {
+            // The AppRouter class already handles all named routes.
+            // We only need to handle special cases here.
             switch (settings.name) {
               case '/notifiedSessionDetails':
                 return MaterialPageRoute(
                     builder: (_) => NotifiedSessionDetails(
                         sessionId: settings.arguments.toString()));
-              case '/egoPage':
-                return MaterialPageRoute(
-                    builder: (_) => EgoProfilePage(title: 'Dear Claire'));
-              case '/diaryRooms':
-                return MaterialPageRoute(
-                    builder: (_) => ChatRoomsPage(title: 'Dear Claire'));
-              case '/alterEgoDiaryRooms':
-                return MaterialPageRoute(
-                    builder: (_) => ChatRooms());
-              case '/createSession':
-                return MaterialPageRoute(builder: (_) => CreateSessionPage());
-              case '/games':
-                return MaterialPageRoute(builder: (_) => GamesHome());
+              default:
+                return AppRouter.generateRoute(settings);
             }
-            return AppRouter.generateRoute(settings);
           },
+
         ),
       ),
     );

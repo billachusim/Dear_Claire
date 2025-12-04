@@ -488,7 +488,7 @@ class UserActivityCard extends StatelessWidget {
               try {
                 showToast("Opening room...");
                 DocumentSnapshot roomDoc = await FirebaseFirestore.instance
-                    .collection('ChatRooms') // Use your correct collection name
+                    .collection('chats')
                     .doc(roomId)
                     .get();
 

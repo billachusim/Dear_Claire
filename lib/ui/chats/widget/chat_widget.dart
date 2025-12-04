@@ -949,6 +949,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                               "data": {
                                 'route': 'diaryRooms',
                                 'roomId': widget.chatRoomPodo!.id.toString(),
+                                'cornerId': widget.chatModel!.userId.toString(),
                               },
                             });
 

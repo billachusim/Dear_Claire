@@ -24,9 +24,12 @@ class Temp {
 
 class ChatScreen extends StatefulWidget {
   ChatRoomPodo chatRoomPodo;
-
-  ChatScreen({Key? key, required this.chatRoomPodo}) : super(key: key);
-
+  final String? cornerId;
+  ChatScreen({
+    Key? key,
+    required this.chatRoomPodo,
+    this.cornerId,
+  }) : super(key: key);
   @override
   _ChatScreenState createState() => _ChatScreenState(chatRoomPodo);
 }

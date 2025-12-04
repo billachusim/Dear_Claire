@@ -213,7 +213,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       // Now you have the visiting user's nickname to use in the message.
       await firebaseServices.saveUserActivity(
         activityType: 'visit_ego',
-        activityMessage: "${fetchedVisitedUser.nickname ?? 'You'} visited ${widget.visitedEgoName}'s Ego",
+        activityMessage: "${fetchedVisitingUser.nickname ?? 'You'} visited ${fetchedVisitedUser.nickname ?? 'A Darling'}'s Ego",
         recipientId: widget.visitedUsersID,
         recipientNickname: widget.visitedEgoName,
       );

@@ -98,7 +98,7 @@ class _InsideInsideAlterEgoChatWidgetState
               "body": "${visitingUser.alterEgoId ?? 'An Alter Ego'} just visited your profile with a kola of 1❤️."
             },
             "data": {
-              "route": "alterEgoPage" // Navigate them to their Alter Ego page
+              "route": "egoPage" // Navigate them to their Alter Ego page
             }
           });
         }

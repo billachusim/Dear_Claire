@@ -566,7 +566,7 @@ Timestamp: ${DateTime.now().toIso8601String()}
                               "title": "You've Received Love! ❤️",
                               "body": "${sender.nickname ?? 'A user'} just sent you $amountToReceive❤️. ${note.isNotEmpty ? 'Note: $note' : ''}"
                             },
-                            "data": {"route": "egoPage"}
+                            "data": {"route": "wallet"}
                           });
                         }
                       }

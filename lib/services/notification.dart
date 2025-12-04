@@ -1,7 +1,7 @@
+import 'dart:convert'; // Import dart:convert for JSON encoding/decoding
 import 'dart:math';
 
-import 'package:clairediary/Automations/setup_autoDiary_widget.dart';
-import 'package:clairediary/ui/routes/routes.dart';
+import 'package:clairediary/Automations/setup_autoDiary_widget.dart';import 'package:clairediary/ui/routes/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +13,7 @@ class ClairNotification {
   User? currentUser = FirebaseAuth.instance.currentUser;
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin();
 
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
       'socialFaculty', // id
@@ -23,7 +23,7 @@ class ClairNotification {
 
   Future<void> init() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    AndroidInitializationSettings('@mipmap/ic_launcher');
     const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
@@ -41,95 +41,135 @@ class ClairNotification {
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         final payload = response.payload;
-        print('Notification Tapped with payload: $payload');
+        if (payload == null || payload.isEmpty) return;
 
-        if (payload == 'auto_diary_record') {
-          NavigationService.navigationKey.currentState?.push(
-              MaterialPageRoute(builder: (context) => SetupAutoDiary()));
-        } else if (payload != null) {
-          // Your existing FCM logic
-          switch (payload) {
-            case 'room':
-              navService.pushNamed('/diaryRooms');
-              break;
-            case 'wallet':
-            case 'love_transfer_received': // Add this line
-            case 'love_transfer_sent':
-              navService.pushNamed('/egoPage');
-              break;
-            case 'claireminder':
-            case 'createSession':
-              navService.pushNamed('/createSession');
-              break;
-            case 'game':
-              navService.pushNamed('/games');
-              break;
-            default:
-              navService.pushNamed('/notifiedSessionDetails', args: payload);
+        print('Local Notification Tapped with payload: $payload');
+
+        // --- NEW LOGIC: Try to decode payload as JSON first ---
+        try {
+          final Map<String, dynamic> data = jsonDecode(payload);
+          final route = data['route'] as String?;
+          if (route == 'diaryRooms' || route == 'alterEgoDiaryRooms') {
+            navService.pushNamed(
+              '/$route',
+              args: {
+                'roomId': data['roomId'],
+                'cornerId': data['cornerId'],
+              },
+            );
+            return; // Handled, so we exit.
           }
+        } catch (e) {
+          // If it's not a JSON string, it's a simple string payload.
+          print("Payload is not a JSON object, handling as simple string.");
+        }
+
+        // --- OLD LOGIC: Handle simple string payloads ---
+        switch (payload) {
+          case 'auto_diary_record':
+            NavigationService.navigationKey.currentState?.push(
+                MaterialPageRoute(builder: (context) => SetupAutoDiary()));
+            break;
+          case 'alterEgoHomepage':
+            navService.pushNamed('/alterEgoHomepage');
+            break;
+          case 'room':
+            navService.pushNamed('/diaryRooms');
+            break;
+          case 'wallet':
+          case 'love_transfer_received':
+          case 'love_transfer_sent':
+            navService.pushNamed('/egoPage');
+            break;
+          case 'claireminder':
+          case 'createSession':
+            navService.pushNamed('/createSession');
+            break;
+          case 'game':
+            navService.pushNamed('/games');
+            break;
+          default:
+          // This handles notifiedSessionDetails and any other routes passed as a plain string.
+            navService.pushNamed('/notifiedSessionDetails', args: payload);
         }
       },
     );
 
     // Foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      /*// Don't show notification if the sender is the current user.
-      if (message.data['id'] != null &&
-          message.data['id'] == FirebaseAuth.instance.currentUser?.uid) {
-        return;
-      }*/
-
       final notification = message.notification;
+      if (notification == null) return;
+
+      String payload;
       final route = message.data["route"];
-      if (notification != null) {
-        flutterLocalNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              channel.id,
-              channel.name,
-              channelDescription: channel.description,
-              importance: Importance.max,
-              priority: Priority.max,
-              playSound: true,
-              enableVibration: true,
-            ),
-            iOS: const DarwinNotificationDetails(
-              presentAlert: true,
-              presentBadge: true,
-              presentSound: true,
-            ),
-          ),
-          payload: route,
-        );
+
+      // --- NEW LOGIC: Encode full data for diary rooms ---
+      if (route == 'diaryRooms' || route == 'alterEgoDiaryRooms') {
+        payload = jsonEncode(message.data); // Encode the whole map
+      } else {
+        payload = route ?? ''; // Use the route string for others
       }
+
+      flutterLocalNotificationsPlugin.show(
+        notification.hashCode,
+        notification.title,
+        notification.body,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            channel.id,
+            channel.name,
+            channelDescription: channel.description,
+            importance: Importance.max,
+            priority: Priority.max,
+            playSound: true,
+            enableVibration: true,
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        payload: payload,
+      );
     });
 
     // When app is in background and user taps FCM notification
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       final route = message.data["route"];
       if (route != null) {
-          switch (route) {
-            case 'room':
-              navService.pushNamed('/diaryRooms');
-              break;
-            case 'wallet':
-            case 'love_transfer_received': // Add this line
-            case 'love_transfer_sent':
-              navService.pushNamed('/egoPage');
-              break;
-            case 'claireminder':
-            case 'createSession':
-              navService.pushNamed('/createSession');
-              break;
-            case 'game':
-              navService.pushNamed('/games');
-              break;
-            default:
-              navService.pushNamed('/notifiedSessionDetails', args: route);
-          }
+        switch (route) {
+          case 'diaryRooms':
+          case 'alterEgoDiaryRooms':
+            navService.pushNamed(
+              '/$route',
+              args: {
+                'roomId': message.data['roomId'],
+                'cornerId': message.data['cornerId'],
+              },
+            );
+            break;
+          case 'alterEgoHomepage':
+            navService.pushNamed('/alterEgoHomepage');
+            break;
+          case 'room':
+            navService.pushNamed('/diaryRooms');
+            break;
+          case 'wallet':
+          case 'love_transfer_received':
+          case 'love_transfer_sent':
+            navService.pushNamed('/egoPage');
+            break;
+          case 'claireminder':
+          case 'createSession':
+            navService.pushNamed('/createSession');
+            break;
+          case 'game':
+            navService.pushNamed('/games');
+            break;
+          default:
+            navService.pushNamed('/notifiedSessionDetails', args: route);
+        }
       }
     });
   }

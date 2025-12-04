@@ -309,7 +309,7 @@ class _RequestClaireLovesFormState extends State<RequestClaireLovesForm> {
                 "title": 'New Withdrawal Request',
                 "body": 'A user has requested to withdraw ${widget.loveAmount}❤️. Please review.'
               },
-              "data": {"route": 'admin_transactions'} // A route for admin deep-linking
+              "data": {"route": 'egoPage'} // A route for admin deep-linking
             });
             logger.d("Successfully sent withdrawal request notification to admin.");
           }

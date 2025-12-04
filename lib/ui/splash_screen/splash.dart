@@ -20,6 +20,7 @@ class SplashPage extends StatefulWidget {
     this.initialLocalNotification,
   }) : super(key: key);
 
+  @override
   _SplashPageState createState() => _SplashPageState();
 }
 
@@ -32,46 +33,83 @@ class _SplashPageState extends State<SplashPage>
   void initState() {
     super.initState();
     _controller =
-        AnimationController(vsync: this, duration: Duration(seconds: 1))
-          ..forward();
+    AnimationController(vsync: this, duration: Duration(seconds: 1))
+      ..forward();
 
+    // This is the single, correct place for this callback.
+    // It ensures all logic runs only after the first frame is drawn.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _handleInitialNotification();
     });
   }
 
   void _handleInitialNotification() {
+    // --- Handle Remote (FCM) Notification ---
     if (widget.initialRemoteMessage != null) {
       final route = widget.initialRemoteMessage!.data["route"];
       if (route != null) {
-        // Use pushReplacement to prevent the splash screen from being on the back stack.
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => NotifiedSessionDetails(
-              sessionId: route,
-            ),
-          ),
-        );
-        return; // We handled a notification, so we're done.
+        // We removed the nested callback. Navigation now happens directly.
+        switch (route) {
+        // This is the correct, unified case for both room types
+          case 'diaryRooms':
+          case 'alterEgoDiaryRooms':
+            navService.pushReplacementNamed(
+              '/$route',
+              args: {
+                'roomId': widget.initialRemoteMessage!.data['roomId'],
+                'cornerId': widget.initialRemoteMessage!.data['cornerId'],
+              },
+            );
+            break;
+
+        // Redundant cases for 'diaryRooms' and 'alterEgoDiaryRooms' have been removed.
+
+          case 'alterEgoHomepage':
+            navService.pushReplacementNamed('/alterEgoHomepage');
+            break;
+          case 'room': // Legacy case
+            navService.pushReplacementNamed('/diaryRooms');
+            break;
+          case 'wallet':
+          case 'love_transfer_received':
+          case 'love_transfer_sent':
+            navService.pushReplacementNamed('/egoPage');
+            break;
+          case 'claireminder':
+          case 'createSession':
+            navService.pushReplacementNamed('/createSession');
+            break;
+          case 'game':
+            navService.pushReplacementNamed('/games');
+            break;
+          default:
+            navService.pushReplacementNamed('/notifiedSessionDetails', args: route);
+        }
+        // Since we handled a notification, we exit the function to prevent
+        // the normal app launch animation listener from being added.
+        return;
       }
-    } else if (widget.initialLocalNotification != null) {
-      final payload =
-          widget.initialLocalNotification!.notificationResponse?.payload;
+    }
+    // --- Handle Local Notification ---
+    else if (widget.initialLocalNotification != null &&
+        widget.initialLocalNotification!.didNotificationLaunchApp) {
+      final payload = widget.initialLocalNotification!.notificationResponse?.payload;
       if (payload == 'auto_diary_record') {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => SetupAutoDiary()),
-        );
-        return; // We handled a notification, so we're done.
+        // No callback needed here either.
+        navService.pushReplacementNamed(AppRoutes.setupAutoDiary);
+        return; // Handled, so we exit.
       }
     }
 
-    // If there was no notification, proceed with the regular splash screen animation.
+    // --- NO NOTIFICATION: Proceed with normal animation-based launch ---
+    // This listener is only added if no notification was handled.
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       }
     });
   }
+
 
 
   @override

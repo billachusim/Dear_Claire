@@ -3,6 +3,7 @@ import 'package:clairediary/ui/Categories/category_sessions.dart';
 import 'package:clairediary/ui/alter_ego/alter_ego_homepage.dart';
 import 'package:clairediary/ui/alter_ego/alter_ego_login.dart';
 import 'package:clairediary/ui/alter_ego/alter_ego_registration.dart';
+import 'package:clairediary/ui/alter_ego/chatrooms.dart';
 import 'package:clairediary/ui/alter_ego/new_diaries_page.dart';
 import 'package:clairediary/ui/auth/auth_selection.dart';
 import 'package:clairediary/ui/bottom_nav/stack_index_home.dart';
@@ -50,6 +51,7 @@ class AppRoutes {
   static const authSelection = '/authSelection';
   static const alterEgoLogin = '/alterEgoLogin';
   static const alterEgoHomepage = '/alterEgoHomepage';
+  static const alterEgoDiaryRooms = '/alterEgoDiaryRooms';
   static const createSessionPage = '/create_session';
   static const egoModeSessionDetail = '/egoModeSessionDetail';
   static const postDetailsWidget = '/postDetailsWidget';
@@ -125,6 +127,13 @@ class AppRouter {
           builder: (_) => AlterEgoLoginPage(),
           settings: settings,
           fullscreenDialog: true,
+        );
+
+      case AppRoutes.alterEgoDiaryRooms:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => ChatRooms(),
+          settings: settings,
+          fullscreenDialog: false,
         );
 
       case AppRoutes.authSelection:
