@@ -7,10 +7,13 @@ import 'package:clairediary/ui/chats/widget/sub_diaryroom_widget.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/widgets/chat_edit_field.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import '../../helpers/toast_helper.dart';
+import '../../services/notification_service.dart';
 import 'widget/chat_widget.dart';
 
 class Temp {
@@ -35,7 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
   ChatRoomPodo? chatRoomPodo;
 
   _ChatScreenState(this.chatRoomPodo);
-
+  bool _isSending = false;
   List<Temp> _chatList = [];
 
   @override
@@ -235,13 +238,29 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
 
             // --- CHAT INPUT FIELD ---
-            // Aligned to the absolute bottom of the Stack.
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: ChatEditField(
-                onTap: (v, voiceNote, image1, image2) =>
-                    _sendMessage(v, voiceNote, image1, image2),
-              ),
+            Stack(
+              children: [
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: ChatEditField(
+                    onTap: (v, voiceNote, image1, image2) =>
+                        _sendMessage(v, voiceNote, image1, image2),
+                  ),
+                ),
+                // The overlay that shows only when sending
+                if (_isSending)
+                  Positioned.fill(
+                    child: Container(
+                      color:Colors.black.withOpacity(0.5), // Semi-transparent overlay
+                      child: const Center(
+                        child: CupertinoActivityIndicator(
+                          color: Colors.white,
+                          radius: 15,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
@@ -250,18 +269,67 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
 
-  void _sendMessage(String v, voiceNote, String image1, String image2) async {
-    final _user = await firebaseServices.getUserInfo();
-    firebaseServices.addMessage(
-        chatRoomPodo!,
-        ChatModel(
-            message: v,
-            colorHex: chatRoomPodo!.hex,
-            userId: _user.userId,
-            timeCreated: Timestamp.now(),
-            audioUrl: voiceNote,
-            image1: image1,
-            image2: image2,
-            members: [_user.userId]));
+  void _sendMessage(String v, String voiceNote, String image1, String image2) async {
+    // --- Prevent sending if already processing or if content is empty ---
+    if (_isSending || (v.isEmpty && voiceNote.isEmpty && image1.isEmpty && image2.isEmpty)) {
+      return;
+    }
+
+    // --- Show loader ---
+    if (mounted) {
+      setState(() {
+        _isSending = true;
+      });
+    }
+
+    try {
+      final _user = await firebaseServices.getUserInfo();
+
+      firebaseServices.addMessage(
+          widget.chatRoomPodo,
+          ChatModel(
+              message: v,
+              colorHex: widget.chatRoomPodo.hex,
+              userId: _user.userId,
+              timeCreated: Timestamp.now(),
+              audioUrl: voiceNote,
+              image1: image1,
+              image2: image2,
+              members: [_user.userId]));
+
+      await firebaseServices.saveUserActivity(
+        activityType: 'room_join',
+        activityMessage: "You started your own corner inside ${chatRoomPodo!.title ?? 'Chatrooms'}'.",
+        sessionId: chatRoomPodo!.id.toString(),
+      );
+
+      await notificationService.sendNotification({
+        "token": _user.fcmId,
+        "notification": {
+          "title": "You started your own corner!",
+          "body": "Darlings will join your corner soon. Behave.",
+        },
+        "data": {
+          // Ensure the route points to the Ego section
+          'route': 'chatRoom',
+          'roomId': widget.chatRoomPodo.id,
+        },
+      });
+
+    } catch (e) {
+      // Handle any potential errors
+      print("Error creating Ego corner: $e");
+      showToast(message: "Failed to start corner. Please try again.");
+    } finally {
+      // --- HIDE LOADER (GUARANTEED) ---
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
+    }
   }
+
+
+
 }

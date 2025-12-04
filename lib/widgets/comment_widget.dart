@@ -846,39 +846,20 @@ class _CommentWidgetState extends State<CommentWidget> {
                 mainAxisSpacing: 4.0,
               ),
               itemBuilder: (context, index) {
-                String image = widget.commentSessionModel!.imageUrls![index].toString();
+                String imageUrl = widget.commentSessionModel!.imageUrls![index];
                 return GestureDetector(
                   onTap: () {
-                    PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
+                    PageRouter.gotoWidget(CustomImageWidget(imageUrl: imageUrl), context);
                   },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15), // Smaller radius for a tighter look
-                      image: DecorationImage(
-                        image: CachedNetworkImageProvider(image), // Use provider for decoration
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(15.0),
                     child: CachedNetworkImage(
-                      imageUrl: image,
-                      imageBuilder: (context, imageProvider) => Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                          image: DecorationImage(
-                            image: imageProvider,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                      placeholder: (context, url) => Center(child: CircularProgressIndicator()),
-                      errorWidget: (context, url, error) => ClipRRect(
-                        borderRadius: BorderRadius.circular(15),
-                        child: Image.asset(
-                          "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                          fit: BoxFit.contain, // Contain to avoid stretching
-                          width: 48,
-                          height: 48,
-                        ),
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover, // Ensures the image fills the space without distortion
+                      placeholder: (context, url) => const Center(child: CupertinoActivityIndicator()),
+                      errorWidget: (context, url, error) => Image.asset(
+                        "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),

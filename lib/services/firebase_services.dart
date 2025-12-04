@@ -156,13 +156,15 @@ class FirebaseServices extends ChangeNotifier {
           metadata: metadata,
         );
 
-        return false;
+        // Return true on a successful debit transaction so the UI can proceed.
+        return true;
       } catch (e) {
         print("Error in treasury debit (withdrawal) transaction: $e");
         return false;
       }
     }
   }
+
 
 
 
@@ -1436,16 +1438,7 @@ class FirebaseServices extends ChangeNotifier {
   /// send alter ego message
   void addAlterEgoMessage(ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
     final _user = await getUserInfo();
-    final sender = _user.alterEgoId;
     final roomTitle = chatRoomPodo!.title.toString();
-    final pushNotification.NotificationModel _notificationModel =
-    pushNotification.NotificationModel(
-        topic: chatRoomPodo.id.toString(),
-        data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
-        notification: pushNotification.Notification(
-            title: chatRoomPodo.title!,
-            body: '$sender started a new corner inside $roomTitle.'));
-
     _firebaseFirestore
         .collection("alterEgoChats")
         .doc(chatRoomPodo.id.toString())
@@ -1455,8 +1448,18 @@ class FirebaseServices extends ChangeNotifier {
         .whenComplete(() {
       /// automatically subscribe user to this topic
       _subscribeToChatRoom(chatRoomPodo.id.toString());
-      notificationService.sendNotification(_notificationModel.toJson());
       logger.d('Message sent ${chatModel.toJson()}');
+    });
+    await notificationService.sendNotification({
+      "token": _user.fcmId,
+      "notification": {
+        "title": "You Started Your Own Corner!",
+        "body": "You created a room corner of your own inside ${roomTitle}.",
+      },
+      "data": {
+        'route': 'chatRoom',
+        'roomId': chatRoomPodo.id,
+      },
     });
   }
 
@@ -1479,14 +1482,7 @@ class FirebaseServices extends ChangeNotifier {
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
     final _user = await getUserInfo();
     final sender = _user.alterEgoId;
-    final pushNotification.NotificationModel _notificationModel =
-    pushNotification.NotificationModel(
-        topic: chatModel.userId!,
-        data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
-        notification: pushNotification.Notification(
-          title: chatRoomPodo!.title!,
-          body: '$sender sent something to your corner of the room',
-        ));
+    final roomTitle = chatRoomPodo!.title.toString();
     _firebaseFirestore
         .collection("alterEgoChats")
         .doc(chatRoomPodo.id.toString())
@@ -1497,8 +1493,18 @@ class FirebaseServices extends ChangeNotifier {
         .set(chatModel.toJson())
         .whenComplete(() {
       _subscribeToChatRoom(key);
-      notificationService.sendNotification(_notificationModel.toJson());
       logger.d('SubMessage sent ${chatModel.toJson()}');
+    });
+    await notificationService.sendNotification({
+      "token": _user.fcmId,
+      "notification": {
+        "title": "Message Dropped In Your Corner!",
+        "body": "${sender ?? 'An Ego'} sent something to your corner of the room inside ${roomTitle}.",
+      },
+      "data": {
+        'route': 'chatRoom',
+        'roomId': chatRoomPodo.id,
+      },
     });
   }
 
@@ -1531,16 +1537,7 @@ class FirebaseServices extends ChangeNotifier {
   /// send users message
   void addMessage(ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
     final _user = await getUserInfo();
-    final sender = _user.nickname;
     final roomTitle = chatRoomPodo!.title.toString();
-    final pushNotification.NotificationModel _notificationModel =
-        pushNotification.NotificationModel(
-            topic: chatRoomPodo.id.toString(),
-            data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
-            notification: pushNotification.Notification(
-                title: chatRoomPodo.title!,
-                body: '$sender started a new corner inside $roomTitle.'));
-
     _firebaseFirestore
         .collection(AppString.appChats)
         .doc(chatRoomPodo.id.toString())
@@ -1550,8 +1547,18 @@ class FirebaseServices extends ChangeNotifier {
         .whenComplete(() {
       /// automatically subscribe user to this topic
       _subscribeToChatRoom(chatRoomPodo.id.toString());
-      notificationService.sendNotification(_notificationModel.toJson());
       logger.d('Message sent ${chatModel.toJson()}');
+    });
+    await notificationService.sendNotification({
+      "token": _user.fcmId,
+      "notification": {
+        "title": "You Started Your Own Corner!",
+        "body": "You created a room corner of your own inside ${roomTitle}.",
+      },
+      "data": {
+        'route': 'chatRoom',
+        'roomId': chatRoomPodo.id,
+      },
     });
   }
 
@@ -1574,14 +1581,7 @@ class FirebaseServices extends ChangeNotifier {
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
     final _user = await getUserInfo();
     final sender = _user.nickname;
-    final pushNotification.NotificationModel _notificationModel =
-        pushNotification.NotificationModel(
-            topic: chatModel.userId!,
-            data: pushNotification.Data(id: chatModel.userNickname, route: 'room'),
-            notification: pushNotification.Notification(
-              title: chatRoomPodo!.title!,
-              body: '$sender sent something to your corner of the room',
-            ));
+    final roomTitle = chatRoomPodo!.title.toString();
     _firebaseFirestore
         .collection(AppString.appChats)
         .doc(chatRoomPodo.id.toString())
@@ -1591,9 +1591,18 @@ class FirebaseServices extends ChangeNotifier {
         .doc(_user.userId)
         .set(chatModel.toJson())
         .whenComplete(() {
-      _subscribeToChatRoom(key);
-      notificationService.sendNotification(_notificationModel.toJson());
       logger.d('SubMessage sent ${chatModel.toJson()}');
+    });
+    await notificationService.sendNotification({
+      "token": _user.fcmId,
+      "notification": {
+        "title": "Message Dropped In Your Corner!",
+        "body": "${sender ?? 'An Ego'} sent something to your corner of the room inside ${roomTitle}.",
+      },
+      "data": {
+        'route': 'chatRoom',
+        'roomId': chatRoomPodo.id,
+      },
     });
   }
 
@@ -1606,6 +1615,56 @@ class FirebaseServices extends ChangeNotifier {
         .doc(key)
         .update(chatModel.toJson());
   }
+
+
+  /// Fetches a single ChatRoomPodo document by its unique ID from the 'chatRooms' collection.
+  /// Returns the ChatRoomPodo if found, otherwise null.
+  Future<ChatRoomPodo?> getChatRoomPodoById(String chatRoomId) async {
+    try {
+      final docSnapshot = await _firebaseFirestore.collection('chatRooms').doc(chatRoomId).get();
+      if (docSnapshot.exists) {
+        return ChatRoomPodo.fromJson(docSnapshot.data() as Map<String, dynamic>);
+      }
+      print("ChatRoomPodo with ID $chatRoomId not found.");
+      return null;
+    } catch (e) {
+      print("Error fetching ChatRoomPodo by ID: $e");
+      return null;
+    }
+  }
+
+
+  /// Fetches a single ChatModel (a corner) by its ID from within its parent ChatRoom's subcollection.
+  /// Returns the ChatModel if found, otherwise null.
+  Future<ChatModel?> getChatModelById(ChatRoomPodo chatRoomPodo, String chatModelId) async {
+    try {
+      // --- THIS IS THE FIX ---
+      // Instead of a 'type' field, we decide the collection based on the room's title.
+      // List all known Alter Ego room titles here.
+      final alterEgoRoomTitles = ["Band Of Super Egos", "Another Alter Ego Room Title"]; // Add any other Alter Ego room titles
+
+      final bool isAlterEgo = alterEgoRoomTitles.contains(chatRoomPodo.title);
+      final String mainCollection = isAlterEgo ? 'alterEgoChats' : 'chats';
+      // --- END OF FIX ---
+
+      final docSnapshot = await _firebaseFirestore
+          .collection(mainCollection)
+          .doc(chatRoomPodo.id.toString())
+          .collection(chatRoomPodo.title!) // The subcollection is named after the room title
+          .doc(chatModelId)
+          .get();
+
+      if (docSnapshot.exists) {
+        return ChatModel.fromJson(docSnapshot.data() as Map<String, dynamic>);
+      }
+      print("ChatModel with ID $chatModelId not found in room ${chatRoomPodo.title}.");
+      return null;
+    } catch (e) {
+      print("Error fetching ChatModel by ID: $e");
+      return null;
+    }
+  }
+
 
 
   Future<bool> addToCategory(

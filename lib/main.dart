@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/services/notification.dart';
+import 'package:clairediary/ui/alter_ego/chatrooms.dart';
 import 'package:clairediary/ui/chats/chatrooms.dart';
+import 'package:clairediary/ui/chats/widget/alter_ego_diaryrooms_widget.dart';
 import 'package:clairediary/ui/create_session/create_session_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
@@ -289,6 +291,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               case '/diaryRooms':
                 return MaterialPageRoute(
                     builder: (_) => ChatRoomsPage(title: 'Dear Claire'));
+              case '/alterEgoDiaryRooms':
+                return MaterialPageRoute(
+                    builder: (_) => ChatRooms());
               case '/createSession':
                 return MaterialPageRoute(builder: (_) => CreateSessionPage());
               case '/games':

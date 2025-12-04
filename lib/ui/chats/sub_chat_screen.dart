@@ -9,12 +9,15 @@ import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/utils/strings.dart';
 import 'package:clairediary/widgets/chat_edit_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
+import '../../helpers/toast_helper.dart';
 import '../../services/firebase_services.dart';
+import '../../services/notification_service.dart';
 
 class Temp {
   String id;
@@ -44,6 +47,7 @@ const int maxFailedLoadAttempts = 3;
 class _SubChatScreenState extends State<SubChatScreen> {
 
   List<Temp> _chatList = [];
+  bool _isSending = false;
   User? currentUser = FirebaseAuth.instance.currentUser;
 
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
@@ -140,10 +144,22 @@ class _SubChatScreenState extends State<SubChatScreen> {
     }
   }
 
-  
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(    backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),
+    // --- LOGIC FOR HIDING CHAT FIELD ---
+    // 1. Check if this is the special "Eavesdrop" room.
+    final bool isEavesdropRoom =
+        widget.chatRoomPodo?.title == "One On One Eavedrop With ClAIre";
+
+    // 2. Check if the current user is the owner of this corner.
+    final bool isCornerOwner = currentUser?.uid == widget.chatModel?.userId;
+
+    // 3. The user can send messages if it's NOT an eavesdrop room, OR if they ARE the corner owner.
+    final bool canSendMessage = !isEavesdropRoom || isCornerOwner;
+
+    return Scaffold(
+      backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),
@@ -151,16 +167,15 @@ class _SubChatScreenState extends State<SubChatScreen> {
         elevation: 0,
       ),
       body: SafeArea(
-        // 1. Revert back to using a Stack, as this is the layout pattern used elsewhere.
         child: Stack(
           children: [
-            // 2. The main content is a ListView.
             ListView(
               children: [
                 AnimationLimiter(
                   child: ListView.builder(
                     shrinkWrap: true,
-                    physics: BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
+                    physics: BouncingScrollPhysics(
+                        parent: NeverScrollableScrollPhysics()),
                     itemCount: 1,
                     itemBuilder: (BuildContext c, int i) {
                       return AnimationConfiguration.staggeredList(
@@ -177,13 +192,17 @@ class _SubChatScreenState extends State<SubChatScreen> {
                             flipAxis: FlipAxis.y,
                             child: StreamBuilder(
                               stream: firebaseServices.getSubMessages(
-                                  widget.documentID!, widget.chatRoomPodo, widget.chatModel!),
+                                  widget.documentID!,
+                                  widget.chatRoomPodo,
+                                  widget.chatModel!),
                               builder: (context,
-                                  AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapShot) {
+                                  AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
+                                  snapShot) {
                                 if (snapShot.hasData) {
                                   _chatList.clear();
                                   snapShot.data!.docs
-                                      .map((e) => _chatList.add(Temp(e.id, ChatModel.fromJson(e.data()))))
+                                      .map((e) => _chatList.add(Temp(
+                                      e.id, ChatModel.fromJson(e.data()))))
                                       .toList();
                                   return Column(
                                     children: [
@@ -192,12 +211,12 @@ class _SubChatScreenState extends State<SubChatScreen> {
                                           chatModel: widget.chatModel,
                                           chatRoomPodo: widget.chatRoomPodo),
                                       ..._chatList
-                                          .map((element) => InsideInsideInsideChatWidget(
-                                        isSubChat: true,
-                                        documentID: element.id,
-                                        chatModel: element.chatModel,
-                                        chatRoomPodo: widget.chatRoomPodo,
-                                      ))
+                                          .map((element) =>
+                                          InsideInsideInsideChatWidget(
+                                            documentID: element.id,
+                                            chatModel: element.chatModel,
+                                            chatRoomPodo: widget.chatRoomPodo,
+                                          ))
                                           .toList(),
                                     ],
                                   );
@@ -211,16 +230,12 @@ class _SubChatScreenState extends State<SubChatScreen> {
                     },
                   ),
                 ),
-                // 3. Add a SizedBox at the end of the list to create space for the controls below.
-                //    This ensures the last message isn't hidden behind the ad/input.
                 SizedBox(height: 120),
               ],
             ),
-
-            // 4. Place the banner ad above the chat field using Positioned.
             if (_bottomBannerAd != null && _isBannerAdInitialized)
               Positioned(
-                bottom: 60, // Position it 60 pixels from the bottom, leaving space for the input field.
+                bottom: 60,
                 left: 0,
                 right: 0,
                 child: Container(
@@ -231,12 +246,32 @@ class _SubChatScreenState extends State<SubChatScreen> {
                 ),
               ),
 
-            // 5. Align the ChatEditField to the absolute bottom of the Stack.
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: ChatEditField(onTap: (v, voiceNote, image1, image2) =>
-                  _sendMessage(v, voiceNote, image1, image2)),
-            ),
+            // --- MODIFICATION: Conditionally display the chat field ---
+            if (canSendMessage)
+              Stack(
+                children: [
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: ChatEditField(
+                      onTap: (v, voiceNote, image1, image2) =>
+                          _sendMessage(v, voiceNote, image1, image2),
+                    ),
+                  ),
+                  // The overlay that shows only when sending
+                  if (_isSending)
+                    Positioned.fill(
+                      child: Container(
+                        color:Colors.black.withOpacity(0.5), // Semi-transparent overlay
+                        child:  Center(
+                          child: CupertinoActivityIndicator(
+                            color: Colors.white,
+                            radius: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
           ],
         ),
       ),
@@ -244,21 +279,79 @@ class _SubChatScreenState extends State<SubChatScreen> {
   }
 
 
+
+
   void _sendMessage(String v, String voiceNote, String image1, String image2) async {
+    // --- Prevent sending if already processing or if content is empty ---
+    if (_isSending || (v.isEmpty && voiceNote.isEmpty && image1.isEmpty && image2.isEmpty)) {
+      return;
+    }
+
+    // --- Show loader ---
+    if (mounted) {
+      setState(() {
+        _isSending = true;
+      });
+    }
+    try {
     final _user = await firebaseServices.getUserInfo();
+
+    // Create the chat model to be sent
+    final newChatMessage = ChatModel(
+        message: v,
+        userId: _user.userId,
+        timeCreated: Timestamp.now(),
+        audioUrl: voiceNote,
+        image1: image1,
+        image2: image2,
+        members: [_user.userId]);
+
+    // Send the message to Firestore
     firebaseServices.addSubMessage(
         widget.documentID!,
         widget.chatRoomPodo!,
-        ChatModel(
-            message: v,
-            userId: _user.userId,
-            timeCreated: Timestamp.now(),
-            audioUrl: voiceNote,
-            image1: image1,
-            image2: image2,
-            members: [_user.userId]));
-    updateDiaryroomTimeLastActivity(_user.userId.toString(), widget.chatRoomPodo!);
+        newChatMessage);
+
+    // Update the last activity time for sorting purposes
+    updateDiaryroomTimeLastActivity(widget.documentID!, widget.chatRoomPodo!);
+
+    await firebaseServices.saveUserActivity(
+      activityType: 'room_join',
+      activityMessage: "You messaged a corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}'.",
+      sessionId: widget.chatRoomPodo?.id.toString(),
+    );
+
+    // --- 3. DROP NOTIFICATION ---
+    final cornerOwner = await firebaseServices.getUserWithId(id: widget.chatModel!.userId);
+    final cornerOwnerFcmId = cornerOwner.fcmId;
+    final visitorNickname = _user.nickname;
+    await notificationService.sendNotification({
+      "token": cornerOwnerFcmId,
+      "notification": {
+        "title": "Someone Entered Your Corner!",
+        "body": "${visitorNickname ?? 'An Ego'} dropped a message in your corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
+      },
+      "data": {
+        'route': 'diaryRooms',
+        'roomId': widget.chatRoomPodo!.id.toString(),
+      },
+    });
+    showToast(message: 'Message Sent. Remember, positive vibes only.');
+
+    } catch (e) {
+      // Handle any potential errors
+      print("Error creating Ego corner: $e");
+      showToast(message: "Failed to start corner. Please try again.");
+    } finally {
+      // --- HIDE LOADER (GUARANTEED) ---
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
+    }
   }
+
 
 
 
@@ -288,4 +381,59 @@ class _SubChatScreenState extends State<SubChatScreen> {
     );
     logger.d('Successfully updated time of last activity');
   }
+
+
+
+  /// Sends a notification to all members of this specific chat corner,
+  /// excluding the person who sent the message.
+  Future<void> _notifyChatCornerMembers({
+    required ChatModel chatCorner, // The specific corner (e.g., widget.chatModel)
+    required String senderId,
+    required String senderNickname,
+    required String message,
+  }) async {
+    // 1. Get the correct list of members for this specific corner.
+    // The 'members' list on the ChatModel is the source of truth.
+    final List<dynamic> memberIds = chatCorner.members ?? [];
+    if (memberIds.length <= 1) return; // No one else to notify
+
+    // 2. Fetch the FCM tokens for all members in a single efficient query.
+    try {
+      final tokensSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: memberIds)
+          .get();
+
+      // 3. Iterate through the results and send notifications.
+      for (var userDoc in tokensSnapshot.docs) {
+        final String memberId = userDoc.id;
+
+        // CRITICAL: Do not send a notification to the person who sent the message.
+        if (memberId == senderId) {
+          continue;
+        }
+
+        final fcmToken = userDoc.data()['fcmId'] as String?;
+
+        if (fcmToken != null && fcmToken.isNotEmpty) {
+          await notificationService.sendNotification({
+            "token": fcmToken,
+            "notification": {
+              "title": "New message dropped in the corner of'${widget.chatRoomPodo?.title}'",
+              "body": "$senderNickname: $message",
+            },
+            "data": {
+              'route': 'chatRoom',
+              'roomId': widget.chatRoomPodo!.id,
+            },
+          });
+        }
+      }
+    } catch (e) {
+      print("Error sending chat corner notifications: $e");
+      // Don't block the UI if notifications fail.
+    }
+  }
+
+
 }

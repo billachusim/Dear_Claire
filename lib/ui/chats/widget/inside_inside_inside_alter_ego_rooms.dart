@@ -1,29 +1,26 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/user_model.dart';
 import 'package:clairediary/ui/chats/data/chatroompodo.dart';
 import 'package:clairediary/ui/chats/data/chats.dart';
 import 'package:clairediary/ui/routes/page_router_animation.dart';
-import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/helper.dart';
+import 'package:clairediary/widgets/toast.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../services/firebase_services.dart';
-import '../../../utils/strings.dart';
-import '../../../widgets/custom_image_widget.dart';
-import '../../../widgets/play_advise_voice_note.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import '../../../services/notification_service.dart';
+import '../../visited_user_ego_page/visited_user_ego_page.dart';
+import 'alter_ego_chat_message_bubble.dart';
 
 class InsideInsideInsideAlterEgoChatWidget extends StatefulWidget {
-  String? documentID;
-  ChatModel? chatModel;
-  ChatRoomPodo? chatRoomPodo;
+  final String? documentID;
+  final ChatModel? chatModel;
+  final ChatRoomPodo? chatRoomPodo;
+  final bool? isSubChat;
 
-  /// use this bool value to determine when a chat is sub chat or not
-  bool? isSubChat;
-
-  InsideInsideInsideAlterEgoChatWidget(
+  const InsideInsideInsideAlterEgoChatWidget(
       {Key? key,
         required this.documentID,
         required this.chatModel,
@@ -32,289 +29,166 @@ class InsideInsideInsideAlterEgoChatWidget extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<InsideInsideInsideAlterEgoChatWidget> createState() => _InsideInsideInsideAlterEgoChatWidgetState();
+  State<InsideInsideInsideAlterEgoChatWidget> createState() =>
+      _InsideInsideInsideAlterEgoChatWidgetState();
 }
 
-class _InsideInsideInsideAlterEgoChatWidgetState extends State<InsideInsideInsideAlterEgoChatWidget> {
-  TextEditingController editChatController = TextEditingController();
+class _InsideInsideInsideAlterEgoChatWidgetState
+    extends State<InsideInsideInsideAlterEgoChatWidget> {
+  // A single Future to get all user data efficiently
+  late Future<Map<String, UserModel?>> _userDataFuture;
+  final currentUser = FirebaseAuth.instance.currentUser;
 
-  late String visitedUsersID;
+  @override
+  void initState() {
+    super.initState();
+    // Fetch both sender and current user data in one go
+    _userDataFuture = _fetchUsers();
+  }
 
-  late String visitedEgoName;
-
-  String? _commentTime;
-
-  String timeAgo() {
-    final commentTime = widget.chatModel?.timeCreated?.toDate();
-    final _time = timeago.format(commentTime!);
-    _commentTime = _time;
-    return _commentTime.toString();
+  Future<Map<String, UserModel?>> _fetchUsers() async {
+    final sender =
+    await firebaseServices.getUserWithId(id: widget.chatModel!.userId);
+    final me = await firebaseServices.getUserInfo();
+    return {'sender': sender, 'me': me};
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6),
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(
-              AppImages.appChatBg,
-            ),
-            fit: BoxFit.fill,
-          ),
-          borderRadius: BorderRadius.circular(25), color: Pallet.colorWhite),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FutureBuilder(
-              future: firebaseServices.getUserWithId(id: widget.chatModel!.userId),
-              builder: (_, AsyncSnapshot<UserModel> snap) {
-                if (!snap.hasData) {
-                  return Container();
-                }
-                UserModel? _user = snap.data;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    CachedNetworkImage(
-                        width: 35,
-                        height: 35,
-                        imageUrl: _user!.avatarUrl ?? '',
-                        imageBuilder: (context, imageProvider) => Container(
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: imageProvider,
-                              fit: BoxFit.fill,
-                            ),
-                          ),
-                        ),
-                        placeholder: (context, url) =>
-                            Center(child: CircularProgressIndicator()),
-                        errorWidget: (context, url, error) => Image.asset(
-                          "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                          width: 35,
-                          height: 35,
-                        ) //Icon(Icons.error),
-                    ),
-                    SizedBox(
-                      width: 4,
-                    ),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(_user.alterEgoId ?? '',
-                              textAlign: TextAlign.start,
-                              maxLines: 1,
-                              style: GoogleFonts.lato(
-                                  fontSize: 13.0,
-                                  color: Pallet.colorBlack,
-                                  fontWeight: FontWeight.w800)),
-                          SizedBox(
-                            height: 2,
-                          ),
-                          Text(
-                              timeAgo(),
-                              textAlign: TextAlign.start,
-                              maxLines: 1,
-                              style: GoogleFonts.lato(
-                                  fontSize: 11.0,
-                                  color: Pallet.colorGrey,
-                                  fontWeight: FontWeight.normal)),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }),
-          SizedBox(
-            height: 6,
-          ),
-          Text(
-            widget.chatModel!.message!,
-            textAlign: TextAlign.start,
-            style: GoogleFonts.lato(
-                fontSize: 15.0,
-                color: Pallet.colorBlack,
-                fontWeight: FontWeight.normal),
-          ),
+    // Determine if the message is from the current user
+    final bool isMe = currentUser?.uid == widget.chatModel?.userId;
 
-          Visibility(
-            visible: widget.chatModel?.audioUrl != '',
-            child: Container(
-              alignment: Alignment.topLeft,
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Row(
-                  children: [
-                    PlayAdviseVoiceNote(filePath: widget.chatModel!.audioUrl)
-                  ],
-                ),
-              ),
-            ),
-          ),
+    // Use a FutureBuilder to get the sender's and current user's info
+    return FutureBuilder<Map<String, UserModel?>>(
+      future: _userDataFuture,
+      builder: (_, AsyncSnapshot<Map<String, UserModel?>> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 80,
+            child: Center(child: CupertinoActivityIndicator()),
+          );
+        }
 
+        if (!snapshot.hasData ||
+            snapshot.data?['sender'] == null ||
+            snapshot.data?['me'] == null) {
+          return Container(); // Return empty container on error or no data
+        }
 
-          Container(
-            margin: EdgeInsets.only(bottom: 1, top: 8),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Row(
-                children: [
-                  Visibility(
-                      visible: widget.chatModel!.image1 != '',
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image1.toString()), context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 85,
-                            width: 70,
-                            imageUrl: widget.chatModel!.image1.toString(),
-                            imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                ),
-                              ),
-                            ),
-                            placeholder: (context, url) =>
-                                Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
-                        ),
-                      )),
-                  SizedBox(
-                    width: 5,
-                  ),
-                  Visibility(
-                      visible:
-                      widget.chatModel!.image2 != '',
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image2.toString()), context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 85,
-                            width: 70,
-                            imageUrl: widget.chatModel!.image2.toString(),
-                            imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                ),
-                              ),
-                            ),
-                            placeholder: (context, url) =>
-                                Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
-                        ),
-                      )),
-                ],
-              ),
-            ),
-          ),
+        final sender = snapshot.data!['sender']!;
+        final me = snapshot.data!['me']!;
 
+        final timeAgo = widget.chatModel?.timeCreated?.toDate() != null
+            ? timeago.format(widget.chatModel!.timeCreated!.toDate())
+            : 'just now';
 
+        // Check if the current user can delete the message
+        final bool canDelete = me.userType == "SUPER_ADMIN";
 
-          FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-            future: FirebaseFirestore.instance
-                .collection("users")
-                .doc(currentUser?.uid)
-                .get(),
-            builder: (_, snapshot) {
-              if (snapshot.hasData) {
-                var data = snapshot.data!.data();
-                var userType = data?["userType"];
-
-                return
-                  Visibility(
-                    visible: userType == "SUPER_ADMIN",
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            if (userType == "SUPER_ADMIN")
-                              showCustomDialog(context,
-                                  message: AppString.delete_advise_alert_note,
-                                  onPressed: () {
-                                    PageRouter.goBack(context);
-                                    deleteAlterEgoSubChat();
-                                  });
-                          },
-                          child: Row(
-                            children: [
-
-                              Text(
-                                'Mod',
-                                style: GoogleFonts.lato(
-                                    fontSize: 13.0,
-                                    color: Pallet.colorSecondary,
-                                    fontWeight: FontWeight.w800),
-                              ),
-
-
-                              Visibility(
-                                visible: userType == "SUPER_ADMIN",
-                                child: GestureDetector(
-                                  onTap: () {
-                                    if (userType == "SUPER_ADMIN")
-                                      showCustomDialog(context,
-                                          message: AppString.delete_advise_alert_note,
-                                          onPressed: () {
-                                            PageRouter.goBack(context);
-                                            deleteAlterEgoSubChat();
-                                          });
-                                  },
-                                  child: Icon(
-                                    Icons.delete_forever_rounded,
-                                    color: Pallet.colorPrimaryDark,
-                                    size: 15,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-              }
-
-              return Container();
-            },
-          ),
-
-        ],
-      ),
+        // --- THE UI TRANSFORMATION ---
+        // Delegate all UI rendering to the new bubble widget
+        return AlterEgoChatMessageBubble(
+          chatModel: widget.chatModel!,
+          senderName: sender.alterEgoId ?? 'An Alter Ego',
+          senderAvatarUrl: sender.avatarUrl ?? '',
+          timeAgo: timeAgo,
+          isMe: isMe,
+          onAvatarTap: () => _handleAvatarTap(context, sender, me),
+          onDelete: canDelete
+              ? () => showCustomDialog(context,
+              message: "Are you sure you want to delete this message?",
+              onPressed: () {
+                PageRouter.goBack(context);
+                deleteAlterEgoSubChat();
+              })
+              : null, // Pass null if user can't delete
+        );
+      },
     );
   }
 
+  // --- AVATAR TAP LOGIC ---
+  void _handleAvatarTap(BuildContext context, UserModel visitedUser, UserModel visitingUser) async {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => const Center(
+        child: CupertinoActivityIndicator(radius: 20, color: Colors.white),
+      ),
+      barrierDismissible: false,
+    );
 
-  /// Delete a chat
+    try {
+      const int visitCost = 1;
 
+      if (visitingUser.userId == visitedUser.userId) {
+        Navigator.pop(context); // Close loader
+        PageRouter.gotoWidget(
+            VisitedUserEgoProfilePage(
+                visitedUsersID: visitedUser.userId!,
+                visitedEgoName: visitedUser.alterEgoId!),
+            context);
+        return;
+      }
+
+      if (visitingUser.currentLoveCount < visitCost) {
+        Navigator.pop(context); // Close loader
+        showToast("You need at least 1❤️ to visit an Alter Ego's profile.");
+        return;
+      }
+
+      final bool success = await firebaseServices.transferLoveBetweenUsers(
+        senderId: visitingUser.userId!,
+        receiverId: visitedUser.userId!,
+        amountToSend: visitCost,
+        taxAmount: 0,
+        totalDebitAmount: visitCost,
+        senderTransactionDesc: "1❤️ visiting ${visitedUser.alterEgoId}'s Alter Ego.",
+        receiverTransactionDesc: "1❤️ from ${visitingUser.alterEgoId} visiting your Alter Ego.",
+        claireTransactionDesc: "Tax from an Alter Ego profile visit.",
+        forProfileVisits: 1,
+        fromProfileVisits: 1,
+      );
+
+      Navigator.pop(context); // Close loader
+
+      if (success) {
+        if (visitedUser.fcmId != null && visitedUser.fcmId!.isNotEmpty) {
+          notificationService.sendNotification({
+            "token": visitedUser.fcmId,
+            "notification": {
+              "title": "Your Alter Ego profile has a visitor!",
+              "body": "${visitingUser.alterEgoId ?? 'An Alter Ego'} just visited your profile with a kola of 1❤️."
+            },
+            "data": {"route": "alterEgoPage"}
+          });
+        }
+        PageRouter.gotoWidget(
+            VisitedUserEgoProfilePage(
+                visitedUsersID: visitedUser.userId!,
+                visitedEgoName: visitedUser.alterEgoId!),
+            context);
+      } else {
+        showToast("Profile visit failed. Please try again.");
+      }
+    } catch (e) {
+      if (context.mounted) Navigator.pop(context);
+      print("Error during avatar tap: $e");
+      showToast("An error occurred.");
+    }
+  }
+
+  // --- DELETE CHAT LOGIC ---
   Future<void> deleteAlterEgoSubChat() async {
-    final collection = FirebaseFirestore.instance
-        .collection("alterEgoChats")
-        .doc(widget.chatRoomPodo!.id.toString())
-        .collection(widget.chatRoomPodo!.title!)
-        .doc(widget.chatModel!.userId.toString())
-        .collection(widget.chatModel!.userId.toString());
-    await collection.doc(currentUser!.uid.toString()).delete();
-    firebaseServices.unsubscribeToChatRoom(widget.chatModel!.userId.toString());
-    logger.d('Successfully deleted an chat session');
+    try {
+      final collection = FirebaseFirestore.instance
+          .collection("alterEgoSubChats")
+          .doc(widget.chatRoomPodo!.id.toString())
+          .collection(widget.chatModel!.sessionId!);
+      await collection.doc(widget.documentID).delete();
+      showToast('Message deleted by Mod.');
+    } catch (e) {
+      print('Error deleting Alter Ego sub-chat: $e');
+      showToast('Failed to delete message.');
+    }
   }
 }

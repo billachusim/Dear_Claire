@@ -370,74 +370,7 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
           ),
 
 
-          Container(
-            margin: EdgeInsets.only(bottom: 10, top: 10),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Row(
-                children: [
-                  Visibility(
-                      visible: widget.chatModel!.image1 != '',
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image1.toString()), context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 120,
-                            width: 100,
-                            imageUrl: widget.chatModel!.image1.toString(),
-                            imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                ),
-                              ),
-                            ),
-                            placeholder: (context, url) =>
-                                Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
-                        ),
-                      )),
-                  SizedBox(
-                    width: 5,
-                  ),
-                  Visibility(
-                      visible:
-                      widget.chatModel!.image2 != '',
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image2.toString()), context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 120,
-                            width: 100,
-                            imageUrl: widget.chatModel!.image2.toString(),
-                            imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                ),
-                              ),
-                            ),
-                            placeholder: (context, url) =>
-                                Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
-                        ),
-                      )),
-                ],
-              ),
-            ),
-          ),
+          _buildImageGrid(context),
 
 
           Visibility(
@@ -504,4 +437,57 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
   bool _isCompleted(ChatModel? chatModel, ChatRoomPodo? chatRoomPodo) {
     return chatModel!.members!.length == chatRoomPodo?.numberOfParticipants;
   }
+
+  // --- NEW: Helper widget to build the image display ---
+  Widget _buildImageGrid(BuildContext context) {
+    final bool hasImage1 = widget.chatModel!.image1 != null && widget.chatModel!.image1!.isNotEmpty;
+    final bool hasImage2 = widget.chatModel!.image2 != null && widget.chatModel!.image2!.isNotEmpty;
+
+    // Only build the grid if there is at least one image
+    if (!hasImage1 && !hasImage2) {
+      return const SizedBox.shrink(); // Return an empty widget if no images
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10, top: 8),
+      child: Row(
+        // The children are expanded, so they will fill the row.
+        // If there's only one image, it will take up the full width.
+        children: [
+          if (hasImage1)
+            Expanded(child: _buildClickableImage(context, widget.chatModel!.image1!)),
+          if (hasImage1 && hasImage2)
+            const SizedBox(width: 8), // Spacer between images
+          if (hasImage2)
+            Expanded(child: _buildClickableImage(context, widget.chatModel!.image2!)),
+        ],
+      ),
+    );
+  }
+
+  // --- NEW: Helper for a single clickable image with rounded corners ---
+  Widget _buildClickableImage(BuildContext context, String imageUrl) {
+    return GestureDetector(
+      onTap: () {
+        PageRouter.gotoWidget(CustomImageWidget(imageUrl: imageUrl), context);
+      },
+      // Constrain the height for a preview look
+      child: SizedBox(
+        height: 150,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15.0), // Consistent rounded corners
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => const Center(child: CupertinoActivityIndicator()),
+            errorWidget: (context, url, error) => Image.asset(
+              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
 }

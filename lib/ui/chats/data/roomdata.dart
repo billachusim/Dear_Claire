@@ -8,11 +8,11 @@ class RoomData {
     chatRoomPojo = ChatRoomPodo(
         image: "assets/images/loveGif.gif",
         id: -1,
-        title: "One On One With Claire AI",
+        title: "One On One Eavedrop With ClAIre",
         font: "Default",
         hex: "#68034D",
         text: "Hello, Darlings,\n" +
-            "Want to have some fun and expand your horizons? Come chat with me, ChatGPT! Whether it's about your favorite hobbies, current events, or just random musings, I'm here to listen and chat.");
+            "Take A front row seat and watch Claire and different people discuss secrets and personal topics while you watch, read and listen to everything in silence. You can't respond or participate and they don't even know you are there!");
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(

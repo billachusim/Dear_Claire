@@ -284,7 +284,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     logger.d('Successfully sent an Ego message to $egoName');
     await firebaseServices.saveUserActivity(
       activityType: 'mantra', // A new activity type
-      activityMessage: "You left a new mantra for ${widget.visitedEgoName}.",
+      activityMessage: "$egoName left a new mantra for you, ${widget.visitedEgoName}.",
       recipientId: widget.visitedUsersID,
       recipientNickname: widget.visitedEgoName,
     );
@@ -321,25 +321,51 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
   Future<void> pushMantraNotification() async {
     final egoMessage = _visitorMantraController.text;
-    final egoName = _visitingUser?.nickname;
-    final userId = widget.visitedUsersID;
+    final egoName = _visitingUser?.nickname ?? 'An Ego';
     final senderId = currentUser?.uid;
 
-    await _firebaseMessaging.subscribeToTopic(userId);
+    // A mantra is only pushed if there is a message to send.
+    if (egoMessage.isEmpty) {
+      return;
+    }
 
-    final pushNotification.NotificationModel _notificationModel =
-        pushNotification.NotificationModel(
-            topic: userId,
-            data: pushNotification.Data(id: senderId, route: 'wallet'),
-            notification: pushNotification.Notification(
-                title: "Ego Mantra",
-                body:
-                    '$egoName sent a new mantra to your ego stream.\n$egoMessage'));
-    notificationService.sendNotification(_notificationModel.toJson());
+    try {
+      // --- 1. FETCH THE RECIPIENT'S USER DATA TO GET THEIR FCM TOKEN ---
+      final UserModel visitedUser = await firebaseServices.getUserWithId(id: widget.visitedUsersID);
+      final String? receiverToken = visitedUser.fcmId;
 
-    logger.d('Successfully pushed an Ego message notification to $egoName');
-    print('Ego Message: $egoMessage');
+      // --- 2. PROCEED ONLY IF A TOKEN EXISTS ---
+      if (receiverToken != null && receiverToken.isNotEmpty) {
+        // --- 3. CONSTRUCT THE NOTIFICATION PAYLOAD AS A SIMPLE MAP ---
+        final Map<String, dynamic> notificationPayload = {
+          "token": receiverToken,
+          "notification": {
+            "title": "Ego Mantra Received!",
+            "body": "$egoName sent a new mantra to your ego stream."
+          },
+          "data": {
+            // The route should navigate the user to where they can see the mantra.
+            // Assuming 'visitedEgo' is the correct route to view another user's profile.
+            'route': 'visitedEgo',
+            'visitedUserId': widget.visitedUsersID,
+            'visitedEgoName': widget.visitedEgoName
+          }
+        };
+
+        // --- 4. SEND THE NOTIFICATION ---
+        await notificationService.sendNotification(notificationPayload);
+
+        logger.d('Successfully pushed an Ego mantra notification to ${visitedUser.nickname}');
+      } else {
+        logger.w('Could not send mantra notification: User ${widget.visitedEgoName} has no FCM token.');
+      }
+    } catch (e) {
+      logger.e('Failed to push mantra notification: $e');
+      // We don't show a toast here to not interrupt the sender's experience.
+      // The failure is only logged.
+    }
   }
+
 
   Future<void> pushAudioMantraNotification() async {
     final egoName = _visitingUser?.nickname;

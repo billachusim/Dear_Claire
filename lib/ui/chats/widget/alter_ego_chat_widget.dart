@@ -12,27 +12,19 @@ import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/enums.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../../../services/notification_service.dart';
 import '../../../utils/strings.dart';
 import '../../../widgets/custom_image_widget.dart';
 import '../../../widgets/play_advise_voice_note.dart';
 import '../../../widgets/toast.dart';
 import '../alter_ego_sub_chat_screen.dart';
 
-class AlterEgoChatWidget extends StatelessWidget {
-
-  UserModel userModel = UserModel();
-  User? currentUser = FirebaseAuth.instance.currentUser;
-
-  int maxFailedLoadAttempts = 3;
-
-
-  getUser() async {
-    userModel = await firebaseServices.getUserInfo();
-  }
+class AlterEgoChatWidget extends StatefulWidget {
 
   String? documentID;
   ChatModel? chatModel;
@@ -40,9 +32,6 @@ class AlterEgoChatWidget extends StatelessWidget {
 
   /// use this bool value to determine when a chat is sub chat or not
   bool? isSubChat;
-  late String visitedUsersID;
-  late String visitedEgoName;
-  late UserModel _userModel;
 
   AlterEgoChatWidget(
       {Key? key,
@@ -52,9 +41,53 @@ class AlterEgoChatWidget extends StatelessWidget {
         this.isSubChat = false})
       : super(key: key);
 
+  @override
+  State<AlterEgoChatWidget> createState() => _AlterEgoChatWidgetState();
+}
+
+class _AlterEgoChatWidgetState extends State<AlterEgoChatWidget> {
+  UserModel userModel = UserModel();
+
+  User? currentUser = FirebaseAuth.instance.currentUser;
+
+  int maxFailedLoadAttempts = 3;
+  bool _isProcessing = false;
+
+
+  getUser() async {
+    userModel = await firebaseServices.getUserInfo();
+  }
+
+  late String visitedUsersID;
+
+  late String visitedEgoName;
+
+  late UserModel _userModel;
+
+// Ad-related variables remain the same
   InterstitialAd? _joinChatInterstitialAd;
   int _joinChatInterstitialLoadAttempts = 0;
+  InterstitialAd? _leaveChatInterstitialAd;
+  int _leaveChatInterstitialLoadAttempts = 0;
+  InterstitialAd? _contChatInterstitialAd;
+  int _contChatInterstitialLoadAttempts = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    // Pre-load ads when the widget is created
+    _createJoinChatInterstitialAd();
+    _createLeaveChatInterstitialAd();
+    _createContChatInterstitialAd();
+  }
+
+  @override
+  void dispose() {
+    _joinChatInterstitialAd?.dispose();
+    _leaveChatInterstitialAd?.dispose();
+    _contChatInterstitialAd?.dispose();
+    super.dispose();
+  }
   /// Create and show Join Chat interstitial ad.
 
   void _createJoinChatInterstitialAd() {
@@ -96,10 +129,6 @@ class AlterEgoChatWidget extends StatelessWidget {
   }
 
 
-
-  InterstitialAd? _leaveChatInterstitialAd;
-  int _leaveChatInterstitialLoadAttempts = 0;
-
   /// Create Leave Chat interstitial ad.
 
   void _createLeaveChatInterstitialAd() {
@@ -139,10 +168,6 @@ class AlterEgoChatWidget extends StatelessWidget {
       _leaveChatInterstitialAd!.show();
     }
   }
-
-
-  InterstitialAd? _contChatInterstitialAd;
-  int _contChatInterstitialLoadAttempts = 0;
 
   /// Create and show Continue Chat interstitial ad.
 
@@ -202,7 +227,7 @@ class AlterEgoChatWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           FutureBuilder(
-              future: firebaseServices.getUserWithId(id: chatModel!.userId),
+              future: firebaseServices.getUserWithId(id: widget.chatModel!.userId),
               builder: (_, AsyncSnapshot<UserModel> snap) {
                 if (!snap.hasData) {
                   return Container();
@@ -252,7 +277,7 @@ class AlterEgoChatWidget extends StatelessWidget {
                             height: 2,
                           ),
                           Text(
-                              timeConverter(chatModel!.timeCreated!,
+                              timeConverter(widget.chatModel!.timeCreated!,
                                   time: TimeConverterEnum.Comment),
                               textAlign: TextAlign.start,
                               maxLines: 1,
@@ -266,7 +291,7 @@ class AlterEgoChatWidget extends StatelessWidget {
 
                     StreamBuilder(
                         stream: firebaseServices
-                            .getAlterEgoSubMessages(documentID!, chatRoomPodo!, chatModel!),
+                            .getAlterEgoSubMessages(widget.documentID!, widget.chatRoomPodo!, widget.chatModel!),
                         builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
                           if (snapShot.hasError) {
                             return Container();
@@ -291,7 +316,7 @@ class AlterEgoChatWidget extends StatelessWidget {
             height: 6,
           ),
           Text(
-            chatModel!.message!,
+            widget.chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
                 fontSize: 18.0,
@@ -300,95 +325,35 @@ class AlterEgoChatWidget extends StatelessWidget {
           ),
 
           Visibility(
-            visible: chatModel?.audioUrl != '',
+            visible: widget.chatModel?.audioUrl != '',
             child: Container(
-              child: PlayAdviseVoiceNote(filePath: chatModel!.audioUrl),
+              child: PlayAdviseVoiceNote(filePath: widget.chatModel!.audioUrl),
             ),
           ),
 
+          _buildImageGrid(context),
 
-
-          Container(
-            margin: EdgeInsets.only(bottom: 10),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Row(
-                children: [
-                  Visibility(
-                      visible: chatModel!.image1 != '',
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: chatModel!.image1.toString()), context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 85,
-                            width: 75,
-                            imageUrl: chatModel!.image1.toString(),
-                            imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                ),
-                              ),
-                            ),
-                            placeholder: (context, url) =>
-                                Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
-                        ),
-                      )),
-                  SizedBox(
-                    width: 5,
-                  ),
-                  Visibility(
-                      visible:
-                      chatModel!.image2 != '',
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: chatModel!.image2.toString()), context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 75,
-                            width: 75,
-                            imageUrl: chatModel!.image2.toString(),
-                            imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                ),
-                              ),
-                            ),
-                            placeholder: (context, url) =>
-                                Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
-                        ),
-                      )),
-                ],
-              ),
+          Visibility(
+            visible: widget.chatModel?.audioUrl != '',
+            child: Container(
+              child: PlayAdviseVoiceNote(filePath: widget.chatModel!.audioUrl),
             ),
           ),
+
+          SizedBox(height: 8,),
 
           Row(
             children: [
 
               Visibility(
-                visible: chatModel!.userId == currentUser!.uid,
+                visible: widget.chatModel!.userId == currentUser!.uid,
                 child: GestureDetector(
                   onTap: () {
-                    if (chatModel!.userId == currentUser?.uid)
+                    if (widget.chatModel!.userId == currentUser?.uid)
                       deletedRoomAlertDialog(context);
                   },
                   child: Visibility(
-                    visible: chatModel!.userId == currentUser?.uid,
+                    visible: widget.chatModel!.userId == currentUser?.uid,
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
@@ -408,7 +373,7 @@ class AlterEgoChatWidget extends StatelessWidget {
               ),
 
 
-              if (chatModel!.members!.contains(currentUser!.uid))
+              if (widget.chatModel!.members!.contains(currentUser!.uid))
                 Align(
                   alignment: Alignment.bottomLeft,
                   child: InkWell(
@@ -419,7 +384,8 @@ class AlterEgoChatWidget extends StatelessWidget {
 
                       deleteAlterEgoSubChat();
                       updateMembers(joining: false);
-                      firebaseServices.unsubscribeToChatRoom(chatModel!.userId.toString());
+                      _showLeaveChatInterstitialAd(); // Show ad on leaving
+                      firebaseServices.unsubscribeToChatRoom(widget.chatModel!.userId.toString());
 
                       Future.delayed(Duration(seconds: 4), () {
                         _showLeaveChatInterstitialAd();
@@ -446,11 +412,11 @@ class AlterEgoChatWidget extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            '${chatModel!.members!.length} LEAVE',
+                            '${widget.chatModel!.members!.length} LEAVE',
                             style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w800,
-                                color: _isCompleted(chatModel, chatRoomPodo)
+                                color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
                                     ? Pallet.colorPrimaryDark
                                     : Pallet.colorSplashScreen),
                           ),
@@ -515,30 +481,98 @@ class AlterEgoChatWidget extends StatelessWidget {
               Spacer(flex: 1,),
 
 
-              if (chatModel!.members!.contains(currentUser!.uid))
+              if (widget.chatModel!.members!.contains(currentUser!.uid))
                 Align(
                   alignment: Alignment.bottomRight,
                   child: InkWell(
-                    onTap: () {
-                      _createContChatInterstitialAd();
-                      visitedUsersID = chatModel!.userId!.toString();
-                      String thisUser = visitedUsersID;
-
-                      if (!_isCompleted(chatModel, chatRoomPodo))
-                        showToast('Welcome back. Positive vibes only.');
-
-                      Future.delayed(Duration(days: 2), () {
-                        _showContChatInterstitialAd();
+                    onTap: () async {
+                      // --- PREVENT DOUBLE TAPS & SHOW LOADER ---
+                      if (_isProcessing) return;
+                      setState(() {
+                        _isProcessing = true;
                       });
 
-                      PageRouter.gotoWidget(
-                          AlterEgoSubChatScreen(
-                            documentID: thisUser,
-                            chatModel: chatModel,
-                            chatRoomPodo: chatRoomPodo,
-                          ),
-                          context);
+                      // WRONG: _showContChatInterstitialAd(); // DO NOT call the ad here. It blocks navigation.
+
+                      try {
+                        final String cornerOwnerId = widget.chatModel!.userId!;
+                        final UserModel cornerOwner = await firebaseServices.getUserWithId(id: cornerOwnerId);
+                        final String cornerOwnerNickname = cornerOwner.alterEgoId.toString();
+                        final String visitorId = currentUser!.uid;
+                        final UserModel visitor = await firebaseServices.getUserWithId(id: visitorId);
+                        final visitorNickname = visitor.alterEgoId;
+                        bool canProceed = false;
+
+                        if (visitorId == cornerOwnerId) {
+                          showToast('Welcome back to your Alter Ego corner.');
+                          canProceed = true;
+                        } else {
+                          const int entryCost = 1;
+                          const int taxAmount = 1;
+                          const int totalDebit = entryCost + taxAmount;
+
+                          if (visitor.currentLoveCount < totalDebit) {
+                            showToast("You need at least $totalDebit❤️ to continue in this corner.");
+                          } else {
+                            bool success = await firebaseServices.transferLoveBetweenUsers(
+                              senderId: visitorId,
+                              receiverId: cornerOwnerId,
+                              amountToSend: entryCost,
+                              taxAmount: taxAmount,
+                              totalDebitAmount: totalDebit,
+                              senderTransactionDesc: "$totalDebit❤️ for re-entering ${cornerOwnerNickname}'s corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
+                              receiverTransactionDesc: "$entryCost❤️ from ${visitorNickname} re-entering your corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
+                              claireTransactionDesc: "$taxAmount❤️ Tax from Alter Ego corner reentry.",
+                              forRoomVisits: entryCost,
+                              fromRoomVisits: entryCost,
+                            );
+                            canProceed = success;
+                            if(success) {
+                              showToast('Welcome Back to this corner with 1❤️ and positive vibes only.');
+                            }
+                          }
+                        }
+
+                        if (canProceed) {
+                          await firebaseServices.saveUserActivity(
+                            activityType: 'room_join',
+                            activityMessage: "You re-entered ${cornerOwnerNickname}'s Alter Ego corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}'.",
+                            sessionId: widget.chatModel?.sessionId!,
+                          );
+                          _showContChatInterstitialAd(); // Show ad on successful continuation
+                          if (!mounted) return;
+                          PageRouter.gotoWidget(
+                              AlterEgoSubChatScreen( // Correct navigation target
+                                documentID: cornerOwnerId,
+                                chatModel: widget.chatModel,
+                                chatRoomPodo: widget.chatRoomPodo,
+                              ),
+                              context);
+
+                          if (visitorId != cornerOwnerId) {
+                            await notificationService.sendNotification({
+                              "token": cornerOwner.fcmId,
+                              "notification": {
+                                "title": "Someone Entered Your Alter Ego Corner. Again!",
+                                "body": "${visitorNickname ?? 'An Alter Ego'} returned with 1❤️ to your corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
+                              },
+                              "data": {
+                                'route': 'alterEgoDiaryRooms',
+                                'roomId': widget.chatModel?.sessionId!, // Use sessionId for consistency
+                              },
+                            });
+                          }
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() {
+                            _isProcessing = false;
+                          });
+                        }
+                      }
                     },
+
+
                     child: Container(
                         padding: EdgeInsets.all(5),
                         width: 85,
@@ -559,7 +593,9 @@ class AlterEgoChatWidget extends StatelessWidget {
                           ),
                         ),
                         child: Center(
-                          child: Text(
+                          child: _isProcessing
+                              ? CupertinoActivityIndicator(color: Pallet.colorPrimaryDark)
+                              : Text(
                             'Continue',
                             style: TextStyle(
                               fontSize: 15,
@@ -573,34 +609,89 @@ class AlterEgoChatWidget extends StatelessWidget {
 
 
 
-              if (!chatModel!.members!.contains(currentUser!.uid))
+              if (!widget.chatModel!.members!.contains(currentUser!.uid))
                 Visibility(
-                  visible: !_isCompleted(chatModel, chatRoomPodo),
+                  visible: !_isCompleted(widget.chatModel, widget.chatRoomPodo),
                   child: Align(
                     alignment: Alignment.bottomRight,
                     child: InkWell(
-                      onTap: () {
-                        _createJoinChatInterstitialAd();
-                        visitedUsersID = _userModel.userId ?? '';
-                        String thisUser = visitedUsersID;
+                      onTap: () async {if (_isProcessing) return;
+                      setState(() {
+                        _isProcessing = true;
+                      });
 
-                        if (!_isCompleted(chatModel, chatRoomPodo))
+                      try {
+                        final String cornerOwnerId = widget.chatModel!.userId!;
+                        final UserModel cornerOwner = await firebaseServices.getUserWithId(id: cornerOwnerId);
+                        final String cornerOwnerNickname = cornerOwner.alterEgoId.toString();
+                        final String visitorId = currentUser!.uid;
+                        final UserModel visitor = await firebaseServices.getUserWithId(id: visitorId);
+                        final visitorNickname = visitor.alterEgoId;
 
-                          updateMembers(joining: true);
-                        showToast('Welcome. Start chatting after this ad.');
+                        const int entryCost = 3;
+                        const int taxAmount = 2;
+                        const int totalDebit = entryCost + taxAmount;
 
-                        Future.delayed(Duration(seconds: 5), () {
-                          _showJoinChatInterstitialAd();
-                        });
+                        if (visitor.currentLoveCount < totalDebit) {
+                          showToast("You need at least $totalDebit❤️ to join this corner.");
+                        } else {
+                          final bool transactionSuccess = await firebaseServices.transferLoveBetweenUsers(
+                            senderId: visitorId,
+                            receiverId: cornerOwnerId,
+                            amountToSend: entryCost,
+                            taxAmount: taxAmount,
+                            totalDebitAmount: totalDebit,
+                            senderTransactionDesc: "$totalDebit❤️ for ${cornerOwnerNickname} entering your corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
+                            receiverTransactionDesc: "$entryCost❤️ from ${visitorNickname} entering your corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
+                            claireTransactionDesc: "$taxAmount❤️ Tax from corner join.",
+                            forRoomVisits: entryCost,
+                            fromRoomVisits: entryCost,
+                          );
 
-                        PageRouter.gotoWidget(
-                            AlterEgoSubChatScreen(
-                              documentID: thisUser,
-                              chatModel: chatModel,
-                              chatRoomPodo: chatRoomPodo,
-                            ),
-                            context);
+                          if (transactionSuccess) {
+                            updateMembers(joining: true);
+                            showToast('Welcome to this corner with 3❤️ and positive vibes only.');
+
+                            await firebaseServices.saveUserActivity(
+                              activityType: 'room_join',
+                              activityMessage: "You entered ${cornerOwnerNickname}'s corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}'.",
+                              sessionId: widget.chatRoomPodo!.id.toString(),
+                            );
+                            _showJoinChatInterstitialAd(); // Show ad on successful join
+
+                            if (!mounted) return;
+                            PageRouter.gotoWidget(
+                                AlterEgoSubChatScreen(
+                                  documentID: cornerOwnerId,
+                                  chatModel: widget.chatModel,
+                                  chatRoomPodo: widget.chatRoomPodo,
+                                ),
+                                context);
+
+                            await notificationService.sendNotification({
+                              "token": cornerOwner.fcmId,
+                              "notification": {
+                                "title": "Someone Entered Your Alter Ego Corner!",
+                                "body": "${visitorNickname ?? 'An Alter Ego'} entered with 3❤️ to your corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
+                              },
+                              "data": {
+                                'route': 'alterEgoDiaryRooms',
+                                'roomId': widget.chatRoomPodo!.id.toString(),
+                              },
+                            });
+                          } else {
+                            showToast("Could not process entry. Please try again.");
+                          }
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() {
+                            _isProcessing = false;
+                          });
+                        }
+                      }
                       },
+
                       child: Container(
                           padding: EdgeInsets.all(5),
                           width: 70,
@@ -620,12 +711,14 @@ class AlterEgoChatWidget extends StatelessWidget {
                             ),
                           ),
                           child: Center(
-                            child: Text(
-                              '${chatModel!.members!.length} JOIN',
+                            child: _isProcessing
+                                ? CupertinoActivityIndicator(color: Pallet.colorSplashScreen)
+                                :  Text(
+                              '${widget.chatModel!.members!.length} JOIN',
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w800,
-                                color: _isCompleted(chatModel, chatRoomPodo)
+                                color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
                                     ? Pallet.blueGreyBgColor
                                     : Pallet.colorSplashScreen,
                               ),
@@ -636,9 +729,9 @@ class AlterEgoChatWidget extends StatelessWidget {
                 ),
 
 
-              if (!chatModel!.members!.contains(currentUser!.uid))
+              if (!widget.chatModel!.members!.contains(currentUser!.uid))
                 Visibility(
-                  visible: _isCompleted(chatModel, chatRoomPodo),
+                  visible: _isCompleted(widget.chatModel, widget.chatRoomPodo),
                   child: Align(
                     alignment: Alignment.bottomRight,
                     child: InkWell(
@@ -672,9 +765,9 @@ class AlterEgoChatWidget extends StatelessWidget {
                           ),
                           child: Center(
                             child: Text(
-                              '${chatModel!.members!.length} Room Full',
+                              '${widget.chatModel!.members!.length} Room Full',
                               style: TextStyle(
-                                  color: _isCompleted(chatModel, chatRoomPodo)
+                                  color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
                                       ? Pallet.blueGreyBgColor
                                       : Pallet.colorSplashScreen,
                                   fontWeight: FontWeight.w600),
@@ -697,14 +790,13 @@ class AlterEgoChatWidget extends StatelessWidget {
   void updateMembers({required bool joining}) async {
     final userID = currentUser!.uid.toString();
     if (joining) {
-      chatModel!.members!.add(userID);
+      widget.chatModel!.members!.add(userID);
     }
     if (!joining) {
-      chatModel!.members!.remove(userID);
+      widget.chatModel!.members!.remove(userID);
     }
-    firebaseServices.updateAlterEgoMembers(chatModel!.userId.toString(), chatRoomPodo, chatModel!);
+    firebaseServices.updateAlterEgoMembers(widget.chatModel!.userId.toString(), widget.chatRoomPodo, widget.chatModel!);
   }
-
 
   deletedRoomAlertDialog(BuildContext context) {
 
@@ -722,7 +814,7 @@ class AlterEgoChatWidget extends StatelessWidget {
         deleteAlterEgoChat();
         deleteAlterEgoSubChat();
         showToast("You have deleted the chat. Keep the aura clean!");
-        firebaseServices.unsubscribeToChatRoom(chatRoomPodo!.id.toString());
+        firebaseServices.unsubscribeToChatRoom(widget.chatRoomPodo!.id.toString());
         Navigator.of(context).pop();
       },
     );
@@ -751,25 +843,77 @@ class AlterEgoChatWidget extends StatelessWidget {
   Future<void> deleteAlterEgoChat() async {
     final collection = FirebaseFirestore.instance
         .collection("alterEgoChats")
-        .doc(chatRoomPodo!.id.toString())
-        .collection(chatRoomPodo!.title!);
-    await collection.doc(chatModel!.userId.toString()).delete();
-    firebaseServices.unsubscribeToChatRoom(chatModel!.userId.toString());
+        .doc(widget.chatRoomPodo!.id.toString())
+        .collection(widget.chatRoomPodo!.title!);
+    await collection.doc(widget.chatModel!.userId.toString()).delete();
+    firebaseServices.unsubscribeToChatRoom(widget.chatModel!.userId.toString());
     logger.d('Successfully deleted an chat session');
   }
-
 
   Future<void> deleteAlterEgoSubChat() async {
     final collection = FirebaseFirestore.instance
         .collection("alterEgoChats")
-        .doc(chatRoomPodo!.id.toString())
-        .collection(chatRoomPodo!.title!)
-        .doc(chatModel!.userId.toString())
-        .collection(chatModel!.userId.toString());
-    await collection.doc(chatModel!.userId.toString()).delete();
-    firebaseServices.unsubscribeToChatRoom(chatModel!.userId.toString());
+        .doc(widget.chatRoomPodo!.id.toString())
+        .collection(widget.chatRoomPodo!.title!)
+        .doc(widget.chatModel!.userId.toString())
+        .collection(widget.chatModel!.userId.toString());
+    await collection.doc(widget.chatModel!.userId.toString()).delete();
+    firebaseServices.unsubscribeToChatRoom(widget.chatModel!.userId.toString());
     logger.d('Successfully deleted an chat session');
   }
 
+
+
+  // --- NEW: Helper widget to build the image display ---
+  Widget _buildImageGrid(BuildContext context) {
+    final bool hasImage1 = widget.chatModel!.image1 != null && widget.chatModel!.image1!.isNotEmpty;
+    final bool hasImage2 = widget.chatModel!.image2 != null && widget.chatModel!.image2!.isNotEmpty;
+
+    // Only build the grid if there is at least one image
+    if (!hasImage1 && !hasImage2) {
+      return const SizedBox.shrink(); // Return an empty widget if no images
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10, top: 8),
+      child: Row(
+        // The children are expanded, so they will fill the row.
+        // If there's only one image, it will take up the full width.
+        children: [
+          if (hasImage1)
+            Expanded(child: _buildClickableImage(context, widget.chatModel!.image1!)),
+          if (hasImage1 && hasImage2)
+            const SizedBox(width: 8), // Spacer between images
+          if (hasImage2)
+            Expanded(child: _buildClickableImage(context, widget.chatModel!.image2!)),
+        ],
+      ),
+    );
+  }
+
+  // --- NEW: Helper for a single clickable image with rounded corners ---
+  Widget _buildClickableImage(BuildContext context, String imageUrl) {
+    return GestureDetector(
+      onTap: () {
+        PageRouter.gotoWidget(CustomImageWidget(imageUrl: imageUrl), context);
+      },
+      // Constrain the height for a preview look
+      child: SizedBox(
+        height: 150,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15.0), // Consistent rounded corners
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => const Center(child: CupertinoActivityIndicator()),
+            errorWidget: (context, url, error) => Image.asset(
+              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
 }

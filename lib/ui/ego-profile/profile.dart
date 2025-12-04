@@ -149,8 +149,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
       //SetOptions(merge: true)
     );
     logger.d('Successfully saved your Ego message');
-    print('Ego Message: $egoMessage');
-
+    await firebaseServices.saveUserActivity(
+      activityType: 'mantra', // A new activity type
+      activityMessage: "You left a new mantra for yourself, $egoName.",);
   }
 
   /// Save Ego audio mantra

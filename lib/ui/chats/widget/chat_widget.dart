@@ -66,11 +66,74 @@ class _ChatWidgetState extends State<ChatWidget> {
 
   late UserModel _userModel;
 
+  // Ad-related variables remain the same
+  InterstitialAd? _joinChatInterstitialAd;
+  int _joinChatInterstitialLoadAttempts = 0;
   InterstitialAd? _leaveChatInterstitialAd;
-
   int _leaveChatInterstitialLoadAttempts = 0;
+  InterstitialAd? _contChatInterstitialAd;
+  int _contChatInterstitialLoadAttempts = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-load ads when the widget is created
+    _createJoinChatInterstitialAd();
+    _createLeaveChatInterstitialAd();
+    _createContChatInterstitialAd();
+  }
+
+  @override
+  void dispose() {
+    _joinChatInterstitialAd?.dispose();
+    _leaveChatInterstitialAd?.dispose();
+    _contChatInterstitialAd?.dispose();
+    super.dispose();
+  }
 
   bool _isAvatarLoading = false;
+  bool _isProcessing = false;
+
+
+  /// Create and show Join Chat interstitial ad.
+
+  void _createJoinChatInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/7417113912" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/7030101104" :
+      '',      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _joinChatInterstitialAd = ad;
+          _joinChatInterstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _joinChatInterstitialLoadAttempts += 1;
+          _joinChatInterstitialAd = null;
+          if (_joinChatInterstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createJoinChatInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showJoinChatInterstitialAd() {
+    if (_joinChatInterstitialAd != null) {
+      _joinChatInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createJoinChatInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createJoinChatInterstitialAd();
+        },
+      );
+      _joinChatInterstitialAd!.show();
+    }
+  }
 
 
   /// Create Leave Chat interstitial ad.
@@ -110,6 +173,46 @@ class _ChatWidgetState extends State<ChatWidget> {
         },
       );
       _leaveChatInterstitialAd!.show();
+    }
+  }
+
+  /// Create and show Continue Chat interstitial ad.
+
+  void _createContChatInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/2293350565" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/3728601600" :
+      '',      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _contChatInterstitialAd = ad;
+          _contChatInterstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _contChatInterstitialLoadAttempts += 1;
+          _contChatInterstitialAd = null;
+          if (_contChatInterstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createContChatInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showContChatInterstitialAd() {
+    if (_contChatInterstitialAd != null) {
+      _contChatInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createContChatInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createContChatInterstitialAd();
+        },
+      );
+      _contChatInterstitialAd!.show();
     }
   }
 
@@ -489,76 +592,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                 fontWeight: FontWeight.normal),
           ),
 
-
-
-          Container(
-            margin: EdgeInsets.only(bottom: 10),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Row(
-                children: [
-                  Visibility(
-                      visible: widget.chatModel!.image1 != '',
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image1.toString()), context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 85,
-                            width: 75,
-                            imageUrl: widget.chatModel!.image1.toString(),
-                            imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                ),
-                              ),
-                            ),
-                            placeholder: (context, url) =>
-                                Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
-                        ),
-                      )),
-                  SizedBox(
-                    width: 5,
-                  ),
-                  Visibility(
-                      visible:
-                      widget.chatModel!.image2 != '',
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(CustomImageWidget(imageUrl: widget.chatModel!.image2.toString()), context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 75,
-                            width: 75,
-                            imageUrl: widget.chatModel!.image2.toString(),
-                            imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(
-                                  image: imageProvider,
-                                ),
-                              ),
-                            ),
-                            placeholder: (context, url) =>
-                                Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                              width: 48,
-                              height: 48,
-                            ) //Icon(Icons.error),
-                        ),
-                      )),
-                ],
-              ),
-            ),
-          ),
+          _buildImageGrid(context),
 
           Visibility(
             visible: widget.chatModel?.audioUrl != '',
@@ -566,6 +600,8 @@ class _ChatWidgetState extends State<ChatWidget> {
               child: PlayAdviseVoiceNote(filePath: widget.chatModel!.audioUrl),
             ),
           ),
+
+          SizedBox(height: 8,),
 
           Row(
             children: [
@@ -603,17 +639,13 @@ class _ChatWidgetState extends State<ChatWidget> {
                 alignment: Alignment.bottomLeft,
                 child: InkWell(
                   onTap: () {
-                    _createLeaveChatInterstitialAd();
                     visitedUsersID = _userModel.userId ?? '';
-                      showToast('Thanks for your time. A short ad coming.');
+                      showToast('Thanks for your time. A short ad might show.');
 
                     deleteSubChat();
                     updateMembers(joining: false);
                     firebaseServices.unsubscribeToChatRoom(widget.chatModel!.userId.toString());
-
-                    Future.delayed(Duration(seconds: 4), () {
-                      _showLeaveChatInterstitialAd();
-                    });
+                    _showLeaveChatInterstitialAd(); // Show ad on leaving
 
                   },
                   child: Container(
@@ -709,65 +741,106 @@ class _ChatWidgetState extends State<ChatWidget> {
                 Align(
                   alignment: Alignment.bottomRight,
                   child: InkWell(
-                    onTap: () async { // Make sure this is async
-                      final String roomOwnerId = widget.chatModel!.userId!;
-                      final String visitorId = currentUser!.uid;
+                    onTap: () async {
+                      // --- PREVENT DOUBLE TAPS & SHOW LOADER ---
+                      if (_isProcessing) return;
+                      setState(() {
+                        _isProcessing = true;
+                      });
 
-                      // --- NEW AND CORRECTED LOGIC ---
-                      if (visitorId == roomOwnerId) {
-                        // User is entering their own room, no cost.
-                        showToast('Welcome back to your room.');
-                      } else {
-                        // Visitor is entering another user's room.
-                        const int entryCost = 3;
-                        const int taxAmount = 2;
-                        const int totalDebit = entryCost + taxAmount;
+                      try {
+                        final String cornerOwnerId = widget.chatModel!.userId!;
+                        final UserModel cornerOwner = await firebaseServices.getUserWithId(id: cornerOwnerId);
+                        final String cornerOwnerNickname = cornerOwner.nickname.toString();
+                        final String visitorId = currentUser!.uid;
+                        final UserModel visitor = await firebaseServices.getUserWithId(id: visitorId);
+                        final visitorNickname = visitor.nickname;
+                        bool canProceed = false;
 
-                        // Check if the visitor can afford the entry
-                        UserModel visitorData = await firebaseServices.getUserWithId(id: visitorId);
-                        if (visitorData.currentLoveCount < totalDebit) {
-                          showToast("You need at least $totalDebit ❤️ to enter another user's room.");
-                          return; // Stop if they can't afford it.
+                        if (visitorId == cornerOwnerId) {
+                          // User is entering their own room, no cost.
+                          showToast('Welcome back to your corner.');
+                          canProceed = true;
+                        } else {
+                          // A Visitor is re-entering another corner owner's corner.
+                          const int entryCost = 1;
+                          const int taxAmount = 1;
+                          const int totalDebit = entryCost + taxAmount;
+
+                          if (visitor.currentLoveCount < totalDebit) {
+                            showToast("You need at least $totalDebit❤️ to continue chat in this corner.");
+                            // canProceed remains false
+                          } else {
+
+                            // Perform the user-to-user transfer and capture the result
+                            bool success = await firebaseServices.transferLoveBetweenUsers(
+                              senderId: visitorId,
+                              receiverId: cornerOwnerId,
+                              amountToSend: entryCost,
+                              taxAmount: taxAmount,
+                              totalDebitAmount: totalDebit,
+                              senderTransactionDesc: "$totalDebit❤️ for re-entering ${cornerOwnerNickname}'s corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
+                              receiverTransactionDesc: "$entryCost❤️ from ${visitorNickname} re-entering your corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
+                              claireTransactionDesc: "$taxAmount❤️ Tax from corner reentry.",
+                              forRoomVisits: entryCost,
+                              fromRoomVisits: entryCost,
+                            );
+                            canProceed = success; // Set canProceed based on transaction outcome
+                          }
                         }
 
-                        // Perform the user-to-user transfer
-                        bool success = await firebaseServices.transferLoveBetweenUsers(
-                          senderId: visitorId,
-                          receiverId: roomOwnerId,
-                          amountToSend: entryCost,
-                          taxAmount: taxAmount,
-                          totalDebitAmount: totalDebit,
-                          senderTransactionDesc: "5❤️ to enter ${widget.chatModel!.userNickname}'s room.",
-                          receiverTransactionDesc: "3❤️ for ${visitorData.nickname} visiting your room.",
-                          claireTransactionDesc: "2❤️ Tax from room entry.",
-                          // Pass the stat increments
-                          forRoomVisits: entryCost,
-                          fromRoomVisits: entryCost,
-                        );
+                        // --- EXECUTE SUBSEQUENT ACTIONS ONLY IF ALLOWED ---
+                        if (canProceed) {
+                          await firebaseServices.saveUserActivity(
+                            activityType: 'room_join',
+                            activityMessage: "You re-entered ${cornerOwnerNickname}'s corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}'.",
+                            sessionId: widget.chatRoomPodo!.id.toString(),
+                          );
+                          _showContChatInterstitialAd(); // Show ad on successful continuation
 
-                        if (!success) {
-                          // The transaction failed, probably due to a race condition or other error.
-                          // The service method already shows a toast.
-                          return;
+                          // Safety check before navigating
+                          if (!mounted) return;
+                          PageRouter.gotoWidget(
+                              SubChatScreen(
+                                documentID: cornerOwnerId,
+                                chatModel: widget.chatModel,
+                                chatRoomPodo: widget.chatRoomPodo,
+                              ),
+                              context);
+
+                          // Send notification only if it's not the owner re-entering
+                          if (visitorId != cornerOwnerId) {
+                            await notificationService.sendNotification({
+                              "token": cornerOwner.fcmId,
+                              "notification": {
+                                "title": "Someone Entered Your Corner. Again!",
+                                "body": "${visitorNickname ?? 'An Ego'} returned with 1❤️ to your corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
+                              },
+                              "data": {
+                                'route': 'diaryRooms',
+                                'roomId': widget.chatRoomPodo!.id.toString(),
+                              },
+                            });
+                          }
+                          showToast('Welcome Back to this corner with 1❤️ and positive vibes only.');
+                        }
+                        // If canProceed is false for any reason, the code will skip to the finally block.
+
+                      } finally {
+                        // --- HIDE THE LOADER ---
+                        if (mounted) {
+                          setState(() {
+                            _isProcessing = false;
+                          });
                         }
                       }
-
-                      PageRouter.gotoWidget(
-                          SubChatScreen(
-                            documentID: roomOwnerId,
-                            chatModel: widget.chatModel,
-                            chatRoomPodo: widget.chatRoomPodo,
-                          ),
-                          context);
                     },
-
                     child: Container(
                         padding: EdgeInsets.all(5),
                         width: 85,
                         height: 25,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.0),
-
                           gradient: LinearGradient(
                             begin: Alignment(
                                 -0.37857140550652835, -1.9473685559777252),
@@ -781,7 +854,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                           ),
                         ),
                         child: Center(
-                          child: Text(
+                          child: _isProcessing
+                              ? CupertinoActivityIndicator(color: Pallet.colorPrimaryDark)
+                              : Text(
                             'CONTINUE',
                             style: TextStyle(
                                 fontSize: 14,
@@ -801,24 +876,98 @@ class _ChatWidgetState extends State<ChatWidget> {
                   child: Align(
                   alignment: Alignment.bottomRight,
                   child: InkWell(
-                    onTap: () {
-                      visitedUsersID = _userModel.userId ?? '';
-                      String thisUser = visitedUsersID;
+                    onTap: () async {
+                      if (_isProcessing) return;
+                      setState(() {
+                        _isProcessing = true;
+                      });
 
-                      if (!_isCompleted(widget.chatModel, widget.chatRoomPodo))
+                      try {
+                        final String cornerOwnerId = widget.chatModel!.userId!;
+                        final UserModel cornerOwner = await firebaseServices.getUserWithId(id: cornerOwnerId);
+                        final String cornerOwnerNickname = cornerOwner.nickname.toString();
+                        final String visitorId = currentUser!.uid;
+                        final UserModel visitor = await firebaseServices.getUserWithId(id: visitorId);
+                        final visitorNickname = visitor.nickname;
 
-                        updateMembers(joining: true);
-                        showToast('Welcome. Start chatting with positive vibes.');
+                        if (!_isCompleted(widget.chatModel, widget.chatRoomPodo)) {
+                          updateMembers(joining: true);
+                        }
 
+                        // PERFORM THE TRANSACTION FOR JOINING ---
+                        const int entryCost = 3;
+                        const int taxAmount = 2;
+                        const int totalDebit = entryCost + taxAmount;
 
-                      PageRouter.gotoWidget(
-                            SubChatScreen(
-                                documentID: thisUser,
-                                chatModel: widget.chatModel,
-                                chatRoomPodo: widget.chatRoomPodo,
-                            ),
-                            context);
+                        if (visitor.currentLoveCount < totalDebit) {
+                          showToast(
+                              "You need at least $totalDebit❤️ to enter this corner.");
+                          // No 'return' here, the finally block will handle the loader state.
+                        } else {
+                          // Capture the boolean result of the transaction
+                          final bool transactionSuccess = await firebaseServices.transferLoveBetweenUsers(
+                            senderId: visitorId,
+                            receiverId: cornerOwnerId,
+                            amountToSend: entryCost,
+                            taxAmount: taxAmount,
+                            totalDebitAmount: totalDebit,
+                            senderTransactionDesc: "$totalDebit❤️ for ${cornerOwnerNickname} entering your corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
+                            receiverTransactionDesc: "$entryCost❤️ from ${visitorNickname} entering your corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
+                            claireTransactionDesc: "$taxAmount❤️ Tax from corner join.",
+                            forRoomVisits: entryCost,
+                            fromRoomVisits: entryCost,
+                          );
+
+                          // --- CHECK IF TRANSACTION SUCCEEDED ---
+                          if (transactionSuccess) {
+                            // --- 1. SAVE USER ACTIVITY ---
+                            await firebaseServices.saveUserActivity(
+                              activityType: 'room_join',
+                              activityMessage: "You entered ${cornerOwnerNickname}'s corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}'.",
+                              sessionId: widget.chatRoomPodo!.id.toString(),
+                            );
+                            _showJoinChatInterstitialAd(); // Show ad on successful join
+
+                            // --- 2. NAVIGATE TO SUBCHAT SCREEN ---
+                            // Check if the widget is still in the tree before navigating
+                            if (!mounted) return;
+                            PageRouter.gotoWidget(
+                                SubChatScreen(
+                                  documentID: cornerOwnerId,
+                                  chatModel: widget.chatModel,
+                                  chatRoomPodo: widget.chatRoomPodo,
+                                ),
+                                context);
+
+                            // --- 3. DROP NOTIFICATION ---
+                            await notificationService.sendNotification({
+                              "token": cornerOwner.fcmId,
+                              "notification": {
+                                "title": "Someone Entered Your Corner!",
+                                "body": "${visitorNickname ?? 'An Ego'} entered with 3❤️ to your corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
+                              },
+                              "data": {
+                                'route': 'diaryRooms',
+                                'roomId': widget.chatRoomPodo!.id.toString(),
+                              },
+                            });
+
+                            showToast('Welcome to this corner with 3❤️ and positive vibes only.');
+
+                          }
+                          // If transactionSuccess is false, the code will skip to the finally block.
+                        }
+
+                      } finally {
+                        // --- HIDE THE LOADER ---
+                        if (mounted) {
+                          setState(() {
+                            _isProcessing = false;
+                          });
+                        }
+                      }
                     },
+
                     child: Container(
                         padding: EdgeInsets.all(5),
                         width: 70,
@@ -838,7 +987,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                           ),
                         ),
                         child: Center(
-                          child: Text(
+                          child: _isProcessing
+                              ? CupertinoActivityIndicator(color: Pallet.colorSplashScreen)
+                              :  Text(
                             '${widget.chatModel!.members!.length} JOIN',
                             style: TextStyle(
                               fontSize: 14,
@@ -866,9 +1017,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                         showToast('Sorry, this room is full.\n'
                             'Start your own room after this ad.');
 
-                        Future.delayed(Duration(seconds: 5), () {
-                          _showLeaveChatInterstitialAd();
-                        });
+                        _showLeaveChatInterstitialAd();
                       },
                       child: Container(
                           padding: EdgeInsets.all(5),
@@ -986,4 +1135,59 @@ class _ChatWidgetState extends State<ChatWidget> {
     firebaseServices.unsubscribeToChatRoom(widget.chatModel!.userId.toString());
     logger.d('Successfully deleted an chat session');
   }
-}
+
+
+  // --- NEW: Helper widget to build the image display ---
+  Widget _buildImageGrid(BuildContext context) {
+    final bool hasImage1 = widget.chatModel!.image1 != null && widget.chatModel!.image1!.isNotEmpty;
+    final bool hasImage2 = widget.chatModel!.image2 != null && widget.chatModel!.image2!.isNotEmpty;
+
+    // Only build the grid if there is at least one image
+    if (!hasImage1 && !hasImage2) {
+      return const SizedBox.shrink(); // Return an empty widget if no images
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10, top: 8),
+      child: Row(
+        // The children are expanded, so they will fill the row.
+        // If there's only one image, it will take up the full width.
+        children: [
+          if (hasImage1)
+            Expanded(child: _buildClickableImage(context, widget.chatModel!.image1!)),
+          if (hasImage1 && hasImage2)
+            const SizedBox(width: 8), // Spacer between images
+          if (hasImage2)
+            Expanded(child: _buildClickableImage(context, widget.chatModel!.image2!)),
+        ],
+      ),
+    );
+  }
+
+  // --- NEW: Helper for a single clickable image with rounded corners ---
+  Widget _buildClickableImage(BuildContext context, String imageUrl) {
+    return GestureDetector(
+      onTap: () {
+        PageRouter.gotoWidget(CustomImageWidget(imageUrl: imageUrl), context);
+      },
+      // Constrain the height for a preview look
+      child: SizedBox(
+        height: 150,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15.0), // Consistent rounded corners
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => const Center(child: CupertinoActivityIndicator()),
+            errorWidget: (context, url, error) => Image.asset(
+              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  }

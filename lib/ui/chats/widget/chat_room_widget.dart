@@ -29,64 +29,79 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
   Widget build(BuildContext context) {
     return CupertinoButton(
       onPressed: () async {
+        // --- 1. PREVENT DOUBLE TAPS & SHOW LOADER ---
+        if (isLoading) return;
         setState(() {
           isLoading = true;
         });
 
-        UserModel user = await firebaseServices.getUserInfo();
+        try {
+          // --- 2. FETCH USER DATA ---
+          UserModel user = await firebaseServices.getUserInfo();
 
-        // Define the cost and check if the user can afford it
-        const int roomEntryCost = 1;
-        if (user.currentLoveCount < roomEntryCost) {
-          showToast("You need at least 1 ❤️ to enter a room.");
-          setState(() {
-            isLoading = false;
-          });
-          return;
+          // --- 3. DEFINE COSTS & CHECK REQUIREMENTS ---
+          const int roomEntryCost = 1;
+          const int specialRoomLoveRequirement = 2000;
+
+          // Check for room-specific love requirement
+          final isSpecialRoom = widget.element.title == "One On One Room" ||
+              widget.element.title == "Five Aside Room" ||
+              widget.element.title == "One On One Eavedrop With ClAIre";
+
+          if (isSpecialRoom && user.currentLoveCount <= specialRoomLoveRequirement) {
+            showToast("You need more than $specialRoomLoveRequirement Loves for this room.");
+            return; // Exit early, finally block will handle the loader
+          }
+
+          // Check if the user can afford the basic entry cost
+          if (user.currentLoveCount < roomEntryCost) {
+            showToast("You need at least $roomEntryCost❤️ to enter a room.");
+            return; // Exit early, finally block will handle the loader
+          }
+
+          // --- 4. PERFORM TRANSACTION ---
+          final bool transactionSuccess = await firebaseServices.updateTreasuryAndUser(
+            userId: user.userId!,
+            amount: roomEntryCost,
+            type: t_model.TransactionType.debit, // User is spending
+            userTransactionDescription: "$roomEntryCost❤️ to enter ${widget.element.title}.",
+            forRoomVisits: roomEntryCost, // Increment the 'forRoomVisits' stat
+            metadata: {
+              'room_id': widget.element.id,
+              'room_title': widget.element.title
+            },
+          );
+
+          // --- 5. PROCEED ONLY IF TRANSACTION IS SUCCESSFUL ---
+          if (transactionSuccess) {
+            // Show success toast
+            showToast("Welcome to ${widget.element.title}! Positive vibes only");
+
+            // Save the join room activity
+            await firebaseServices.saveUserActivity(
+              activityType: 'room_join',
+              activityMessage: "You entered Claire's room: ${widget.element.title}.",
+              sessionId: widget.element.id.toString(),
+            );
+
+            // Navigate to the chat screen
+            if (!mounted) return; // Safety check before navigating
+            PageRouter.gotoWidget(
+                ChatScreen(chatRoomPodo: widget.element), context);
+          } else {
+            // Optional: Notify user if the transaction specifically failed
+            showToast("Could not process entry. Please try again.");
+          }
+        } finally {
+          // --- 6. HIDE THE LOADER (GUARANTEED) ---
+          if (mounted) {
+            setState(() {
+              isLoading = false;
+            });
+          }
         }
-
-        // Check for room-specific requirements (like the 2000 loves for certain rooms)
-        if ((widget.element.title == "One On One Room" ||
-            widget.element.title == "Five Aside Room") &&
-            user.currentLoveCount <= 2000) {
-          showToast("You need more than 2000 Loves for this room.");
-          setState(() {
-            isLoading = false;
-          });
-          return;
-        }
-
-        // --- TRANSACTION LOGIC ---
-        // If all checks pass, deduct the love for entering the room.
-        await firebaseServices.updateTreasuryAndUser(
-          userId: user.userId!,
-          amount: roomEntryCost,
-          type: t_model.TransactionType.debit,
-          // User is spending
-          userTransactionDescription: "1❤️ to enter ${widget.element
-              .title}.",
-          forRoomVisits: roomEntryCost,
-          // Increment the 'forRoomVisits' stat
-          metadata: {
-            'room_id': widget.element.id,
-            'room_title': widget.element.title
-          },
-        );
-        // --- ADD THIS LINE TO SAVE THE JOIN ROOM ACTIVITY ---
-        await firebaseServices.saveUserActivity(
-          activityType: 'room_join',
-          activityMessage: "This room was joined: ${widget.element.title}.",
-          sessionId: widget.element.id.toString(),
-        );
-
-        // Navigate to the chat screen after the transaction
-        PageRouter.gotoWidget(
-            ChatScreen(chatRoomPodo: widget.element), context);
-
-        setState(() {
-          isLoading = false;
-        });
       },
+
       padding: EdgeInsets.zero,
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
