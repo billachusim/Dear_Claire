@@ -294,50 +294,69 @@ class _SubChatScreenState extends State<SubChatScreen> {
       });
     }
     try {
-    final _user = await firebaseServices.getUserInfo();
+      final _user = await firebaseServices.getUserInfo();
 
-    // Create the chat model to be sent
-    final newChatMessage = ChatModel(
-        message: v,
-        userId: _user.userId,
-        timeCreated: Timestamp.now(),
-        audioUrl: voiceNote,
-        image1: image1,
-        image2: image2,
-        members: [_user.userId]);
+      // Create the chat model to be sent
+      final newChatMessage = ChatModel(
+          message: v,
+          userId: _user.userId,
+          timeCreated: Timestamp.now(),
+          audioUrl: voiceNote,
+          image1: image1,
+          image2: image2,
+          members: [_user.userId]);
 
-    // Send the message to Firestore
-    firebaseServices.addSubMessage(
-        widget.documentID!,
-        widget.chatRoomPodo!,
-        newChatMessage);
+      // Send the message to Firestore
+      firebaseServices.addSubMessage(
+          widget.documentID!,
+          widget.chatRoomPodo!,
+          newChatMessage);
 
-    // Update the last activity time for sorting purposes
-    updateDiaryroomTimeLastActivity(widget.documentID!, widget.chatRoomPodo!);
+      // Update the last activity time for sorting purposes
+      updateDiaryroomTimeLastActivity(widget.documentID!, widget.chatRoomPodo!);
 
-    await firebaseServices.saveUserActivity(
-      activityType: 'room_join',
-      activityMessage: "You messaged a corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}'.",
-      sessionId: widget.chatRoomPodo?.id.toString(),
-    );
+      await firebaseServices.saveUserActivity(
+        activityType: 'room_join',
+        activityMessage: "You messaged a corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}'.",
+        sessionId: widget.chatRoomPodo?.id.toString(),
+      );
 
-    // --- 3. DROP NOTIFICATION ---
-    final cornerOwner = await firebaseServices.getUserWithId(id: widget.chatModel!.userId);
-    final cornerOwnerFcmId = cornerOwner.fcmId;
-    final visitorNickname = _user.nickname;
-    await notificationService.sendNotification({
-      "token": cornerOwnerFcmId,
-      "notification": {
-        "title": "Someone Entered Your Corner!",
-        "body": "${visitorNickname ?? 'An Ego'} dropped a message in your corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
-      },
-      "data": {
+      // --- 3. NOTIFY ALL MEMBERS IN THE CORNER ---
+      final visitorNickname = _user.nickname;
+      final title = "New Message in ${widget.chatModel?.message ?? 'a Corner'}!";
+      final body = "${visitorNickname ?? 'An Ego'} dropped a message in a corner you're in.";
+      final routeData = {
         'route': 'diaryRooms',
         'roomId': widget.chatRoomPodo!.id.toString(),
         'cornerId': widget.documentID,
-      },
-    });
-    showToast(message: 'Message Sent. Remember, positive vibes only.');
+      };
+
+      // Use a Set to avoid duplicate notifications
+      final memberIds = widget.chatModel?.members?.toSet() ?? {};
+      // Also include the corner owner if they are not already in members list
+      if (widget.chatModel?.userId != null) {
+        memberIds.add(widget.chatModel!.userId!);
+      }
+
+      for (String memberId in memberIds) {
+        // Don't send a notification to the user who sent the message
+        if (memberId == _user.userId) continue;
+
+        try {
+          final member = await firebaseServices.getUserWithId(id: memberId);
+          final fcmId = member.fcmId;
+          if (fcmId != null && fcmId.isNotEmpty) {
+            await notificationService.sendNotification({
+              "token": fcmId,
+              "notification": {"title": title, "body": body},
+              "data": routeData,
+            });
+          }
+        } catch (e) {
+          print("Error sending notification to member $memberId: $e");
+        }
+      }
+      showToast(message: 'Message Sent. Remember, positive vibes only.');
 
     } catch (e) {
       // Handle any potential errors
@@ -351,20 +370,6 @@ class _SubChatScreenState extends State<SubChatScreen> {
         });
       }
     }
-  }
-
-
-
-
-  void updateMembers({required bool joining}) async {
-    final userID = currentUser!.uid.toString();
-    if (joining) {
-      widget.chatModel!.members!.add(userID);
-    }
-    if (!joining) {
-      widget.chatModel!.members!.remove(userID);
-    }
-    firebaseServices.updateMembers(widget.documentID!, widget.chatRoomPodo, widget.chatModel!);
   }
 
 

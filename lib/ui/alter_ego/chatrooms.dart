@@ -59,14 +59,12 @@ class _ChatRoomsState extends State<ChatRooms> {
         },
         child: Scaffold(
           body: Stack(
-            children:[
-              CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
-
-
-              ListView(
-                children: AlterEgoRoomData.room().map((room) => AlterEgoChatRoomWidget(element: room)).toList(),
-              ),
-          ]
+              children:[
+                CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
+                ListView(
+                  children: AlterEgoRoomData.room().map((room) => AlterEgoChatRoomWidget(element: room)).toList(),
+                ),
+              ]
           ),
         ),
       ),

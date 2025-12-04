@@ -537,7 +537,7 @@ class _AlterEgoChatWidgetState extends State<AlterEgoChatWidget> {
                           await firebaseServices.saveUserActivity(
                             activityType: 'room_join',
                             activityMessage: "You re-entered ${cornerOwnerNickname}'s Alter Ego corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}'.",
-                            sessionId: widget.chatModel?.sessionId!,
+                            sessionId: widget.chatRoomPodo!.id.toString(),
                           );
                           _showContChatInterstitialAd(); // Show ad on successful continuation
                           if (!mounted) return;
@@ -558,7 +558,7 @@ class _AlterEgoChatWidgetState extends State<AlterEgoChatWidget> {
                               },
                               "data": {
                                 'route': 'alterEgoDiaryRooms',
-                                'roomId': widget.chatModel?.sessionId!, // Use sessionId for consistency
+                                'roomId': widget.chatRoomPodo!.id.toString(),
                               },
                             });
                           }

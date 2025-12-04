@@ -18,6 +18,7 @@ import '../../Admob/ad_state.dart';
 import '../../helpers/toast_helper.dart';
 import '../../services/firebase_services.dart';
 import '../../services/notification_service.dart';
+import '../../utils/strings.dart';
 
 class Temp {
   String id;
@@ -289,52 +290,74 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
     }
 
     // --- Show loader ---
-    setState(() {
-      _isSending = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isSending = true;
+      });
+    }
 
     try {
-    final _user = await firebaseServices.getUserInfo();
-    firebaseServices.addAlterEgoSubMessage(
-        widget.documentID!,
-        widget.chatRoomPodo!,
-        ChatModel(
-            message: v,
-            userId: _user.userId,
-            timeCreated: Timestamp.now(),
-            audioUrl: voiceNote,
-            image1: image1,
-            image2: image2,
-            members: [_user.userId]));
-    updateDiaryroomTimeLastActivity(_user.userId.toString(), widget.chatRoomPodo!);
+      final _user = await firebaseServices.getUserInfo();
+      firebaseServices.addAlterEgoSubMessage(
+          widget.documentID!,
+          widget.chatRoomPodo!,
+          ChatModel(
+              message: v,
+              userId: _user.userId,
+              timeCreated: Timestamp.now(),
+              audioUrl: voiceNote,
+              image1: image1,
+              image2: image2,
+              members: [_user.userId]));
+      updateDiaryroomTimeLastActivity(widget.documentID!, widget.chatRoomPodo!);
 
-    await firebaseServices.saveUserActivity(
-      activityType: 'room_join',
-      activityMessage: "You messaged a corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}'.",
-      sessionId: widget.chatRoomPodo?.id.toString(),
-    );
+      await firebaseServices.saveUserActivity(
+        activityType: 'room_join',
+        activityMessage: "You messaged a corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}'.",
+        sessionId: widget.chatRoomPodo?.id.toString(),
+      );
 
-    // --- 3. DROP NOTIFICATION ---
-    final cornerOwner = await firebaseServices.getUserWithId(id: widget.chatModel!.userId);
-    final cornerOwnerFcmId = cornerOwner.fcmId;
-    final visitorNickname = _user.nickname;
-    await notificationService.sendNotification({
-      "token": cornerOwnerFcmId,
-      "notification": {
-        "title": "Someone Entered Your Corner!",
-        "body": "${visitorNickname ?? 'An Ego'} dropped a message in your corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
-      },
-      "data": {
-        'route': 'diaryRooms',
+      // --- NOTIFY ALL MEMBERS IN THE ALTER EGO CORNER ---
+      final visitorNickname = _user.alterEgoId;
+      final title = "New Message in ${widget.chatModel?.message ?? 'an Alter Ego Corner'}!";
+      final body = "${visitorNickname ?? 'An Alter Ego'} dropped a message in a corner you're in.";
+      final routeData = {
+        'route': 'alterEgoDiaryRooms',
         'roomId': widget.chatRoomPodo!.id.toString(),
-      },
-    });
-    showToast(message: 'Message Sent. Remember, positive vibes only.');
+        'cornerId': widget.documentID,
+      };
+
+      // Use a Set to gather unique member IDs
+      final memberIds = widget.chatModel?.members?.toSet() ?? {};
+      // Also include the corner owner if they are not already in members list
+      if (widget.chatModel?.userId != null) {
+        memberIds.add(widget.chatModel!.userId!);
+      }
+
+      for (String memberId in memberIds) {
+        // Don't send a notification to the user who sent the message
+        if (memberId == _user.userId) continue;
+
+        try {
+          final member = await firebaseServices.getUserWithId(id: memberId);
+          final fcmId = member.fcmId;
+          if (fcmId != null && fcmId.isNotEmpty) {
+            await notificationService.sendNotification({
+              "token": fcmId,
+              "notification": {"title": title, "body": body},
+              "data": routeData,
+            });
+          }
+        } catch (e) {
+          print("Error sending notification to member $memberId: $e");
+        }
+      }
+      showToast(message: 'Message Sent. Remember, positive vibes only.');
 
     } catch (e) {
       // Handle any potential errors
-      print("Error creating Alter Ego corner: $e");
-      showToast(message: "Failed to start corner. Please try again.");
+      print("Error sending message in Alter Ego corner: $e");
+      showToast(message: "Failed to send message. Please try again.");
     } finally {
       // --- HIDE LOADER (GUARANTEED) ---
       if (mounted) {
@@ -345,70 +368,7 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
     }
   }
 
-
-  /// Sends a notification to all members of this specific chat corner,
-  /// excluding the person who sent the message.
-  Future<void> _notifyChatCornerMembers({
-    required ChatModel chatCorner, // The specific corner (e.g., widget.chatModel)
-    required String senderId,
-    required String senderNickname,
-    required String message,
-  }) async {
-    // 1. Get the correct list of members for this specific corner.
-    // The 'members' list on the ChatModel is the source of truth.
-    final List<dynamic> memberIds = chatCorner.members ?? [];
-    if (memberIds.length <= 1) return; // No one else to notify
-
-    // 2. Fetch the FCM tokens for all members in a single efficient query.
-    try {
-      final tokensSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where(FieldPath.documentId, whereIn: memberIds)
-          .get();
-
-      // 3. Iterate through the results and send notifications.
-      for (var userDoc in tokensSnapshot.docs) {
-        final String memberId = userDoc.id;
-
-        // CRITICAL: Do not send a notification to the person who sent the message.
-        if (memberId == senderId) {
-          continue;
-        }
-
-        final fcmToken = userDoc.data()['fcmId'] as String?;
-
-        if (fcmToken != null && fcmToken.isNotEmpty) {
-          await notificationService.sendNotification({
-            "token": fcmToken,
-            "notification": {
-              "title": "New message dropped in the corner of'${widget.chatRoomPodo?.title}'",
-              "body": "$senderNickname: $message",
-            },
-            "data": {
-              'route': 'chatRoom',
-              'roomId': widget.chatRoomPodo!.id,
-            },
-          });
-        }
-      }
-    } catch (e) {
-      print("Error sending chat corner notifications: $e");
-      // Don't block the UI if notifications fail.
-    }
-  }
-
-  void updateMembers({required bool joining}) async {
-    final userID = currentUser!.uid.toString();
-    if (joining) {
-      widget.chatModel!.members!.add(userID);
-    }
-    if (!joining) {
-      widget.chatModel!.members!.remove(userID);
-    }
-    firebaseServices.updateAlterEgoMembers(widget.documentID!, widget.chatRoomPodo, widget.chatModel!);
-  }
-
-  /// Update a session's timeLastActivity when new chat is made.
+  /// Update a session's timeLastActivity when new comment is made.
   Future<void> updateDiaryroomTimeLastActivity(String key, ChatRoomPodo chatRoomPodo) async {
     FirebaseFirestore.instance
         .collection("alterEgoChats")
@@ -419,6 +379,6 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
       'timeLastActivity': FieldValue.serverTimestamp(),
     },
     );
-    logger.d('Successfully updated time of last activity');
+    logger.d('Successfully updated time of last activity for Alter Ego');
   }
 }

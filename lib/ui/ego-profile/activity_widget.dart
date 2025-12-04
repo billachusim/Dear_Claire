@@ -16,6 +16,10 @@ import '../chats/data/chatroompodo.dart';
 import '../chats/inside_chatroom.dart';
 import '../featured/notified_session_details.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
+import 'package:clairediary/ui/chats/data/roomdata.dart';
+import 'package:clairediary/ui/alter_ego/alter_ego_room_data.dart';
+import 'package:clairediary/ui/chats/widget/inside_alter_ego_diaryroom.dart';
+// Import for AppRoutes
 
 class ActivityWidget extends StatefulWidget {
   final String userId;
@@ -481,29 +485,47 @@ class UserActivityCard extends StatelessWidget {
             }
             break;
 
-        // Join Room activity
+        // --- FINAL, FULLY CORRECTED 'Join Room' activity ---
           case 'room_join':
-            final roomId = element.sessionId;
-            if (roomId != null && roomId.isNotEmpty) {
-              try {
-                showToast("Opening room...");
-                DocumentSnapshot roomDoc = await FirebaseFirestore.instance
-                    .collection('chats')
-                    .doc(roomId)
-                    .get();
+            final roomIdString = element.sessionId;
+            if (roomIdString != null && roomIdString.isNotEmpty) {
+              showToast("Opening room...");
 
-                if (roomDoc.exists) {
-                  final chatRoom = ChatRoomPodo.fromJson(roomDoc.data() as Map<String, dynamic>);
-                  PageRouter.gotoWidget(ChatScreen(chatRoomPodo: chatRoom), context);
+              final int? roomId = int.tryParse(roomIdString);
+              if (roomId == null) {
+                showToast("Invalid room ID.");
+                break;
+              }
+
+              // --- NEW LOGIC: Differentiate based on the specific Alter Ego IDs ---
+              if (roomId == 6 || roomId == 7 || roomId == 8) {
+                // --- It's an ALTER EGO room ---
+                // Search the static list for Alter Ego rooms
+                final room = AlterEgoRoomData.room()
+                    .firstWhereOrNull((r) => r.id == roomId);
+
+                if (room != null) {
+                  PageRouter.gotoWidget(
+                      AlterEgoChatScreen(chatRoomPodo: room), context);
                 } else {
-                  showToast("Sorry, this room could not be found.");
+                  showToast("Sorry, this Alter Ego room could not be found.");
                 }
-              } catch (e) {
-                print("Error navigating to room: $e");
-                showToast("Could not open the room.");
+
+              } else {
+                // --- It's a NORMAL (Ego Mode) room ---
+                // Search the static list for normal rooms
+                final room = RoomData.room()
+                    .firstWhereOrNull((r) => r.id == roomId);
+
+                if (room != null) {
+                  PageRouter.gotoWidget(ChatScreen(chatRoomPodo: room), context);
+                } else {
+                  showToast("Sorry, this Diary Room could not be found.");
+                }
               }
             }
             break;
+
 
         // Wallet-related activities
           case 'send_love':
@@ -511,7 +533,7 @@ class UserActivityCard extends StatelessWidget {
             Navigator.of(context).pushNamed(AppRoutes.egoPage);
             break;
 
-            // Default case for all other activities
+        // Default case for all other activities
           default:
             Navigator.of(context).pushNamed(AppRoutes.egoPage);
             print("Navigating to Ego Profile for activity type '$activityType'.");
