@@ -839,7 +839,7 @@ class FirebaseServices extends ChangeNotifier {
           .createUserWithEmailAndPassword(email: email, password: secretCode);
       setUsersId(_user.user!.uid);
 
-      // 2. *** GET THE FCM TOKEN *** (This is the critical new step)
+      // 2. GET THE FCM TOKEN
       String? fcmToken = await FirebaseMessaging.instance.getToken();
       print('FCM Token for new user: $fcmToken'); // Good for debugging
 
@@ -851,17 +851,16 @@ class FirebaseServices extends ChangeNotifier {
         "alterEgoAccessCode": "",
         "alterEgoId": "",
         "email": email,
-        "fcmId": fcmToken ?? '', // *** SAVE THE TOKEN HERE ***
+        "fcmId": fcmToken ?? '',
         "secretCode": secretCode,
         "timeLastUnlocked": FieldValue.serverTimestamp(),
         "timeRegistered": FieldValue.serverTimestamp(),
         "userType": "REGULAR",
         "sessionCount": 0,
         "adviseCount": 0,
-        "totalLoveCount": 10, // Give some starting love
-        "currentLoveCount": 10, // Give some starting love
+        "totalLoveCount": 10,
+        "currentLoveCount": 10,
         "withdrawnLoveCount": 0,
-        // Initialize other love transfer fields
         "forLoveTransfer": 0,
         "fromLoveTransfer": 0,
       };
@@ -878,6 +877,17 @@ class FirebaseServices extends ChangeNotifier {
       await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: secretCode)
           .then((value) => setUsersId(value.user!.uid));
+
+      // 6. Trigger a welcome email
+      await FirebaseFirestore.instance.collection('mail').add({
+        'to': [email], // The recipient's email address
+        'template': {
+          'name': 'welcome_template',
+          'data': {
+            'egoName': nickname,
+          },
+        },
+      });
 
       showToast(message: AppString.create_ego_complete_toast);
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);

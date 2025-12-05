@@ -218,12 +218,12 @@ class AppString{
   static const String create_ego_welcome ="Welcome, Human,\nIt's Claire To The World!";
   static const String create_ego_note = "\nCreate your ego and start a diary session with Claire or to follow diary sessions from around the world.\n\nYou can make your diary sessions just between you and Claire or you can allow other users to follow and advise positively.";
   static const String create_ego_sub_note = "You remain completely anonymous.\nClaire only needs an email in case you forget your ego code.";
-  static const String i_already_have_ego = "I already have Ego,";
+  static const String i_already_have_ego = "I already have Ego, ";
 
   static const String gender_label_text = "Gender";
   static const String gender_hint_text = "Female, Male or Any Other";
 
-  static const String egoName_label_text = "Choose Ego Name. Can be changed anytime.";
+  static const String egoName_label_text = "Choose Ego Name. Can change anytime.";
   static const String egoName_hint_text = "Sasha Fierce";
 
   static const String how_claire_works_header = "Open Up 🌺 Write or record anything and get advise from Claire secret diary.";

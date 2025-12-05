@@ -144,17 +144,12 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
                                     if (visitingUser.userType == "REGULAR" &&
                                         visitingUser.currentLoveCount < 100) {
-                                      showToast("Need up to 500 Loves in Wallet or Alter Ego Access to view other Ego Profiles.");
+                                      showToast("Need to have 100 Loves or Alter Ego Access to view Ego Profiles.");
                                       return;
                                     }
 
-                                    if (visitingUser.currentLoveCount < visitCost) {
-                                      showToast("You need at least 1 ❤️ to visit a profile.");
-                                      return;
-                                    }
-
-                                    if (currentUser == null) {
-                                      showToast("You must be logged in to visit an ego.");
+                                    if (currentUser?.uid == null) {
+                                      showToast("You need to log in to visit an ego profile.");
                                       return;
                                     }
 
@@ -311,14 +306,15 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                           // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
                                           // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
                                           if (visitingUser.userType == "REGULAR" &&
-                                              visitingUser.currentLoveCount < 500) {
-                                            // Changed from 50 to 500 for consistency
-                                            showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                                              visitingUser.currentLoveCount < 100) {
+                                            showToast(
+                                                "Need to have 100 Loves or Alter Ego Access to view Ego Profiles.");
                                             return;
                                           }
 
-                                          if (visitingUser.currentLoveCount < visitCost) {
-                                            showToast("You need at least 1 ❤️ to visit a profile.");
+                                          if (currentUser?.uid == null) {
+                                            showToast(
+                                                "You need to log in to visit an ego profile.");
                                             return;
                                           }
 
