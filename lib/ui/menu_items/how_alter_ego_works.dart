@@ -71,19 +71,25 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
                 header: AppString.what_is_alter_ego_header,
                 paragraph: AppString.what_is_alter_ego_paragraph,
                 isDarkMode: isDarkMode,
-                delay: 200, // Staggered animation delay
+                delay: 400,
               ),
               _buildInfoSection(
                 header: AppString.what_is_alter_ego_mode_header,
                 paragraph: AppString.what_is_alter_ego_mode_paragraph,
                 isDarkMode: isDarkMode,
-                delay: 400,
+                delay: 600,
               ),
               _buildInfoSection(
                 header: AppString.how_does_it_work,
                 paragraph: AppString.how_does_it_work_paragraph,
                 isDarkMode: isDarkMode,
-                delay: 600,
+                delay: 800,
+              ),
+              _buildInfoSection(
+                header: AppString.creators_quote,
+                paragraph: AppString.creators_quote_paragraph,
+                isDarkMode: isDarkMode,
+                delay: 1000,
               ),
 
               const SizedBox(height: 30),
@@ -212,7 +218,7 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
   Widget _buildRequestAccessButton(bool isDarkMode) {
     return FadeInUp(
       from: 50,
-      delay: const Duration(milliseconds: 800),
+      delay: const Duration(milliseconds: 1200),
       child: Material(
         color: Pallet.colorSecondary,
         borderRadius: BorderRadius.circular(16),
@@ -259,7 +265,7 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
   Widget _buildDonateButton() {
     return FadeInUp(
       from: 50,
-      delay: const Duration(milliseconds: 900),
+      delay: const Duration(milliseconds: 1400),
       child: TextButton(
         onPressed: onDonateClicked,
         child: Text(

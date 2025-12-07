@@ -11,6 +11,16 @@ class AuthSelectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: Pallet.colorWhite),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      // --- IMPORTANT: Extend body behind AppBar ---
+      extendBodyBehindAppBar: true,
       body: Container(
         width: getDeviceWidth(context),
         height: getDeviceHeight(context),

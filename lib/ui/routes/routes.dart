@@ -35,6 +35,7 @@ import '../../widgets/updates/announcements_widget.dart';
 import '../Search/search_page.dart';
 import '../featured/widget/custom_post_details_screen.dart';
 import '../featured/widget/post_details_widget.dart';
+import '../menu_items/rules_of_love_page.dart';
 import '../splash_screen/custom_splash.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 
@@ -59,6 +60,7 @@ class AppRoutes {
   static const donate = '/donate';
   static const howClaireWorks = '/how_claire_works';
   static const howAlterEgoWorks = '/how_alter_ego_works';
+  static const String rulesOfLove = '/rules_of_love';
   static const alterEgoRegistration = '/alterEgoRegistration';
   static const requestFeatureForm = '/requestFeatureForm';
   static const requestClaireLoveForm = '/requestClaireLoveForm';
@@ -192,6 +194,13 @@ class AppRouter {
          return MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider(
               create: (_) => HowClaireWorksProvider(), child: HowAlterEgoWorks()),
+          settings: settings,
+          fullscreenDialog: true,
+        );
+
+      case AppRoutes.rulesOfLove:
+        return MaterialPageRoute<dynamic>(
+          builder: (_) => RulesOfLovePage(),
           settings: settings,
           fullscreenDialog: true,
         );

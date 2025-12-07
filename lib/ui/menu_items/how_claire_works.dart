@@ -79,47 +79,47 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                 body: AppString.how_claire_works_paragraph2,
                 isExpanded: _expandedCardKey == AppString.what_is_claire2,
                 onTap: () => _handleCardTap(AppString.what_is_claire2),
-                delay: 250,
+                delay: 400,
               ),
               _ExpandableContentCard(
                 title: AppString.who_needs_claire,
                 body: AppString.how_claire_works_paragraph3,
                 isExpanded: _expandedCardKey == AppString.who_needs_claire,
                 onTap: () => _handleCardTap(AppString.who_needs_claire),
-                delay: 300,
+                delay: 500,
               ),
               _ExpandableContentCard(
                 title: AppString.how_does_claire_work,
                 body: AppString.how_claire_works_paragraph4,
                 isExpanded: _expandedCardKey == AppString.how_does_claire_work,
                 onTap: () => _handleCardTap(AppString.how_does_claire_work),
-                delay: 350,
+                delay: 600,
               ),
               _ExpandableContentCard(
                 title: AppString.creators_quote_how_claire_works,
                 body: AppString.how_claire_works_paragraph5,
                 isExpanded: _expandedCardKey == AppString.creators_quote_how_claire_works,
                 onTap: () => _handleCardTap(AppString.creators_quote_how_claire_works),
-                delay: 400,
+                delay: 700,
               ),
               _ExpandableContentCard(
                 title: AppString.quick_tips,
                 body: '${AppString.how_claire_works_paragraph6}\n\n${AppString.how_claire_works_paragraph7}\n\n${AppString.how_claire_works_paragraph8}\n\n${AppString.how_claire_works_paragraph9}\n\n${AppString.how_claire_works_paragraph10}\n\n${AppString.how_claire_works_paragraph11}',
                 isExpanded: _expandedCardKey == AppString.quick_tips,
                 onTap: () => _handleCardTap(AppString.quick_tips),
-                delay: 450,
+                delay: 800,
               ),
 
-              // --- "How Sessions are Counted" - NOW WITH ICON AND SUBTITLE ---
-              _ExpandableContentCard(
-                icon: Icons.rule_folder_rounded, // ICON ADDED
-                title: "How Sessions & Advises Are Counted",
-                subtitle: "Learn the rules for diary sessions and advises to be counted.", // SUBTITLE ADDED
-                body: "For a diary session to be counted, it must contain the phrase Dear Claire and must be more than 50 characters.\n\nFor an advise to be counted, it must contain the word Darling, must be up to 20 characters and must be sent within 24 hours of the diary session.\n\nClaire reserves the right to increase or decrease session and advise counts during the course of cash out verifications.",
-                isExpanded: _expandedCardKey == "How Sessions & Advises Are Counted",
-                onTap: () => _handleCardTap("How Sessions & Advises Are Counted"),
-                delay: 500,
+              // --- "Learn the Rules of Love" - NEW IMMERSIVE GUIDE ---
+              _buildGlassCard(
+                icon: Icons.favorite_rounded, // Changed Icon
+                title: "Learn The Rules Of Love ❤️", // New Title
+                subtitle: "Understand how Sessions, Advises, Thanks, and Loves work.", // New Subtitle
+                color: const Color.fromRGBO(182, 31, 107, 1), // A distinct, lovely color
+                onTap: () => Navigator.of(context).pushNamed(AppRoutes.rulesOfLove), // Navigate to the new page
+                delay: 900,
               ),
+
               const SizedBox(height: 8),
 
               // --- SECONDARY ACTIONS (STATIC GLASS CARDS) ---
@@ -129,7 +129,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                 subtitle: "Discover the role of a trusted friend within the Claire community.",
                 color: Pallet.colorSecondary,
                 onTap: () => Navigator.of(context).pushNamed(AppRoutes.howAlterEgoWorks),
-                delay: 800,
+                delay: 1000,
               ),
               _buildGlassCard(
                 icon: Icons.volunteer_activism_rounded,
@@ -140,7 +140,7 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                   final Uri donateUrl = Uri.parse(AppString.donate_url);
                   launchUrl(donateUrl);
                 },
-                delay: 900,
+                delay: 1100,
               ),
               _buildGlassCard(
                 icon: Icons.feedback_rounded,
@@ -158,12 +158,12 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                   );
                   launchUrl(emailLaunchUri);
                 },
-                delay: 1000,
+                delay: 1200,
               ),
 
               // --- FOOTER ---
               FadeInUp(
-                delay: const Duration(milliseconds: 1200),
+                delay: const Duration(milliseconds: 1300),
                 child: const Padding(
                   padding: EdgeInsets.symmetric(vertical: 30.0),
                   child: Center(
