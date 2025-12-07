@@ -134,7 +134,7 @@ class FirebaseServices extends ChangeNotifier {
       try {
         await userDoc.update({
           'currentLoveCount': FieldValue.increment(-amount),
-          'withdrawnLoveCount': FieldValue.increment(forLoveTransfer),
+          'withdrawnLoveCount': FieldValue.increment(amount),
           'forLoveTransfer': FieldValue.increment(forLoveTransfer),
           'forGameLoses': FieldValue.increment(forGameLoses),
           'forRoomVisits': FieldValue.increment(forRoomVisits),
@@ -223,7 +223,7 @@ class FirebaseServices extends ChangeNotifier {
       // 2. Credit the receiver (current and total loves)
       await receiverDoc.update({
         'currentLoveCount': FieldValue.increment(amountToSend),
-        'totalLoveCount': FieldValue.increment(amountToSend), // Receiver's lifetime total increases
+        'totalLoveCount': FieldValue.increment(amountToSend),
         'fromLoveTransfer': FieldValue.increment(fromLoveTransfer),
         'fromRoomVisits': FieldValue.increment(fromRoomVisits),
         'loveFromThanks': FieldValue.increment(fromThanks),
@@ -1566,7 +1566,7 @@ class FirebaseServices extends ChangeNotifier {
         "body": "You created a room corner of your own inside ${roomTitle}.",
       },
       "data": {
-        'route': 'chatRoom',
+        'route': 'diaryRooms',
         'roomId': chatRoomPodo.id,
       },
     });
@@ -1610,7 +1610,7 @@ class FirebaseServices extends ChangeNotifier {
         "body": "${sender ?? 'An Ego'} sent something to your corner of the room inside ${roomTitle}.",
       },
       "data": {
-        'route': 'chatRoom',
+        'route': 'diaryRooms',
         'roomId': chatRoomPodo.id,
       },
     });

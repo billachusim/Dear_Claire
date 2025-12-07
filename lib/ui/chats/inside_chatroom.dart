@@ -313,8 +313,7 @@ class _ChatScreenState extends State<ChatScreen> {
           "body": "Darlings will join your corner soon. Behave.",
         },
         "data": {
-          // Ensure the route points to the Ego section
-          'route': 'chatRoom',
+          'route': 'diaryRooms',
           'roomId': widget.chatRoomPodo.id,
         },
       });

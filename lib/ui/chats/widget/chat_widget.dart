@@ -890,46 +890,43 @@ class _ChatWidgetState extends State<ChatWidget> {
                         final UserModel visitor = await firebaseServices.getUserWithId(id: visitorId);
                         final visitorNickname = visitor.nickname;
 
+                        // Await the database update to ensure it completes before proceeding.
                         if (!_isCompleted(widget.chatModel, widget.chatRoomPodo)) {
-                          updateMembers(joining: true);
+                          await updateMembers(joining: true);
                         }
-
                         // PERFORM THE TRANSACTION FOR JOINING ---
                         const int entryCost = 3;
                         const int taxAmount = 2;
                         const int totalDebit = entryCost + taxAmount;
 
                         if (visitor.currentLoveCount < totalDebit) {
-                          showToast(
-                              "You need at least $totalDebit❤️ to enter this corner.");
-                          // No 'return' here, the finally block will handle the loader state.
+                          showToast("You need at least $totalDebit❤️ to enter this corner.");
                         } else {
-                          // Capture the boolean result of the transaction
-                          final bool transactionSuccess = await firebaseServices.transferLoveBetweenUsers(
+                          final bool transactionSuccess =
+                          await firebaseServices.transferLoveBetweenUsers(
                             senderId: visitorId,
                             receiverId: cornerOwnerId,
                             amountToSend: entryCost,
                             taxAmount: taxAmount,
                             totalDebitAmount: totalDebit,
-                            senderTransactionDesc: "$totalDebit❤️ for ${cornerOwnerNickname} entering your corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
-                            receiverTransactionDesc: "$entryCost❤️ from ${visitorNickname} entering your corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
+                            senderTransactionDesc:
+                            "$totalDebit❤️ for ${cornerOwnerNickname} entering your corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
+                            receiverTransactionDesc:
+                            "$entryCost❤️ from ${visitorNickname} entering your corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}.",
                             claireTransactionDesc: "$taxAmount❤️ Tax from corner join.",
                             forRoomVisits: entryCost,
                             fromRoomVisits: entryCost,
                           );
 
-                          // --- CHECK IF TRANSACTION SUCCEEDED ---
                           if (transactionSuccess) {
-                            // --- 1. SAVE USER ACTIVITY ---
                             await firebaseServices.saveUserActivity(
                               activityType: 'room_join',
-                              activityMessage: "You entered ${cornerOwnerNickname}'s corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}'.",
+                              activityMessage:
+                              "${visitorNickname} entered ${cornerOwnerNickname}'s corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}'.",
                               sessionId: widget.chatRoomPodo!.id.toString(),
                             );
-                            _showJoinChatInterstitialAd(); // Show ad on successful join
+                            _showJoinChatInterstitialAd();
 
-                            // --- 2. NAVIGATE TO SUBCHAT SCREEN ---
-                            // Check if the widget is still in the tree before navigating
                             if (!mounted) return;
                             PageRouter.gotoWidget(
                                 SubChatScreen(
@@ -939,12 +936,12 @@ class _ChatWidgetState extends State<ChatWidget> {
                                 ),
                                 context);
 
-                            // --- 3. DROP NOTIFICATION ---
                             await notificationService.sendNotification({
                               "token": cornerOwner.fcmId,
                               "notification": {
                                 "title": "Someone Entered Your Corner!",
-                                "body": "${visitorNickname ?? 'An Ego'} entered with 3❤️ to your corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
+                                "body":
+                                "${visitorNickname ?? 'An Ego'} entered with 3❤️ to your corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
                               },
                               "data": {
                                 'route': 'diaryRooms',
@@ -954,13 +951,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                             });
 
                             showToast('Welcome to this corner with 3❤️ and positive vibes only.');
-
                           }
-                          // If transactionSuccess is false, the code will skip to the finally block.
                         }
-
                       } finally {
-                        // --- HIDE THE LOADER ---
                         if (mounted) {
                           setState(() {
                             _isProcessing = false;
@@ -1062,19 +1055,26 @@ class _ChatWidgetState extends State<ChatWidget> {
     return chatModel!.members!.length == chatRoomPodo?.numberOfParticipants;
   }
 
-  void updateMembers({required bool joining}) async {
+  Future<void> updateMembers({required bool joining}) async {
     final userID = currentUser!.uid.toString();
     if (joining) {
+      // Add the user to the local model instance
       widget.chatModel!.members!.add(userID);
-    }
-    if (!joining) {
+    } else {
+      // Remove the user from the local model instance
       widget.chatModel!.members!.remove(userID);
     }
-    firebaseServices.updateMembers(widget.chatModel!.userId.toString(), widget.chatRoomPodo, widget.chatModel!);
+    // Perform the database update directly here and await it.
+    await FirebaseFirestore.instance
+        .collection(AppString.appChats)
+        .doc(widget.chatRoomPodo!.id.toString())
+        .collection(widget.chatRoomPodo!.title!)
+        .doc(widget.chatModel!.userId.toString())
+        .update(widget.chatModel!.toJson());
   }
 
-  deletedRoomAlertDialog(BuildContext context) {
 
+  deletedRoomAlertDialog(BuildContext context) {
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text("Wait First"),
