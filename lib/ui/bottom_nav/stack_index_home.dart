@@ -48,7 +48,6 @@ class _HomeDashboardPageState extends State<HomePage>
   var currentUser = FirebaseAuth.instance.currentUser;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late final WebViewController _webViewController; // Updated initialization
-  late final WebViewController _twitterWebViewController;
   late ShakeDetector detector;
   String filePath = 'assets/web_games/tictactoe/index2.html';
   String tweets = 'assets/tweet/index.html';
@@ -61,6 +60,7 @@ class _HomeDashboardPageState extends State<HomePage>
   int _playerScore = 0;
   int _claireScore = 0;
   int _drawCount = 0;
+  bool _isHandlingOutcome = false;
 
   late final AnimationController _controller = AnimationController(
     duration: const Duration(seconds: 15),
@@ -218,26 +218,34 @@ class _HomeDashboardPageState extends State<HomePage>
       ..addJavaScriptChannel(
         'Score',
         onMessageReceived: (JavaScriptMessage message) {
-          if (!mounted) return;if (message.message == 'player_wins') {
+          // Immediately exit if an outcome is already being processed.
+          if (!mounted || _isHandlingOutcome) return;
+
+          if (message.message == 'player_wins') {
             setState(() => _playerScore++);
           } else if (message.message == 'claire_wins') {
             setState(() => _claireScore++);
           } else if (message.message == 'draw') {
-            // A draw occurred, increment the draw counter
-            // and handle the reward immediately.
-            setState(() => _drawCount++);
-            _handleDrawReward();
+            // Set the lock and update the UI in a single atomic call.
+            setState(() {
+              _isHandlingOutcome = true;
+              _drawCount++;
+            });
+
+            // Call the reward function and reset the lock upon completion.
+            _handleDrawReward().whenComplete(() {
+              if (mounted) {
+                setState(() {
+                  _isHandlingOutcome = false;
+                });
+              }
+            });
           }
         },
       );
 
-    // Initialize Twitter/X WebView
-    _twitterWebViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted);
-
-    // Load game and social feed
+    // Load drawer quick tac toe
     _loadHtmlFromAssets();
-    _twitterWebViewController.loadRequest(Uri.parse('https://x.com/dearclaireapp'));
   }
 
 
@@ -245,7 +253,6 @@ class _HomeDashboardPageState extends State<HomePage>
   final AudioPlayer _audioPlayer = AudioPlayer();
 
 
-  // Add this new method inside the _AppDrawerState class
   Future<void> _handleDrawReward() async {
     if (currentUser == null) return;
     const int rewardAmount = 2;
@@ -455,7 +462,6 @@ class _HomeDashboardPageState extends State<HomePage>
         launchEmailApp: launchEmailApp,
         isUserSignedIn: () => firebaseServices.isUserSignIn(context),
         ticTacToeController: _webViewController,
-        twitterController: _twitterWebViewController,
         playerScore: _playerScore,
         claireScore: _claireScore,
         drawCount: _drawCount,
@@ -528,18 +534,11 @@ class _AppDrawer extends StatefulWidget {
   final VoidCallback launchEmailApp;
   final Future<bool> Function() isUserSignedIn;
   final WebViewController ticTacToeController;
-  final WebViewController twitterController;
   final int playerScore;
   final int claireScore;
   final int drawCount;
 
-  const _AppDrawer
-      (
-      {
-        Key
-        ?
-        key
-        ,
+  const _AppDrawer({Key? key,
         required this.userName,
         required this.userType,
         required this.avatarUrl,
@@ -550,7 +549,6 @@ class _AppDrawer extends StatefulWidget {
         required this.launchEmailApp,
         required this.isUserSignedIn,
         required this.ticTacToeController,
-        required this.twitterController,
         required this.playerScore,
         required this.claireScore,
         required this.drawCount,
@@ -562,14 +560,12 @@ class _AppDrawer extends StatefulWidget {
 
 class _AppDrawerState extends State<_AppDrawer> {
   late final AudioPlayer _audioPlayer;
-  final TransactionService _transactionService = TransactionService();
   final User? _currentUser = FirebaseAuth.instance.currentUser;
   bool _isGameRewardProcessed = false;
 
   @override
   void initState() {
     super.initState();
-// Initialize the audio player here
     _audioPlayer = AudioPlayer();
 
 // Add the JavaScript channel for sound here
@@ -602,13 +598,10 @@ class _AppDrawerState extends State<_AppDrawer> {
   @override
   void didUpdateWidget(covariant _AppDrawer oldWidget) {
     super.didUpdateWidget(oldWidget);
-// Check if the score has changed and trigger the game result logic
+    // Check if the score has changed and trigger the game result logic
     if (widget.playerScore != oldWidget.playerScore ||
         widget.claireScore != oldWidget.claireScore) {
       _handleGameResult();
-    }
-    if (widget.drawCount != oldWidget.drawCount) {
-      _handleDrawReward();
     }
   }
 
@@ -879,14 +872,6 @@ class _AppDrawerState extends State<_AppDrawer> {
               title: "Send Claire To Someone",
               icon: Icons.share_rounded,
               onTap: widget.sendClaireToSomeone),
-          /*_MenuTile(
-            title: "Updates & Announcements",
-            icon: Icons.announcement_rounded,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.of(context).pushNamed(AppRoutes.updatesAndAnnouncements);
-            },
-          ),*/
         ],
       ),
     );
@@ -928,40 +913,7 @@ class _AppDrawerState extends State<_AppDrawer> {
     );
   }
 
-// Widget _buildTwitterFeed(BuildContext context) {
-//   return Container(
-//     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-//     height: 400,
-//     decoration: BoxDecoration(
-//       color: Colors.black.withOpacity(0.2),
-//       borderRadius: BorderRadius.circular(16),
-//       border: Border.all(color: Colors.white.withOpacity(0.2)),
-//     ),
-//     child: Column(
-//       children: [
-//         const Padding(
-//           padding: EdgeInsets.all(12.0),
-//           child: Row(
-//             children: [
-//               Icon(Icons.rss_feed_rounded, color: Color(0xFF1DA1F2)),
-//               SizedBox(width: 8),
-//               Text("Latest from X", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-//             ],
-//           ),
-//         ),
-//         Expanded(
-//           child: ClipRRect(
-//             borderRadius: const BorderRadius.vertical(bottom: Radius.circular(15)),
-//             child: WebViewWidget(controller: widget.twitterController),
-//           ),
-//         ),
-//       ],
-//     ),
-//   );
-// }
 
-
-  // Add this new method inside _AppDrawerState
 
   Future<void> _handleDrawReward() async {
     if (_currentUser == null) return;
