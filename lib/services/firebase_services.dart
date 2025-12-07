@@ -317,7 +317,7 @@ class FirebaseServices extends ChangeNotifier {
     await _firebaseMessaging.subscribeToTopic("PbRuh3FmtESK57j3PM1Tc9RvPKh2");
     final pushNotification.NotificationModel _notificationModel =
     pushNotification.NotificationModel(
-      topic: "PbRuh3FmtESK57j3PM1Tc9RvPKh2",
+      topic: session.sessionId.toString(),
       data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
       notification: pushNotification.Notification(
           title: 'New Diary Session ${session.title}' ?? '', body: '$sender started a new session, please advice it'),

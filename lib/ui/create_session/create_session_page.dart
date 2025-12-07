@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
+import 'package:clairediary/ui/create_session/quick_session_widget.dart';
+import 'package:clairediary/ui/create_session/session_categorizer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/services/user_model.dart';
@@ -12,7 +14,6 @@ import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/strings.dart';
 import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -27,12 +28,13 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/transaction_model.dart' as t_model;
-import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/notification_service.dart';
 import '../../services/transaction_service.dart';
 import '../../widgets/unified_media_widget.dart';
 import '../featured/model/comment_session_model.dart';
 import '../featured/model/session.dart';
+import '../featured/notified_session_details.dart';
+import '../routes/page_router_animation.dart';
 import 'create_session_controller.dart';
 import 'sound/sound_widget.dart';
 
@@ -53,9 +55,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   final c = Get.find<CreateSessionController>();
 
   Session? featuredSessionModel;
-
-  //ChatGPT? chatGPT;
-  StreamSubscription? _subscription;
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
@@ -83,12 +82,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     if (mounted) setState(f);
   }
 
-  ///this function is triggered when user clicks on any emoji
-  appendEmojiToText(Emoji emoji) {
-    var newText = sessionTextEditingController.text + emoji.emoji;  // Use 'emoji.emoji' instead of 'emoji.char'
-    sessionTextEditingController.text = newText;
-  }
-
 //initialize the audio record file that stores user audio record. null by default
   File? recordFile;
   File? videoRecordFile;
@@ -104,13 +97,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   String sessionMood = 'Current Mood';
   String _location = '';
 
-  // Function to save audio path to Hive
-  Future<void> _saveAudioPathToHive(String path) async {
-    await box.put('audio_path', path);
-    setState(() {
-      recordFile = File(path);
-    });
-  }
 
   // Function to retrieve audio path from Hive
   void _loadAudioFromHive() {
@@ -143,24 +129,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     }
   }
 
-  // Override openRecordScreen to handle saving the file
-  void openRecordScreen() async {
-    final result = await Navigator.push<File>(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            SoundRecorderWidget(
-              onRecordComplete: (file) {
-                // This callback is no longer needed here as we use the pop result
-              },
-            ),
-      ),
-    );
-
-    if (result != null) {
-      await _saveAudioPathToHive(result.path);
-    }
-  }
 
 
 
@@ -197,7 +165,10 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
       place = placemarks[0];
-      _location = ("in  ${place.administrativeArea.toString()}, ${place.country.toString()}");
+      setState(() {
+        _location =
+        "in ${place?.administrativeArea.toString()}, ${place?.country.toString()}";
+      });
       print("Location is: $_location");
       return place;
     } catch (e) {
@@ -205,6 +176,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     }
     return place;
   }
+
 
 
 
@@ -224,7 +196,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     randomizeBackgroundColor();
     initializeDatabaseObject();
     sessionTextFocusNode = FocusNode();
-    Future.delayed(Duration(seconds: 5), () {
+    Future.delayed(Duration(seconds: 8), () {
       sessionTextFocusNode.requestFocus();
     }
     );
@@ -289,47 +261,55 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   /// checks if session meets original session rules...
   /// if it does, then increment necessary counts.
-  /// checks if session meets original session rules...
-  /// if it does, then increment necessary counts.
   Future<bool> isOriginalSession(String sessionText) async {
     final _session = sessionText.toString();
     final _length = _session.length;
 
-    if (_session.contains("ear") && _session.contains("laire") && _length >= 50) {
-      // This is a simple stat counter and can remain.
+    if (_session.contains("ear") &&
+        _session.contains("laire") &&
+        _length >= 50) {
       incrementSessionCount();
-
-      // The old incrementTotalLoveCount() and _transactionService calls are no longer needed here.
 
       if (currentUser != null) {
         // --- NEW TREASURY LOGIC ---
-        // A single, safe call to the new centralized method.
         final bool wasApproved = await _firebaseServices.updateTreasuryAndUser(
           userId: currentUser!.uid,
           amount: 10,
           type: t_model.TransactionType.credit,
-          userTransactionDescription: "10 Loves received for an original diary session.",
+          userTransactionDescription:
+          "10 Loves received for an original diary session.",
           metadata: {'source': 'new_session'},
         );
 
-        // Check if the transaction was approved or is pending
         if (!wasApproved) {
-          // If the treasury was too low, the transaction is now pending.
           showToast("Your reward of 10 Loves is pending admin approval.");
-          // We don't send a push notification because the reward isn't confirmed.
           return true; // Exit gracefully.
         }
         // --- END OF NEW TREASURY LOGIC ---
 
         // --- Send Push Notification (Only if approved) ---
         try {
-          final notificationModel = push_notification.NotificationModel(
-              topic: currentUser!.uid, // Send to the user's personal topic
-              data: push_notification.Data(id: currentUser!.uid, route: 'wallet'),
-              notification: push_notification.Notification(
-                  title: "You've Earned Love!",
-                  body: "You received 10 ❤️ for creating an original session."));
-          await notificationService.sendNotification(notificationModel.toJson());
+          // 1. Fetch the user's document to get their specific FCM token.
+          final userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser!.uid)
+              .get();
+
+          if (userDoc.exists) {
+            final userToken = userDoc.data()?['fcmId'] as String?;
+            // 2. Check if the token exists before trying to send.
+            if (userToken != null && userToken.isNotEmpty) {
+              // 3. Send notification directly to the user's token.
+              await notificationService.sendNotification({
+                "token": userToken, // Use 'token' instead of 'topic'
+                "notification": {
+                  "title": "You've Earned Love!",
+                  "body": "You received 10 ❤️ for creating an original session."
+                },
+                "data": {"route": "wallet"}
+              });
+            }
+          }
         } catch (e) {
           print("Failed to send 'Original Session' push notification: $e");
         }
@@ -343,6 +323,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     }
     return false;
   }
+
 
 
 
@@ -462,7 +443,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         ),
       );
     }
-    return SizedBox.shrink(); // Return empty space if no recording
+    return SizedBox.shrink();
   }
 
 
@@ -682,7 +663,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                           SizedBox(
                             height: 10,
                           ),
-                          Text("Please Wait your Diary Session is being created"
+                          Text("Please Wait your Diary Session is being created, "
                               "If you have many videos and images, be patient.",
                               style: TextStyle(
                                   fontSize: 20,
@@ -742,21 +723,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                           width: 15.w,
                         ),
 
+
                         _buildVideoSelector(),
-
-                        _buildAudioPlayer(),
-
-                        Container(
-                            height: 100.h,
-                            width: 100.w,
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.mic_rounded,
-                                size: 80,
-                                color: Pallet.colorWhite,
-                              ),
-                              onPressed: openRecordScreen,
-                            )),
 
                         SizedBox(height: 20,),
 
@@ -765,760 +733,30 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                             child: _imagesGridView()
                         ),
 
+                        _buildAudioPlayer(),
+
+
 
                         SizedBox(height: 20,),
 
 
                         /// Introducing Quick Sessions.
-
-
                         Visibility(
                           visible: !isTyping,
-                            child: Container(
-                              margin: const EdgeInsets.only(top: 4),
-                              child: Column(
-                                children: [
-
-                                  Align(
-                                    alignment: Alignment.topLeft,
-                                    child: Container(
-                                      padding: EdgeInsets.all(2),
-                                      height: 20,
-                                      width: 160,
-                                      decoration: BoxDecoration(
-                                          color: Pallet.colorWhite,
-                                          borderRadius: BorderRadius.circular(20)
-                                      ),
-                                      child: Text(
-                                        "Start A Quick AI Session",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 14,
-                                          fontStyle: FontStyle.italic,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  SizedBox(height: 5,),
-
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: <Widget>[
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire, I'm feeling so alive today!";
-                                            String quickSessionTitle = "Feeling Alive Today";
-                                            mood = 1;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 77.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.green,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("I'm Alive!",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire,\n"
-                                                "Hmmm. Something's in the air o...\n"
-                                                "It seems like I'm falling in love today!";
-                                            String quickSessionTitle = "Falling in Love Today";
-                                            mood = 4;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 110.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.red,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("Falling in love!",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire, I'm so motivated and ready to face today!\n"
-                                                "Ginger oh ginger... Na you dey ginger me o ginger!";
-                                            String quickSessionTitle = "Feeling Gingered Today";
-                                            mood = 15;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 135.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.orange,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("Feeling gingered!",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire, I'm feeling so fly today. Woo!\n"
-                                                "Flamboyance is a state of mind.\n"
-                                                "Nobody can tell me anything.";
-                                            String quickSessionTitle = "Feeling So Fly!";
-                                            mood = 16;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 45.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.purple,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("Fly!",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-
-
-                                  SizedBox(height: 8,),
-
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: <Widget>[
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire, I'm feeling sad.\n"
-                                                "What could this be? I'm thinking, lost in my sad thoughts.";
-                                            String quickSessionTitle = "Feeling Sad";
-                                            mood = 2;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 112.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.blueAccent,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("Mtcheew, Sad",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire, I'm really surprised. WOW!";
-                                            String quickSessionTitle = "Surprise!!!";
-                                            mood = 11;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 75.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.brown,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("Surprise!",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire,\n"
-                                                "I'm kinda feeling anxious today txmqaqkcqtfch.\n"
-                                                "I really need to get hold of myselfkc";
-                                            String quickSessionTitle = "So Anxious Today";
-                                            mood = 8;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                            Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 80.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.blueGrey,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("Anxious",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire, I'm just so sick and tired.";
-                                            String quickSessionTitle = "Sick And Tired";
-                                            mood = 9;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 107.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.black54,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("Sick and tired",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-
-
-
-
-
-
-                                  SizedBox(height: 8,),
-
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: <Widget>[
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire,\n"
-                                                "Hmmm. This must be jealousy all over me. I don't think I'm envious though.";
-                                            String quickSessionTitle = "Jealous Mood";
-                                            mood = 12;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 85.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.black,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("I'm jealous",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire,\n"
-                                                "I'm falling out of love again.\n"
-                                                "I don't want to get philosophical but our mistakes only leads us to becoming a better version of ourselves.\n"
-                                                "Heartbroken, yet, we move.";
-                                            String quickSessionTitle = "Out Of Love";
-                                            mood = 5;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 105.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.red,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("Heartbroken",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire, I'm afraid.\n"
-                                                "Just afraid. I'll be careful. I promise.";
-                                            String quickSessionTitle = "I'm Afraid Right Now";
-                                            mood = 10;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 80.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.deepPurpleAccent,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("I'm afraid",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire, I'm feeling so embarrassed right now!\n"
-                                                " I feel like the ground should open up beneath me and let me in.";
-                                            String quickSessionTitle = "I'm So Embarrassed";
-                                            mood = 14;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 130.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.brown,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("I'm embarrassed",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-
-
-                                  SizedBox(height: 8,),
-
-                                  SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: Row(
-                                      children: <Widget>[
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire, I love you!.";
-                                            String quickSessionTitle = "Oh My Claire!";
-                                            mood = 17;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 100.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.deepPurple,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("I love Claire!",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire, Hala!\n"
-                                                "I'm feeling so excited today!\n"
-                                                "I'm so actually hyperactive right now. Woooo!! E for energy!.";
-                                            String quickSessionTitle = "I'm excited!";
-                                            mood = 3;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 70.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.pink,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("Excited!",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire,\n"
-                                                "I think I'm feeling depressed today.\n"
-                                                "I'm doing my best to shake out the beast.";
-                                            String quickSessionTitle = "I'm Depressed";
-                                            mood = 6;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 85.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.amber,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("Depressed",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-
-
-
-
-
-                                        GestureDetector(
-                                          onTap: (){
-                                            String quickSessionMessage = "Dear Claire,\n"
-                                                " I'm feeling upside down today!\n"
-                                                " Like... The up side is down... I repeat... The up side is down!";
-                                            String quickSessionTitle = "Up Side Is Down!";
-                                            mood = 13;
-                                            sessionTitleController.text = quickSessionTitle;
-                                            sessionTextEditingController.text = quickSessionMessage;
-
-                                              Navigator.of(context).pop();
-                                              createQuickSession();
-                                              showToast(AppString.started_new_session);
-                                          },
-
-                                          child: Container(
-                                            width: 105.0,
-                                            margin: EdgeInsets.all(2),
-                                            padding: EdgeInsets.all(2),
-                                            decoration: BoxDecoration(
-                                                color: Colors.black,
-                                                borderRadius: BorderRadius.circular(15)
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text("Upside down",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight: FontWeight.w600,
-                                                        fontStyle: FontStyle.italic,
-                                                        fontSize: 15,
-                                                      ),
-                                                    )),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          child: QuickSessionWidget(
+                            sessionTitleController: sessionTitleController,
+                            sessionTextEditingController: sessionTextEditingController,
+                            createQuickSession: (newMood) {
+                              // This anonymous function calls your existing method
+                              // and handles the mood update.
+                              setState(() {
+                                mood = newMood;
+                              });
+                              createQuickSession();
+                            },
+                          ),
                         ),
+
                         SizedBox(height: 80,),
                       ],
                     ),
@@ -1545,31 +783,15 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                     width: 23.w,
                   ),
                   Container(
-                      height: 20.h,
-                      width: 25.w,
+                      height: 30.h,
+                      width: 35.w,
                       child: IconButton(
-                        icon: Icon(Icons.emoji_emotions_outlined,
-                            color: Pallet.colorWhite),
-                        onPressed: () {
-                          /*showModalBottomSheet(
-                            context: context,
-                            builder: (BuildContext subcontext) {
-                              return Container(
-                                // height: 250.h,
-                                child: SingleChildScrollView(
-                                  child: Padding(
-                                    padding: EdgeInsets.only(bottom: 10),
-                                    child: EmojiPicker(
-                                      onSelected: (emoji) {
-                                        appendEmojiToText(emoji);
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );*/
-                        },
+                        icon: Icon(
+                          Icons.video_call_rounded,
+                          size: 35,
+                          color: Pallet.colorWhite,
+                        ),
+                        onPressed: pickVideo,
                       )),
                   SizedBox(
                     width: 20.w,
@@ -1645,32 +867,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     );
   }
 
-  Widget _recordFileWidget() {
-    return Container(
-      height: 60.h,
-      //width: 60.w,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          Center(
-              child: CustomPlaySoundWidget(filePath: recordFile?.path)
-          ),
-          Positioned(
-              right: 25,
-              top: 3,
-              child: IconButton(
-                  icon: Icon(
-                    Icons.cancel,
-                    color: Colors.red,
-                    size: 24.r,
-                  ),
-                  onPressed: () => setState(() {
-                        recordFile = null;
-                      })))
-        ],
-      ),
-    );
-  }
+
 
   // This function is correct. It correctly picks files and updates the state.
   Future<void> loadAssets() async {
@@ -1780,22 +977,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         ),
       );
     } else {
-      // If no video is selected, show a new, more visible button.
-      return OutlinedButton.icon(
-        onPressed: pickVideo,
-        icon: const Icon(Icons.videocam_outlined, color: Colors.white),
-        label: const Text(
-          'Add Video',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: Colors.white54, width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-        ),
-      );
+      return SizedBox.shrink();
     }
   }
 
@@ -2054,869 +1236,129 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
 
   /// CREATE NEW SESSION METHOD IS HERE
-
-
-  createSession() async {
+  createSession() async {// Set loading to true immediately.
     setState(() {
       isLoading = true;
     });
 
-    userModel = await _firebaseServices.getUserInfo();
-    CreateSessionModel sessionObject = CreateSessionModel();
-    if (recordFile != null) {
-      sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile!);
-      sessionObject.containsAudio = true;
-    }
-
     try {
-      // 1. Create a list of upload tasks (Futures) without awaiting them individually.
-      //    We use c.images, which holds the files the user picked.
-      List<Future<String>> uploadTasks = c.images.map((imageFile) {
-        return _firebaseServices.uploadImage(imageFile);
-      }).toList();
-
-      // 2. Run all the upload tasks in parallel and wait for them all to complete.
-      //    Future.wait returns a List<String> with all the download URLs.
-      List<String> imageDownloadUrls = await Future.wait(uploadTasks);
-
-      // 3. Assign the completed list of URLs to your session object.
-      sessionObject.imageUrls = imageDownloadUrls;
-
-      print('${imageDownloadUrls.length} images uploaded successfully.');
-
-    } catch (e) {
-      // Handle potential upload errors
-      print('Error uploading images: $e');
-      // Optionally, show an error message to the user here.
-    }
-
-    // --- Multi-Video Upload Logic ---
-    List<String> videoDownloadUrls = [];
-    List<String> thumbnailDownloadUrls = [];
-
-    // Check if there are any videos to upload.
-    if (_videoFiles.isNotEmpty) {// Create a list of all upload tasks (video + thumbnail for each file).
-      List<Future<List<String>>> allUploadTasks = _videoFiles.map((videoFile) {
-        // For each video file, create a pair of futures: one for the video, one for the thumbnail.
-        return Future.wait([
-          _firebaseServices.uploadVideoToStorage(videoFile),
-          _firebaseServices.uploadVideoThumbnailToStorage(videoFile),
-        ]);
-      }).toList();
-
-      // Run all upload tasks in parallel and wait for everything to complete.
-      // `Future.wait` on the list of lists will return a List<List<String>>.
-      List<List<String>> allResults = await Future.wait(allUploadTasks);
-
-      // Process the results to separate video and thumbnail URLs.
-      for (var resultPair in allResults) {
-        videoDownloadUrls.add(resultPair[0]);   // The video URL
-        thumbnailDownloadUrls.add(resultPair[1]); // The thumbnail URL
+      userModel = await _firebaseServices.getUserInfo();
+      CreateSessionModel sessionObject = CreateSessionModel();
+      if (recordFile != null) {
+        sessionObject.audioUrl =
+        await _firebaseServices.uploadSound(recordFile!);
+        sessionObject.containsAudio = true;
       }
 
-      // Assign the lists of URLs to the session object.
-      sessionObject.videoUrls = videoDownloadUrls;
-      sessionObject.videoThumbnailUrls = thumbnailDownloadUrls;
-      sessionObject.containsVideo = true; // Set the flag
-
-      print('${videoDownloadUrls.length} videos uploaded successfully.');
-    }
-    // --- End of Multi-Video Upload Logic ---
-
-
-    /// Adding a category tag to every session created.
-
-    if (sessionTextEditingController.text.contains('love'))
-    {
-      sessionObject.category1 = 'love and relationship';
-      sessionObject.category2 = 'sex and dating';
-      sessionObject.category3 = 'boyfriend and girlfriend';
-      sessionObject.category4 = 'birthdays and anniversary';
-    }
-
-    if (sessionTextEditingController.text.contains('relationship'))
-    {
-      sessionObject.category1 = 'love and relationship';
-      sessionObject.category2 = 'sex and dating';
-      sessionObject.category3 = 'boyfriend and girlfriend';
-      sessionObject.category4 = 'birthdays and anniversary';
-    }
-
-    if (sessionTextEditingController.text.contains('marriage'))
-    {
-      sessionObject.category1 = 'marriage and family';
-      sessionObject.category2 = 'husband and wife';
-      sessionObject.category3 = 'birthdays and anniversary';
-    }
-
-    if (sessionTextEditingController.text.contains('family'))
-    {
-      sessionObject.category1 = 'marriage and family';
-      sessionObject.category2 = 'husband and wife';
-      sessionObject.category3 = 'birthdays and anniversary';
-    }
-
-
-    if (sessionTextEditingController.text.contains('sex'))
-    {
-      sessionObject.category1 = 'sex and dating';
-      sessionObject.category2 = 'love and relationship';
-      sessionObject.category3 = 'boyfriend and girlfriend';
-    }
-
-    if (sessionTextEditingController.text.contains('dating'))
-    {
-      sessionObject.category1 = 'sex and dating';
-      sessionObject.category2 = 'love and relationship';
-      sessionObject.category3 = 'boyfriend and girlfriend';
-    }
-
-    if (sessionTextEditingController.text.contains('school'))
-    {
-      sessionObject.category1 = 'school and education';
-      sessionObject.category2 = 'work and career';
-    }
-
-    if (sessionTextEditingController.text.contains('education'))
-    {
-      sessionObject.category1 = 'school and education';
-      sessionObject.category2 = 'work and career';
-    }
-
-    if (sessionTextEditingController.text.contains('work'))
-    {
-      sessionObject.category1 = 'work and career';
-      sessionObject.category2 = 'business and entrepreneur';
-    }
-
-    if (sessionTextEditingController.text.contains('career'))
-    {
-      sessionObject.category1 = 'work and career';
-      sessionObject.category2 = 'business and entrepreneur';
-    }
-
-    if (sessionTextEditingController.text.contains('office'))
-    {
-      sessionObject.category1 = 'work and career';
-      sessionObject.category2 = 'business and entrepreneur';
-    }
-
-    if (sessionTextEditingController.text.contains('job'))
-    {
-      sessionObject.category1 = 'work and career';
-      sessionObject.category2 = 'business and entrepreneur';
-    }
-
-    if (sessionTextEditingController.text.contains('boss'))
-    {
-      sessionObject.category1 = 'work and career';
-      sessionObject.category2 = 'business and entrepreneur';
-    }
-
-    if (sessionTextEditingController.text.contains('madam'))
-    {
-      sessionObject.category1 = 'work and career';
-      sessionObject.category2 = 'business and entrepreneur';
-    }
-
-
-    if (sessionTextEditingController.text.contains('hate'))
-    {
-      sessionObject.category1 = 'hate and abuse';
-      sessionObject.category2 = 'depression and anxiety';
-      sessionObject.category3 = 'sad and depressed';
-    }
-
-    if (sessionTextEditingController.text.contains('abuse'))
-    {
-      sessionObject.category1 = 'hate and abuse';
-      sessionObject.category2 = 'depression and anxiety';
-      sessionObject.category3 = 'sad and depressed';
-    }
-
-    if (sessionTextEditingController.text.contains('pain'))
-    {
-      sessionObject.category1 = 'hate and abuse';
-      sessionObject.category2 = 'depression and anxiety';
-      sessionObject.category3 = 'sad and depressed';
-    }
-
-    if (sessionTextEditingController.text.contains('trauma'))
-    {
-      sessionObject.category1 = 'hate and abuse';
-      sessionObject.category2 = 'depression and anxiety';
-      sessionObject.category3 = 'sad and depressed';
-    }
-
-    if (sessionTextEditingController.text.contains('slap'))
-    {
-      sessionObject.category1 = 'hate and abuse';
-      sessionObject.category2 = 'depression and anxiety';
-      sessionObject.category3 = 'sad and depressed';
-    }
-
-    if (sessionTextEditingController.text.contains('punch'))
-    {
-      sessionObject.category1 = 'hate and abuse';
-      sessionObject.category2 = 'depression and anxiety';
-      sessionObject.category3 = 'sad and depressed';
-    }
-
-    if (sessionTextEditingController.text.contains('friends'))
-    {
-      sessionObject.category1 = 'friends and fun';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('fun'))
-    {
-      sessionObject.category1 = 'friends and fun';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('depression'))
-    {
-      sessionObject.category1 = 'depression and anxiety';
-      sessionObject.category2 = 'sad and depressed';
-      sessionObject.category3 = 'single and lonely';
-    }
-
-    if (sessionTextEditingController.text.contains('anxiety'))
-    {
-      sessionObject.category1 = 'depression and anxiety';
-      sessionObject.category2 = 'sad and depressed';
-      sessionObject.category3 = 'single and lonely';
-    }
-
-    if (sessionTextEditingController.text.contains('help'))
-    {
-      sessionObject.category1 = 'help and charity';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('charity'))
-    {
-      sessionObject.category1 = 'help and charity';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('sick'))
-    {
-      sessionObject.category1 = 'health and fitness';
-      sessionObject.category2 = 'life and living';
-      sessionObject.category3 = 'food and drink';
-    }
-
-    if (sessionTextEditingController.text.contains('health'))
-    {
-      sessionObject.category1 = 'health and fitness';
-      sessionObject.category2 = 'life and living';
-      sessionObject.category3 = 'food and drink';
-    }
-
-    if (sessionTextEditingController.text.contains('fitness'))
-    {
-      sessionObject.category1 = 'health and fitness';
-      sessionObject.category2 = 'life and living';
-      sessionObject.category3 = 'food and drink';
-    }
-
-    if (sessionTextEditingController.text.contains('husband'))
-    {
-      sessionObject.category1 = 'husband and wife';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'life and living';
-      sessionObject.category4 = 'birthdays and anniversary';
-    }
-
-    if (sessionTextEditingController.text.contains('wife'))
-    {
-      sessionObject.category1 = 'husband and wife';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'life and living';
-      sessionObject.category4 = 'birthdays and anniversary';
-    }
-
-    if (sessionTextEditingController.text.contains('married'))
-    {
-      sessionObject.category1 = 'husband and wife';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'life and living';
-      sessionObject.category4 = 'birthdays and anniversary';
-    }
-
-    if (sessionTextEditingController.text.contains('inlaw'))
-    {
-      sessionObject.category1 = 'husband and wife';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'life and living';
-      sessionObject.category4 = 'birthdays and anniversary';
-    }
-
-    if (sessionTextEditingController.text.contains('boyfriend'))
-    {
-      sessionObject.category1 = 'love and relationship';
-      sessionObject.category2 = 'sex and dating';
-      sessionObject.category3 = 'birthdays and anniversary';
-      sessionObject.category4 = 'boyfriend and girlfriend';
-    }
-
-    if (sessionTextEditingController.text.contains('girlfriend'))
-    {
-      sessionObject.category1 = 'love and relationship';
-      sessionObject.category2 = 'sex and dating';
-      sessionObject.category3 = 'birthdays and anniversary';
-      sessionObject.category4 = 'boyfriend and girlfriend';
-    }
-
-    if (sessionTextEditingController.text.contains('bf'))
-    {
-      sessionObject.category1 = 'love and relationship';
-      sessionObject.category2 = 'sex and dating';
-      sessionObject.category3 = 'birthdays and anniversary';
-      sessionObject.category4 = 'boyfriend and girlfriend';
-    }
-
-    if (sessionTextEditingController.text.contains('gf'))
-    {
-      sessionObject.category1 = 'love and relationship';
-      sessionObject.category2 = 'sex and dating';
-      sessionObject.category3 = 'birthdays and anniversary';
-      sessionObject.category4 = 'boyfriend and girlfriend';
-    }
-
-    if (sessionTextEditingController.text.contains('food'))
-    {
-      sessionObject.category1 = 'food and drink';
-      sessionObject.category2 = 'health and fitness';
-      sessionObject.category3 = 'friends and fun';
-    }
-
-    if (sessionTextEditingController.text.contains('drink'))
-    {
-      sessionObject.category1 = 'food and drink';
-      sessionObject.category2 = 'health and fitness';
-      sessionObject.category3 = 'friends and fun';
-    }
-
-    if (sessionTextEditingController.text.contains('birthday'))
-    {
-      sessionObject.category1 = 'birthday and anniversary';
-      sessionObject.category2 = 'love and relationship';
-      sessionObject.category3 = 'marriage and family';
-      sessionObject.category4 = 'friends and fun';
-    }
-
-    if (sessionTextEditingController.text.contains('anniversary'))
-    {
-      sessionObject.category1 = 'birthday and anniversary';
-      sessionObject.category2 = 'love and relationship';
-      sessionObject.category3 = 'marriage and family';
-      sessionObject.category4 = 'friends and fun';
-    }
-
-    if (sessionTextEditingController.text.contains('pray'))
-    {
-      sessionObject.category1 = 'prayer and thanksgiving';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('God'))
-    {
-      sessionObject.category1 = 'prayer and thanksgiving';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('church'))
-    {
-      sessionObject.category1 = 'prayer and thanksgiving';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('prayer'))
-    {
-      sessionObject.category1 = 'prayer and thanksgiving';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('praises'))
-    {
-      sessionObject.category1 = 'prayer and thanksgiving';
-      sessionObject.category2 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('childhood'))
-    {
-      sessionObject.category1 = 'childhood and memory';
-      sessionObject.category2 = 'life and living';
-      sessionObject.category3 = 'marriage and family';
-      sessionObject.category4 = 'parents and children';
-    }
-
-    if (sessionTextEditingController.text.contains('memory'))
-    {
-      sessionObject.category1 = 'childhood and memory';
-      sessionObject.category2 = 'life and living';
-      sessionObject.category3 = 'marriage and family';
-      sessionObject.category4 = 'parents and children';
-    }
-
-
-    if (sessionTextEditingController.text.contains('old'))
-    {
-      sessionObject.category1 = 'childhood and memory';
-      sessionObject.category2 = 'life and living';
-      sessionObject.category3 = 'marriage and family';
-      sessionObject.category4 = 'parents and children';
-    }
-
-    if (sessionTextEditingController.text.contains('parents'))
-    {
-      sessionObject.category1 = 'parents and children';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-      sessionObject.category4 = 'childhood and memory';
-    }
-
-    if (sessionTextEditingController.text.contains('children'))
-    {
-      sessionObject.category1 = 'parents and children';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-      sessionObject.category4 = 'childhood and memory';
-    }
-
-    if (sessionTextEditingController.text.contains('father'))
-    {
-      sessionObject.category1 = 'parents and children';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-      sessionObject.category4 = 'childhood and memory';
-    }
-
-    if (sessionTextEditingController.text.contains('mother'))
-    {
-      sessionObject.category1 = 'parents and children';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-      sessionObject.category4 = 'childhood and memory';
-    }
-
-    if (sessionTextEditingController.text.contains('dad'))
-    {
-      sessionObject.category1 = 'parents and children';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-      sessionObject.category4 = 'childhood and memory';
-    }
-
-    if (sessionTextEditingController.text.contains('mom'))
-    {
-      sessionObject.category1 = 'parents and children';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-      sessionObject.category4 = 'childhood and memory';
-    }
-
-    if (sessionTextEditingController.text.contains('stepmom'))
-    {
-      sessionObject.category1 = 'parents and children';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-      sessionObject.category4 = 'childhood and memory';
-    }
-
-    if (sessionTextEditingController.text.contains('stepdad'))
-    {
-      sessionObject.category1 = 'parents and children';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-      sessionObject.category4 = 'childhood and memory';
-    }
-
-    if (sessionTextEditingController.text.contains('business'))
-    {
-      sessionObject.category1 = 'business and entrepreneur';
-      sessionObject.category2 = 'work and career';
-      sessionObject.category3 = 'school and education';
-    }
-
-    if (sessionTextEditingController.text.contains('entrepreneur'))
-    {
-      sessionObject.category1 = 'business and entrepreneur';
-      sessionObject.category2 = 'work and career';
-      sessionObject.category3 = 'school and education';
-    }
-
-
-    if (sessionTextEditingController.text.contains('startup'))
-    {
-      sessionObject.category1 = 'business and entrepreneur';
-      sessionObject.category2 = 'work and career';
-      sessionObject.category3 = 'school and education';
-    }
-
-
-    if (sessionTextEditingController.text.contains('sales'))
-    {
-      sessionObject.category1 = 'business and entrepreneur';
-      sessionObject.category2 = 'work and career';
-      sessionObject.category3 = 'school and education';
-    }
-
-    if (sessionTextEditingController.text.contains('art'))
-    {
-      sessionObject.category1 = 'arts and photography';
-      sessionObject.category2 = 'work and career';
-      sessionObject.category3 = 'business and entrepreneur';
-    }
-
-    if (sessionTextEditingController.text.contains('photography'))
-    {
-      sessionObject.category1 = 'arts and photography';
-      sessionObject.category2 = 'work and career';
-      sessionObject.category3 = 'business and entrepreneur';
-    }
-
-    if (sessionTextEditingController.text.contains('studio'))
-    {
-      sessionObject.category1 = 'arts and photography';
-      sessionObject.category2 = 'work and career';
-      sessionObject.category3 = 'business and entrepreneur';
-    }
-
-    if (sessionTextEditingController.text.contains('camera'))
-    {
-      sessionObject.category1 = 'arts and photography';
-      sessionObject.category2 = 'work and career';
-      sessionObject.category3 = 'business and entrepreneur';
-    }
-
-    if (sessionTextEditingController.text.contains('music'))
-    {
-      sessionObject.category1 = 'music and videos';
-      sessionObject.category2 = 'arts and photography';
-      sessionObject.category3 = 'work and career';
-      sessionObject.category4 = 'comedy and entertainment';
-    }
-
-    if (sessionTextEditingController.text.contains('video'))
-    {
-      sessionObject.category1 = 'music and videos';
-      sessionObject.category2 = 'arts and photography';
-      sessionObject.category3 = 'work and career';
-      sessionObject.category4 = 'comedy and entertainment';
-    }
-
-    if (sessionTextEditingController.text.contains('riddles'))
-    {
-      sessionObject.category1 = 'riddles and jokes';
-      sessionObject.category2 = 'friends Aad fun';
-      sessionObject.category3 = 'comedy and entertainment';
-    }
-
-    if (sessionTextEditingController.text.contains('joke'))
-    {
-      sessionObject.category1 = 'riddles and jokes';
-      sessionObject.category2 = 'friends Aad fun';
-      sessionObject.category3 = 'comedy and entertainment';
-    }
-
-    if (sessionTextEditingController.text.contains('comedy'))
-    {
-      sessionObject.category1 = 'riddles and jokes';
-      sessionObject.category2 = 'friends Aad fun';
-      sessionObject.category3 = 'comedy and entertainment';
-    }
-
-    if (sessionTextEditingController.text.contains('laugh'))
-    {
-      sessionObject.category1 = 'riddles and jokes';
-      sessionObject.category2 = 'friends Aad fun';
-      sessionObject.category3 = 'comedy and entertainment';
-    }
-
-    if (sessionTextEditingController.text.contains('television'))
-    {
-      sessionObject.category1 = 'television and movies';
-      sessionObject.category2 = 'music Aad videos';
-      sessionObject.category3 = 'arts and photography';
-      sessionObject.category4 = 'comedy and entertainment';
-    }
-
-    if (sessionTextEditingController.text.contains('movie'))
-    {
-      sessionObject.category1 = 'television and movies';
-      sessionObject.category2 = 'music Aad videos';
-      sessionObject.category3 = 'arts and photography';
-      sessionObject.category4 = 'comedy and entertainment';
-    }
-
-    if (sessionTextEditingController.text.contains('cinema'))
-    {
-      sessionObject.category1 = 'television and movies';
-      sessionObject.category2 = 'music Aad videos';
-      sessionObject.category3 = 'arts and photography';
-      sessionObject.category4 = 'comedy and entertainment';
-    }
-
-    if (sessionTextEditingController.text.contains('puzzle'))
-    {
-      sessionObject.category1 = 'puzzles and games';
-      sessionObject.category2 = 'riddles Aad jokes';
-      sessionObject.category3 = 'comedy and entertainment';
-    }
-
-    if (sessionTextEditingController.text.contains('games'))
-    {
-      sessionObject.category1 = 'puzzles and games';
-      sessionObject.category2 = 'riddles Aad jokes';
-      sessionObject.category3 = 'comedy and entertainment';
-    }
-
-    if (sessionTextEditingController.text.contains('life'))
-    {
-      sessionObject.category1 = 'life and living';
-      sessionObject.category2 = 'happy and blessed';
-      sessionObject.category3 = 'childhood and memory';
-      sessionObject.category4 = 'work and career';
-    }
-
-    if (sessionTextEditingController.text.contains('living'))
-    {
-      sessionObject.category1 = 'life and living';
-      sessionObject.category2 = 'happy and blessed';
-      sessionObject.category3 = 'childhood and memory';
-      sessionObject.category4 = 'work and career';
-    }
-
-    if (sessionTextEditingController.text.contains('house'))
-    {
-      sessionObject.category1 = 'life and living';
-      sessionObject.category2 = 'happy and blessed';
-      sessionObject.category3 = 'childhood and memory';
-      sessionObject.category4 = 'work and career';
-    }
-
-
-    if (sessionTextEditingController.text.contains('bedroom'))
-    {
-      sessionObject.category1 = 'life and living';
-      sessionObject.category2 = 'happy and blessed';
-      sessionObject.category3 = 'childhood and memory';
-      sessionObject.category4 = 'work and career';
-    }
-
-    if (sessionTextEditingController.text.contains('single'))
-    {
-      sessionObject.category1 = 'single and lonely';
-      sessionObject.category2 = 'sad Aad depressed';
-      sessionObject.category3 = 'love and relationship';
-    }
-
-    if (sessionTextEditingController.text.contains('lonely'))
-    {
-      sessionObject.category1 = 'single and lonely';
-      sessionObject.category2 = 'sad Aad depressed';
-      sessionObject.category3 = 'love and relationship';
-    }
-
-    if (sessionTextEditingController.text.contains('alone'))
-    {
-      sessionObject.category1 = 'single and lonely';
-      sessionObject.category2 = 'sad Aad depressed';
-      sessionObject.category3 = 'love and relationship';
-    }
-
-    if (sessionTextEditingController.text.contains('mingle'))
-    {
-      sessionObject.category1 = 'single and lonely';
-      sessionObject.category2 = 'sad Aad depressed';
-      sessionObject.category3 = 'love and relationship';
-    }
-
-    if (sessionTextEditingController.text.contains('sad'))
-    {
-      sessionObject.category1 = 'sad and depressed';
-      sessionObject.category2 = 'single and lonely';
-      sessionObject.category3 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('depressed'))
-    {
-      sessionObject.category1 = 'sad and depressed';
-      sessionObject.category2 = 'single and lonely';
-      sessionObject.category3 = 'life and living';
-    }
-
-
-    if (sessionTextEditingController.text.contains('suicide'))
-    {
-      sessionObject.category1 = 'sad and depressed';
-      sessionObject.category2 = 'single and lonely';
-      sessionObject.category3 = 'life and living';
-    }
-
-
-    if (sessionTextEditingController.text.contains('die'))
-    {
-      sessionObject.category1 = 'sad and depressed';
-      sessionObject.category2 = 'single and lonely';
-      sessionObject.category3 = 'life and living';
-    }
-
-    if (sessionTextEditingController.text.contains('brother'))
-    {
-      sessionObject.category1 = 'brothers and sisters';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-    }
-
-    if (sessionTextEditingController.text.contains('sister'))
-    {
-      sessionObject.category1 = 'brothers and sisters';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-    }
-
-    if (sessionTextEditingController.text.contains('my bro'))
-    {
-      sessionObject.category1 = 'brothers and sisters';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-    }
-
-    if (sessionTextEditingController.text.contains('my sis'))
-    {
-      sessionObject.category1 = 'brothers and sisters';
-      sessionObject.category2 = 'marriage and family';
-      sessionObject.category3 = 'husband and wife';
-    }
-
-    if (sessionTextEditingController.text.contains('comedy'))
-    {
-      sessionObject.category1 = 'comedy and entertainment';
-      sessionObject.category2 = 'music Aad videos';
-      sessionObject.category3 = 'riddles and jokes';
-    }
-
-    if (sessionTextEditingController.text.contains('entertainment'))
-    {
-      sessionObject.category1 = 'comedy and entertainment';
-      sessionObject.category2 = 'music Aad videos';
-      sessionObject.category3 = 'riddles and jokes';
-    }
-
-    if (sessionTextEditingController.text.contains('happy'))
-    {
-      sessionObject.category1 = 'happy and blessed';
-      sessionObject.category2 = 'life Aad living';
-      sessionObject.category3 = 'love and relationship';
-      sessionObject.category4 = 'marriage and family';
-    }
-
-    if (sessionTextEditingController.text.contains('blessed'))
-    {
-      sessionObject.category1 = 'happy and blessed';
-      sessionObject.category2 = 'life Aad living';
-      sessionObject.category3 = 'love and relationship';
-      sessionObject.category4 = 'marriage and family';
-    }
-
-    if (sessionTextEditingController.text.contains('excited'))
-    {
-      sessionObject.category1 = 'happy and blessed';
-      sessionObject.category2 = 'life Aad living';
-      sessionObject.category3 = 'love and relationship';
-      sessionObject.category4 = 'marriage and family';
-    }
-
-    if (sessionTextEditingController.text.contains('grateful'))
-    {
-      sessionObject.category1 = 'happy and blessed';
-      sessionObject.category2 = 'life Aad living';
-      sessionObject.category3 = 'love and relationship';
-      sessionObject.category4 = 'marriage and family';
-    }
-
-    if (sessionTextEditingController.text.contains('joyful'))
-    {
-      sessionObject.category1 = 'happy and blessed';
-      sessionObject.category2 = 'life Aad living';
-      sessionObject.category3 = 'love and relationship';
-      sessionObject.category4 = 'marriage and family';
-    }
-
-    if (sessionTextEditingController.text.contains('dance'))
-    {
-      sessionObject.category1 = 'happy and blessed';
-      sessionObject.category2 = 'life Aad living';
-      sessionObject.category3 = 'love and relationship';
-      sessionObject.category4 = 'marriage and family';
-    }
-
-    if (sessionTextEditingController.text.contains('dancing'))
-    {
-      sessionObject.category1 = 'happy and blessed';
-      sessionObject.category2 = 'life Aad living';
-      sessionObject.category3 = 'love and relationship';
-      sessionObject.category4 = 'marriage and family';
-    }
-
-    if (sessionTextEditingController.text.contains('beach'))
-    {
-      sessionObject.category1 = 'happy and blessed';
-      sessionObject.category2 = 'life Aad living';
-      sessionObject.category3 = 'love and relationship';
-      sessionObject.category4 = 'marriage and family';
+      // --- Image Upload ---
+      try {
+        List<Future<String>> uploadTasks = c.images.map((imageFile) {
+          return _firebaseServices.uploadImage(imageFile);
+        }).toList();
+        List<String> imageDownloadUrls = await Future.wait(uploadTasks);
+        sessionObject.imageUrls = imageDownloadUrls;
+        print('${imageDownloadUrls.length} images uploaded successfully.');
+      } catch (e) {
+        print('Error uploading images: $e');
+        // Optionally, show an error message to the user here.
+      }
+
+      // --- Multi-Video Upload Logic ---
+      if (_videoFiles.isNotEmpty) {
+        List<String> videoDownloadUrls = [];
+        List<String> thumbnailDownloadUrls = [];
+
+        List<Future<List<String>>> allUploadTasks =
+        _videoFiles.map((videoFile) {
+          return Future.wait([
+            _firebaseServices.uploadVideoToStorage(videoFile),
+            _firebaseServices.uploadVideoThumbnailToStorage(videoFile),
+          ]);
+        }).toList();
+
+        List<List<String>> allResults = await Future.wait(allUploadTasks);
+
+        for (var resultPair in allResults) {
+          videoDownloadUrls.add(resultPair[0]);
+          thumbnailDownloadUrls.add(resultPair[1]);
+        }
+
+        sessionObject.videoUrls = videoDownloadUrls;
+        sessionObject.videoThumbnailUrls = thumbnailDownloadUrls;
+        sessionObject.containsVideo = true;
+        print('${videoDownloadUrls.length} videos uploaded successfully.');
+      }
+
+      SessionCategorizer.assignCategories(
+          sessionObject, sessionTextEditingController.text);
+
+      sessionObject.userAvatarUrl = userModel.avatarUrl;
+      sessionObject.userNickname = userModel.nickname;
+      sessionObject.title = sessionTitleController.text;
+      sessionObject.private = c.acceptReplies.value;
+      sessionObject.repliesEnabled = c.acceptReplies.value;
+      sessionObject.message = sessionTextEditingController.text;
+      sessionObject.colorHex = Constant.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
+      sessionObject.sessionId = uuid.v1();
+      sessionObject.userId = userModel.userId;
+      sessionObject.moodId = Constant.USER_SESSION_MOODS.indexOf(c.sessionMood.value);
+      sessionObject.location = _location;
+      sessionObject.timeLastActivity = Timestamp.now();
+
+      await _firebaseServices.createSession(session: sessionObject);
+
+      await _firebaseServices.saveUserActivity(
+        activityType: 'session',
+        activityMessage:
+        "You started a new diary session: '${sessionObject.title}'.",
+        sessionId: sessionObject.sessionId,
+      );
+
+      Hive.box("draft").clear();
+
+      categorize(sessionObject);
+
+      isOriginalSession(sessionTextEditingController.text);
+
+      ascertainCurrentLoveCount();
+
+      Future.delayed(Duration(seconds: 4), () {
+        _showInterstitialAd();
+      });
+
+      _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
+
+      _firebaseServices.notifyClaireForSession(userModel.nickname.toString(), sessionObject);
+
+      // This will only be called after all previous awaits are complete.
+      if (mounted && sessionObject.sessionId != null && sessionObject.sessionId!.isNotEmpty) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => NotifiedSessionDetails(sessionId: sessionObject.sessionId!),
+          ),
+        );
+      }
+
+    } catch (e) {
+      // If any error occurs during the process, log it.
+      print("An error occurred during session creation: $e");
+      // Optionally, show a toast or dialog to the user that something went wrong.
+
+    } finally {
+      // This block will ALWAYS run, whether the try block succeeds or fails.
+      // This is the perfect place to turn off the loading indicator.
+      if (mounted) { // Check if the widget is still in the tree
+        setState(() {
+          sessionTextEditingController.clear();
+          isLoading = false;
+          imageList.clear();
+          _videoFiles.clear();
+          recordFile = null;
+        });
+      }
     }
-
-    sessionObject.userAvatarUrl = userModel.avatarUrl;
-    sessionObject.userNickname = userModel.nickname;
-    sessionObject.title = sessionTitleController.text;
-    sessionObject.private = c.acceptReplies.value;
-    sessionObject.repliesEnabled = c.acceptReplies.value;
-    sessionObject.message = sessionTextEditingController.text;
-    sessionObject.colorHex =
-        Constant.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
-    sessionObject.sessionId = uuid.v1();
-    sessionObject.userId = userModel.userId;
-    sessionObject.moodId =
-        Constant.USER_SESSION_MOODS.indexOf(c.sessionMood.value);
-    sessionObject.location = _location;
-    sessionObject.timeLastActivity = Timestamp.now();
-
-    bool isSuccessfull =
-        await _firebaseServices.createSession(session: sessionObject);
-
-    await _firebaseServices.saveUserActivity(
-      activityType: 'session',
-      activityMessage: "You started a new diary session: '${sessionObject.title}'.",
-      sessionId: sessionObject.sessionId,
-    );
-
-    //startAiChat(sessionObject, sessionTextEditingController.text);
-
-    Hive.box("draft").clear();
-
-    categorize(sessionObject);
-
-    isOriginalSession(sessionTextEditingController.text);
-
-    ascertainCurrentLoveCount();
-
-    Future.delayed(Duration(seconds: 4), () {
-      _showInterstitialAd();
-    });
-
-    _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
-
-    _firebaseServices.notifyClaireForSession(userModel.nickname.toString(), sessionObject);
-
-    navigateToNewSession(await _firebaseServices.getSingleSession(
-        sessionId: sessionObject.sessionId));
   }
-
 
 
 
