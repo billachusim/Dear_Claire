@@ -7,6 +7,7 @@ import 'package:clairediary/utils/constant.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../services/firebase_services.dart';
@@ -89,10 +90,19 @@ class AutoDiary {
   }
 
 
-  /// Uploads the recorded audio file and creates a Firestore document.
+  /// Uploads the recorded audio file and creates a Firestore document with custom settings.
   static Future<void> saveAndSendAutoDiary(String recordedFilePath) async {
     print(
         'BACKGROUND: Preparing to save and send auto diary from path: $recordedFilePath');
+
+    // --- Load All Auto Diary settings from SharedPreferences ---
+    final prefs = await SharedPreferences.getInstance();
+    final String title = prefs.getString('autoDiaryTitle') ?? "Auto Diary";
+    final bool isPrivate = prefs.getBool('autoDiaryIsPrivate') ?? false;
+    final bool repliesEnabled = prefs.getBool('autoDiaryRepliesEnabled') ?? true;
+    final int moodId = prefs.getInt('autoDiaryMoodId') ?? 0;
+    final bool locationEnabled = prefs.getBool('autoDiaryLocationEnabled') ?? false;
+    final String locationData = prefs.getString('autoDiaryLocationData') ?? '';
 
     final Uuid uuid = Uuid();
     final FirebaseServices _firebaseServices = FirebaseServices();
@@ -108,39 +118,48 @@ class AutoDiary {
 
     if (await recordFile.exists()) {
       sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile);
+      sessionObject.containsAudio = true;
       print('BACKGROUND: Audio file uploaded successfully.');
-      // await recordFile.delete(); // Uncomment to save space
     } else {
       print(
           'BACKGROUND: Error - Recorded file not found at path: $recordedFilePath');
       return;
     }
 
+    final randomColor = Constant.DIARY_COLORS_HEXCODE[
+    Random().nextInt(Constant.DIARY_COLORS_HEXCODE.length)];
+
+    String finalLocationString = '#AutoDiary';
+    if (locationEnabled && locationData.isNotEmpty) {
+      finalLocationString = '$locationData';
+    }
+
+    // --- APPLY SETTINGS ---
     sessionObject.userAvatarUrl = userModel.avatarUrl;
     sessionObject.userNickname = userModel.nickname;
-    sessionObject.title = "Auto Diary";
-    sessionObject.private = false;
-    sessionObject.repliesEnabled = true;
+    sessionObject.title = title;
+    sessionObject.private = isPrivate;
+    sessionObject.repliesEnabled = repliesEnabled;
     sessionObject.message =
-    "This diary entry was recorded automatically by Claire.";
-    sessionObject.colorHex = "#6200EA";
+    "This diary session was recorded automatically by Claire in the background as a monitoring spirit with the users permission. #AutoDiary";
+    sessionObject.colorHex = randomColor;
     sessionObject.sessionId = uuid.v1();
     sessionObject.userId = userModel.userId;
-    sessionObject.moodId = 0;
-    sessionObject.location = '#AutoDiary';
+    sessionObject.moodId = moodId;
+    sessionObject.location = finalLocationString;
     sessionObject.timeLastActivity = Timestamp.now();
 
-    bool isSuccessful = await _firebaseServices.createSession(
-        session: sessionObject);
+    bool isSuccessful =
+    await _firebaseServices.createSession(session: sessionObject);
 
     if (isSuccessful) {
       print('BACKGROUND: Firestore session created successfully.');
-      _firebaseServices.subscribeToYourSession(
-          userModel.nickname.toString(), sessionObject);
     } else {
       print('BACKGROUND: Failed to create Firestore session.');
     }
   }
+
+
 
   // NEW: A dedicated method to send the follow-up notification.
   static Future<void> _sendContinuationNotification() async {

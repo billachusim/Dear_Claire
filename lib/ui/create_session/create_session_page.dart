@@ -1219,7 +1219,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     bool isSuccessfull =
     await _firebaseServices.createSession(session: sessionObject);
 
-    //startAiChat(sessionObject, sessionTextEditingController.text);
+    // Call saveUserActivity
+    await _firebaseServices.saveUserActivity(
+      activityType: 'session',
+      activityMessage: "You started a quick diary session: '${sessionObject.title}'.",
+      sessionId: sessionObject.sessionId,
+    );
 
     Future.delayed(Duration(seconds: 4), () {
       _showQuickInterstitialAd();

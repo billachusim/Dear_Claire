@@ -1,13 +1,19 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:clairediary/utils/constant.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/widgets/toast.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // NEW: To persist ritual state
+import 'package:shared_preferences/shared_preferences.dart';
+
+enum _SanctuaryView { main, whisper, ritual, configure }
 
 class SetupAutoDiary extends StatefulWidget {
   const SetupAutoDiary({Key? key}) : super(key: key);
@@ -18,29 +24,48 @@ class SetupAutoDiary extends StatefulWidget {
 
 class _SetupAutoDiaryState extends State<SetupAutoDiary>
     with TickerProviderStateMixin {
+  // --- UI & Service State ---
   bool isServiceRunning = false;
-  TimeOfDay? _selectedTime;
-  TimeOfDay? _dailyRitualTime; // NEW: State for the daily ritual
+  TimeOfDay? _dailyRitualTime;
+  _SanctuaryView _currentView = _SanctuaryView.main;
 
+  // --- Animation State ---
   late AnimationController _pulseController;
   late AnimationController _narrativeController;
+  late AnimationController _introNarrativeController;
   late Animation<double> _pulseAnimation;
-
   int _narrativeIndex = 0;
-  final List<String> _narratives = [
+  int _introNarrativeIndex = 0;
+
+  final List<String> _introNarratives = [
+    "Activate your inner companion.",
+    "Let your spirit listen and guide you.",
+    "Journals your day, even without you touching your phone.",
+    "Your alter ego is always within."
+  ];
+
+  final List<String> _footerNarratives = [
     "Your real alter ego is within.",
     "Helping you without being seen.",
     "A psychical window to your soul.",
     "Ready to listen, always.",
-    "Record your diary... without touching your phone.",
   ];
+
+  // --- User Settings State ---
+  final TextEditingController _titleController = TextEditingController();
+  String _selectedMood = Constant.USER_SESSION_MOODS[0];
+  bool _isPrivate = false;
+  bool _repliesEnabled = true;
+  bool _locationEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _checkServiceStatus();
-    _loadDailyRitual(); // NEW: Load saved ritual time on init
+    _loadDailyRitual();
+    _loadSettings();
 
+    // --- Animation Setup ---
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -54,24 +79,114 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       duration: const Duration(seconds: 5),
     )..addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        setState(() {
-          _narrativeIndex = (_narrativeIndex + 1) % _narratives.length;
-        });
+        setState(() =>
+        _narrativeIndex = (_narrativeIndex + 1) % _footerNarratives.length);
         _narrativeController.forward(from: 0);
       }
     });
     _narrativeController.forward();
+
+    _introNarrativeController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() => _introNarrativeIndex =
+            (_introNarrativeIndex + 1) % _introNarratives.length);
+        _introNarrativeController.forward(from: 0);
+      }
+    });
+    _introNarrativeController.forward();
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
     _narrativeController.dispose();
+    _introNarrativeController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
-  // --- NEW: Methods to save, load, and cancel the Daily Ritual ---
+  // --- Settings & Location Methods ---
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _titleController.text = prefs.getString('autoDiaryTitle') ?? "Auto Diary";
+        _isPrivate = prefs.getBool('autoDiaryIsPrivate') ?? false;
+        _repliesEnabled = prefs.getBool('autoDiaryRepliesEnabled') ?? true;
+        _locationEnabled = prefs.getBool('autoDiaryLocationEnabled') ?? false;
+        int moodId = prefs.getInt('autoDiaryMoodId') ?? 0;
+        _selectedMood = Constant.USER_SESSION_MOODS[moodId];
+      });
+    }
+  }
 
+  Future<void> _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('autoDiaryTitle', _titleController.text);
+    await prefs.setBool('autoDiaryIsPrivate', _isPrivate);
+    await prefs.setBool('autoDiaryRepliesEnabled', _repliesEnabled);
+    await prefs.setBool('autoDiaryLocationEnabled', _locationEnabled);
+    await prefs.setInt(
+        'autoDiaryMoodId', Constant.USER_SESSION_MOODS.indexOf(_selectedMood));
+
+    if (!_locationEnabled) {
+      await prefs.remove('autoDiaryLocationData');
+    }
+
+    showToast("Your Spirit's configuration is saved.");
+    setState(() {
+      _currentView = _SanctuaryView.main;
+    });
+  }
+
+  Future<void> _determinePositionAndSave() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      showToast('Location services are disabled.');
+      if (mounted) setState(() => _locationEnabled = false);
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        showToast('Location permissions are denied.');
+        if (mounted) setState(() => _locationEnabled = false);
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      showToast('Location permissions are permanently denied.');
+      openAppSettings();
+      if (mounted) setState(() => _locationEnabled = false);
+      return;
+    }
+
+    try {
+      final position = await Geolocator.getCurrentPosition();
+      List<Placemark> placemarks =
+      await placemarkFromCoordinates(position.latitude, position.longitude);
+      Placemark place = placemarks[0];
+      String locationString = "in ${place.administrativeArea}, ${place.country}";
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('autoDiaryLocationData', locationString);
+      showToast("Location captured: $locationString");
+    } catch (e) {
+      showToast("Could not determine location.");
+      if (mounted) setState(() => _locationEnabled = false);
+    }
+  }
+
+  // --- Core Auto Diary Methods (Narrative Updated) ---
   Future<void> _loadDailyRitual() async {
     final prefs = await SharedPreferences.getInstance();
     final hour = prefs.getInt('dailyRitualHour');
@@ -96,7 +211,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
     await prefs.remove('dailyRitualHour');
     await prefs.remove('dailyRitualMinute');
     final service = FlutterBackgroundService();
-    service.invoke('cancelDailyRitual'); // Tell the service to stop the timer
+    service.invoke('cancelDailyRitual');
     if (mounted) {
       setState(() {
         _dailyRitualTime = null;
@@ -105,20 +220,16 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
     showToast("Your daily ritual has been cancelled.");
   }
 
-
-  // --- Existing Methods (with minor updates for new logic) ---
-
   void _checkServiceStatus() async {
     final service = FlutterBackgroundService();
     bool isRunning = await service.isRunning();
     if (mounted) {
       setState(() {
         isServiceRunning = isRunning;
-        if (isRunning) {
+        if (isRunning)
           _pulseController.repeat(reverse: true);
-        } else {
+        else
           _pulseController.stop();
-        }
       });
     }
   }
@@ -126,51 +237,14 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
   Future<bool> _requestMicPermission() async {
     PermissionStatus status = await Permission.microphone.request();
     if (!status.isGranted) {
-      showToast("Microphone permission is required to speak.");
-      if (status.isPermanentlyDenied) {
-        openAppSettings();
-      }
+      showToast("Microphone permission is required for Claire to listen.");
+      if (status.isPermanentlyDenied) openAppSettings();
       return false;
     }
     return true;
   }
 
-  // Updated to distinguish between one-time and daily schedules
-  Future<void> _selectTime(BuildContext context, {bool isDailyRitual = false}) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: (_dailyRitualTime ?? _selectedTime) ?? TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.dark().copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: Pallet.colorSecondary,
-              onPrimary: Colors.white,
-              surface: Pallet.colorSecondary.withOpacity(0.1),
-              onSurface: Colors.white,
-            ),
-            dialogBackgroundColor: Colors.black.withOpacity(0.8),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      if (isDailyRitual) {
-        _scheduleDailyRitual(picked);
-      } else {
-        setState(() { _selectedTime = picked; });
-        _scheduleAutoDiary();
-      }
-    }
-  }
-
-  // UNCHANGED
-  void _scheduleAutoDiary() async {
-    if (_selectedTime == null) {
-      showToast("Please select a time first.");
-      return;
-    }
+  void _scheduleOneTime(TimeOfDay time) async {
     if (!await _requestMicPermission()) return;
     final service = FlutterBackgroundService();
     if (!isServiceRunning) {
@@ -178,27 +252,21 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       await Future.delayed(const Duration(seconds: 1));
     }
     final now = DateTime.now();
-    var scheduledDateTime = DateTime(
-        now.year, now.month, now.day, _selectedTime!.hour, _selectedTime!.minute);
+    var scheduledDateTime =
+    DateTime(now.year, now.month, now.day, time.hour, time.minute);
     if (scheduledDateTime.isBefore(now)) {
       scheduledDateTime = scheduledDateTime.add(const Duration(days: 1));
     }
-    service.invoke('scheduleRecording', {
-      'time': scheduledDateTime.toIso8601String(),
-    });
-    if (mounted) setState(() { isServiceRunning = true; });
-    final formattedDate = DateFormat('MMM d, yyyy').format(scheduledDateTime);
-    final formattedTime = _selectedTime!.format(context);
-    showToast("An intention is set for $formattedDate at $formattedTime.");
+    service.invoke(
+        'scheduleRecording', {'time': scheduledDateTime.toIso8601String()});
+    if (mounted) setState(() => isServiceRunning = true);
+    showToast("Claire will listen at ${time.format(context)}.");
     Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
+      if (mounted) Navigator.of(context).pop();
     });
   }
 
-  // UNCHANGED
-  void _speakNow() async {
+  void _listenNow() async {
     if (!await _requestMicPermission()) return;
     final service = FlutterBackgroundService();
     if (!isServiceRunning) {
@@ -206,87 +274,71 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       await Future.delayed(const Duration(seconds: 1));
     }
     service.invoke('instantRecording');
-    if (mounted) setState(() { isServiceRunning = true; });
-    showToast("Your session has begun. Speak freely.");
+    if (mounted) setState(() => isServiceRunning = true);
+    showToast("Claire is listening now. Speak freely.");
     Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
+      if (mounted) Navigator.of(context).pop();
     });
   }
 
-  // NEW: Function to handle scheduling the daily ritual
-  void _scheduleDailyRitual(TimeOfDay time) async {
+  void _scheduleDaily(TimeOfDay time) async {
     if (!await _requestMicPermission()) return;
     final service = FlutterBackgroundService();
     if (!isServiceRunning) {
       await service.startService();
       await Future.delayed(const Duration(seconds: 1));
     }
-    service.invoke('scheduleDailyRitual', {
-      'hour': time.hour,
-      'minute': time.minute,
-    });
-    await _saveDailyRitual(time); // Save the time to persistent storage
+    service
+        .invoke('scheduleDailyRitual', {'hour': time.hour, 'minute': time.minute});
+    await _saveDailyRitual(time);
     if (mounted) {
       setState(() {
         isServiceRunning = true;
         _dailyRitualTime = time;
+        _currentView = _SanctuaryView.main;
       });
     }
-    showToast("Your daily ritual is set for ${time.format(context)} each day.");
+    showToast("Claire will listen daily at ${time.format(context)}.");
   }
 
-
+  // --- Build Methods ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text('The Sanctuary',
+        title: Text('Monitoring Spirit',
             style: GoogleFonts.lato(color: Colors.white.withOpacity(0.8))),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        leading: _currentView != _SanctuaryView.main
+            ? IconButton(
+          icon:
+          const Icon(Icons.arrow_back_ios_new, color: Colors.white70),
+          onPressed: () =>
+              setState(() => _currentView = _SanctuaryView.main),
+        )
+            : null,
+        actions: [
+          if (_currentView == _SanctuaryView.configure)
+            IconButton(
+              icon: const Icon(Icons.save_rounded, color: Colors.white, size: 28),
+              onPressed: _saveSettings,
+            ),
+          if (_currentView != _SanctuaryView.configure)
+            const SizedBox(width: 56)
+        ],
       ),
       body: Stack(
         children: [
           _buildAnimatedBackground(),
           Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildHeartbeatOrb(),
-                const SizedBox(height: 40),
-
-                // All three action buttons
-                _buildActionButton(
-                  onTap: _speakNow,
-                  icon: Icons.mic_none_rounded,
-                  label: 'Speak Now',
-                  color: Colors.cyan.withOpacity(0.7),
-                ),
-                const SizedBox(height: 25),
-                _buildActionButton(
-                  onTap: () => _selectTime(context, isDailyRitual: false),
-                  icon: Icons.watch_later_outlined,
-                  label: 'Whisper Later',
-                  color: Pallet.colorSecondary.withOpacity(0.7),
-                ),
-                const SizedBox(height: 25),
-
-                // NEW: Daily Ritual Button
-                _dailyRitualTime == null
-                    ? _buildActionButton(
-                  onTap: () => _selectTime(context, isDailyRitual: true),
-                  icon: Icons.sync_rounded,
-                  label: 'Set Daily Ritual',
-                  color: Colors.amber.withOpacity(0.7),
-                )
-                    : _buildActiveRitualDisplay(), // Show this if a ritual is active
-
-                const SizedBox(height: 60),
-              ],
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 600),
+              transitionBuilder: (child, animation) =>
+                  FadeTransition(opacity: animation, child: child),
+              child: _buildCurrentView(),
             ),
           ),
           _buildFooter(),
@@ -295,10 +347,219 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
     );
   }
 
-  // --- NEW: Widget to display the active daily ritual ---
+  Widget _buildCurrentView() {
+    switch (_currentView) {
+      case _SanctuaryView.whisper:
+        return _buildTimePickerView(isDaily: false);
+      case _SanctuaryView.ritual:
+        return _buildTimePickerView(isDaily: true);
+      case _SanctuaryView.configure:
+        return _buildSettingsView();
+      case _SanctuaryView.main:
+      default:
+        return _buildMainActionsView();
+    }
+  }
+
+  Widget _buildMainActionsView() {
+    return Column(
+      key: const ValueKey('mainActions'),
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildIntroNarrative(),
+        _buildHeartbeatOrb(),
+        const SizedBox(height: 30),
+        _buildActionButton(
+          onTap: _listenNow,
+          icon: Icons.hearing_rounded,
+          label: 'Listen Now, Claire',
+          color: Colors.cyan.withOpacity(0.7),
+        ),
+        const SizedBox(height: 25),
+        _buildActionButton(
+          onTap: () => setState(() => _currentView = _SanctuaryView.whisper),
+          icon: Icons.schedule_rounded,
+          label: 'Schedule Claire To Listen',
+          color: Pallet.colorSecondary.withOpacity(0.7),
+        ),
+        const SizedBox(height: 25),
+        _dailyRitualTime == null
+            ? _buildActionButton(
+          onTap: () =>
+              setState(() => _currentView = _SanctuaryView.ritual),
+          icon: Icons.sync_rounded,
+          label: 'Set Daily Time To Listen',
+          color: Colors.amber.withOpacity(0.7),
+        )
+            : _buildActiveRitualDisplay(),
+        const SizedBox(height: 25),
+        _buildActionButton(
+          onTap: () => setState(() => _currentView = _SanctuaryView.configure),
+          icon: Icons.settings_outlined,
+          label: 'Configure Your Spirit',
+          color: Colors.grey.withOpacity(0.5),
+        ),
+        const SizedBox(height: 60),
+      ],
+    );
+  }
+
+  Widget _buildTimePickerView({required bool isDaily}) {
+    TimeOfDay selectedTime = _dailyRitualTime ?? TimeOfDay.now();
+    return Column(
+      key: ValueKey(isDaily ? 'ritualPicker' : 'whisperPicker'),
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          isDaily
+              ? 'Set your daily listening time'
+              : 'Set a time for Claire to listen',
+          style: GoogleFonts.lato(color: Colors.white70, fontSize: 18),
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          height: 200,
+          child: CupertinoTheme(
+            data: const CupertinoThemeData(
+              brightness: Brightness.dark,
+              textTheme: CupertinoTextThemeData(
+                  dateTimePickerTextStyle:
+                  TextStyle(color: Colors.white, fontSize: 20)),
+            ),
+            child: CupertinoTimerPicker(
+              mode: CupertinoTimerPickerMode.hm,
+              initialTimerDuration: Duration(
+                  hours: selectedTime.hour, minutes: selectedTime.minute),
+              onTimerDurationChanged: (Duration d) => selectedTime =
+                  TimeOfDay(hour: d.inHours % 24, minute: d.inMinutes % 60),
+            ),
+          ),
+        ),
+        const SizedBox(height: 30),
+        _buildActionButton(
+          onTap: () =>
+          isDaily ? _scheduleDaily(selectedTime) : _scheduleOneTime(selectedTime),
+          icon: isDaily ? Icons.sync_rounded : Icons.check_circle_outline,
+          label: isDaily ? 'Begin Ritual' : 'Set Intention',
+          color: isDaily
+              ? Colors.amber.withOpacity(0.7)
+              : Pallet.colorSecondary.withOpacity(0.7),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettingsView() {
+    return SingleChildScrollView(
+      key: const ValueKey('settings'),
+      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TextField(
+            controller: _titleController,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.lato(fontSize: 20, color: Colors.white),
+            decoration: InputDecoration(
+              labelText: 'Default Session Title',
+              labelStyle:
+              GoogleFonts.lato(color: Pallet.colorSecondary.withOpacity(0.7)),
+              enabledBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white24)),
+              focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Pallet.colorSecondary)),
+            ),
+          ),
+          const SizedBox(height: 30),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white38)),
+            child: DropdownButton<String>(
+              value: _selectedMood,
+              isExpanded: true,
+              dropdownColor: Colors.black,
+              underline: const SizedBox.shrink(),
+              icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
+              style: GoogleFonts.lato(fontSize: 16, color: Colors.white),
+              onChanged: (String? v) => setState(() => _selectedMood = v!),
+              items: Constant.USER_SESSION_MOODS
+                  .map<DropdownMenuItem<String>>(
+                      (String v) => DropdownMenuItem<String>(value: v, child: Text(v)))
+                  .toList(),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildSettingsToggle(
+              label: "Allow Replies",
+              value: _repliesEnabled,
+              onChanged: (v) => setState(() => _repliesEnabled = v)),
+          const SizedBox(height: 15),
+          _buildSettingsToggle(
+              label: "Make Session Private",
+              value: _isPrivate,
+              onChanged: (v) => setState(() => _isPrivate = v)),
+          const SizedBox(height: 15),
+          _buildSettingsToggle(
+              label: "Do you want to tag your location?",
+              value: _locationEnabled,
+              onChanged: (val) {
+                setState(() => _locationEnabled = val);
+                if (val) _determinePositionAndSave();
+              }),
+        ],
+      ),
+    );
+  }
+
+  // --- Helper Widgets ---
+  Widget _buildIntroNarrative() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 1500),
+        transitionBuilder: (child, animation) =>
+            FadeTransition(opacity: animation, child: child),
+        child: Text(
+          _introNarratives[_introNarrativeIndex],
+          key: ValueKey<int>(_introNarrativeIndex),
+          textAlign: TextAlign.center,
+          style: GoogleFonts.lato(
+              fontSize: 16.0,
+              color: Colors.white.withOpacity(0.7),
+              fontStyle: FontStyle.italic),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsToggle(
+      {required String label,
+        required bool value,
+        required ValueChanged<bool> onChanged}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(
+          child: Text(label,
+              style: GoogleFonts.lato(color: Colors.white70, fontSize: 16)),
+        ),
+        Transform.scale(
+          scale: 0.8,
+          child: CupertinoSwitch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: Pallet.colorSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildActiveRitualDisplay() {
     return Container(
-      width: 250,
+      width: 280, // Adjusted width for longer text
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         color: Colors.amber.withOpacity(0.1),
@@ -310,13 +571,15 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
         children: [
           const Icon(Icons.sync_rounded, color: Colors.amber),
           const SizedBox(width: 12),
-          Text('Ritual at ${_dailyRitualTime!.format(context)}',
-              style: GoogleFonts.lato(
-                  fontSize: 18.0,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white.withOpacity(0.9))),
+          Flexible(
+            child: Text('Daily at ${_dailyRitualTime!.format(context)}',
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.lato(
+                    fontSize: 16.0, // Adjusted font size
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withOpacity(0.9))),
+          ),
           const SizedBox(width: 8),
-          // Add a small cancel button
           GestureDetector(
             onTap: _clearDailyRitual,
             child: const Icon(Icons.close, color: Colors.white70, size: 20),
@@ -326,7 +589,6 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
     );
   }
 
-  // --- Unchanged Helper Methods ---
   Widget _buildAnimatedBackground() {
     return Stack(
       children: List.generate(30, (index) {
@@ -381,7 +643,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 250,
+        width: 280, // Adjusted width for longer text
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: color.withOpacity(0.2),
@@ -393,11 +655,14 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           children: [
             Icon(icon, color: Colors.white.withOpacity(0.9)),
             const SizedBox(width: 12),
-            Text(label,
-                style: GoogleFonts.lato(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withOpacity(0.9))),
+            Flexible(
+              child: Text(label,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.lato(
+                      fontSize: 16.0, // Adjusted font size
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withOpacity(0.9))),
+            ),
           ],
         ),
       ),
@@ -411,12 +676,13 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       right: 24,
       child: Column(
         children: [
-          FadeTransition(
-            opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-              CurvedAnimation(parent: _narrativeController, curve: Curves.easeIn),
-            ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 1500),
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
             child: Text(
-              _narratives[_narrativeIndex],
+              _footerNarratives[_narrativeIndex],
+              key: ValueKey<int>(_narrativeIndex),
               textAlign: TextAlign.center,
               style: GoogleFonts.lato(
                 fontSize: 16.0,
