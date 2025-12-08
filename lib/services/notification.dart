@@ -5,6 +5,7 @@ import 'package:clairediary/Automations/setup_autoDiary_widget.dart';import 'pac
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../utils/color.dart';
@@ -66,6 +67,11 @@ class ClairNotification {
 
         // --- OLD LOGIC: Handle simple string payloads ---
         switch (payload) {
+          case 'start_instant_auto_diary':
+            print("APP: Notification tapped, invoking instantRecording.");
+            final service = FlutterBackgroundService();
+            service.invoke('instantRecording');
+            break;
           case 'auto_diary_record':
             NavigationService.navigationKey.currentState?.push(
                 MaterialPageRoute(builder: (context) => SetupAutoDiary()));
@@ -82,8 +88,8 @@ class ClairNotification {
             navService.pushNamed('/egoPage');
             break;
           case 'claireminder':
-          case 'createSession':
-            navService.pushNamed('/createSession');
+          case 'create_session':
+            navService.pushNamed('/create_session');
             break;
           case 'game':
             navService.pushNamed('/games');
@@ -161,8 +167,8 @@ class ClairNotification {
             navService.pushNamed('/egoPage');
             break;
           case 'claireminder':
-          case 'createSession':
-            navService.pushNamed('/createSession');
+          case 'create_session':
+            navService.pushNamed('/create_session');
             break;
           case 'game':
             navService.pushNamed('/games');
