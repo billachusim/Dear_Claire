@@ -24,6 +24,7 @@ class Constant {
   static const String APP_DYNAMIC_LINK =
       "https://claire.page.link/featured";
   static const String WHATSAPP_URL = "https://api.whatsapp.com/send?phone=2348188578955&text=";
+  static const String AGORA_APP_ID = "b476113d691f42dcb7bc6882021afc9c";
 
 
   static List<TextStyle> DIARY_FONT_STYLES = [

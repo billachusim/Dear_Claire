@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -24,6 +25,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:shake/shake.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
+import '../../Automations/setup_autoDiary_widget.dart';
 import '../../helpers/toast_helper.dart';
 import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/firebase_services.dart';
@@ -31,6 +33,8 @@ import '../../services/notification_service.dart';
 import '../../services/user_model.dart';
 import '../../utils/helper.dart';
 import '../../widgets/recent_transactions_list.dart';
+import '../call/companion_call_page.dart';
+import '../call/live_call_page.dart';
 import '../routes/page_router_animation.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'destination.dart';
@@ -48,6 +52,9 @@ class _HomeDashboardPageState extends State<HomePage>
   var currentUser = FirebaseAuth.instance.currentUser;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late final WebViewController _webViewController; // Updated initialization
+  OverlayEntry? _overlayEntry;
+  bool _isFabMenuOpen = false;
+  final GlobalKey _fabKey = GlobalKey();
   late ShakeDetector detector;
   String filePath = 'assets/web_games/tictactoe/index2.html';
   String tweets = 'assets/tweet/index.html';
@@ -101,6 +108,37 @@ class _HomeDashboardPageState extends State<HomePage>
         'Successfully got an Ego user model and updated time last unlocked.');
     return egoInfo;
   }
+
+  // Add these methods inside _HomeDashboardPageState
+
+  void _toggleFabMenu() {
+    if (_isFabMenuOpen) {
+      _overlayEntry?.remove();
+      _overlayEntry = null;
+    } else {
+      _overlayEntry = _createFabMenuOverlay();
+      Overlay.of(context).insert(_overlayEntry!);
+    }
+    setState(() {
+      _isFabMenuOpen = !_isFabMenuOpen;
+    });
+  }
+
+  OverlayEntry _createFabMenuOverlay() {
+    final RenderBox renderBox = _fabKey.currentContext!.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+    final offset = renderBox.localToGlobal(Offset.zero);
+
+    return OverlayEntry(
+      builder: (context) => _FabMenuOverlay(
+        parentContext: this.context,
+        fabSize: size,
+        fabOffset: offset,
+        onClose: _toggleFabMenu,
+      ),
+    );
+  }
+
 
   launchEmailApp() {
     String? encodeQueryParameters(Map<String, String> params) {
@@ -357,6 +395,10 @@ class _HomeDashboardPageState extends State<HomePage>
   void dispose() {
     _controller.dispose();
     detector.stopListening();
+    // Add this inside your dispose() method
+    if (_isFabMenuOpen) {
+      _overlayEntry?.remove();
+    }
     super.dispose();
   }
 
@@ -430,20 +472,25 @@ class _HomeDashboardPageState extends State<HomePage>
                 label: destination.title);
           }).toList(),
         ),
-        floatingActionButton: FloatingActionButton(
-          heroTag: "fab",
-          backgroundColor: Pallet.colorSplashScreen,
-          onPressed: () {
-            if (currentUser == null) {
-              Navigator.of(context)
-                  .pushReplacementNamed(AppRoutes.authSelection);
-            } else {
-              Navigator.of(context).pushNamed(AppRoutes.createSessionPage);
-            }
+      // Replace the existing floatingActionButton property in the Scaffold
+      floatingActionButton: FloatingActionButton(
+        key: _fabKey, // Key to find the FAB's position
+        heroTag: "fab",
+        backgroundColor: Pallet.colorSplashScreen,  onPressed: _toggleFabMenu, // Triggers our custom menu
+        tooltip: 'Start a new session',
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return ScaleTransition(child: child, scale: animation);
           },
-          tooltip: 'Hi, Darling!',
-          child: RotateImage(45, 45),
+          child: _isFabMenuOpen
+              ? Icon(Icons.close, key: ValueKey('close_icon'), size: 30)
+              : RotateImage(45, 45),
         ),
+
+      ),
+
+
       drawer: _AppDrawer(
         userName: userName,
         userType: userType,
@@ -1113,5 +1160,215 @@ class _MenuTile extends StatelessWidget {
     );
   }
 }
+
+// Paste this entire class at the end of the file
+
+class _FabMenuOverlay extends StatefulWidget {
+  final BuildContext parentContext;
+  final Size fabSize;
+  final Offset fabOffset;final VoidCallback onClose;
+
+  const _FabMenuOverlay({
+    Key? key,
+    required this.parentContext,
+    required this.fabSize,
+    required this.fabOffset,
+    required this.onClose,
+  }) : super(key: key);
+
+  @override
+  _FabMenuOverlayState createState() => _FabMenuOverlayState();
+}
+
+class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _blurAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  final List<double> _itemPositions = [280.0, 210.0, 140.0, 70.0];
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _blurAnimation = Tween<double>(begin: 0.0, end: 5.0).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeIn));
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _closeAndNavigate(Function navigationAction) {
+    _animationController.reverse().then((_) {
+      widget.onClose();
+      navigationAction();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Blurred background
+          GestureDetector(
+            onTap: () => _animationController.reverse().then((_) => widget.onClose()),
+            child: AnimatedBuilder(
+              animation: _blurAnimation,
+              builder: (context, child) {
+                return BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: _blurAnimation.value, sigmaY: _blurAnimation.value),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.4),
+                  ),
+                );
+              },
+            ),
+          ),
+          // Menu Items
+          Positioned(
+            right: MediaQuery.of(context).size.width - widget.fabOffset.dx - widget.fabSize.width,
+            bottom: MediaQuery.of(context).size.height - widget.fabOffset.dy - widget.fabSize.height,
+            width: 300,
+            height: 400,
+            child: Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                _buildMenuItem(
+                  position: _itemPositions[0],
+                  icon: Icons.edit_note_rounded,
+                  label: "Diary Session",
+                  onPressed: () => _closeAndNavigate(() {
+                    final currentUser = FirebaseAuth.instance.currentUser;
+                    if (currentUser == null) {
+                      Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
+                    } else {
+                      Navigator.of(widget.parentContext).pushNamed(AppRoutes.createSessionPage);
+                    }
+                  }),
+                ),
+                _buildMenuItem(
+                  position: _itemPositions[1],
+                  icon: Icons.phone_in_talk_outlined,
+                  label: "Companion Session",
+                  onPressed: () => _closeAndNavigate(() {
+                    final currentUser = FirebaseAuth.instance.currentUser;
+                    if (currentUser == null) {
+                      Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
+                    } else {
+                      // Pass the user object directly to the call page
+                      Navigator.of(widget.parentContext).push(
+                        MaterialPageRoute(builder: (context) => CompanionCallPage(user: currentUser)),
+                      );
+                    }
+                  }),
+
+                ),
+                _buildMenuItem(
+                  position: _itemPositions[2],
+                  icon: Icons.videocam_rounded,
+                  label: "Live Session",
+                  onPressed: () => _closeAndNavigate(() {
+                    final currentUser = FirebaseAuth.instance.currentUser;
+                    if (currentUser == null) {
+                      Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
+                    } else {
+                      // Pass the user object directly to the live call page
+                      Navigator.of(widget.parentContext).push(
+                        MaterialPageRoute(builder: (context) => LiveCallPage(user: currentUser)),
+                      );
+                    }
+                  }),
+
+                ),
+                _buildMenuItem(
+                  position: _itemPositions[3],
+                  icon: Icons.psychology_alt_rounded,
+                  label: "AutoDiary Session",
+                  onPressed: () => _closeAndNavigate(() {
+                    final currentUser = FirebaseAuth.instance.currentUser;
+                    if (currentUser == null) {
+                      Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
+                    } else {
+                      Navigator.of(widget.parentContext).push(MaterialPageRoute(builder: (context) => const SetupAutoDiary()));
+                    }
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required double position,
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return Positioned(
+          bottom: position * _scaleAnimation.value,
+          right: 0,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        )
+                      ]
+                  ),
+                  child: Text(
+                    label,
+                    style: GoogleFonts.lato(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                FloatingActionButton(
+                  heroTag: null, // Avoids tag conflicts
+                  mini: true,
+                  backgroundColor: Pallet.colorPrimary,
+                  onPressed: onPressed,
+                  child: Icon(icon, color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 
 

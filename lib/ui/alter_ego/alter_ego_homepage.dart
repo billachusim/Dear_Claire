@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/alter_ego/advised_page.dart';
@@ -16,6 +18,8 @@ import 'package:vibration/vibration.dart';
 import '../../utils/constant.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
+import '../call/admin_call_page.dart';
+import '../call/admin_live_call_page.dart';
 import '../ego-profile/claire_loves.dart';
 import 'flagged_sessions_page.dart';
 
@@ -28,6 +32,8 @@ class AlterEgoHomePage extends StatefulWidget {
 
 class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  StreamSubscription? _callSubscription;
+  StreamSubscription? _liveSessionSubscription;
   PageController? _pageController;
   int currentIndex = 0;
   late String _title;
@@ -44,6 +50,8 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
     _title = "Alter Ego Mode";
     _pageController = PageController(keepPage: true);
     shakeDevice();
+    _listenForIncomingCalls();
+    _listenForIncomingLiveSessions();
   }
 
   void setTabIndex(index) async {
@@ -78,6 +86,113 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
         break;
     }
   }
+
+  // Replace the _listenForIncomingCalls method
+  void _listenForIncomingCalls() {
+    final adminId = "claire_admin"; // Hardcoded for now.
+
+    _callSubscription = FirebaseFirestore.instance
+        .collection('companion_calls')
+        .where('receiverId', isEqualTo: adminId)
+        .where('status', isEqualTo: 'dialing')
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        final callDoc = snapshot.docs.first;
+        _showIncomingCallDialog(callDoc, isVideoCall: false);
+      }
+    });
+  }
+
+
+  void _listenForIncomingLiveSessions() {
+    final adminId = "claire_admin";
+
+    _liveSessionSubscription = FirebaseFirestore.instance
+        .collection('live_sessions') // Listen to the new collection
+        .where('receiverId', isEqualTo: adminId)
+        .where('status', isEqualTo: 'dialing')
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        final callDoc = snapshot.docs.first;
+        // We can reuse the same dialog, but pass a flag to identify the call type
+        _showIncomingCallDialog(callDoc, isVideoCall: true);
+      }
+    });
+  }
+
+
+  // Replace the entire _showIncomingCallDialog method with this new version
+  void _showIncomingCallDialog(DocumentSnapshot callDoc, {bool isVideoCall = false}) {
+    final callData = callDoc.data() as Map<String, dynamic>;
+    final channelName = callData['channelName'];
+    final callDocId = callDoc.id;
+    final collectionName = isVideoCall ? 'live_sessions' : 'companion_calls';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(isVideoCall ? "Incoming Live Session" : "Incoming Companion Call"),
+          content: Text(isVideoCall ? "A user is requesting a live video session." : "A user is calling for Companion Mode."),
+          actions: [
+            TextButton(
+              child: Text("Decline"),
+              onPressed: () {
+                // Update status in the correct collection
+                FirebaseFirestore.instance
+                    .collection(collectionName)
+                    .doc(callDocId)
+                    .update({'status': 'ended'});
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text("Accept"),
+              onPressed: () {
+                final currentUser = FirebaseAuth.instance.currentUser;
+                Navigator.of(context).pop(); // Close the dialog
+
+                if (currentUser == null) {
+                  // This case should rarely happen for an admin, but it's a good safeguard.
+                  Fluttertoast.showToast(msg: "Authentication error. Please restart the app.");
+                  return;
+                }
+
+                // Navigate to the correct call page, passing the user object
+                if (isVideoCall) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => AdminLiveCallPage(
+                        user: currentUser, // Pass the user object
+                        channelName: channelName,
+                        callDocId: callDocId,
+                      ),
+                    ),
+                  );
+                } else {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => AdminCallPage(
+                        user: currentUser, // Pass the user object
+                        channelName: channelName,
+                        callDocId: callDocId,
+                      ),
+                    ),
+                  );
+                }
+              },
+
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
 
   shakeDevice() {
     detector = ShakeDetector.autoStart(
@@ -119,6 +234,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   dispose() {
     _pageController!.dispose();
     detector.stopListening();
+    _callSubscription?.cancel(); // Stop listening for calls
     super.dispose();
   }
 
