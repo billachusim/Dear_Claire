@@ -46,6 +46,8 @@ class _AdminCallPageState extends State<AdminCallPage> {
     super.dispose();
   }
 
+  // In /lib/ui/call/admin_call_page.dart
+
   Future<void> _setupAndJoin() async {
     try {
       _engine = createAgoraRtcEngine();
@@ -55,12 +57,17 @@ class _AdminCallPageState extends State<AdminCallPage> {
 
       _engine!.registerEventHandler(
         RtcEngineEventHandler(
+          // --- FIX IS HERE ---
           onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
             setState(() {
               _isJoined = true;
               _callStatus = "Waiting for user...";
             });
+            // Recording MUST be started after the LOCAL user joins. This is the correct place.
+            print("Admin (local user) has joined the channel. Starting recording...");
+            _startRecording();
           },
+          // --- END OF FIX ---
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
             setState(() {
               _remoteUid = remoteUid;
@@ -70,7 +77,9 @@ class _AdminCallPageState extends State<AdminCallPage> {
                 .collection('companion_calls')
                 .doc(widget.callDocId)
                 .update({'status': 'active'});
-            _startRecording();
+
+            // --- REMOVED FROM HERE ---
+            // The call to _startRecording() has been moved.
           },
           onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             _endCall();
@@ -93,6 +102,7 @@ class _AdminCallPageState extends State<AdminCallPage> {
       });
     }
   }
+
 
   Future<void> _join() async {
     String token;
@@ -129,19 +139,33 @@ class _AdminCallPageState extends State<AdminCallPage> {
 
   Future<void> _startRecording() async {
     final directory = await getApplicationDocumentsDirectory();
-    _recordingPath = '${directory.path}/rec_${widget.callDocId}.m4a';
+    // --- FIX: Change file extension to .aac for better compatibility ---
+    _recordingPath = '${directory.path}/rec_${widget.callDocId}.aac';
+    // -----------------------------------------------------------------
 
-    await _engine?.startAudioRecording(AudioRecordingConfiguration(
-      filePath: _recordingPath!,
-      fileRecordingType: AudioFileRecordingType.audioFileRecordingMixed,
-      quality: AudioRecordingQualityType.audioRecordingQualityMedium,
-    ));
-
-    print("Recording started at: $_recordingPath");
+    try {
+      await _engine?.startAudioRecording(AudioRecordingConfiguration(
+        filePath: _recordingPath!,
+        fileRecordingType: AudioFileRecordingType.audioFileRecordingMixed,
+        quality: AudioRecordingQualityType.audioRecordingQualityMedium,
+      ));
+      print("Recording started at: $_recordingPath");
+    } catch (e) {
+      print("!!! CRITICAL: Error starting audio recording: $e");
+      _recordingPath = null;
+    }
   }
 
   Future<void> _stopRecordingAndUpload() async {
-    if (_recordingPath == null) return;
+    if (_recordingPath == null) {
+      print("No recording path, likely because starting the recording failed.");
+      // Ensure the call status is updated even if recording failed
+      await FirebaseFirestore.instance
+          .collection('companion_calls')
+          .doc(widget.callDocId)
+          .update({'status': 'ended'}).catchError((e) => print("Error updating status: $e"));
+      return;
+    }
 
     await _engine?.stopAudioRecording();
     print("Recording stopped.");
@@ -149,9 +173,11 @@ class _AdminCallPageState extends State<AdminCallPage> {
     File file = File(_recordingPath!);
     if (await file.exists()) {
       try {
+        // --- FIX: Update storage path to use .aac ---
         final storageRef = FirebaseStorage.instance
             .ref()
-            .child('companion_recordings/${widget.callDocId}.m4a');
+            .child('companion_recordings/${widget.callDocId}.aac');
+        // ---------------------------------------------
         await storageRef.putFile(file);
         final downloadUrl = await storageRef.getDownloadURL();
 
@@ -170,7 +196,7 @@ class _AdminCallPageState extends State<AdminCallPage> {
             .update({'status': 'ended'});
       }
     } else {
-      // If file doesn't exist for some reason, still mark the call as ended
+      print("Recording file was expected but not found at: $_recordingPath");
       await FirebaseFirestore.instance
           .collection('companion_calls')
           .doc(widget.callDocId)
@@ -178,6 +204,7 @@ class _AdminCallPageState extends State<AdminCallPage> {
     }
     _recordingPath = null;
   }
+
 
   Future<void> _endCall() async {
     // Stop recording and handle upload first

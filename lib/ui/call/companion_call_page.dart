@@ -236,21 +236,20 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
     );
   }
 
-  Future<void> _endCall() async {
-    if (!_isJoined && _engine == null) return;
 
-    if (_callDocId != null) {
-      await FirebaseFirestore.instance
-          .collection('companion_calls')
-          .doc(_callDocId)
-          .update({'status': 'ended'}).catchError((e) {
-        print("Error updating Firestore on leave: $e");
-      });
+  Future<void> _endCall() async {
+
+    await _callDocSubscription?.cancel();
+
+    // The user's primary responsibility is to leave the Agora channel.
+    // The admin is responsible for updating the final document status.
+    // This prevents race conditions where the user sets 'status' to 'ended' too early.
+    if (_engine != null) {
+      await _engine?.leaveChannel();
+      await _engine?.release();
+      _engine = null;
     }
 
-    await _engine?.leaveChannel();
-    await _engine?.release();
-    _engine = null;
     _isJoined = false;
     _remoteUid = null;
 
@@ -258,6 +257,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
       setState(() {
         _callStatus = "Call Ended";
       });
+      // Delay to show the "Call Ended" message before popping the screen.
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           Navigator.of(context).pop();
@@ -265,6 +265,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

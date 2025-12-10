@@ -230,31 +230,33 @@ class _LiveCallPageState extends State<LiveCallPage> {
     );
   }
 
-  Future<void> _endCall() async {
-    if (_engine == null) return;
 
-    if (_callDocId != null) {
-      await FirebaseFirestore.instance
-          .collection('live_sessions')
-          .doc(_callDocId)
-          .update({'status': 'ended'}).catchError((e) {
-        print("Error updating Firestore on leave: $e");
-      });
+  Future<void> _endCall() async {
+    // Cancel the listener to prevent memory leaks and duplicate diary entries.
+    await _callDocSubscription?.cancel();
+
+    // The user's primary responsibility is to leave the Agora channel.
+    // The admin is responsible for updating the final document status.
+    if (_engine != null) {
+      await _engine?.stopPreview();
+      await _engine?.leaveChannel();
+      await _engine?.release();
+      _engine = null;
     }
 
-    await _engine?.stopPreview();
-    await _engine?.leaveChannel();
-    await _engine?.release();
-    _engine = null;
+    _localUserJoined = false;
+    _remoteUid = null;
 
     if (mounted) {
-      Future.delayed(const Duration(seconds: 3), () {
+      // Pop the screen after a short delay.
+      Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
           Navigator.of(context).pop();
         }
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

@@ -64,6 +64,11 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
               _isJoined = true;
               _callStatus = "Waiting for user...";
             });
+            // --- FIX 1: Start recording after the LOCAL user (admin) joins ---
+            print(
+                "Admin successfully joined live session. Starting recording...");
+            _startRecording();
+            // ------------------------------------------------------------------
           },
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
             setState(() {
@@ -74,10 +79,9 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
                 .collection('live_sessions')
                 .doc(widget.callDocId)
                 .update({'status': 'active'});
-            // --- START RECORDING ---
-            _startRecording();
           },
-          onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
+          onUserOffline: (RtcConnection connection, int remoteUid,
+              UserOfflineReasonType reason) {
             _endCall();
           },
           onError: (ErrorCodeType err, String msg) {
@@ -135,55 +139,70 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
 
   Future<void> _startRecording() async {
     final directory = await getApplicationDocumentsDirectory();
-    _recordingPath = '${directory.path}/rec_${widget.callDocId}.m4a';
+    // --- FIX 2: Use .aac for better compatibility ---
+    _recordingPath = '${directory.path}/rec_${widget.callDocId}.aac';
 
-    await _engine?.startAudioRecording(AudioRecordingConfiguration(
-      filePath: _recordingPath!,
-      fileRecordingType: AudioFileRecordingType.audioFileRecordingMixed,
-      quality: AudioRecordingQualityType.audioRecordingQualityMedium,
-    ));
-
-    print("Live Session audio recording started at: $_recordingPath");
+    try {
+      await _engine?.startAudioRecording(AudioRecordingConfiguration(
+        filePath: _recordingPath!,
+        fileRecordingType: AudioFileRecordingType.audioFileRecordingMixed,
+        quality: AudioRecordingQualityType.audioRecordingQualityMedium,
+      ));
+      print("Live Session audio recording started at: $_recordingPath");
+    } catch (e) {
+      print("!!! CRITICAL: Error starting live session recording: $e");
+      _recordingPath = null;
+    }
   }
 
   Future<void> _stopRecordingAndUpload() async {
-    if (_recordingPath == null) return;
+    // --- FIX 3: Robust upload and update logic ---
+    if (_recordingPath == null) {
+      print("No recording path found, updating status to ended.");
+      await FirebaseFirestore.instance
+          .collection('live_sessions')
+          .doc(widget.callDocId)
+          .update({'status': 'ended'}).catchError((e) =>
+          print("Error updating status: $e"));
+      return;
+    }
 
     await _engine?.stopAudioRecording();
     print("Live Session audio recording stopped.");
 
     File file = File(_recordingPath!);
-    if (await file.exists()) {
-      try {
-        // Upload to Firebase Storage in a new folder
+    String? downloadUrl;
+
+    try {
+      if (await file.exists()) {
         final storageRef = FirebaseStorage.instance
             .ref()
-            .child('live_session_recordings/${widget.callDocId}.m4a');
+            .child('live_session_recordings/${widget.callDocId}.aac'); // Use .aac
         await storageRef.putFile(file);
-        final downloadUrl = await storageRef.getDownloadURL();
-
-        // Update Firestore with the recording URL
-        await FirebaseFirestore.instance
-            .collection('live_sessions')
-            .doc(widget.callDocId)
-            .update({'recordingUrl': downloadUrl, 'status': 'ended'});
+        downloadUrl = await storageRef.getDownloadURL();
         print("Live Session recording uploaded to: $downloadUrl");
-
         await file.delete();
-      } catch (e) {
-        print("Error uploading live session recording: $e");
-        await FirebaseFirestore.instance
-            .collection('live_sessions')
-            .doc(widget.callDocId)
-            .update({'status': 'ended'});
+      } else {
+        print("Recording file was expected but not found at: $_recordingPath");
       }
-    } else {
-      // If file doesn't exist, still mark the call as ended
+    } catch (e) {
+      print("Error uploading live session recording: $e");
+    }
+
+    // Always update the document to trigger the listener on the other side.
+    try {
       await FirebaseFirestore.instance
           .collection('live_sessions')
           .doc(widget.callDocId)
-          .update({'status': 'ended'});
+          .update({
+        'recordingUrl': downloadUrl, // Will be null if upload failed
+        'status': 'ended',
+      });
+      print("Firestore document updated for live session.");
+    } catch (e) {
+      print("Error performing final update on live session document: $e");
     }
+    // ----------------------------------------------------
     _recordingPath = null;
   }
 
