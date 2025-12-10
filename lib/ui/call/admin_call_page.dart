@@ -11,6 +11,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
+import '../../services/firebase_services.dart';
+
 class AdminCallPage extends StatefulWidget {
   final User user;
   final String channelName;
@@ -46,7 +48,7 @@ class _AdminCallPageState extends State<AdminCallPage> {
     super.dispose();
   }
 
-  // In /lib/ui/call/admin_call_page.dart
+
 
   Future<void> _setupAndJoin() async {
     try {
@@ -57,17 +59,32 @@ class _AdminCallPageState extends State<AdminCallPage> {
 
       _engine!.registerEventHandler(
         RtcEngineEventHandler(
-          // --- FIX IS HERE ---
-          onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+          onJoinChannelSuccess: (RtcConnection connection, int elapsed) async { // Make async
             setState(() {
               _isJoined = true;
               _callStatus = "Waiting for user...";
             });
-            // Recording MUST be started after the LOCAL user joins. This is the correct place.
+
+            // --- FIX: Fetch admin's alterEgoId and update the document ---
+            try {
+              final FirebaseServices firebaseServices = FirebaseServices();
+              final adminUserModel = await firebaseServices.getUserWithId(id: widget.user.uid);
+
+              await FirebaseFirestore.instance
+                  .collection('companion_calls')
+                  .doc(widget.callDocId)
+                  .update({
+                'receiverId': adminUserModel.alterEgoId, // Update receiverId with alterEgoId
+              });
+              print("Updated call document with admin alterEgoId: ${adminUserModel.alterEgoId}");
+            } catch (e) {
+              print("Error updating call document with alterEgoId: $e");
+            }
+            // -------------------------------------------------------------
+
             print("Admin (local user) has joined the channel. Starting recording...");
             _startRecording();
           },
-          // --- END OF FIX ---
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
             setState(() {
               _remoteUid = remoteUid;
@@ -77,9 +94,6 @@ class _AdminCallPageState extends State<AdminCallPage> {
                 .collection('companion_calls')
                 .doc(widget.callDocId)
                 .update({'status': 'active'});
-
-            // --- REMOVED FROM HERE ---
-            // The call to _startRecording() has been moved.
           },
           onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             _endCall();
@@ -102,6 +116,7 @@ class _AdminCallPageState extends State<AdminCallPage> {
       });
     }
   }
+
 
 
   Future<void> _join() async {

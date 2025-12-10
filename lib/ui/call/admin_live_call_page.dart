@@ -11,6 +11,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
+import '../../services/firebase_services.dart';
+
 class AdminLiveCallPage extends StatefulWidget {
   final User user; // Accept the user object
   final String channelName;
@@ -47,28 +49,44 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
     super.dispose();
   }
 
+  // In /lib/ui/call/admin_live_call_page.dart
+
   Future<void> _setupAndJoin() async {
     try {
       _engine = createAgoraRtcEngine();
-      await _engine!.initialize(const RtcEngineContext(
-        appId: "b476113d691f42dcb7bc6882021afc9c",
+      await _engine!.initialize(const RtcEngineContext(      appId: "b476113d691f42dcb7bc6882021afc9c",
       ));
 
       await _engine!.enableVideo();
 
       _engine!.registerEventHandler(
         RtcEngineEventHandler(
-          onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+          onJoinChannelSuccess: (RtcConnection connection, int elapsed) async { // Make async
             setState(() {
               _localUserJoined = true;
               _isJoined = true;
               _callStatus = "Waiting for user...";
             });
-            // --- FIX 1: Start recording after the LOCAL user (admin) joins ---
-            print(
-                "Admin successfully joined live session. Starting recording...");
+
+            // --- FIX: Fetch admin's alterEgoId and update the document ---
+            try {
+              final FirebaseServices firebaseServices = FirebaseServices();
+              final adminUserModel = await firebaseServices.getUserWithId(id: widget.user.uid);
+
+              await FirebaseFirestore.instance
+                  .collection('live_sessions')
+                  .doc(widget.callDocId)
+                  .update({
+                'receiverId': adminUserModel.alterEgoId, // Update receiverId with alterEgoId
+              });
+              print("Updated live session with admin alterEgoId: ${adminUserModel.alterEgoId}");
+            } catch (e) {
+              print("Error updating live session with alterEgoId: $e");
+            }
+            // -------------------------------------------------------------
+
+            print("Admin successfully joined live session. Starting recording...");
             _startRecording();
-            // ------------------------------------------------------------------
           },
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
             setState(() {
@@ -80,8 +98,7 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
                 .doc(widget.callDocId)
                 .update({'status': 'active'});
           },
-          onUserOffline: (RtcConnection connection, int remoteUid,
-              UserOfflineReasonType reason) {
+          onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             _endCall();
           },
           onError: (ErrorCodeType err, String msg) {
@@ -99,6 +116,7 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
       });
     }
   }
+
 
   Future<void> _join() async {
     String token;
