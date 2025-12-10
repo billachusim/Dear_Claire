@@ -27,12 +27,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
 import '../../Automations/setup_autoDiary_widget.dart';
 import '../../helpers/toast_helper.dart';
-import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/firebase_services.dart';
 import '../../services/notification_service.dart';
 import '../../services/user_model.dart';
 import '../../utils/helper.dart';
-import '../../widgets/recent_transactions_list.dart';
+import '../../widgets/pre_call_dialog.dart';
 import '../call/companion_call_page.dart';
 import '../call/live_call_page.dart';
 import '../routes/page_router_animation.dart';
@@ -40,7 +39,6 @@ import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'destination.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../data/models/transaction_model.dart' as t_model;
-import '../../services/transaction_service.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -1263,40 +1261,74 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                     }
                   }),
                 ),
+
                 _buildMenuItem(
                   position: _itemPositions[1],
                   icon: Icons.phone_in_talk_outlined,
                   label: "Companion Session",
-                  onPressed: () => _closeAndNavigate(() {
-                    final currentUser = FirebaseAuth.instance.currentUser;
-                    if (currentUser == null) {
-                      Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
-                    } else {
-                      // Pass the user object directly to the call page
-                      Navigator.of(widget.parentContext).push(
-                        MaterialPageRoute(builder: (context) => CompanionCallPage(user: currentUser)),
-                      );
-                    }
-                  }),
+                  // --- MODIFIED ---
+                  onPressed: () {
+                    // Close the FAB menu first, then show the dialog and navigate
+                    _animationController.reverse().then((_) async {
+                      widget.onClose();
+                      final currentUser = FirebaseAuth.instance.currentUser;
+                      if (currentUser == null) {
+                        Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
+                        return;
+                      }
 
+                      // Show the pre-call dialog
+                      final callDetails = await showPreCallDialog(widget.parentContext, isVideoCall: false);
+
+                      // If the user didn't cancel, navigate with the details
+                      if (callDetails != null) {
+                        Navigator.of(widget.parentContext).push(
+                          MaterialPageRoute(
+                            builder: (context) => CompanionCallPage(
+                              user: currentUser,
+                              callDetails: callDetails, // Pass the collected details
+                            ),
+                          ),
+                        );
+                      }
+                    });
+                  },
+                  // --- END MODIFIED ---
                 ),
                 _buildMenuItem(
                   position: _itemPositions[2],
                   icon: Icons.videocam_rounded,
                   label: "Live Session",
-                  onPressed: () => _closeAndNavigate(() {
-                    final currentUser = FirebaseAuth.instance.currentUser;
-                    if (currentUser == null) {
-                      Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
-                    } else {
-                      // Pass the user object directly to the live call page
-                      Navigator.of(widget.parentContext).push(
-                        MaterialPageRoute(builder: (context) => LiveCallPage(user: currentUser)),
-                      );
-                    }
-                  }),
+                  // --- MODIFIED ---
+                  onPressed: () {
+                    // Close the FAB menu first, then show the dialog and navigate
+                    _animationController.reverse().then((_) async {
+                      widget.onClose();
+                      final currentUser = FirebaseAuth.instance.currentUser;
+                      if (currentUser == null) {
+                        Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
+                        return;
+                      }
 
+                      // Show the pre-call dialog
+                      final callDetails = await showPreCallDialog(widget.parentContext, isVideoCall: true);
+
+                      // If the user didn't cancel, navigate with the details
+                      if (callDetails != null) {
+                        Navigator.of(widget.parentContext).push(
+                          MaterialPageRoute(
+                            builder: (context) => LiveCallPage(
+                              user: currentUser,
+                              callDetails: callDetails, // Pass the collected details
+                            ),
+                          ),
+                        );
+                      }
+                    });
+                  },
+                  // --- END MODIFIED ---
                 ),
+
                 _buildMenuItem(
                   position: _itemPositions[3],
                   icon: Icons.psychology_alt_rounded,

@@ -17,6 +17,7 @@ dependencies:
   cached_network_image: ^3.4.1
   image_picker: ^1.2.1
   qr_flutter: ^4.1.0
+  rxdart: ^0.28.0
 
   # Updated Firebase dependencies
   firebase_app_check: ^0.4.1+2

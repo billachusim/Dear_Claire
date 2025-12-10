@@ -1,4 +1,6 @@
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:clairediary/services/firebase_services.dart';
+import 'package:clairediary/ui/alter_ego/alter_ego_calls_page.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -11,18 +13,14 @@ import 'dart:async';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
-import '../../services/firebase_services.dart';
-
 class AdminCallPage extends StatefulWidget {
   final User user;
-  final String channelName;
-  final String callDocId;
+  final IncomingCall call;
 
   const AdminCallPage({
     Key? key,
     required this.user,
-    required this.channelName,
-    required this.callDocId,
+    required this.call,
   }) : super(key: key);
 
   @override
@@ -36,6 +34,27 @@ class _AdminCallPageState extends State<AdminCallPage> {
   int? _remoteUid;
   String? _recordingPath;
 
+  // --- NEW: For the call timer ---
+  Timer? _timer;
+  int _callDurationInSeconds = 0;
+
+  String get _durationString {
+    final duration = Duration(seconds: _callDurationInSeconds);
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  void _startCallTimer() {
+    _timer?.cancel(); // Cancel any existing timer
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _callDurationInSeconds++;
+      });
+    });
+  }
+  // --- END NEW ---
+
   @override
   void initState() {
     super.initState();
@@ -44,11 +63,10 @@ class _AdminCallPageState extends State<AdminCallPage> {
 
   @override
   void dispose() {
+    _timer?.cancel(); // Stop the timer on dispose
     _endCall();
     super.dispose();
   }
-
-
 
   Future<void> _setupAndJoin() async {
     try {
@@ -59,30 +77,29 @@ class _AdminCallPageState extends State<AdminCallPage> {
 
       _engine!.registerEventHandler(
         RtcEngineEventHandler(
-          onJoinChannelSuccess: (RtcConnection connection, int elapsed) async { // Make async
+          onJoinChannelSuccess: (RtcConnection connection, int elapsed) async {
             setState(() {
               _isJoined = true;
               _callStatus = "Waiting for user...";
             });
 
-            // --- FIX: Fetch admin's alterEgoId and update the document ---
             try {
               final FirebaseServices firebaseServices = FirebaseServices();
-              final adminUserModel = await firebaseServices.getUserWithId(id: widget.user.uid);
+              final adminUserModel =
+              await firebaseServices.getUserWithId(id: widget.user.uid);
 
               await FirebaseFirestore.instance
                   .collection('companion_calls')
-                  .doc(widget.callDocId)
+                  .doc(widget.call.doc.id)
                   .update({
-                'receiverId': adminUserModel.alterEgoId, // Update receiverId with alterEgoId
+                'receiverId': adminUserModel.alterEgoId,
               });
-              print("Updated call document with admin alterEgoId: ${adminUserModel.alterEgoId}");
+              print(
+                  "Updated call document with admin alterEgoId: ${adminUserModel.alterEgoId}");
             } catch (e) {
               print("Error updating call document with alterEgoId: $e");
             }
-            // -------------------------------------------------------------
 
-            print("Admin (local user) has joined the channel. Starting recording...");
             _startRecording();
           },
           onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
@@ -90,19 +107,20 @@ class _AdminCallPageState extends State<AdminCallPage> {
               _remoteUid = remoteUid;
               _callStatus = "Connected";
             });
+            // --- NEW: Start the timer when connected ---
+            _startCallTimer();
+            // --- END NEW ---
             FirebaseFirestore.instance
                 .collection('companion_calls')
-                .doc(widget.callDocId)
+                .doc(widget.call.doc.id)
                 .update({'status': 'active'});
           },
-          onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
+          onUserOffline:
+              (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
             _endCall();
           },
           onError: (ErrorCodeType err, String msg) {
             print('[Agora Error] err: $err, msg: $msg');
-            setState(() {
-              _callStatus = "Error. Please try again.";
-            });
             _endCall();
           },
         ),
@@ -117,18 +135,15 @@ class _AdminCallPageState extends State<AdminCallPage> {
     }
   }
 
-
-
   Future<void> _join() async {
     String token;
     try {
-      // --- CRITICAL FIX: Force a refresh of the admin's auth token ---
       await widget.user.getIdToken(true);
-      // ----------------------------------------------------------------
 
-      final callable = FirebaseFunctions.instance.httpsCallable('generateAgoraToken');
+      final callable =
+      FirebaseFunctions.instance.httpsCallable('generateAgoraToken');
       final result = await callable.call<Map<String, dynamic>>({
-        'channelName': widget.channelName,
+        'channelName': widget.call.channelName,
         'uid': 1, // The admin will have a static UID of 1
       });
       token = result.data['token'];
@@ -142,21 +157,19 @@ class _AdminCallPageState extends State<AdminCallPage> {
       return;
     }
 
-    await _engine?.setChannelProfile(ChannelProfileType.channelProfileCommunication);
+    await _engine
+        ?.setChannelProfile(ChannelProfileType.channelProfileCommunication);
     await _engine?.joinChannel(
       token: token,
-      channelId: widget.channelName,
+      channelId: widget.call.channelName,
       options: const ChannelMediaOptions(),
       uid: 1, // Admin user uid, must be non-zero
     );
   }
 
-
   Future<void> _startRecording() async {
     final directory = await getApplicationDocumentsDirectory();
-    // --- FIX: Change file extension to .aac for better compatibility ---
-    _recordingPath = '${directory.path}/rec_${widget.callDocId}.aac';
-    // -----------------------------------------------------------------
+    _recordingPath = '${directory.path}/rec_${widget.call.doc.id}.aac';
 
     try {
       await _engine?.startAudioRecording(AudioRecordingConfiguration(
@@ -174,11 +187,11 @@ class _AdminCallPageState extends State<AdminCallPage> {
   Future<void> _stopRecordingAndUpload() async {
     if (_recordingPath == null) {
       print("No recording path, likely because starting the recording failed.");
-      // Ensure the call status is updated even if recording failed
       await FirebaseFirestore.instance
           .collection('companion_calls')
-          .doc(widget.callDocId)
-          .update({'status': 'ended'}).catchError((e) => print("Error updating status: $e"));
+          .doc(widget.call.doc.id)
+          .update({'status': 'ended'}).catchError(
+              (e) => print("Error updating status: $e"));
       return;
     }
 
@@ -188,17 +201,15 @@ class _AdminCallPageState extends State<AdminCallPage> {
     File file = File(_recordingPath!);
     if (await file.exists()) {
       try {
-        // --- FIX: Update storage path to use .aac ---
         final storageRef = FirebaseStorage.instance
             .ref()
-            .child('companion_recordings/${widget.callDocId}.aac');
-        // ---------------------------------------------
+            .child('companion_recordings/${widget.call.doc.id}.aac');
         await storageRef.putFile(file);
         final downloadUrl = await storageRef.getDownloadURL();
 
         await FirebaseFirestore.instance
             .collection('companion_calls')
-            .doc(widget.callDocId)
+            .doc(widget.call.doc.id)
             .update({'recordingUrl': downloadUrl, 'status': 'ended'});
         print("Recording uploaded to: $downloadUrl");
 
@@ -207,25 +218,23 @@ class _AdminCallPageState extends State<AdminCallPage> {
         print("Error uploading recording: $e");
         await FirebaseFirestore.instance
             .collection('companion_calls')
-            .doc(widget.callDocId)
+            .doc(widget.call.doc.id)
             .update({'status': 'ended'});
       }
     } else {
       print("Recording file was expected but not found at: $_recordingPath");
       await FirebaseFirestore.instance
           .collection('companion_calls')
-          .doc(widget.callDocId)
+          .doc(widget.call.doc.id)
           .update({'status': 'ended'});
     }
     _recordingPath = null;
   }
 
-
   Future<void> _endCall() async {
-    // Stop recording and handle upload first
+    _timer?.cancel();
     await _stopRecordingAndUpload();
 
-    // Leave Agora channel and release engine
     if (_engine != null) {
       await _engine?.leaveChannel();
       await _engine?.release();
@@ -249,6 +258,11 @@ class _AdminCallPageState extends State<AdminCallPage> {
 
   @override
   Widget build(BuildContext context) {
+    // --- NEW: Extract details for the UI ---
+    final moodIcon = Constant.USER_SESSION_MOODS[widget.call.moodId];
+    final hasLocation = widget.call.locationData.isNotEmpty;
+    // --- END NEW ---
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Container(
@@ -274,18 +288,50 @@ class _AdminCallPageState extends State<AdminCallPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                "Companion Call",
-                style: GoogleFonts.lato(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Text(
+                  widget.call.title,
+                  style: GoogleFonts.lato(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               const SizedBox(height: 10),
               Text(
-                _callStatus,
+                _callStatus == "Connected" ? _durationString : _callStatus,
                 style: GoogleFonts.lato(fontSize: 18, color: Colors.white70),
               ),
+              const SizedBox(height: 12),
+              // --- NEW: Display Mood and Location ---
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(moodIcon, style: const TextStyle(fontSize: 22)),
+                    if (hasLocation) const SizedBox(width: 12),
+                    if (hasLocation)
+                      Icon(Icons.location_on,
+                          color: Colors.grey.shade400, size: 18),
+                    if (hasLocation) const SizedBox(width: 4),
+                    if (hasLocation)
+                      Flexible(
+                        child: Text(
+                          widget.call.locationData,
+                          style: TextStyle(
+                              color: Colors.grey.shade400, fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // --- END NEW ---
               const Spacer(flex: 3),
               _buildHangUpButton(),
               const SizedBox(height: 60),

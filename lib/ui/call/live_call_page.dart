@@ -13,14 +13,19 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
-class LiveCallPage extends StatefulWidget {
-  final User user; // Accept the user object
+import '../../widgets/pre_call_dialog.dart';
 
-  const LiveCallPage({Key? key, required this.user}) : super(key: key);
+class LiveCallPage extends StatefulWidget {
+  final User user;
+  final CallSetupDetails callDetails;
+
+  const LiveCallPage({Key? key, required this.user, required this.callDetails}) : super(key: key);
 
   @override
   State<LiveCallPage> createState() => _LiveCallPageState();
 }
+
+// In /lib/ui/call/live_call_page.dart
 
 class _LiveCallPageState extends State<LiveCallPage> {
   String _callStatus = "Calling Claire for a Live Session...";
@@ -34,6 +39,29 @@ class _LiveCallPageState extends State<LiveCallPage> {
   StreamSubscription? _callDocSubscription;
   bool _diaryCreationInProgress = false;
 
+  // --- NEW: For the call timer ---
+  Timer? _timer;
+  int _callDurationInSeconds = 0;
+
+  String get _durationString {
+    final duration = Duration(seconds: _callDurationInSeconds);
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  void _startCallTimer() {
+    _timer?.cancel(); // Cancel any existing timer
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _callDurationInSeconds++;
+        });
+      }
+    });
+  }
+  // --- END NEW ---
+
   @override
   void initState() {
     super.initState();
@@ -42,49 +70,53 @@ class _LiveCallPageState extends State<LiveCallPage> {
 
   @override
   void dispose() {
+    _timer?.cancel(); // NEW: Stop the timer
     _callDocSubscription?.cancel();
     _endCall();
     super.dispose();
   }
 
+  // In /lib/ui/call/live_call_page.dart
   Future<void> _initiateCall() async {
     try {
-      // Use the user object passed to the widget
       final callerId = widget.user.uid;
-
       final callId = const Uuid().v4();
       _callDocId = callId;
       _channelName = 'live_session_$callId';
-
       final adminId = "claire_admin";
 
+      // --- ADD NEW FIELDS TO THE DOCUMENT ---
       await FirebaseFirestore.instance.collection('live_sessions').doc(_callDocId).set({
         'callerId': callerId,
         'receiverId': adminId,
         'channelName': _channelName,
         'status': 'dialing',
-        'type': 'video',
+        'type': 'video', // Specific to live call
         'createdAt': FieldValue.serverTimestamp(),
-        'recordingUrl': null, // Initialize field
+        'recordingUrl': null,
+        // --- Details from the dialog ---
+        'title': widget.callDetails.title,
+        'moodId': widget.callDetails.moodId,
+        'isPrivate': widget.callDetails.isPrivate,
+        'repliesEnabled': widget.callDetails.repliesEnabled,
+        'locationEnabled': widget.callDetails.locationEnabled,
+        'locationData': widget.callDetails.locationData,
       });
 
-      // Start listening for the recording
       _listenForRecording();
-
       await _setupVideoSDKEngine();
+
     } catch (e) {
       print("Error initiating live call: $e");
       setState(() {
         _callStatus = "Failed to start live session.";
       });
-      // Pop the page if initiation fails
       Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
+        if (mounted) Navigator.of(context).pop();
       });
     }
   }
+
 
   void _listenForRecording() {
     if (_callDocId == null) return;
@@ -108,6 +140,7 @@ class _LiveCallPageState extends State<LiveCallPage> {
   }
 
   Future<void> _createDiarySessionFromCall(String audioUrl) async {
+    // This method remains unchanged
     print('LIVE_CALL: Creating diary session from URL: $audioUrl');
 
     final Uuid uuid = Uuid();
@@ -119,23 +152,34 @@ class _LiveCallPageState extends State<LiveCallPage> {
       return;
     }
 
+    final callDoc = await FirebaseFirestore.instance.collection('live_sessions').doc(_callDocId).get();
+    if (!callDoc.exists) {
+      print('LIVE_CALL: Original call document not found. Cannot create session.');
+      return;
+    }
+    final callData = callDoc.data() as Map<String, dynamic>;
+
     CreateSessionModel sessionObject = CreateSessionModel();
     final randomColor = Constant.DIARY_COLORS_HEXCODE[Random().nextInt(Constant.DIARY_COLORS_HEXCODE.length)];
+    String finalLocationString = '#LiveSession';
+    if (callData['locationEnabled'] == true && (callData['locationData'] as String).isNotEmpty) {
+      finalLocationString = callData['locationData'];
+    }
 
     sessionObject.audioUrl = audioUrl;
     sessionObject.containsAudio = true;
     sessionObject.userAvatarUrl = currentUserInfo.avatarUrl;
     sessionObject.userNickname = currentUserInfo.nickname;
-    sessionObject.title = "Live Session with Claire";
-    sessionObject.private = true;
-    sessionObject.repliesEnabled = false;
+    sessionObject.title = callData['title'] ?? "Live Session with Claire";
+    sessionObject.private = callData['isPrivate'] ?? true;
+    sessionObject.repliesEnabled = callData['repliesEnabled'] ?? false;
     sessionObject.message =
     "This diary session contains audio recorded during a Live Session with Claire. #LiveSession";
     sessionObject.colorHex = randomColor;
     sessionObject.sessionId = uuid.v1();
     sessionObject.userId = currentUserInfo.userId;
-    sessionObject.moodId = 17; // Claire mood 🌺
-    sessionObject.location = '#ClaireLive';
+    sessionObject.moodId = callData['moodId'] ?? 17;
+    sessionObject.location = finalLocationString;
     sessionObject.timeLastActivity = Timestamp.now();
 
     bool isSuccessful = await _firebaseServices.createSession(session: sessionObject);
@@ -150,8 +194,8 @@ class _LiveCallPageState extends State<LiveCallPage> {
     }
   }
 
-
   Future<void> _setupVideoSDKEngine() async {
+    // This method remains unchanged
     if (_channelName == null) return;
 
     await [Permission.microphone, Permission.camera].request();
@@ -180,6 +224,9 @@ class _LiveCallPageState extends State<LiveCallPage> {
             _remoteUid = remoteUid;
             _callStatus = "Connected";
           });
+          // --- NEW: Start the timer when admin joins ---
+          _startCallTimer();
+          // --- END NEW ---
           FirebaseFirestore.instance
               .collection('live_sessions')
               .doc(_callDocId)
@@ -198,11 +245,11 @@ class _LiveCallPageState extends State<LiveCallPage> {
   }
 
   Future<void> _join() async {
+    // This method remains unchanged
     if (_channelName == null) return;
     String token;
     try {
       await widget.user.getIdToken(true);
-      // The user's auth state is now guaranteed by the navigation logic.
       final callable =
       FirebaseFunctions.instance.httpsCallable('generateAgoraToken');
       final result = await callable.call<Map<String, dynamic>>({
@@ -216,14 +263,14 @@ class _LiveCallPageState extends State<LiveCallPage> {
         _callStatus = "Error: Could not get token.";
       });
       _endCall();
-      return; // Stop execution
+      return;
     }
 
     await _engine?.setChannelProfile(ChannelProfileType.channelProfileLiveBroadcasting);
     await _engine?.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
     await _engine?.startPreview();
     await _engine?.joinChannel(
-      token: token, // Use the fetched token
+      token: token,
       channelId: _channelName!,
       options: const ChannelMediaOptions(),
       uid: 0,
@@ -232,23 +279,29 @@ class _LiveCallPageState extends State<LiveCallPage> {
 
 
   Future<void> _endCall() async {
-    // Cancel the listener to prevent memory leaks and duplicate diary entries.
+    _timer?.cancel();
     await _callDocSubscription?.cancel();
 
-    // The user's primary responsibility is to leave the Agora channel.
-    // The admin is responsible for updating the final document status.
+    // --- FIX: Update status on hangup if call was not connected ---
+    if (_remoteUid == null && _callDocId != null) {
+      // If no admin ever joined, mark the call as 'missed'.
+      await FirebaseFirestore.instance
+          .collection('live_sessions')
+          .doc(_callDocId)
+          .update({'status': 'missed'})
+          .catchError((e) => print("Error marking call as missed: $e"));
+    }
+    // --- END FIX ---
+
     if (_engine != null) {
       await _engine?.stopPreview();
       await _engine?.leaveChannel();
       await _engine?.release();
       _engine = null;
     }
-
     _localUserJoined = false;
     _remoteUid = null;
-
     if (mounted) {
-      // Pop the screen after a short delay.
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
           Navigator.of(context).pop();
@@ -260,6 +313,7 @@ class _LiveCallPageState extends State<LiveCallPage> {
 
   @override
   Widget build(BuildContext context) {
+    // This method remains unchanged
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
@@ -268,18 +322,20 @@ class _LiveCallPageState extends State<LiveCallPage> {
             _remoteVideo(),
             Align(
               alignment: Alignment.topLeft,
-              child: SizedBox(
-                width: 120,
-                height: 160,
-                child: _localUserJoined
-                    ? AgoraVideoView(
-                  controller: VideoViewController(
-                    rtcEngine: _engine!,
-                    canvas: const VideoCanvas(uid: 0),
+              child: SafeArea(
+                child: SizedBox(
+                  width: 120,
+                  height: 160,
+                  child: _localUserJoined
+                      ? AgoraVideoView(
+                    controller: VideoViewController(
+                      rtcEngine: _engine!,
+                      canvas: const VideoCanvas(uid: 0),
+                    ),
+                  )
+                      : const Center(
+                    child: CircularProgressIndicator(),
                   ),
-                )
-                    : const Center(
-                  child: CircularProgressIndicator(),
                 ),
               ),
             ),
@@ -291,6 +347,7 @@ class _LiveCallPageState extends State<LiveCallPage> {
   }
 
   Widget _remoteVideo() {
+    // This method remains unchanged, but the 'else' block will now show a timer.
     if (_remoteUid != null) {
       return AgoraVideoView(
         controller: VideoViewController.remote(
@@ -300,6 +357,9 @@ class _LiveCallPageState extends State<LiveCallPage> {
         ),
       );
     } else {
+      final moodIcon = Constant.USER_SESSION_MOODS[widget.callDetails.moodId];
+      final hasLocation = widget.callDetails.locationData.isNotEmpty;
+
       return Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -322,17 +382,49 @@ class _LiveCallPageState extends State<LiveCallPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                "Claire",
-                style: GoogleFonts.lato(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Text(
+                  widget.callDetails.title,
+                  style: GoogleFonts.lato(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               const SizedBox(height: 10),
+              // --- MODIFIED: Show timer when connected ---
               Text(
-                _callStatus,
+                _callStatus == "Connected" ? _durationString : _callStatus,
                 style: GoogleFonts.lato(fontSize: 18, color: Colors.white70),
+              ),
+              // --- END MODIFIED ---
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(moodIcon, style: const TextStyle(fontSize: 22)),
+                    if (hasLocation) const SizedBox(width: 12),
+                    if (hasLocation)
+                      Icon(Icons.location_on,
+                          color: Colors.grey.shade400, size: 18),
+                    if (hasLocation) const SizedBox(width: 4),
+                    if (hasLocation)
+                      Flexible(
+                        child: Text(
+                          widget.callDetails.locationData,
+                          style: TextStyle(
+                              color: Colors.grey.shade400, fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -342,6 +434,7 @@ class _LiveCallPageState extends State<LiveCallPage> {
   }
 
   Widget _toolbar() {
+    // This method remains unchanged
     return Container(
       alignment: Alignment.bottomCenter,
       padding: const EdgeInsets.symmetric(vertical: 48),
@@ -365,3 +458,4 @@ class _LiveCallPageState extends State<LiveCallPage> {
     );
   }
 }
+

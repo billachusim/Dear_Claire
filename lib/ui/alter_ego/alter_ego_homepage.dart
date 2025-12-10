@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:rxdart/rxdart.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/alter_ego/advised_page.dart';
@@ -18,9 +18,8 @@ import 'package:vibration/vibration.dart';
 import '../../utils/constant.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
-import '../call/admin_call_page.dart';
-import '../call/admin_live_call_page.dart';
 import '../ego-profile/claire_loves.dart';
+import 'alter_ego_calls_page.dart';
 import 'flagged_sessions_page.dart';
 
 class AlterEgoHomePage extends StatefulWidget {
@@ -34,6 +33,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   StreamSubscription? _callSubscription;
   StreamSubscription? _liveSessionSubscription;
+  Stream<int>? _incomingCallCountStream;
   PageController? _pageController;
   int currentIndex = 0;
   late String _title;
@@ -44,15 +44,34 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
 
   late ShakeDetector detector;
 
-  @override
-  void initState() {
+
+  @override void initState() {
     super.initState();
     _title = "Alter Ego Mode";
     _pageController = PageController(keepPage: true);
     shakeDevice();
-    _listenForIncomingCalls();
-    _listenForIncomingLiveSessions();
+
+    final adminId = "claire_admin";
+    List<String> activeStatuses = ['dialing', 'ringing', 'connecting'];
+
+    Stream<int> audioCountStream = FirebaseFirestore.instance
+        .collection('companion_calls')
+        .where('receiverId', isEqualTo: adminId)
+        .where('status', whereIn: activeStatuses)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+
+    Stream<int> videoCountStream = FirebaseFirestore.instance
+        .collection('live_sessions')
+        .where('receiverId', isEqualTo: adminId)
+        .where('status', whereIn: activeStatuses)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+
+    _incomingCallCountStream = Rx.combineLatest2(
+        audioCountStream, videoCountStream, (a, b) => a + b);
   }
+
 
   void setTabIndex(index) async {
     if (await firebaseServices.isUserSignIn(context))
@@ -61,135 +80,35 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
     switch (index) {
       case 0:
         {
-          _title = 'Advising';
+          _title = 'Incoming Calls';
         }
         break;
       case 1:
         {
-          _title = 'All';
+          _title = 'Advising';
         }
         break;
       case 2:
         {
-          _title = 'Flagged';
+          _title = 'All';
         }
         break;
       case 3:
         {
-          _title = 'Rooms';
+          _title = 'Flagged';
         }
         break;
       case 4:
+        {
+          _title = 'Rooms';
+        }
+        break;
+      case 5:
         {
           _title = 'Loves';
         }
         break;
     }
-  }
-
-  // Replace the _listenForIncomingCalls method
-  void _listenForIncomingCalls() {
-    final adminId = "claire_admin"; // Hardcoded for now.
-
-    _callSubscription = FirebaseFirestore.instance
-        .collection('companion_calls')
-        .where('receiverId', isEqualTo: adminId)
-        .where('status', isEqualTo: 'dialing')
-        .snapshots()
-        .listen((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        final callDoc = snapshot.docs.first;
-        _showIncomingCallDialog(callDoc, isVideoCall: false);
-      }
-    });
-  }
-
-
-  void _listenForIncomingLiveSessions() {
-    final adminId = "claire_admin";
-
-    _liveSessionSubscription = FirebaseFirestore.instance
-        .collection('live_sessions') // Listen to the new collection
-        .where('receiverId', isEqualTo: adminId)
-        .where('status', isEqualTo: 'dialing')
-        .snapshots()
-        .listen((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        final callDoc = snapshot.docs.first;
-        // We can reuse the same dialog, but pass a flag to identify the call type
-        _showIncomingCallDialog(callDoc, isVideoCall: true);
-      }
-    });
-  }
-
-
-  // Replace the entire _showIncomingCallDialog method with this new version
-  void _showIncomingCallDialog(DocumentSnapshot callDoc, {bool isVideoCall = false}) {
-    final callData = callDoc.data() as Map<String, dynamic>;
-    final channelName = callData['channelName'];
-    final callDocId = callDoc.id;
-    final collectionName = isVideoCall ? 'live_sessions' : 'companion_calls';
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(isVideoCall ? "Incoming Live Session" : "Incoming Companion Call"),
-          content: Text(isVideoCall ? "A user is requesting a live video session." : "A user is calling for Companion Mode."),
-          actions: [
-            TextButton(
-              child: Text("Decline"),
-              onPressed: () {
-                // Update status in the correct collection
-                FirebaseFirestore.instance
-                    .collection(collectionName)
-                    .doc(callDocId)
-                    .update({'status': 'ended'});
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Text("Accept"),
-              onPressed: () {
-                final currentUser = FirebaseAuth.instance.currentUser;
-                Navigator.of(context).pop(); // Close the dialog
-
-                if (currentUser == null) {
-                  // This case should rarely happen for an admin, but it's a good safeguard.
-                  Fluttertoast.showToast(msg: "Authentication error. Please restart the app.");
-                  return;
-                }
-
-                // Navigate to the correct call page, passing the user object
-                if (isVideoCall) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => AdminLiveCallPage(
-                        user: currentUser, // Pass the user object
-                        channelName: channelName,
-                        callDocId: callDocId,
-                      ),
-                    ),
-                  );
-                } else {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => AdminCallPage(
-                        user: currentUser, // Pass the user object
-                        channelName: channelName,
-                        callDocId: callDocId,
-                      ),
-                    ),
-                  );
-                }
-              },
-
-            ),
-          ],
-        );
-      },
-    );
   }
 
 
@@ -234,7 +153,6 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   dispose() {
     _pageController!.dispose();
     detector.stopListening();
-    _callSubscription?.cancel(); // Stop listening for calls
     super.dispose();
   }
 
@@ -291,6 +209,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                   });
                 },
                 children: [
+                  AlterEgoCallsPage(),
                   AdvisedPage(),
                   TheAllPage(),
                   FlaggedDiariesPage(),
@@ -315,37 +234,59 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                 onTap: (int index) => setTabIndex(index),
                 // A6A6B1
                 items: [
+                  // In build() -> BottomNavigationBar -> items
+                  BottomNavigationBarItem(
+                    icon: StreamBuilder<int>(
+                      stream: _incomingCallCountStream,
+                      builder: (context, snapshot) {
+                        final count = snapshot.data ?? 0;
+                        final hasCalls = count > 0;
+
+                        // Use the Badge widget
+                        return Badge(
+                          label: Text(count.toString()),
+                          isLabelVisible: hasCalls, // Only show badge if there are calls
+                          child: Icon(Icons.call,
+                              color: currentIndex == 0
+                                  ? Pallet.colorWhite
+                                  : Pallet.colorSecondary),
+                        );
+                      },
+                    ),
+                    label: 'Calls',
+                  ),
+
                   BottomNavigationBarItem(
                     icon: Icon(Icons.favorite,
-                        color: currentIndex == 0
+                        color: currentIndex == 1
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
                     label: 'Advising',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.calendar_month_rounded,
-                        color: currentIndex == 1
+                        color: currentIndex == 2
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
                     label: 'All',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.flag_circle_rounded,
-                        color: currentIndex == 2
+                        color: currentIndex == 3
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
                     label: 'Flagged',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.message_rounded,
-                        color: currentIndex == 3
+                        color: currentIndex == 4
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
                     label: 'Rooms',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.attach_money_rounded,
-                        color: currentIndex == 4
+                        color: currentIndex == 5
                             ? Pallet.colorWhite
                             : Pallet.colorSecondary),
                     label: 'Loves',

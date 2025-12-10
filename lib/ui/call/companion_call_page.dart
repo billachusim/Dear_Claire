@@ -12,14 +12,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
-class CompanionCallPage extends StatefulWidget {
-  final User user; // Accept the user object
+import '../../widgets/pre_call_dialog.dart';
 
-  const CompanionCallPage({Key? key, required this.user}) : super(key: key);
+class CompanionCallPage extends StatefulWidget {
+  final User user;
+  final CallSetupDetails callDetails;
+  const CompanionCallPage({Key? key, required this.user, required this.callDetails}) : super(key: key);
 
   @override
   State<CompanionCallPage> createState() => _CompanionCallPageState();
 }
+
+// In /lib/ui/call/companion_call_page.dart
 
 class _CompanionCallPageState extends State<CompanionCallPage> {
   String _callStatus = "Calling Claire...";
@@ -33,6 +37,29 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
   StreamSubscription? _callDocSubscription;
   bool _diaryCreationInProgress = false;
 
+  // --- NEW: For the call timer ---
+  Timer? _timer;
+  int _callDurationInSeconds = 0;
+
+  String get _durationString {
+    final duration = Duration(seconds: _callDurationInSeconds);
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  void _startCallTimer() {
+    _timer?.cancel(); // Cancel any existing timer
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _callDurationInSeconds++;
+        });
+      }
+    });
+  }
+  // --- END NEW ---
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +68,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
 
   @override
   void dispose() {
+    _timer?.cancel(); // NEW: Stop the timer
     _callDocSubscription?.cancel();
     _endCall();
     super.dispose();
@@ -48,13 +76,10 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
 
   Future<void> _initiateCall() async {
     try {
-      // Use the user object passed to the widget
       final callerId = widget.user.uid;
-
       final callId = const Uuid().v4();
       _callDocId = callId;
       _channelName = 'companion_call_$callId';
-
       final adminId = "claire_admin";
 
       await FirebaseFirestore.instance.collection('companion_calls').doc(_callDocId).set({
@@ -64,11 +89,15 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
         'status': 'dialing',
         'createdAt': FieldValue.serverTimestamp(),
         'recordingUrl': null,
+        'title': widget.callDetails.title,
+        'moodId': widget.callDetails.moodId,
+        'isPrivate': widget.callDetails.isPrivate,
+        'repliesEnabled': widget.callDetails.repliesEnabled,
+        'locationEnabled': widget.callDetails.locationEnabled,
+        'locationData': widget.callDetails.locationData,
       });
 
-      // Start listening to the document for the recording URL
       _listenForRecording();
-
       await _setupVoiceSDKEngine();
 
     } catch (e) {
@@ -76,16 +105,12 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
       setState(() {
         _callStatus = "Failed to start call. Authentication might have failed.";
       });
-      // Pop the page if initiation fails
       Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
+        if (mounted) Navigator.of(context).pop();
       });
     }
   }
 
-  /// Listens for the recordingUrl to appear in the Firestore document.
   void _listenForRecording() {
     if (_callDocId == null) return;
     _callDocSubscription = FirebaseFirestore.instance
@@ -107,8 +132,8 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
     });
   }
 
-  /// Creates a new diary session using the logic from auto_diary.dart.
   Future<void> _createDiarySessionFromCall(String audioUrl) async {
+    // This method remains unchanged
     print('COMPANION_CALL: Creating diary session from URL: $audioUrl');
 
     final Uuid uuid = Uuid();
@@ -120,29 +145,36 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
       return;
     }
 
+    final callDoc = await FirebaseFirestore.instance.collection('companion_calls').doc(_callDocId).get();
+    if (!callDoc.exists) {
+      print('COMPANION_CALL: Original call document not found. Cannot create session.');
+      return;
+    }
+    final callData = callDoc.data() as Map<String, dynamic>;
+
     CreateSessionModel sessionObject = CreateSessionModel();
-
     final randomColor = Constant.DIARY_COLORS_HEXCODE[Random().nextInt(Constant.DIARY_COLORS_HEXCODE.length)];
+    String finalLocationString = '#CompanionCall';
+    if (callData['locationEnabled'] == true && (callData['locationData'] as String).isNotEmpty) {
+      finalLocationString = callData['locationData'];
+    }
 
-    // Populate the session object
     sessionObject.audioUrl = audioUrl;
     sessionObject.containsAudio = true;
     sessionObject.userAvatarUrl = currentUserInfo.avatarUrl;
     sessionObject.userNickname = currentUserInfo.nickname;
-    sessionObject.title = "Companion Call Session";
-    sessionObject.private = true;
-    sessionObject.repliesEnabled = false;
-    sessionObject.message =
-    "This diary session was recorded during a Companion Mode call with Claire. #CompanionCall";
+    sessionObject.title = callData['title'] ?? "Companion Call Session";
+    sessionObject.private = callData['isPrivate'] ?? true;
+    sessionObject.repliesEnabled = callData['repliesEnabled'] ?? false;
+    sessionObject.message = "This diary session was recorded during a Companion Mode call with Claire. #CompanionCall";
     sessionObject.colorHex = randomColor;
     sessionObject.sessionId = uuid.v1();
     sessionObject.userId = currentUserInfo.userId;
-    sessionObject.moodId = 17; // Claire mood 🌺
-    sessionObject.location = '#Claire';
+    sessionObject.moodId = callData['moodId'] ?? 17;
+    sessionObject.location = finalLocationString;
     sessionObject.timeLastActivity = Timestamp.now();
 
-    bool isSuccessful =
-    await _firebaseServices.createSession(session: sessionObject);
+    bool isSuccessful = await _firebaseServices.createSession(session: sessionObject);
 
     if (isSuccessful) {
       print('COMPANION_CALL: Firestore session created successfully.');
@@ -185,6 +217,9 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
             _remoteUid = remoteUid;
             _callStatus = "Connected";
           });
+          // --- NEW: Start the timer when admin joins ---
+          _startCallTimer();
+          // --- END NEW ---
           if (_callDocId != null) {
             FirebaseFirestore.instance
                 .collection('companion_calls')
@@ -208,6 +243,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
   }
 
   Future<void> _join() async {
+    // This method remains unchanged
     if (_channelName == null) return;
     String token;
     try {
@@ -238,12 +274,19 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
 
 
   Future<void> _endCall() async {
-
+    _timer?.cancel();
     await _callDocSubscription?.cancel();
 
-    // The user's primary responsibility is to leave the Agora channel.
-    // The admin is responsible for updating the final document status.
-    // This prevents race conditions where the user sets 'status' to 'ended' too early.
+    // --- FIX: Update status on hangup if call was not connected ---
+    if (_remoteUid == null && _callDocId != null) {
+      // If no admin ever joined, mark the call as 'missed'.
+      await FirebaseFirestore.instance
+          .collection('companion_calls')
+          .doc(_callDocId)
+          .update({'status': 'missed'})
+          .catchError((e) => print("Error marking call as missed: $e"));
+    }
+
     if (_engine != null) {
       await _engine?.leaveChannel();
       await _engine?.release();
@@ -257,7 +300,6 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
       setState(() {
         _callStatus = "Call Ended";
       });
-      // Delay to show the "Call Ended" message before popping the screen.
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           Navigator.of(context).pop();
@@ -269,6 +311,9 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
 
   @override
   Widget build(BuildContext context) {
+    final moodIcon = Constant.USER_SESSION_MOODS[widget.callDetails.moodId];
+    final hasLocation = widget.callDetails.locationData.isNotEmpty;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Container(
@@ -294,17 +339,49 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                "Claire",
-                style: GoogleFonts.lato(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Text(
+                  widget.callDetails.title,
+                  style: GoogleFonts.lato(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               const SizedBox(height: 10),
+              // --- MODIFIED: Show timer when connected ---
               Text(
-                _callStatus,
+                _callStatus == "Connected" ? _durationString : _callStatus,
                 style: GoogleFonts.lato(fontSize: 18, color: Colors.white70),
+              ),
+              // --- END MODIFIED ---
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(moodIcon, style: const TextStyle(fontSize: 22)),
+                    if (hasLocation) const SizedBox(width: 12),
+                    if (hasLocation)
+                      Icon(Icons.location_on,
+                          color: Colors.grey.shade400, size: 18),
+                    if (hasLocation) const SizedBox(width: 4),
+                    if (hasLocation)
+                      Flexible(
+                        child: Text(
+                          widget.callDetails.locationData,
+                          style: TextStyle(
+                              color: Colors.grey.shade400, fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                ),
               ),
               const Spacer(flex: 3),
               _buildHangUpButton(),
@@ -333,3 +410,4 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
     );
   }
 }
+
