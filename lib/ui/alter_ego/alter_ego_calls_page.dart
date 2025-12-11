@@ -1,8 +1,11 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:just_audio/just_audio.dart' hide AudioPlayer;
 import 'package:rxdart/rxdart.dart';
+import 'package:vibration/vibration.dart';
 import '../../utils/color.dart';
 import '../../utils/constant.dart';
 import '../call/admin_call_page.dart';
@@ -116,6 +119,7 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> {
   }
 
   void _acceptCall(BuildContext context, IncomingCall call) {
+    RingtoneService.stopRingtone();
     final currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser == null) {
@@ -152,12 +156,15 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> {
   }
 
   void _declineCall(IncomingCall call) {
+    RingtoneService.stopRingtone();
     final collectionName = call.isVideoCall ? 'live_sessions' : 'companion_calls';
     FirebaseFirestore.instance
         .collection(collectionName)
         .doc(call.doc.id)
         .update({'status': 'ended'});
   }
+
+  // In /lib/ui/alter_ego/alter_ego_calls_page.dart
 
   @override
   Widget build(BuildContext context) {
@@ -176,8 +183,20 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> {
             ),
           ),
           StreamBuilder<List<IncomingCall>>(
-            stream: _callsStream,
+            stream: _callsStream, // Correct stream
             builder: (context, snapshot) {
+              // --- FIX: Ringtone logic is now in the correct place ---
+              if (snapshot.hasData) {
+                if (snapshot.data!.isNotEmpty) {
+                  RingtoneService.playRingtone();
+                } else {
+                  RingtoneService.stopRingtone();
+                }
+              } else if (snapshot.connectionState != ConnectionState.waiting) {
+                RingtoneService.stopRingtone();
+              }
+              // --- END FIX ---
+
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return SliverToBoxAdapter(child: Center(child: Padding(
                   padding: const EdgeInsets.all(40.0),
@@ -201,7 +220,7 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> {
               return SliverList(
                 delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                    return _buildIncomingCallCard(calls[index]);
+                    return _buildIncomingCallCard(calls[index]); // Correct builder
                   },
                   childCount: calls.length,
                 ),
@@ -220,10 +239,15 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> {
             ),
           ),
           StreamBuilder<List<IncomingCall>>(
-            stream: _recentCallsStream,
+            stream: _recentCallsStream, // Correct stream
             builder: (context, snapshot) {
+              // Ringtone logic has been correctly removed from here.
+
               if (snapshot.connectionState == ConnectionState.waiting && !(snapshot.hasData)) {
-                return const SliverToBoxAdapter(child: SizedBox.shrink()); // Don't show loader for recents on first load
+                return const SliverToBoxAdapter(child: SizedBox.shrink());
+              }
+              if (snapshot.hasError) {
+                return SliverToBoxAdapter(child: Center(child: Text("Error: ${snapshot.error}", style: TextStyle(color: Colors.red))));
               }
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return const SliverToBoxAdapter(
@@ -239,7 +263,7 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> {
               return SliverList(
                 delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                    return _buildRecentCallCard(calls[index]);
+                    return _buildRecentCallCard(calls[index]); // Correct builder
                   },
                   childCount: calls.length,
                 ),
@@ -250,6 +274,7 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> {
       ),
     );
   }
+
 
   Widget _buildIncomingCallCard(IncomingCall call) {
     final icon = call.isVideoCall ? Icons.videocam : Icons.call;
@@ -355,3 +380,36 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> {
     );
   }
 }
+
+
+class RingtoneService {
+  static final AudioPlayer _audioPlayer = AudioPlayer();
+  static bool _isPlaying = false;
+
+  static Future<void> playRingtone() async {
+    if (_isPlaying) return; // Don't start if already playing
+
+    _isPlaying = true;
+    // Set the release mode to loop so the sound repeats
+    await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    // Assuming you have a ringing.mp3 in your assets/audio/ folder
+    await _audioPlayer.play(AssetSource('audio/tictactoeWin.mp3'));
+
+    // Vibrate in a loop
+    if (await Vibration.hasVibrator() ?? false) {
+      // Pattern: Vibrate for 500ms, wait 1000ms, repeat
+      Vibration.vibrate(pattern: [500, 1000, 500, 1000], repeat: 0);
+    }
+  }
+
+  static Future<void> stopRingtone() async {
+    if (!_isPlaying) return; // Nothing to stop
+
+    await _audioPlayer.stop();
+    if (await Vibration.hasVibrator() ?? false) {
+      Vibration.cancel();
+    }
+    _isPlaying = false;
+  }
+}
+

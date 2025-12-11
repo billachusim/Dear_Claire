@@ -96,7 +96,7 @@ class _HomeDashboardPageState extends State<HomePage>
         .get();
 
     var egoInfo =
-        UserModel.fromFirestore(response.data() as Map<String, dynamic>);
+        UserModel.fromFirestore(response!.data() as Map<String, dynamic>);
     userName = egoInfo.nickname.toString();
     userType = egoInfo.userType.toString();
     avatarUrl = egoInfo.avatarUrl.toString();

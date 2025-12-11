@@ -73,75 +73,69 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   }
 
 
-  void setTabIndex(index) async {
-    if (await firebaseServices.isUserSignIn(context))
+  void setTabIndex(index, {bool updatePage = true}) async { // NEW: Add optional flag
+    if (updatePage && await firebaseServices.isUserSignIn(context)) {
       _pageController?.animateToPage(index,
-          duration: Duration(milliseconds: 1500), curve: Curves.elasticOut);
-    switch (index) {
-      case 0:
-        {
-          _title = 'Incoming Calls';
-        }
-        break;
-      case 1:
-        {
-          _title = 'Advising';
-        }
-        break;
-      case 2:
-        {
-          _title = 'All';
-        }
-        break;
-      case 3:
-        {
-          _title = 'Flagged';
-        }
-        break;
-      case 4:
-        {
-          _title = 'Rooms';
-        }
-        break;
-      case 5:
-        {
-          _title = 'Loves';
-        }
-        break;
+          duration: const Duration(milliseconds: 1500), curve: Curves.elasticOut);
     }
+
+    // The switch statement to update the title remains the same
+    setState(() {
+      switch (index) {
+        case 0:
+          {
+            _title = 'Incoming Calls';
+          }
+          break;
+        case 1:
+          {
+            _title = 'Advising';
+          }
+          break;
+        case 2:
+          {
+            _title = 'All';
+          }
+          break;
+        case 3:
+          {
+            _title = 'Flagged';
+          }
+          break;
+        case 4:
+          {
+            _title = 'Rooms';
+          }
+          break;
+        case 5:
+          {
+            _title = 'Loves';
+          }
+          break;
+      }
+    });
   }
+
 
 
 
   shakeDevice() {
     detector = ShakeDetector.autoStart(
-      // 1. INCREASED SENSITIVITY: Higher value means a harder shake is needed.
-      // Default is ~1.5. Let's try 2.5 or 3.0 for a more deliberate shake.
       shakeThresholdGravity: 5.5,
-
       onPhoneShake: (ShakeEvent event) {
         () async {
           if (!mounted) return;
-
-          // Vibrate to give user feedback
           if (await Vibration.hasVibrator() ?? false) {
             Vibration.vibrate();
           }
-
           Fluttertoast.showToast(
             toastLength: Toast.LENGTH_SHORT, // Shorter toast
             msg: "Returning to Ego...",
             textColor: Colors.white,
             backgroundColor: Pallet.colorSplashScreen,
           );
-
-          // 2. CRITICAL FIX: Stop listening for shakes on THIS page FIRST.
           detector.stopListening();
-
-          // Add a small delay to ensure the event loop is clear
           await Future.delayed(const Duration(milliseconds: 100));
-
-          // 3. Navigate AFTER the detector is stopped.
           if (!mounted) return;
           Navigator.of(context).pushReplacementNamed(AppRoutes.home);
         }();
