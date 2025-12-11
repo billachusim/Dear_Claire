@@ -71,6 +71,7 @@ class _SplashPageState extends State<SplashPage>
             navService.pushReplacementNamed('/diaryRooms');
             break;
           case 'wallet':
+          case 'egoPage':
           case 'love_transfer_received':
           case 'love_transfer_sent':
             navService.pushReplacementNamed('/egoPage');

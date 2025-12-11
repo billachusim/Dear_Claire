@@ -83,6 +83,7 @@ class ClairNotification {
             navService.pushNamed('/diaryRooms');
             break;
           case 'wallet':
+          case 'egoPage':
           case 'love_transfer_received':
           case 'love_transfer_sent':
             navService.pushNamed('/egoPage');
@@ -162,6 +163,7 @@ class ClairNotification {
             navService.pushNamed('/diaryRooms');
             break;
           case 'wallet':
+          case 'egoPage':
           case 'love_transfer_received':
           case 'love_transfer_sent':
             navService.pushNamed('/egoPage');
