@@ -11,19 +11,25 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-
+import 'package:clairediary/ui/alter_ego/alter_ego_calls_page.dart';
 import '../../widgets/pre_call_dialog.dart';
 
 class CompanionCallPage extends StatefulWidget {
   final User user;
   final CallSetupDetails callDetails;
-  const CompanionCallPage({Key? key, required this.user, required this.callDetails}) : super(key: key);
+  final IncomingCall? incomingCall;
+  const CompanionCallPage({
+    Key? key,
+    required this.user,
+    required this.callDetails,
+    this.incomingCall,
+  }) : assert(callDetails != null || incomingCall != null, "Either callDetails or incomingCall must be provided"),
+        super(key: key);
 
   @override
   State<CompanionCallPage> createState() => _CompanionCallPageState();
 }
 
-// In /lib/ui/call/companion_call_page.dart
 
 class _CompanionCallPageState extends State<CompanionCallPage> {
   String _callStatus = "Calling Claire...";
@@ -63,7 +69,18 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
   @override
   void initState() {
     super.initState();
-    _initiateCall(); // Directly initiate the call
+    if (widget.incomingCall != null) {
+      // SCENARIO B: We are JOINING an existing call from an admin
+      print("Joining an existing companion call...");
+      _callDocId = widget.incomingCall!.doc.id;
+      _channelName = widget.incomingCall!.channelName;
+      // Skip _initiateCall and go straight to setting up the engine
+      _setupVoiceSDKEngine();
+    } else {
+      // SCENARIO A: We are INITIATING a new call to an admin
+      print("Initiating a new companion call...");
+      _initiateCall();
+    }
   }
 
   @override
@@ -309,10 +326,18 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
   }
 
 
+  // In /lib/ui/call/companion_call_page.dart
+
   @override
   Widget build(BuildContext context) {
-    final moodIcon = Constant.USER_SESSION_MOODS[widget.callDetails.moodId];
-    final hasLocation = widget.callDetails.locationData.isNotEmpty;
+    // If we are joining, get info from`incomingCall`.
+    // If we are creating a new call, get it from `callDetails`.
+    final String title = widget.incomingCall?.title ?? widget.callDetails.title;
+    final int moodId = widget.incomingCall?.moodId ?? widget.callDetails.moodId;
+    final String locationData = widget.incomingCall?.locationData ?? widget.callDetails.locationData;
+
+    final moodIcon = Constant.USER_SESSION_MOODS[moodId];
+    final hasLocation = locationData.isNotEmpty;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -342,7 +367,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Text(
-                  widget.callDetails.title,
+                  title, // Use the corrected title variable
                   style: GoogleFonts.lato(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -353,12 +378,10 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
                 ),
               ),
               const SizedBox(height: 10),
-              // --- MODIFIED: Show timer when connected ---
               Text(
                 _callStatus == "Connected" ? _durationString : _callStatus,
                 style: GoogleFonts.lato(fontSize: 18, color: Colors.white70),
               ),
-              // --- END MODIFIED ---
               const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -374,7 +397,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
                     if (hasLocation)
                       Flexible(
                         child: Text(
-                          widget.callDetails.locationData,
+                          locationData, // Use the corrected location variable
                           style: TextStyle(
                               color: Colors.grey.shade400, fontSize: 14),
                           overflow: TextOverflow.ellipsis,
@@ -392,6 +415,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
       ),
     );
   }
+
 
   Widget _buildHangUpButton() {
     return GestureDetector(

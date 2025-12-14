@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:ui';
-
+import 'dart:async';
+import 'package:rxdart/rxdart.dart';
+import 'package:clairediary/ui/alter_ego/alter_ego_calls_page.dart'; // For IncomingCall model
+import 'package:clairediary/ui/call/incoming_call_page.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clairediary/widgets/drawer_transactions_list.dart';
@@ -66,6 +69,9 @@ class _HomeDashboardPageState extends State<HomePage>
   int _claireScore = 0;
   int _drawCount = 0;
   bool _isHandlingOutcome = false;
+  StreamSubscription? _userCallListener;
+  String? _activeCallId;
+  late Future<UserModel?> _egoInfoFuture;
 
   late final AnimationController _controller = AnimationController(
     duration: const Duration(seconds: 15),
@@ -87,25 +93,48 @@ class _HomeDashboardPageState extends State<HomePage>
     EgoProfilePage(title: 'Dear Claire'),
   ];
 
-  /// Get the Ego User info
-  Future<UserModel> getEgoInfo() async {
-    final String? userId = currentUser?.uid.toString();
-    DocumentSnapshot response = await FirebaseFirestore.instance
-        .collection(AppString.users)
-        .doc(userId)
-        .get();
 
-    var egoInfo =
-        UserModel.fromFirestore(response!.data() as Map<String, dynamic>);
-    userName = egoInfo.nickname.toString();
-    userType = egoInfo.userType.toString();
-    avatarUrl = egoInfo.avatarUrl.toString();
-    final _userId = egoInfo.userId.toString();
-    await firebaseServices.updateUserLastTimeUnlocked(_userId);
-    logger.d(
-        'Successfully got an Ego user model and updated time last unlocked.');
-    return egoInfo;
+  /// Get the Ego User info
+  Future<UserModel?> getEgoInfo() async {
+    // Null check at the beginning
+    if (currentUser == null) {
+      logger.w("getEgoInfo called with null user. Aborting.");
+      return null;
+    }
+    final String? userId = currentUser?.uid;
+
+    try {
+      DocumentSnapshot response = await FirebaseFirestore.instance
+          .collection(AppString.users)
+          .doc(userId)
+          .get();
+
+      // Check if document exists before processing
+      if (response.exists && response.data() != null) {
+        var egoInfo =
+        UserModel.fromFirestore(response.data() as Map<String, dynamic>);
+        // Use setState only if you need to update UI properties directly
+        if (mounted) {
+          setState(() {
+            userName = egoInfo.nickname.toString();
+            userType = egoInfo.userType.toString();
+            avatarUrl = egoInfo.avatarUrl.toString();
+          });
+        }
+        final _userId = egoInfo.userId.toString();
+        await firebaseServices.updateUserLastTimeUnlocked(_userId);
+        logger.d('Successfully got an Ego user model and updated time last unlocked.');
+        return egoInfo;
+      } else {
+        logger.w("User document not found for userId: $userId");
+        return null;
+      }
+    } catch (e) {
+      logger.e("Error in getEgoInfo: $e");
+      return null; // Return null on error
+    }
   }
+
 
   // Add these methods inside _HomeDashboardPageState
 
@@ -213,16 +242,101 @@ class _HomeDashboardPageState extends State<HomePage>
   }
 
 
-  // In lib/ui/bottom_nav/stack_index_home.dart -> _HomeDashboardPageState
+
+
+  void _listenForCallsFromClaire() {
+    _userCallListener?.cancel();
+    if (currentUser == null) return;
+
+    final userId = currentUser!.uid;
+    const statusToListenFor = 'dialing';
+
+    // Define the streams for dialing calls
+    Stream<QuerySnapshot> audioCallsStream = FirebaseFirestore.instance
+        .collection('companion_calls')
+        .where('receiverId', isEqualTo: userId)
+        .where('status', isEqualTo: statusToListenFor)
+        .snapshots();
+
+    Stream<QuerySnapshot> videoCallsStream = FirebaseFirestore.instance
+        .collection('live_sessions')
+        .where('receiverId', isEqualTo: userId)
+        .where('status', isEqualTo: statusToListenFor)
+        .snapshots();
+
+    _userCallListener = Rx.combineLatest2(
+      audioCallsStream,
+      videoCallsStream,
+          (QuerySnapshot audio, QuerySnapshot video) => [...audio.docs, ...video.docs],
+    ).listen((callDocs) {
+
+      // If there are no incoming calls, reset our active call tracker and do nothing.
+      if (callDocs.isEmpty) {
+        _activeCallId = null;
+        return;
+      }
+
+      // Get the first incoming call document.
+      final newCallDoc = callDocs.first;
+
+      // --- THE DEFINITIVE FIX ---
+      // If we are already showing an incoming call screen for this specific call,
+      // or for any other call, do absolutely nothing.
+      if (_activeCallId != null && _activeCallId == newCallDoc.id) {
+        return;
+      }
+      if (_activeCallId != null && _activeCallId != newCallDoc.id) {
+        // This case is for when a second call comes in while the first is ringing.
+        // For now we ignore it, but in the future you could show a notification.
+        return;
+      }
+      // --- END FIX ---
+
+      // If we are here, it means this is a new call we haven't handled yet.
+      // Set the active call ID immediately to prevent race conditions.
+      _activeCallId = newCallDoc.id;
+
+      final callData = newCallDoc.data() as Map<String, dynamic>;
+      final isVideo = callData['type'] == 'video';
+      final incomingCall = IncomingCall(doc: newCallDoc, isVideoCall: isVideo);
+
+      // Navigate and wait for the entire call flow to complete.
+      Navigator.of(context, rootNavigator: true)
+          .push(
+        MaterialPageRoute(
+          builder: (context) => IncomingCallPage(call: incomingCall),
+        ),
+      )
+          .then((_) {
+        // This 'then' block runs when the call is over (or declined).
+        // We can now safely reset the active call ID to allow new calls.
+        _activeCallId = null;
+      });
+    });
+  }
+
+
+  void _initializeServices() {
+    // Now we initialize everything that depends on user or context
+    setState(() {
+      _egoInfoFuture = getEgoInfo();
+    });
+    shakeDevice();
+    AppTrackingTransparency.requestTrackingAuthorization();
+    _listenForCallsFromClaire();
+  }
 
   @override
   void initState() {
     super.initState();
     getEgoInfo();
     _title = "Dear Claire";
-    shakeDevice();
-    AppTrackingTransparency.requestTrackingAuthorization();
-
+    _pageController = PageController(initialPage: 0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _initializeServices();
+      }
+    });
     // Initialize WebViewController for TicTacToe
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -393,10 +507,8 @@ class _HomeDashboardPageState extends State<HomePage>
   void dispose() {
     _controller.dispose();
     detector.stopListening();
-    // Add this inside your dispose() method
-    if (_isFabMenuOpen) {
-      _overlayEntry?.remove();
-    }
+    if (_isFabMenuOpen) {_overlayEntry?.remove();}
+    _userCallListener?.cancel();
     super.dispose();
   }
 
@@ -1262,72 +1374,71 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                   }),
                 ),
 
+
                 _buildMenuItem(
                   position: _itemPositions[1],
                   icon: Icons.phone_in_talk_outlined,
                   label: "Companion Session",
-                  // --- MODIFIED ---
                   onPressed: () {
-                    // Close the FAB menu first, then show the dialog and navigate
                     _animationController.reverse().then((_) async {
                       widget.onClose();
                       final currentUser = FirebaseAuth.instance.currentUser;
                       if (currentUser == null) {
-                        Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
+                        Navigator.of(widget.parentContext)
+                            .pushReplacementNamed(AppRoutes.authSelection);
                         return;
                       }
 
-                      // Show the pre-call dialog
-                      final callDetails = await showPreCallDialog(widget.parentContext, isVideoCall: false);
+                      final callDetails =
+                      await showPreCallDialog(widget.parentContext, isVideoCall: false);
 
-                      // If the user didn't cancel, navigate with the details
                       if (callDetails != null) {
                         Navigator.of(widget.parentContext).push(
                           MaterialPageRoute(
                             builder: (context) => CompanionCallPage(
                               user: currentUser,
-                              callDetails: callDetails, // Pass the collected details
+                              callDetails: callDetails, // Correct parameter
+                              incomingCall: null,      // Correctly passing null
                             ),
                           ),
                         );
                       }
                     });
                   },
-                  // --- END MODIFIED ---
                 ),
                 _buildMenuItem(
                   position: _itemPositions[2],
                   icon: Icons.videocam_rounded,
                   label: "Live Session",
-                  // --- MODIFIED ---
                   onPressed: () {
-                    // Close the FAB menu first, then show the dialog and navigate
                     _animationController.reverse().then((_) async {
                       widget.onClose();
                       final currentUser = FirebaseAuth.instance.currentUser;
                       if (currentUser == null) {
-                        Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
+                        Navigator.of(widget.parentContext)
+                            .pushReplacementNamed(AppRoutes.authSelection);
                         return;
                       }
 
-                      // Show the pre-call dialog
-                      final callDetails = await showPreCallDialog(widget.parentContext, isVideoCall: true);
+                      final callDetails =
+                      await showPreCallDialog(widget.parentContext, isVideoCall: true);
 
-                      // If the user didn't cancel, navigate with the details
                       if (callDetails != null) {
                         Navigator.of(widget.parentContext).push(
                           MaterialPageRoute(
                             builder: (context) => LiveCallPage(
                               user: currentUser,
-                              callDetails: callDetails, // Pass the collected details
+                              callDetails: callDetails, // Correct parameter
+                              incomingCall: null,      // Correctly passing null
                             ),
                           ),
                         );
+                        // --- END FIX ---
                       }
                     });
                   },
-                  // --- END MODIFIED ---
                 ),
+
 
                 _buildMenuItem(
                   position: _itemPositions[3],

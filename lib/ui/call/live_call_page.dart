@@ -14,13 +14,19 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../widgets/pre_call_dialog.dart';
+import '../alter_ego/alter_ego_calls_page.dart';
 
 class LiveCallPage extends StatefulWidget {
   final User user;
   final CallSetupDetails callDetails;
-
-  const LiveCallPage({Key? key, required this.user, required this.callDetails}) : super(key: key);
-
+  final IncomingCall? incomingCall;
+  const LiveCallPage({
+    Key? key,
+    required this.user,
+    required this.callDetails,
+    this.incomingCall,
+  }) : assert(callDetails != null || incomingCall != null, "Either callDetails or incomingCall must be provided"),
+        super(key: key);
   @override
   State<LiveCallPage> createState() => _LiveCallPageState();
 }
@@ -65,8 +71,20 @@ class _LiveCallPageState extends State<LiveCallPage> {
   @override
   void initState() {
     super.initState();
-    _initiateCall(); // Directly initiate the call
+    if (widget.incomingCall != null) {
+      // SCENARIO B: We are JOINING an existing call from an admin
+      print("Joining an existing companion call...");
+      _callDocId = widget.incomingCall!.doc.id;
+      _channelName = widget.incomingCall!.channelName;
+      // Skip _initiateCall and go straight to setting up the engine
+      _setupVideoSDKEngine();
+    } else {
+      // SCENARIO A: We are INITIATING a new call to an admin
+      print("Initiating a new companion call...");
+      _initiateCall();
+    }
   }
+
 
   @override
   void dispose() {
