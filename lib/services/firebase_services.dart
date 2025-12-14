@@ -25,6 +25,9 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import '../data/models/transaction_model.dart' as t_model;
+import '../ui/love_store/cart_item_model.dart';
+import '../ui/love_store/order_model.dart';
+import '../ui/love_store/product_model.dart';
 import 'data/notification_model.dart' as pushNotification;
 
 
@@ -1084,6 +1087,272 @@ class FirebaseServices extends ChangeNotifier {
                     int.parse(session.colorHex!.replaceAll('#', '0xff'))));
           });
   }
+
+
+
+  /// Create a new product for the Love Store
+  Future<void> createProduct(Product product) async {
+    try {
+      await _firebaseFirestore
+          .collection('products')
+          .doc(product.productId)
+          .set(product.toJson());
+      logger.d('Successfully created new product: ${product.title}');
+    } catch (e) {
+      logger.e('Error creating product: $e');
+      throw e; // Re-throw the error to be handled by the UI
+    }
+  }
+
+  /// Get all products for the Love Store
+  Stream<List<Product>> getProducts() {
+    return _firebaseFirestore
+        .collection('products')
+        .orderBy('timeCreated', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => Product.fromJson(doc.data())).toList();
+    });
+  }
+
+  /// Get a single product by its ID
+  Stream<DocumentSnapshot<Map<String, dynamic>>> getSingleProduct({String? id}) {
+    return _firebaseFirestore.collection('products').doc(id).snapshots();
+  }
+
+  /// [Love Store] - Add an item to the user's cart
+  Future<void> addToCart(String userId, String productId, int quantity) async {
+    try {
+      final cartItemRef = _firebaseFirestore
+          .collection('users')
+          .doc(userId)
+          .collection('cart')
+          .doc(productId);
+
+      await cartItemRef.set({
+        'productId': productId,
+        'quantity': FieldValue.increment(quantity),
+        'timeAdded': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      showToast(message: 'Item added to your cart.');
+    } catch (e) {
+      logger.e('Error adding to cart: $e');
+      showToast(message: 'Could not add item. Please try again.');
+    }
+  }
+
+
+  // In /lib/services/firebase_services.dart, inside the FirebaseServices class  /// Upload multiple images to Firebase Storage and return their URLs.
+  Future<List<String>> uploadMultipleImages(
+      {required List<File> images, required String docId}) async {
+    List<String> imageUrls = [];
+    for (var imageFile in images) {
+      try {
+        String imageUrl = await uploadImage(imageFile);
+        imageUrls.add(imageUrl);
+      } catch (e) {
+        logger.e('Failed to upload an image: $e');
+        // Continue trying to upload other images
+      }
+    }
+    return imageUrls;
+  }
+
+
+
+
+  /// [Love Store] - Fetches the full product details for items in a user's cart.
+  Future<List<CartItem>> getCartItems(String userId) async {
+    List<CartItem> cartDetails = [];
+    try {
+      // 1. Fetch the simple cart items (productId and quantity)
+      final cartSnapshot = await _firebaseFirestore
+          .collection('users')
+          .doc(userId)
+          .collection('cart')
+          .get();
+
+      if (cartSnapshot.docs.isEmpty) {
+        return []; // Return empty list if cart is empty
+      }
+
+      // 2. For each item in the cart, fetch the full product details
+      for (var cartDoc in cartSnapshot.docs) {
+        final productId = cartDoc.id;
+        final quantity = cartDoc.data()['quantity'] as int? ?? 1;
+
+        final productDoc = await _firebaseFirestore
+            .collection('products')
+            .doc(productId)
+            .get();
+
+        if (productDoc.exists) {
+          final product = Product.fromJson(productDoc.data()!);
+          // CORRECTED: Use the CartItem class
+          cartDetails.add(CartItem(product: product, quantity: quantity));
+        } else {
+          logger.w('Product with ID $productId found in cart but not in products collection.');
+        }
+      }
+    } catch (e) {
+      logger.e('Error fetching cart items: $e');
+      return [];
+    }
+    return cartDetails;
+  }
+
+
+
+
+  /// [Love Store] - Updates the quantity of an item in the user's cart.
+  Future<void> updateCartItemQuantity(String userId, String productId, int newQuantity) async {
+    if (newQuantity <= 0) {
+      // If quantity is zero or less, remove the item instead.
+      await removeCartItem(userId, productId);
+      return;
+    }
+    try {
+      final cartItemRef = _firebaseFirestore
+          .collection('users')
+          .doc(userId)
+          .collection('cart')
+          .doc(productId);
+
+      await cartItemRef.update({'quantity': newQuantity});
+    } catch (e) {
+      logger.e('Error updating cart quantity: $e');
+      showToast(message: 'Could not update item quantity.');
+    }
+  }
+
+  /// [Love Store] - Removes an item completely from the user's cart.
+  Future<void> removeCartItem(String userId, String productId) async {
+    try {
+      await _firebaseFirestore
+          .collection('users')
+          .doc(userId)
+          .collection('cart')
+          .doc(productId)
+          .delete();
+      showToast(message: 'Item removed from cart.');
+    } catch (e) {
+      logger.e('Error removing cart item: $e');
+      showToast(message: 'Could not remove item.');
+    }
+  }
+
+
+  // In /lib/services/firebase_services.dart, inside the FirebaseServices class
+
+  /// [Love Store] - Processes the entire checkout flow.
+  /// Returns a success message or an error message.
+  Future<String> processCheckout(String userId) async {
+    final UserModel? currentUserInfo = await getUserInfo();
+    if (currentUserInfo == null) {
+      return "Could not verify user. Please log in again.";
+    }
+
+    final List<CartItem> cartItems = await getCartItems(userId);
+    if (cartItems.isEmpty) {
+      return "Your cart is empty.";
+    }
+
+    // 1. Calculate total cost and find the seller
+    int totalLove = 0;
+    String sellerId = '';
+    for (var item in cartItems) {
+      totalLove += (item.product.loveAmount ?? 0) * item.quantity;
+      if (sellerId.isEmpty) {
+        sellerId = item.product.sellerId ?? '';
+      }
+    }
+
+    if (sellerId.isEmpty) {
+      return "Could not identify the seller. Checkout aborted.";
+    }
+
+    // 2. Validate user's balance
+    if (currentUserInfo.currentLoveCount < totalLove) {
+      return "Insufficient Loves. You need $totalLove Loves to complete this purchase.";
+    }
+
+    // 3. Execute the transaction
+    final bool transactionSuccess = await transferLoveBetweenUsers(
+      senderId: userId,
+      receiverId: sellerId,
+      amountToSend: totalLove,
+      taxAmount: 0, // Assuming no tax on store purchases for now
+      totalDebitAmount: totalLove,
+      senderTransactionDesc: "Purchase of ${cartItems.length} item(s) from The Love Store.",
+      receiverTransactionDesc: "Sale of ${cartItems.length} item(s) to ${currentUserInfo.nickname}.",
+      claireTransactionDesc: "Love Store Sale.",
+      metadata: {'reason': 'love_store_purchase'},
+      forLoveTransfer: totalLove, // Stat for sender
+      fromLoveTransfer: totalLove, // Stat for receiver
+    );
+
+    if (!transactionSuccess) {
+      return "Transaction failed. Please try again.";
+    }
+
+    // 4. Create the Order document
+    try {
+      final orderId = _firebaseFirestore.collection('orders').doc().id;
+      final order = OrderModel(
+        orderId: orderId,
+        buyerId: userId,
+        buyerNickname: currentUserInfo.nickname ?? 'Unknown',
+        sellerId: sellerId,
+        items: cartItems.map((item) => {
+          'productId': item.product.productId,
+          'title': item.product.title,
+          'loveAmount': item.product.loveAmount,
+          'quantity': item.quantity,
+        }).toList(),
+        totalLoveAmount: totalLove,
+        timestamp: Timestamp.now(),
+      );
+
+      await _firebaseFirestore.collection('orders').doc(orderId).set(order.toJson());
+
+      // ---- FULFILLMENT TRIGGER (Placeholder) ----
+      // This is where you would trigger an email.
+      // For now, we'll just log it. A Firebase Function listening to new 'orders' documents is the best approach.
+      logger.i('FULFILLMENT REQUIRED: New order ${orderId} placed by ${currentUserInfo.nickname}.');
+
+
+      // 5. Clear the user's cart
+      final cartCollection = _firebaseFirestore.collection('users').doc(userId).collection('cart');
+      final cartSnapshot = await cartCollection.get();
+      for (var doc in cartSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      return "Purchase successful! Your order has been placed."; // Success
+
+    } catch (e) {
+      logger.e('Failed to create order or clear cart: $e');
+      // This is a critical error state. The user has paid but the order wasn't recorded properly.
+      // Manual intervention would be needed.
+      return "Payment was successful, but there was an error recording your order. Please contact support.";
+    }
+  }
+
+
+  // In /lib/services/firebase_services.dart, inside the FirebaseServices class
+
+  /// [Love Store] - Gets a real-time stream of the number of items in the user's cart.
+  Stream<int> getCartItemCount(String userId) {
+    return _firebaseFirestore
+        .collection('users')
+        .doc(userId)
+        .collection('cart')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
+
 
 
   /// Uploads a video file to Firebase Storage and returns the download URL.

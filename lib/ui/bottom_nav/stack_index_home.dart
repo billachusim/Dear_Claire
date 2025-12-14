@@ -37,6 +37,7 @@ import '../../utils/helper.dart';
 import '../../widgets/pre_call_dialog.dart';
 import '../call/companion_call_page.dart';
 import '../call/live_call_page.dart';
+import '../love_store/love_store_page.dart';
 import '../routes/page_router_animation.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'destination.dart';
@@ -1013,10 +1014,14 @@ class _AppDrawerState extends State<_AppDrawer> {
               }
             },
           ),
-          /*_MenuTile(
-              title: "Top Up Your Love",
-              icon: Icons.currency_exchange_rounded,
-              onTap: widget.onDonateClicked),*/
+          ListTile(
+            leading: Icon(Icons.storefront, color: Pallet.colorWhite),
+            title: Text('The Love Store', style: TextStyle(color: Pallet.colorWhite)),
+            onTap: () {
+              Navigator.pop(context); // Close the drawer first
+              PageRouter.gotoWidget(LoveStorePage(), context);
+            },
+          ),
           _MenuTile(
             title: "More Games With Claire",
             icon: Icons.gamepad_rounded,

@@ -19,6 +19,8 @@ import '../../utils/constant.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
 import '../ego-profile/claire_loves.dart';
+import '../love_store/create_love_item_page.dart';
+import '../routes/page_router_animation.dart';
 import 'alter_ego_calls_page.dart';
 import 'flagged_sessions_page.dart';
 
@@ -159,12 +161,40 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
     launch(whatsAppUrl!);
   }
 
+
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-    return SafeArea(
-        child: Scaffold(
+  Widget build(BuildContext context) {
+    // CORRECTED: Wrap the Scaffold in a FutureBuilder to get userType first
+    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance
+          .collection("users")
+          .doc(currentUser?.uid)
+          .get(),
+      builder: (_, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show a loading indicator while fetching user data
+          return Scaffold(
+            backgroundColor: Pallet.colorBottomNav,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+          // Handle error case
+          return Scaffold(
+            backgroundColor: Pallet.colorBottomNav,
+            body: Center(child: Text("Could not load user data.")),
+          );
+        }
+
+        // Data is available, now we set userType and build the UI
+        var data = snapshot.data!.data();
+        userName = data?["nickname"] ?? " ";
+        userType = data?["userType"] ?? " "; // Set the userType here
+        avatarUrl = data?["avatarUrl"] ?? " ";
+
+        return SafeArea(
+          child: Scaffold(
             key: _scaffoldKey,
             appBar: AppBar(
               backgroundColor: Pallet.colorBottomNav,
@@ -200,6 +230,8 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                 onPageChanged: (index) {
                   setState(() {
                     currentIndex = index;
+                    setTabIndex(index,
+                        updatePage: false); // Update title without moving page
                   });
                 },
                 children: [
@@ -226,20 +258,16 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                 selectedItemColor: Pallet.colorWhite,
                 showUnselectedLabels: false,
                 onTap: (int index) => setTabIndex(index),
-                // A6A6B1
                 items: [
-                  // In build() -> BottomNavigationBar -> items
                   BottomNavigationBarItem(
                     icon: StreamBuilder<int>(
                       stream: _incomingCallCountStream,
                       builder: (context, snapshot) {
                         final count = snapshot.data ?? 0;
                         final hasCalls = count > 0;
-
-                        // Use the Badge widget
                         return Badge(
                           label: Text(count.toString()),
-                          isLabelVisible: hasCalls, // Only show badge if there are calls
+                          isLabelVisible: hasCalls,
                           child: Icon(Icons.call,
                               color: currentIndex == 0
                                   ? Pallet.colorWhite
@@ -249,7 +277,6 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                     ),
                     label: 'Calls',
                   ),
-
                   BottomNavigationBarItem(
                     icon: Icon(Icons.favorite,
                         color: currentIndex == 1
@@ -292,7 +319,11 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
               heroTag: "newSessionFromAEM",
               backgroundColor: Pallet.colorSecondary,
               onPressed: () {
-                Navigator.of(context).pushNamed(AppRoutes.createSessionPage);
+                if (userType == 'SUPER_ADMIN') {
+                  _showAdminFabMenu(context);
+                } else {
+                  Navigator.of(context).pushNamed(AppRoutes.createSessionPage);
+                }
               },
               tooltip: 'Claire',
               child: RotateImage(45, 45),
@@ -320,49 +351,34 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                           userType == 'REGULAR'
                               ? 'Ego'
                               : userType == 'ADMIN'
-                                  ? 'Alter Ego'
-                                  : userType == 'SUPER_ADMIN'
-                                      ? 'Super Ego'
-                                      : 'Ego',
+                              ? 'Alter Ego'
+                              : userType == 'SUPER_ADMIN'
+                              ? 'Super Ego'
+                              : 'Ego',
                           style: TextStyle(
                             color: Pallet.colorWhite,
                             fontSize: 19.0,
                             fontWeight: FontWeight.w700,
                           )),
-                      currentAccountPicture:
-                          FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                        future: FirebaseFirestore.instance
-                            .collection("users")
-                            .doc(currentUser?.uid)
-                            .get(),
-                        builder: (_, snapshot) {
-                          if (snapshot.hasData) {
-                            var data = snapshot.data!.data();
-                            userName = data?["nickname"] ?? " ";
-                            userType = data?["userType"] ?? " ";
-                            avatarUrl = data?["avatarUrl"] ?? " ";
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: userType == 'REGULAR'
-                                    ? Pallet.colorPrimary
-                                    : userType == 'ADMIN'
-                                        ? Pallet.colorSecondary
-                                        : userType == 'SUPER_ADMIN'
-                                            ? Pallet.colorSecondary
-                                            : Pallet.colorBlue,
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                              margin: EdgeInsets.only(left: 0),
-                              child: Container(
-                                  height: 75,
-                                  width: 75,
-                                  margin: EdgeInsets.all(4),
-                                  child: RotateImage(75.h, 75.w)),
-                            );
-                          }
-
-                          return CircularProgressIndicator();
-                        },
+                      // The FutureBuilder here is now redundant but harmless.
+                      // We can leave it as it is.
+                      currentAccountPicture: Container(
+                        decoration: BoxDecoration(
+                          color: userType == 'REGULAR'
+                              ? Pallet.colorPrimary
+                              : userType == 'ADMIN'
+                              ? Pallet.colorSecondary
+                              : userType == 'SUPER_ADMIN'
+                              ? Pallet.colorSecondary
+                              : Pallet.colorBlue,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        margin: EdgeInsets.only(left: 0),
+                        child: Container(
+                            height: 75,
+                            width: 75,
+                            margin: EdgeInsets.all(4),
+                            child: RotateImage(75.h, 75.w)),
                       ),
                       otherAccountsPictures: [
                         GestureDetector(
@@ -377,7 +393,8 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                                   Container(
                                     decoration: BoxDecoration(
                                       color: Colors.white,
-                                      borderRadius: BorderRadius.circular(100),
+                                      borderRadius:
+                                      BorderRadius.circular(100),
                                       image: DecorationImage(
                                         image: imageProvider,
                                         fit: BoxFit.fill,
@@ -386,12 +403,12 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                                   ),
                               placeholder: (context, url) =>
                                   CircularProgressIndicator(),
-                              errorWidget: (context, url, error) => Image.asset(
+                              errorWidget: (context, url, error) =>
+                                  Image.asset(
                                     "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                                     width: 50,
                                     height: 50,
-                                  ) //Icon(Icons.error),
-                              ),
+                                  )),
                         ),
                         GestureDetector(
                           onTap: () async {
@@ -409,7 +426,6 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                         ),
                       ],
                     ),
-                    //SizedBox(height: 30.h,),
                     ListTile(
                       title: Text("Settings",
                           style: TextStyle(color: Pallet.colorWhite)),
@@ -424,8 +440,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                         Navigator.of(context)
                             .pushNamed(AppRoutes.howClaireWorks);
                       },
-                      leading:
-                          Icon(Icons.info_rounded, color: Pallet.colorWhite),
+                      leading: Icon(Icons.info_rounded, color: Pallet.colorWhite),
                     ),
                     ListTile(
                       title: Text("Send Claire to Someone",
@@ -445,8 +460,13 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                   ],
                 ),
               ),
-            )));
+            ),
+          ),
+        );
+      },
+    );
   }
+
 
   void _openEndDrawer() {
     _scaffoldKey.currentState!.openDrawer();
@@ -487,4 +507,67 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
       },
     );
   }
+
+  // Add this new method inside the _AlterEgoHomepageState class
+
+  void _showAdminFabMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,    builder: (BuildContext bc) {
+      return SafeArea(
+        child: Container(
+          margin: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                decoration: BoxDecoration(
+                  color: Pallet.colorBottomNav,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.add_business, color: Pallet.colorWhite),
+                      title: Text('New Love Item', style: TextStyle(color: Pallet.colorWhite, fontWeight: FontWeight.bold)),
+                      onTap: () {
+                        Navigator.of(context).pop(); // Close the sheet
+                        PageRouter.gotoWidget(CreateLoveItemPage(), context);
+                      },
+                    ),
+                    Divider(color: Pallet.colorSecondary.withOpacity(0.5), height: 1),
+                    ListTile(
+                      leading: Icon(Icons.edit, color: Pallet.colorWhite),
+                      title: Text('New Diary Session', style: TextStyle(color: Pallet.colorWhite)),
+                      onTap: () {
+                        Navigator.of(context).pop(); // Close the sheet
+                        Navigator.of(context).pushNamed(AppRoutes.createSessionPage);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 10),
+              // Cancel Button
+              Container(
+                decoration: BoxDecoration(
+                  color: Pallet.colorWhite,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: ListTile(
+                  title: Center(child: Text('Cancel', style: TextStyle(color: Pallet.colorPrimary, fontWeight: FontWeight.bold))),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+    );
+  }
+
+
 }
