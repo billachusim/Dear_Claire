@@ -26,7 +26,10 @@ class ClaireLoves extends StatefulWidget {
   _ClaireLovesState createState() => _ClaireLovesState();
 }
 
-class _ClaireLovesState extends State<ClaireLoves> {
+class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   int _withdrawnLoveCount = 0;
   int _currentLoveCount = 0;
   int _totalLoveCount = 0;
@@ -137,6 +140,7 @@ class _ClaireLovesState extends State<ClaireLoves> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: Pallet.colorSecondaryDark,
       body: SafeArea(

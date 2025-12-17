@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'dart:async';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:clairediary/ui/alter_ego/alter_ego_calls_page.dart'; // For IncomingCall model
 import 'package:clairediary/ui/call/incoming_call_page.dart';
@@ -209,37 +210,12 @@ class _HomeDashboardPageState extends State<HomePage>
     _webViewController.loadRequest(uri);
   }
 
-  void setTabIndex(index) async {
-    if (await firebaseServices.isUserSignIn(context))
-      _pageController.animateToPage(index,
-          duration: Duration(milliseconds: 1500), curve: Curves.elasticOut);
-    switch (index) {
-      case 0:
-        {
-          _title = 'Featured Sessions';
-        }
-        break;
-      case 1:
-        {
-          _title = 'Followed Sessions';
-        }
-        break;
-      case 2:
-        {
-          _title = 'Diary Sessions';
-        }
-        break;
-      case 3:
-        {
-          _title = 'Diary Rooms';
-        }
-        break;
-      case 4:
-        {
-          _title = 'Ego Profile';
-        }
-        break;
-    }
+  void setTabIndex(index) {
+    _pageController.animateToPage(index,
+        duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
+    setState(() {
+      _currentIndex = index;
+    });
   }
 
 
@@ -332,7 +308,7 @@ class _HomeDashboardPageState extends State<HomePage>
     super.initState();
     getEgoInfo();
     _title = "Dear Claire";
-    _pageController = PageController(initialPage: 0);
+    _pageController = PageController(keepPage: true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _initializeServices();
@@ -510,6 +486,7 @@ class _HomeDashboardPageState extends State<HomePage>
     detector.stopListening();
     if (_isFabMenuOpen) {_overlayEntry?.remove();}
     _userCallListener?.cancel();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -521,13 +498,11 @@ class _HomeDashboardPageState extends State<HomePage>
         appBar: AppBar(
           backgroundColor: Pallet.colorPrimary,
           centerTitle: false,
-          title: Text(_title,
-              textAlign: TextAlign.start,
-              maxLines: 1,
-              style: GoogleFonts.lato(
-                  fontSize: 25.0,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600)),
+          title: Text("Dear Claire",
+              style: GoogleFonts.philosopher(
+                  color: Pallet.colorWhite,
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.w700)),
           actions: [
             CupertinoButton(
                 child: RotationTransition(

@@ -36,9 +36,12 @@ class AlterEgoCallsPage extends StatefulWidget {
   _AlterEgoCallsPageState createState() => _AlterEgoCallsPageState();
 }
 
-class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> {
+class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKeepAliveClientMixin {
   Stream<List<IncomingCall>>? _callsStream;
   Stream<List<IncomingCall>>? _recentCallsStream;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -168,6 +171,7 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       backgroundColor: Pallet.colorSecondary,
       body: CustomScrollView(

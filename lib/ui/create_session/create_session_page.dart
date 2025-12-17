@@ -632,236 +632,234 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      () => SafeArea(
-        child: Scaffold(
-          resizeToAvoidBottomInset: true,
-          appBar: AppBar(
-            centerTitle: true,
-            backgroundColor:
-                Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
-            title: Text(
-              "Start A Diary Session",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 22,
-                color: Pallet.colorWhite,
-              ),
-            ),
-            elevation: 0,
-          ),
+      () => Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          centerTitle: true,
           backgroundColor:
               Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
-          body: isLoading
-              ? Center(
-                  child: Container(
-                      height: 200,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          RotateImage(60, 60),
-                          SizedBox(
-                            height: 10,
-                          ),
-                          Text("Please Wait your Diary Session is being created, "
-                              "If you have many videos and images, be patient.",
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white))
-                        ],
-                      )))
-              : SingleChildScrollView(
+          title: Text(
+            "Start A Diary Session",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 22,
+              color: Pallet.colorWhite,
+            ),
+          ),
+          elevation: 0,
+        ),
+        backgroundColor:
+            Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
+        body: isLoading
+            ? Center(
                 child: Container(
-                    height: MediaQuery.of(context).size.height,
-                    padding: EdgeInsets.all(10),
+                    height: 200,
                     child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: Container(
-                            alignment: Alignment.center,
-                            child: AutoSizeTextField(
-                              style: Constant
-                                  .DIARY_FONT_STYLES[c.selectedFontIndex.value],
-                              maxLines: null,
-                              minLines: 1,
-                              onChanged: (text) {
-                                if (text != null) {
-                                  setState(() {
-                                    isTyping = true;
-                                    box.put("text", text);
-                                  });
-                                } else {
+                        RotateImage(60, 60),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Text("Please Wait your Diary Session is being created, "
+                            "If you have many videos and images, be patient.",
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white))
+                      ],
+                    )))
+            : SingleChildScrollView(
+              child: Container(
+                  height: MediaQuery.of(context).size.height,
+                  padding: EdgeInsets.all(10),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          alignment: Alignment.center,
+                          child: AutoSizeTextField(
+                            style: Constant
+                                .DIARY_FONT_STYLES[c.selectedFontIndex.value],
+                            maxLines: null,
+                            minLines: 1,
+                            onChanged: (text) {
+                              if (text != null) {
+                                setState(() {
+                                  isTyping = true;
+                                  box.put("text", text);
+                                });
+                              } else {
+                                isTyping = false;
+                                setState(() {
                                   isTyping = false;
-                                  setState(() {
-                                    isTyping = false;
-                                  });
-                                }
-                              },
+                                });
+                              }
+                            },
 
-                              scrollPadding: EdgeInsets.all(20.0),
-                              controller: sessionTextEditingController,
-                              focusNode: sessionTextFocusNode,
-                              decoration: InputDecoration(
-                                contentPadding: EdgeInsets.all(10),
-                                focusedBorder: InputBorder.none,
-                                disabledBorder: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                border: InputBorder.none,
-                                focusedErrorBorder: InputBorder.none,
-                                errorBorder: InputBorder.none,
-                                hintText:
-                                    "Start your text or voice note with Dear Claire",
-                                hintStyle: TextStyle(
-                                    color: Pallet.colorWhite, fontSize: 12.sp),
-                              ),
+                            scrollPadding: EdgeInsets.all(20.0),
+                            controller: sessionTextEditingController,
+                            focusNode: sessionTextFocusNode,
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.all(10),
+                              focusedBorder: InputBorder.none,
+                              disabledBorder: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              border: InputBorder.none,
+                              focusedErrorBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              hintText:
+                                  "Start your text or voice note with Dear Claire",
+                              hintStyle: TextStyle(
+                                  color: Pallet.colorWhite, fontSize: 12.sp),
                             ),
                           ),
                         ),
+                      ),
 
-                        SizedBox(
-                          width: 15.w,
+                      SizedBox(
+                        width: 15.w,
+                      ),
+
+
+                      _buildVideoSelector(),
+
+                      SizedBox(height: 20,),
+
+                      Align(
+                          alignment: Alignment.center,
+                          child: _imagesGridView()
+                      ),
+
+                      _buildAudioPlayer(),
+
+
+
+                      SizedBox(height: 20,),
+
+
+                      /// Introducing Quick Sessions.
+                      Visibility(
+                        visible: !isTyping,
+                        child: QuickSessionWidget(
+                          sessionTitleController: sessionTitleController,
+                          sessionTextEditingController: sessionTextEditingController,
+                          createQuickSession: (newMood) {
+                            // This anonymous function calls your existing method
+                            // and handles the mood update.
+                            setState(() {
+                              mood = newMood;
+                            });
+                            createQuickSession();
+                          },
                         ),
+                      ),
 
-
-                        _buildVideoSelector(),
-
-                        SizedBox(height: 20,),
-
-                        Align(
-                            alignment: Alignment.center,
-                            child: _imagesGridView()
-                        ),
-
-                        _buildAudioPlayer(),
-
-
-
-                        SizedBox(height: 20,),
-
-
-                        /// Introducing Quick Sessions.
-                        Visibility(
-                          visible: !isTyping,
-                          child: QuickSessionWidget(
-                            sessionTitleController: sessionTitleController,
-                            sessionTextEditingController: sessionTextEditingController,
-                            createQuickSession: (newMood) {
-                              // This anonymous function calls your existing method
-                              // and handles the mood update.
-                              setState(() {
-                                mood = newMood;
-                              });
-                              createQuickSession();
-                            },
-                          ),
-                        ),
-
-                        SizedBox(height: 80,),
-                      ],
-                    ),
+                      SizedBox(height: 80,),
+                    ],
                   ),
-              ),
-          bottomSheet: Container(
-              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
-              decoration: BoxDecoration(
-                color: Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Container(
-                      height: 30.h,
-                      width: 35.w,
-                      child: IconButton(
-                        alignment: Alignment.topCenter,
-                        icon: Icon(Icons.camera_enhance_rounded,
-                            size: 35, color: Pallet.colorWhite),
-                        onPressed: loadAssets,
-                      )),
-                  SizedBox(
-                    width: 23.w,
-                  ),
-                  Container(
-                      height: 30.h,
-                      width: 35.w,
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.video_call_rounded,
-                          size: 35,
-                          color: Pallet.colorWhite,
-                        ),
-                        onPressed: pickVideo,
-                      )),
-                  SizedBox(
-                    width: 20.w,
-                  ),
-                  Container(
-                      height: 20.h,
-                      width: 25.w,
-                      child: IconButton(
-                        icon: Icon(Icons.text_fields, color: Pallet.colorWhite),
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: Text('Select Font'),
-                                  content: showFontSelectionDialog(context),
-                                );
-                              });
-                        },
-                      )),
-                  SizedBox(
-                    width: 20.w,
-                  ),
-                  Container(
-                      height: 20.h,
-                      width: 25.w,
-                      child: IconButton(
-                        icon: Icon(Icons.color_lens_rounded,
-                            color: Pallet.colorWhite),
-                        onPressed: () => c.changeColor(),
-                      )),
-                  SizedBox(
-                    width: 20.w,
-                  ),
-                  Container(
-                      height: 30.h,
-                      width: 35.w,
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.mic_rounded,
-                          size: 35,
-                          color: Pallet.colorWhite,
-                        ),
-                        onPressed: () async {
-                          var data = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => SoundRecorderWidget(
-                                        onRecordComplete: (recordFile) {},
-                                      )));
-                          if (data != null) {
-                            recordFile = data;
-                            setState(() {});
-                          }
-                        },
-                      )),
-                  SizedBox(
-                    width: 10.w,
-                  ),
-                ],
-              )),
-          floatingActionButton: FloatingActionButton(
-            heroTag: "sendSession",
-            backgroundColor: Pallet.colorSplashScreen,
-            onPressed: () {
-              _showCardDialog();
-            },
-            tooltip: 'Send or Save',
-            child: RotateImage(45, 45),
-          ),
+                ),
+            ),
+        bottomSheet: Container(
+            padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
+            decoration: BoxDecoration(
+              color: Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Container(
+                    height: 30.h,
+                    width: 35.w,
+                    child: IconButton(
+                      alignment: Alignment.topCenter,
+                      icon: Icon(Icons.camera_enhance_rounded,
+                          size: 35, color: Pallet.colorWhite),
+                      onPressed: loadAssets,
+                    )),
+                SizedBox(
+                  width: 23.w,
+                ),
+                Container(
+                    height: 30.h,
+                    width: 35.w,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.video_call_rounded,
+                        size: 35,
+                        color: Pallet.colorWhite,
+                      ),
+                      onPressed: pickVideo,
+                    )),
+                SizedBox(
+                  width: 20.w,
+                ),
+                Container(
+                    height: 20.h,
+                    width: 25.w,
+                    child: IconButton(
+                      icon: Icon(Icons.text_fields, color: Pallet.colorWhite),
+                      onPressed: () {
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('Select Font'),
+                                content: showFontSelectionDialog(context),
+                              );
+                            });
+                      },
+                    )),
+                SizedBox(
+                  width: 20.w,
+                ),
+                Container(
+                    height: 20.h,
+                    width: 25.w,
+                    child: IconButton(
+                      icon: Icon(Icons.color_lens_rounded,
+                          color: Pallet.colorWhite),
+                      onPressed: () => c.changeColor(),
+                    )),
+                SizedBox(
+                  width: 20.w,
+                ),
+                Container(
+                    height: 30.h,
+                    width: 35.w,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.mic_rounded,
+                        size: 35,
+                        color: Pallet.colorWhite,
+                      ),
+                      onPressed: () async {
+                        var data = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => SoundRecorderWidget(
+                                      onRecordComplete: (recordFile) {},
+                                    )));
+                        if (data != null) {
+                          recordFile = data;
+                          setState(() {});
+                        }
+                      },
+                    )),
+                SizedBox(
+                  width: 10.w,
+                ),
+              ],
+            )),
+        floatingActionButton: FloatingActionButton(
+          heroTag: "sendSession",
+          backgroundColor: Pallet.colorSplashScreen,
+          onPressed: () {
+            _showCardDialog();
+          },
+          tooltip: 'Send or Save',
+          child: RotateImage(45, 45),
         ),
       ),
     );

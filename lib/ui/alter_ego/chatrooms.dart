@@ -15,7 +15,10 @@ class ChatRooms extends StatefulWidget {
   _ChatRoomsState createState() => _ChatRoomsState();
 }
 
-class _ChatRoomsState extends State<ChatRooms> {
+class _ChatRoomsState extends State<ChatRooms> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +53,7 @@ class _ChatRoomsState extends State<ChatRooms> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SafeArea(
       child: WillPopScope(
         onWillPop: (){

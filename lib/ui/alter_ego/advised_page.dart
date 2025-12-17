@@ -16,9 +16,14 @@ class AdvisedPage extends StatefulWidget {
   _AdvisedPageState createState() => _AdvisedPageState();
 }
 
-class _AdvisedPageState extends State<AdvisedPage> {
+class _AdvisedPageState extends State<AdvisedPage> with AutomaticKeepAliveClientMixin {
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SafeArea(
       child: WillPopScope(
 

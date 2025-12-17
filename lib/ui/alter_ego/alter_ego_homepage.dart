@@ -47,11 +47,15 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   late ShakeDetector detector;
 
 
-  @override void initState() {
+  @override
+  void initState() {
     super.initState();
     _title = "Alter Ego Mode";
-    _pageController = PageController(keepPage: true);
+    _pageController = PageController(initialPage: 0, keepPage: true);
     shakeDevice();
+
+    // 1. Fetch user data once at startup, not in build()
+    _loadUserData();
 
     final adminId = "claire_admin";
     List<String> activeStatuses = ['dialing', 'ringing', 'connecting'];
@@ -71,52 +75,36 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
         .map((snapshot) => snapshot.docs.length);
 
     _incomingCallCountStream = Rx.combineLatest2(
-        audioCountStream, videoCountStream, (a, b) => a + b);
+        audioCountStream, videoCountStream, (a, b) => a + b).asBroadcastStream();
+  }
+
+  Future<void> _loadUserData() async {
+    if (currentUser == null) return;
+    final doc = await FirebaseFirestore.instance.collection("users").doc(currentUser!.uid).get();
+    if (doc.exists && mounted) {
+      setState(() {
+        userName = doc.data()?["nickname"] ?? "";
+        userType = doc.data()?["userType"] ?? "";
+        avatarUrl = doc.data()?["avatarUrl"] ?? "";
+      });
+    }
   }
 
 
-  void setTabIndex(index, {bool updatePage = true}) async { // NEW: Add optional flag
-    if (updatePage && await firebaseServices.isUserSignIn(context)) {
-      _pageController?.animateToPage(index,
-          duration: const Duration(milliseconds: 1500), curve: Curves.elasticOut);
+  void setTabIndex(int index, {bool updatePage = true}) {
+    if (updatePage) {
+      _pageController?.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     }
-
-    // The switch statement to update the title remains the same
+    // This setState triggers the root FutureBuilder to rebuild the UI
     setState(() {
-      switch (index) {
-        case 0:
-          {
-            _title = 'Incoming Calls';
-          }
-          break;
-        case 1:
-          {
-            _title = 'Advising';
-          }
-          break;
-        case 2:
-          {
-            _title = 'All';
-          }
-          break;
-        case 3:
-          {
-            _title = 'Flagged';
-          }
-          break;
-        case 4:
-          {
-            _title = 'Rooms';
-          }
-          break;
-        case 5:
-          {
-            _title = 'Loves';
-          }
-          break;
-      }
+      currentIndex = index;
     });
   }
+
 
 
 
@@ -164,53 +152,27 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // CORRECTED: Wrap the Scaffold in a FutureBuilder to get userType first
-    return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      future: FirebaseFirestore.instance
-          .collection("users")
-          .doc(currentUser?.uid)
-          .get(),
-      builder: (_, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          // Show a loading indicator while fetching user data
-          return Scaffold(
-            backgroundColor: Pallet.colorBottomNav,
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+    // 3. REMOVE FutureBuilder here. Just return the Scaffold.
+    // If userType is empty, we show a loader while initState finishes _loadUserData.
+    if (userType.isEmpty) {
+      return Scaffold(
+        backgroundColor: Pallet.colorBottomNav,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-        if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
-          // Handle error case
-          return Scaffold(
-            backgroundColor: Pallet.colorBottomNav,
-            body: Center(child: Text("Could not load user data.")),
-          );
-        }
-
-        // Data is available, now we set userType and build the UI
-        var data = snapshot.data!.data();
-        userName = data?["nickname"] ?? " ";
-        userType = data?["userType"] ?? " "; // Set the userType here
-        avatarUrl = data?["avatarUrl"] ?? " ";
-
-        return SafeArea(
-          child: Scaffold(
-            key: _scaffoldKey,
-            appBar: AppBar(
-              backgroundColor: Pallet.colorBottomNav,
-              title: Text(_title,
-                  style: TextStyle(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white70)),
-              leading: IconButton(
-                  icon: Icon(
-                    Icons.menu,
-                    color: Pallet.colorSecondary,
-                  ),
-                  onPressed: () {
-                    _openEndDrawer();
-                  }),
+    return SafeArea(
+      child: Scaffold(
+        key: _scaffoldKey,
+        appBar: AppBar(
+          backgroundColor: Pallet.colorBottomNav,
+          title: Text("Alter Ego Mode",
+              style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.w600, color: Colors.white70)),
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: Pallet.colorSecondary),
+            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          ),
               actions: [
                 Container(
                     margin: EdgeInsets.symmetric(horizontal: 10),
@@ -223,97 +185,91 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                     child: Icon(Icons.search, color: Pallet.colorSecondary))
               ],
             ),
-            body: Stack(children: [
-              PageView(
-                physics: AlwaysScrollableScrollPhysics(),
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    currentIndex = index;
-                    setTabIndex(index,
-                        updatePage: false); // Update title without moving page
-                  });
-                },
-                children: [
-                  AlterEgoCallsPage(),
-                  AdvisedPage(),
-                  TheAllPage(),
-                  FlaggedDiariesPage(),
-                  ChatRooms(),
-                  ClaireLoves(),
-                ],
-              ),
-            ]),
-            bottomNavigationBar: Container(
-              decoration: BoxDecoration(color: Colors.black),
-              height: 60,
-              width: double.infinity,
-              child: BottomNavigationBar(
-                type: BottomNavigationBarType.fixed,
-                showSelectedLabels: true,
-                backgroundColor: Pallet.colorBottomNav,
-                selectedLabelStyle: TextStyle(color: Pallet.colorWhite),
-                unselectedLabelStyle: TextStyle(color: Pallet.colorWhite),
-                currentIndex: currentIndex,
-                selectedItemColor: Pallet.colorWhite,
-                showUnselectedLabels: false,
-                onTap: (int index) => setTabIndex(index),
-                items: [
-                  BottomNavigationBarItem(
-                    icon: StreamBuilder<int>(
-                      stream: _incomingCallCountStream,
-                      builder: (context, snapshot) {
-                        final count = snapshot.data ?? 0;
-                        final hasCalls = count > 0;
-                        return Badge(
-                          label: Text(count.toString()),
-                          isLabelVisible: hasCalls,
-                          child: Icon(Icons.call,
-                              color: currentIndex == 0
-                                  ? Pallet.colorWhite
-                                  : Pallet.colorSecondary),
-                        );
-                      },
-                    ),
-                    label: 'Calls',
+        body: PageView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          controller: _pageController,
+          onPageChanged: (index) {
+            // Sync index when swiping
+            if (currentIndex != index) {
+              setState(() {
+                currentIndex = index;
+              });
+            }
+          },
+          children: [
+            AlterEgoCallsPage(),
+            AdvisedPage(),
+            TheAllPage(),
+            FlaggedDiariesPage(),
+            ChatRooms(),
+            ClaireLoves(),
+          ],
+        ),
+            bottomNavigationBar: BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              showSelectedLabels: true,
+              backgroundColor: Pallet.colorBottomNav,
+              selectedLabelStyle: TextStyle(color: Pallet.colorWhite),
+              unselectedLabelStyle: TextStyle(color: Pallet.colorWhite),
+              currentIndex: currentIndex,
+              selectedItemColor: Pallet.colorWhite,
+              showUnselectedLabels: false,
+              onTap: (int index) => setTabIndex(index),
+              items: [
+                BottomNavigationBarItem(
+                  icon: StreamBuilder<int>(
+                    stream: _incomingCallCountStream,
+                    builder: (context, snapshot) {
+                      final count = snapshot.data ?? 0;
+                      final hasCalls = count > 0;
+                      return Badge(
+                        label: Text(count.toString()),
+                        isLabelVisible: hasCalls,
+                        child: Icon(Icons.call,
+                            color: currentIndex == 0
+                                ? Pallet.colorWhite
+                                : Pallet.colorSecondary),
+                      );
+                    },
                   ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.favorite,
-                        color: currentIndex == 1
-                            ? Pallet.colorWhite
-                            : Pallet.colorSecondary),
-                    label: 'Advising',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.calendar_month_rounded,
-                        color: currentIndex == 2
-                            ? Pallet.colorWhite
-                            : Pallet.colorSecondary),
-                    label: 'All',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.flag_circle_rounded,
-                        color: currentIndex == 3
-                            ? Pallet.colorWhite
-                            : Pallet.colorSecondary),
-                    label: 'Flagged',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.message_rounded,
-                        color: currentIndex == 4
-                            ? Pallet.colorWhite
-                            : Pallet.colorSecondary),
-                    label: 'Rooms',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.attach_money_rounded,
-                        color: currentIndex == 5
-                            ? Pallet.colorWhite
-                            : Pallet.colorSecondary),
-                    label: 'Loves',
-                  ),
-                ],
-              ),
+                  label: 'Calls',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.favorite,
+                      color: currentIndex == 1
+                          ? Pallet.colorWhite
+                          : Pallet.colorSecondary),
+                  label: 'Advising',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.calendar_month_rounded,
+                      color: currentIndex == 2
+                          ? Pallet.colorWhite
+                          : Pallet.colorSecondary),
+                  label: 'All',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.flag_circle_rounded,
+                      color: currentIndex == 3
+                          ? Pallet.colorWhite
+                          : Pallet.colorSecondary),
+                  label: 'Flagged',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.message_rounded,
+                      color: currentIndex == 4
+                          ? Pallet.colorWhite
+                          : Pallet.colorSecondary),
+                  label: 'Rooms',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.attach_money_rounded,
+                      color: currentIndex == 5
+                          ? Pallet.colorWhite
+                          : Pallet.colorSecondary),
+                  label: 'Loves',
+                ),
+              ],
             ),
             floatingActionButton: FloatingActionButton(
               heroTag: "newSessionFromAEM",
@@ -463,14 +419,9 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
             ),
           ),
         );
-      },
-    );
   }
 
 
-  void _openEndDrawer() {
-    _scaffoldKey.currentState!.openDrawer();
-  }
 
   lockAlertDialog(BuildContext context) {
     // set up the buttons

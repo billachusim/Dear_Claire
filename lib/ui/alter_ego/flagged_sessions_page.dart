@@ -17,10 +17,14 @@ class FlaggedDiariesPage extends StatefulWidget {
   _FlaggedDiariesPageState createState() => _FlaggedDiariesPageState();
 }
 
-class _FlaggedDiariesPageState extends State<FlaggedDiariesPage> {
+class _FlaggedDiariesPageState extends State<FlaggedDiariesPage> with AutomaticKeepAliveClientMixin {
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SafeArea(
       child: WillPopScope(
 
