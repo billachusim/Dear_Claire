@@ -2,6 +2,7 @@ import 'package:clairediary/ui/chats/widget/inside_alter_ego_diaryroom.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/helper.dart';
+import '../../widgets/toast.dart';
 import '../chats/data/chatroompodo.dart';
 import '../chats/widget/alter_ego_diaryrooms_widget.dart';
 import '../routes/routes.dart';
@@ -59,6 +60,8 @@ class _ChatRoomsState extends State<ChatRooms> with AutomaticKeepAliveClientMixi
         onWillPop: (){
           Navigator.of(context)
               .pushReplacementNamed(AppRoutes.alterEgoHomepage);
+          showToast("Press back again to exit alter ego home.");
+
           return Future.value(false);
         },
         child: Scaffold(

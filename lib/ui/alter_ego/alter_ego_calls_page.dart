@@ -8,8 +8,10 @@ import 'package:rxdart/rxdart.dart';
 import 'package:vibration/vibration.dart';
 import '../../utils/color.dart';
 import '../../utils/constant.dart';
+import '../../widgets/toast.dart';
 import '../call/admin_call_page.dart';
 import '../call/admin_live_call_page.dart';
+import '../routes/routes.dart';
 import '../splash_screen/rotate_logo.dart';
 
 // A model to hold combined call data
@@ -172,109 +174,117 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKee
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Scaffold(
-      backgroundColor: Pallet.colorSecondary,
-      body: CustomScrollView(
-        slivers: <Widget>[
-          // --- INCOMING CALLS SECTION ---
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(16, 20, 16, 10),
-              child: Text(
-                "Incoming Calls",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+    return WillPopScope(
+      onWillPop: (){
+        Navigator.of(context)
+            .pushReplacementNamed(AppRoutes.alterEgoHomepage);
+        showToast("Shake device or use menu to switch back to Ego Mode.");
+        return Future.value(false);
+      },
+      child: Scaffold(
+        backgroundColor: Pallet.colorSecondary,
+        body: CustomScrollView(
+          slivers: <Widget>[
+            // --- INCOMING CALLS SECTION ---
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, 20, 16, 10),
+                child: Text(
+                  "Incoming Calls",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
               ),
             ),
-          ),
-          StreamBuilder<List<IncomingCall>>(
-            stream: _callsStream, // Correct stream
-            builder: (context, snapshot) {
-              // --- FIX: Ringtone logic is now in the correct place ---
-              if (snapshot.hasData) {
-                if (snapshot.data!.isNotEmpty) {
-                  RingtoneService.playRingtone();
-                } else {
+            StreamBuilder<List<IncomingCall>>(
+              stream: _callsStream, // Correct stream
+              builder: (context, snapshot) {
+                // --- FIX: Ringtone logic is now in the correct place ---
+                if (snapshot.hasData) {
+                  if (snapshot.data!.isNotEmpty) {
+                    RingtoneService.playRingtone();
+                  } else {
+                    RingtoneService.stopRingtone();
+                  }
+                } else if (snapshot.connectionState != ConnectionState.waiting) {
                   RingtoneService.stopRingtone();
                 }
-              } else if (snapshot.connectionState != ConnectionState.waiting) {
-                RingtoneService.stopRingtone();
-              }
-              // --- END FIX ---
+                // --- END FIX ---
 
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return SliverToBoxAdapter(child: Center(child: Padding(
-                  padding: const EdgeInsets.all(40.0),
-                  child: RotateImage(40, 40),
-                )));
-              }
-              if (snapshot.hasError) {
-                return SliverToBoxAdapter(child: Center(child: Text("Error: ${snapshot.error}", style: TextStyle(color: Colors.red))));
-              }
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40.0),
-                      child: Text("No incoming calls", style: TextStyle(color: Colors.white70, fontSize: 16)),
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return SliverToBoxAdapter(child: Center(child: Padding(
+                    padding: const EdgeInsets.all(40.0),
+                    child: RotateImage(40, 40),
+                  )));
+                }
+                if (snapshot.hasError) {
+                  return SliverToBoxAdapter(child: Center(child: Text("Error: ${snapshot.error}", style: TextStyle(color: Colors.red))));
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40.0),
+                        child: Text("No incoming calls", style: TextStyle(color: Colors.white70, fontSize: 16)),
+                      ),
                     ),
+                  );
+                }
+                final calls = snapshot.data!;
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                      return _buildIncomingCallCard(calls[index]); // Correct builder
+                    },
+                    childCount: calls.length,
                   ),
                 );
-              }
-              final calls = snapshot.data!;
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                    return _buildIncomingCallCard(calls[index]); // Correct builder
-                  },
-                  childCount: calls.length,
-                ),
-              );
-            },
-          ),
+              },
+            ),
 
-          // --- RECENT CALLS SECTION ---
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(16, 40, 16, 10),
-              child: Text(
-                "Recent Calls",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+            // --- RECENT CALLS SECTION ---
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, 40, 16, 10),
+                child: Text(
+                  "Recent Calls",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
               ),
             ),
-          ),
-          StreamBuilder<List<IncomingCall>>(
-            stream: _recentCallsStream, // Correct stream
-            builder: (context, snapshot) {
-              // Ringtone logic has been correctly removed from here.
+            StreamBuilder<List<IncomingCall>>(
+              stream: _recentCallsStream, // Correct stream
+              builder: (context, snapshot) {
+                // Ringtone logic has been correctly removed from here.
 
-              if (snapshot.connectionState == ConnectionState.waiting && !(snapshot.hasData)) {
-                return const SliverToBoxAdapter(child: SizedBox.shrink());
-              }
-              if (snapshot.hasError) {
-                return SliverToBoxAdapter(child: Center(child: Text("Error: ${snapshot.error}", style: TextStyle(color: Colors.red))));
-              }
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40.0),
-                      child: Text("No recent calls", style: TextStyle(color: Colors.white70, fontSize: 16)),
+                if (snapshot.connectionState == ConnectionState.waiting && !(snapshot.hasData)) {
+                  return const SliverToBoxAdapter(child: SizedBox.shrink());
+                }
+                if (snapshot.hasError) {
+                  return SliverToBoxAdapter(child: Center(child: Text("Error: ${snapshot.error}", style: TextStyle(color: Colors.red))));
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40.0),
+                        child: Text("No recent calls", style: TextStyle(color: Colors.white70, fontSize: 16)),
+                      ),
                     ),
+                  );
+                }
+                final calls = snapshot.data!;
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                      return _buildRecentCallCard(calls[index]); // Correct builder
+                    },
+                    childCount: calls.length,
                   ),
                 );
-              }
-              final calls = snapshot.data!;
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                    return _buildRecentCallCard(calls[index]); // Correct builder
-                  },
-                  childCount: calls.length,
-                ),
-              );
-            },
-          ),
-        ],
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

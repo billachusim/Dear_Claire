@@ -19,6 +19,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../services/firebase_services.dart';
 import '../../services/notification_service.dart';
 import '../../utils/helper.dart' as Helper;
+import '../../widgets/toast.dart';
 import 'request_claire_love_form.dart';
 
 class ClaireLoves extends StatefulWidget {
@@ -141,23 +142,31 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Scaffold(
-      backgroundColor: Pallet.colorSecondaryDark,
-      body: SafeArea(
-        child: _isLoading
-            ? Center(child: RotateImage(70, 70))
-            : CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _buildHeader()),
-                  SliverToBoxAdapter(child: SizedBox(height: 20)),
-                  _buildStatsSection(),
-                  SliverToBoxAdapter(child: SizedBox(height: 20)),
-                  _buildLoveTransferActionButtons(),
-                  SliverToBoxAdapter(child: SizedBox(height: 10)),
-                  _buildRecentTransactions(),
-                  _buildWithdrawSection(),
-                ],
-              ),
+    return WillPopScope(
+      onWillPop: (){
+        Navigator.of(context)
+            .pushReplacementNamed(AppRoutes.alterEgoHomepage);
+        showToast("Press back again to exit alter ego home.");
+        return Future.value(false);
+      },
+      child: Scaffold(
+        backgroundColor: Pallet.colorSecondaryDark,
+        body: SafeArea(
+          child: _isLoading
+              ? Center(child: RotateImage(70, 70))
+              : CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(child: _buildHeader()),
+                    SliverToBoxAdapter(child: SizedBox(height: 20)),
+                    _buildStatsSection(),
+                    SliverToBoxAdapter(child: SizedBox(height: 20)),
+                    _buildLoveTransferActionButtons(),
+                    SliverToBoxAdapter(child: SizedBox(height: 10)),
+                    _buildRecentTransactions(),
+                    _buildWithdrawSection(),
+                  ],
+                ),
+        ),
       ),
     );
   }

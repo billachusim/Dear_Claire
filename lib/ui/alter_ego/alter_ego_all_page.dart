@@ -4,6 +4,7 @@ import 'package:clairediary/ui/alter_ego/widgets/all_mantra_tab.dart';
 import 'package:flutter/material.dart';
 import '../../../utils/color.dart';
 import '../../../utils/helper.dart';
+import '../../widgets/toast.dart';
 import '../routes/routes.dart';
 import '../splash_screen/custom_rotate_bacground.dart';
 
@@ -46,10 +47,10 @@ class _TheAllPageState extends State<TheAllPage>
     super.build(context);
     return SafeArea(
       child: WillPopScope(
-
         onWillPop: (){
           Navigator.of(context)
               .pushReplacementNamed(AppRoutes.alterEgoHomepage);
+          showToast("Press back again to exit alter ego home.");
           return Future.value(false);
         },
         child: Scaffold(
