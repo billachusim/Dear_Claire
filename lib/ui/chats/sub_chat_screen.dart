@@ -159,6 +159,7 @@ class _SubChatScreenState extends State<SubChatScreen> {
     final bool canSendMessage = !isEavesdropRoom || isCornerOwner;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),
       appBar: AppBar(
         centerTitle: true,

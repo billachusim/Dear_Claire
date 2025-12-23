@@ -142,6 +142,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: HexColor.fromHex(chatRoomPodo!.hex!),
       appBar: AppBar(
         centerTitle: true,

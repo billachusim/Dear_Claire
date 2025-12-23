@@ -37,6 +37,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: backgroundColor,
       appBar: AppBar(
         centerTitle: true,

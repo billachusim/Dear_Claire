@@ -95,8 +95,6 @@ class _ChatEditFieldState extends State<ChatEditField> {
     return downloadUrl;
   }
 
-  // Other utility methods (incrementAdviseCount, etc.) remain unchanged.
-  // ... (incrementAdviseCount, incrementTotalLoveCount, updateSessionTimeLastActivity)
 
   @override
   Widget build(BuildContext context) {

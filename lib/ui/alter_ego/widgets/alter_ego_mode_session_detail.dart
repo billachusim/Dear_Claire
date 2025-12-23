@@ -149,6 +149,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         .black : Colors.white;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: backgroundColor,

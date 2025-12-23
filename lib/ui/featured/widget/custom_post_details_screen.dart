@@ -184,6 +184,7 @@ class _CustomPostDetailsWidgetState extends State<CustomPostDetailsWidget> {
   Widget build(BuildContext context) {
     User? currentUser = FirebaseAuth.instance.currentUser;
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Pallet.colorSecondaryDark,
       appBar: AppBar(
         centerTitle: true,

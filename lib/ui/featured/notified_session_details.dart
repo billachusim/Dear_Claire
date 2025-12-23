@@ -181,6 +181,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
     final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: backgroundColor,
       appBar: AppBar(
         centerTitle: true,

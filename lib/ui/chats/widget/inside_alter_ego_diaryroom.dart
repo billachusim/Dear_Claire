@@ -137,6 +137,7 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Pallet.colorSecondaryDark,
       appBar: AppBar(
         centerTitle: true,

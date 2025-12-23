@@ -157,6 +157,7 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
     final bool canSendMessage = !isEavesdropRoom || isCornerOwner;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Pallet.colorSecondaryDark,
       appBar: AppBar(
         centerTitle: true,
