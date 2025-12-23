@@ -138,7 +138,7 @@ Future<void> initializeService() async {
       isForegroundMode: true,
       notificationChannelId: notificationChannelId,
       initialNotificationTitle: 'AutoDiary',
-      initialNotificationContent: 'Claire is active in the background.',
+      initialNotificationContent: 'Claire is active.',
       foregroundServiceNotificationId: notificationId,
     ),
     iosConfiguration: IosConfiguration(
@@ -156,13 +156,8 @@ void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // This Timer needs to be accessible by all handlers.
   Timer? recordingTimer;
-
-  // A separate Timer for the daily ritual to avoid conflicts.
   Timer? dailyRitualTimer;
-
-  // --- Event Listeners ---
 
   service.on('stopService').listen((event) {
     // Cancel ALL timers when the service is stopped.
@@ -172,18 +167,17 @@ void onStart(ServiceInstance service) async {
     print("BACKGROUND_SERVICE: Service stopped, all timers cancelled.");
   });
 
-  // This handler is UNCHANGED.
   service.on('instantRecording').listen((event) async {
     print('BACKGROUND_SERVICE: Received instantRecording event.');
     recordingTimer?.cancel();
     await AutoDiary.startRecording();
-    recordingTimer = Timer(const Duration(minutes: 1), () async {
-      print('BACKGROUND_SERVICE: 1-minute timer elapsed for instant session. Stopping and notifying.');
+    recordingTimer = Timer(const Duration(minutes: 3), () async {
+      print('BACKGROUND_SERVICE: 3-minute timer elapsed for instant session. Stopping and notifying.');
       await AutoDiary.stopRecordingAndNotify();
     });
   });
 
-  // This handler is UNCHANGED.
+  // This handler for schedule listen
   service.on('scheduleRecording').listen((event) async {
     if (event == null || event['time'] == null) return;
     recordingTimer?.cancel();
@@ -191,6 +185,7 @@ void onStart(ServiceInstance service) async {
     final now = DateTime.now();
     final delay = scheduledTime.difference(now);
 
+    // Start instant service
     if (delay.isNegative) {
       print('BACKGROUND_SERVICE: One-time schedule is in the past. Ignoring.');
       return;
@@ -199,19 +194,17 @@ void onStart(ServiceInstance service) async {
     print('BACKGROUND_SERVICE: Received one-time schedule. Will sleep for $delay then start recording.');
     await Future.delayed(delay);
 
-    print('BACKGROUND_SERVICE: Sleep complete. Starting one-time 12-minute recording.');
+    print('BACKGROUND_SERVICE: Sleep complete. Starting one-time 3-minute recording.');
     await AutoDiary.startRecording();
-    recordingTimer = Timer(const Duration(minutes: 1), () async {
-      print('BACKGROUND_SERVICE: 1-minute timer elapsed for one-time session. Stopping and notifying.');
+    recordingTimer = Timer(const Duration(minutes: 3), () async {
+      print('BACKGROUND_SERVICE: 3-minute timer elapsed for one-time session. Stopping and notifying.');
       await AutoDiary.stopRecordingAndNotify();
     });
   });
 
-  // --- NEW: Handler for the Daily Ritual ---
+  //  Handler for the Daily Ritual ---
   service.on('scheduleDailyRitual').listen((event) {
     if (event == null || event['hour'] == null || event['minute'] == null) return;
-
-    // Cancel any previous daily ritual to start a new one.
     dailyRitualTimer?.cancel();
     print("BACKGROUND_SERVICE: New daily ritual received. Cancelling previous one.");
 
@@ -233,12 +226,11 @@ void onStart(ServiceInstance service) async {
 
       // Use the dedicated dailyRitualTimer.
       dailyRitualTimer = Timer(delay, () async {
-        print('BACKGROUND_SERVICE (Ritual): Waking up! Starting daily 12-minute session.');
+        print('BACKGROUND_SERVICE (Ritual): Waking up! Starting daily 3-minute session.');
         await AutoDiary.startRecording();
 
-        // This timer is for the 12-minute DURATION of the recording.
-        Timer(const Duration(minutes: 1), () async {
-          print('BACKGROUND_SERVICE (Ritual): 1-minute session finished.');
+        Timer(const Duration(minutes: 3), () async {
+          print('BACKGROUND_SERVICE (Ritual): 3-minute session finished.');
           await AutoDiary.stopAndSaveRecording(); // Don't notify to continue, it's a fixed ritual.
 
           // IMPORTANT: After saving, schedule the *next* ritual for 24 hours later.

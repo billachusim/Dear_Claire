@@ -14,6 +14,7 @@ import '../../utils/constant.dart';
 import '../../widgets/toast.dart';
 import '../chats/data/chatroompodo.dart';
 import '../chats/inside_chatroom.dart';
+import '../dairy/diary.dart';
 import '../featured/notified_session_details.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'package:clairediary/ui/chats/data/roomdata.dart';
@@ -167,6 +168,7 @@ class _ActivityWidgetState extends State<ActivityWidget> {
       case 'send_love': return 'Sending Love';
       case 'cash_out': return 'Cashing Out';
       case 'mantra': return 'Whispering Mantra';
+      case 'monitor': return 'Monitoring Spirit';
 
     // Add cases for the new raw reaction values
       case 'Cheers👍':
@@ -438,13 +440,15 @@ class UserActivityCard extends StatelessWidget {
       case 'room_join':
         return Icons.meeting_room_outlined;
       case 'visit_ego':
-        return Icons.visibility_outlined;
+        return Icons.person;
       case 'send_love':
         return Icons.volunteer_activism_outlined;
       case 'cash_out':
         return Icons.price_check_outlined;
       case 'mantra':
         return Icons.record_voice_over_outlined;
+      case 'monitor':
+        return Icons.visibility_outlined;
       default:
         return Icons.timeline;
     }
@@ -458,6 +462,11 @@ class UserActivityCard extends StatelessWidget {
 
         switch (activityType) {
         // Session-related activities
+          case 'monitor':
+          // Navigate directly to the main Diary page as requested
+            PageRouter.gotoWidget(DiaryPage(title: 'Dear Claire',), context);
+            break;
+
           case 'session':
           case 'comment':
           case 'react':

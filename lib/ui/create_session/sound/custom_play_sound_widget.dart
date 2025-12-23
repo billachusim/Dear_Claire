@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/cupertino.dart'; // Added for CupertinoActivityIndicator
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -15,6 +16,7 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
   PlayerState _playerState = PlayerState.stopped;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  bool _isLoading = false; // Track loading state
 
   bool get _isPlaying => _playerState == PlayerState.playing;
   bool get _isPaused => _playerState == PlayerState.paused;
@@ -28,6 +30,10 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
       if (mounted) {
         setState(() {
           _playerState = state;
+          // Stop loading indicator once audio starts playing
+          if (state == PlayerState.playing) {
+            _isLoading = false;
+          }
         });
       }
     });
@@ -53,6 +59,7 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
       if (mounted) {
         setState(() {
           _position = Duration.zero;
+          _isLoading = false;
         });
       }
     });
@@ -83,14 +90,27 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
                 } else if (_isPaused) {
                   _audioPlayer.resume();
                 } else {
+                  setState(() {
+                    _isLoading = true;
+                  });
                   _audioPlayer.play(UrlSource(widget.filePath!));
                 }
               }
             },
-            icon: Icon(
-              _isPlaying ? Icons.pause_circle_filled : Icons.play_arrow_rounded,
-              size: 40.r,
-              color: Colors.pink,
+            icon: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  _isPlaying ? Icons.pause_circle_filled : Icons.play_arrow_rounded,
+                  size: 40.r,
+                  color: Colors.pink,
+                ),
+                if (_isLoading)
+                  const CupertinoActivityIndicator(
+                    color: Colors.white,
+                    radius: 12,
+                  ),
+              ],
             ),
           ),
           SizedBox(width: 8.w),

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:clairediary/utils/color.dart';
@@ -12,6 +13,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../data/models/transaction_model.dart' as t_model;
+import '../services/user_model.dart' as t_model;
 
 enum _SanctuaryView { main, whisper, ritual, configure }
 
@@ -246,6 +250,8 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
 
   void _scheduleOneTime(TimeOfDay time) async {
     if (!await _requestMicPermission()) return;
+    if (!await _handleLovesTransaction()) return;
+
     final service = FlutterBackgroundService();
     if (!isServiceRunning) {
       await service.startService();
@@ -260,14 +266,17 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
     service.invoke(
         'scheduleRecording', {'time': scheduledDateTime.toIso8601String()});
     if (mounted) setState(() => isServiceRunning = true);
-    showToast("Claire will listen at ${time.format(context)}.");
+    showToast("Claire scheduled for ${DateFormat.jm().format(scheduledDateTime)}. (1,000 Loves deducted)");
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) Navigator.of(context).pop();
     });
   }
 
+
   void _listenNow() async {
     if (!await _requestMicPermission()) return;
+    if (!await _handleLovesTransaction()) return;
+
     final service = FlutterBackgroundService();
     if (!isServiceRunning) {
       await service.startService();
@@ -275,14 +284,17 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
     }
     service.invoke('instantRecording');
     if (mounted) setState(() => isServiceRunning = true);
-    showToast("Claire is listening now. Speak freely.");
+    showToast("Claire is now monitoring you. (1,000 Loves deducted)");
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) Navigator.of(context).pop();
     });
   }
 
+
   void _scheduleDaily(TimeOfDay time) async {
     if (!await _requestMicPermission()) return;
+    if (!await _handleLovesTransaction()) return;
+
     final service = FlutterBackgroundService();
     if (!isServiceRunning) {
       await service.startService();
@@ -298,8 +310,9 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
         _currentView = _SanctuaryView.main;
       });
     }
-    showToast("Claire will listen daily at ${time.format(context)}.");
+    showToast("Daily monitoring set for ${time}. (1,000 Loves deducted)");
   }
+
 
   // --- Build Methods ---
   @override
@@ -372,14 +385,14 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
         _buildActionButton(
           onTap: _listenNow,
           icon: Icons.hearing_rounded,
-          label: 'Listen Now, Claire',
-          color: Colors.cyan.withOpacity(0.7),
+          label: 'Monitor Now',
+          color: Pallet.colorPrimary.withOpacity(0.7),
         ),
         const SizedBox(height: 25),
         _buildActionButton(
           onTap: () => setState(() => _currentView = _SanctuaryView.whisper),
           icon: Icons.schedule_rounded,
-          label: 'Schedule Claire To Listen',
+          label: 'Schedule Monitor',
           color: Pallet.colorSecondary.withOpacity(0.7),
         ),
         const SizedBox(height: 25),
@@ -388,8 +401,8 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           onTap: () =>
               setState(() => _currentView = _SanctuaryView.ritual),
           icon: Icons.sync_rounded,
-          label: 'Set Daily Time To Listen',
-          color: Colors.amber.withOpacity(0.7),
+          label: 'Set Daily Monitor',
+          color: Pallet.colorPrimary.withOpacity(0.7),
         )
             : _buildActiveRitualDisplay(),
         const SizedBox(height: 25),
@@ -397,7 +410,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           onTap: () => setState(() => _currentView = _SanctuaryView.configure),
           icon: Icons.settings_outlined,
           label: 'Configure Your Spirit',
-          color: Colors.grey.withOpacity(0.5),
+          color: Pallet.colorSecondary.withOpacity(0.5),
         ),
         const SizedBox(height: 60),
       ],
@@ -412,8 +425,8 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       children: [
         Text(
           isDaily
-              ? 'Set your daily listening time'
-              : 'Set a time for Claire to listen',
+              ? 'Set your daily monitoring time'
+              : 'Set a time for Claire to monitor',
           style: GoogleFonts.lato(color: Colors.white70, fontSize: 18),
         ),
         const SizedBox(height: 20),
@@ -440,7 +453,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           onTap: () =>
           isDaily ? _scheduleDaily(selectedTime) : _scheduleOneTime(selectedTime),
           icon: isDaily ? Icons.sync_rounded : Icons.check_circle_outline,
-          label: isDaily ? 'Begin Ritual' : 'Set Intention',
+          label: isDaily ? 'Start Daily Monitor' : 'Schedule Monitor',
           color: isDaily
               ? Colors.amber.withOpacity(0.7)
               : Pallet.colorSecondary.withOpacity(0.7),
@@ -492,12 +505,12 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           ),
           const SizedBox(height: 20),
           _buildSettingsToggle(
-              label: "Allow Replies",
+              label: "Allow Replies From Other Users",
               value: _repliesEnabled,
               onChanged: (v) => setState(() => _repliesEnabled = v)),
           const SizedBox(height: 15),
           _buildSettingsToggle(
-              label: "Make Session Private",
+              label: "Allow Replies From Claire",
               value: _isPrivate,
               onChanged: (v) => setState(() => _isPrivate = v)),
           const SizedBox(height: 15),
@@ -626,11 +639,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           ],
         ),
         child: Center(
-            child: Icon(
-              Icons.psychology_alt_rounded,
-              color: Colors.white.withOpacity(0.8),
-              size: 60,
-            )),
+            child: RotateImage(60, 60)),
       ),
     );
   }
@@ -703,7 +712,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
                     _pulseController.stop();
                   });
                 }
-                showToast("The connection has been paused.");
+                showToast("The connection to alter ego has been paused.");
               },
               child: Container(
                 padding:
@@ -714,11 +723,66 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
                 ),
                 child: Text("Pause Connection",
                     style: GoogleFonts.lato(
-                        color: Colors.red.withOpacity(0.8))),
+                        color: Pallet.colorPrimary.withOpacity(0.8))),
               ),
             ),
         ],
       ),
     );
   }
+
+  // --- Validation & Deduction Logic ---
+  Future<bool> _handleLovesTransaction() async {
+    final String? userId = await firebaseServices.getUsersId();
+    if (userId == null) {
+      showToast("User session not found.");
+      return false;
+    }
+
+    try {
+      // 1. Fetch current balance using the UserModel pattern
+      final t_model.UserModel user =
+      await firebaseServices.getUserWithId(id: userId);
+      final int currentLoves = user.currentLoveCount ?? 0;
+
+      // 2. Check for 10,000 threshold requirement
+      if (currentLoves < 10000) {
+        showToast("You need at least 10,000 Loves to access this technology.");
+        return false;
+      }
+
+      // 3. Check if they can afford the 1,000 cost
+      if (currentLoves < 1000) {
+        showToast("Insufficient Loves. Each activation costs 1,000.");
+        return false;
+      }
+
+      // 4. Deduct 1,000 Loves
+      bool success = await firebaseServices.updateTreasuryAndUser(
+        userId: userId,
+        amount: 1000,
+        type: t_model.TransactionType.debit,
+        userTransactionDescription: "Monitoring Spirit Service Fee",
+      );
+
+      if (success) {
+
+        // 5. Save User Activity as 'monitor'
+        await firebaseServices.saveUserActivity(
+          activityType: 'monitor',
+          activityMessage: "You activated the Monitoring Spirit service.",
+        );
+        return true;
+      } else {
+        showToast("Transaction failed. Please try again.");
+        return false;
+      }
+    } catch (e) {
+      debugPrint("Balance Error: $e");
+      showToast("Error verifying balance.");
+      return false;
+    }
+  }
+
+
 }
