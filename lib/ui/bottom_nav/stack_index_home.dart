@@ -210,7 +210,8 @@ class _HomeDashboardPageState extends State<HomePage>
     _webViewController.loadRequest(uri);
   }
 
-  void setTabIndex(index) {
+  Future<void> setTabIndex(index) async {
+    if (await firebaseServices.isUserSignIn(context))
     _pageController.animateToPage(index,
         duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
     setState(() {

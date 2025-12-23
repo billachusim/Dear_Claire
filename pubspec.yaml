@@ -1,9 +1,9 @@
-name: clairediary
-description: A secret diary chat.
+name: Dear Claire
+description: Secret diary chat.
 
 publish_to: 'none'
 
-version: 12.0.0+120
+version: 12.1.0+121
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
