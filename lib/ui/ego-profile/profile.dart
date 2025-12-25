@@ -1082,7 +1082,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                                   height: 40,
                                                   decoration: BoxDecoration(
                                                     color: Colors.black
-                                                        .withOpacity(0.5),
+                                                        .withValues(alpha: 0.5),
                                                     shape: BoxShape.circle,
                                                   ),
                                                   child: const Center(

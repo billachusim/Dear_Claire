@@ -264,8 +264,8 @@ class _VideoPlayerPageState extends State<_VideoPlayerPage> with AutomaticKeepAl
           // ★ FIX: Icon visibility is now tied directly to the controller's state.
           if (_isInitialized && !isPlaying)
             Container(
-              color: Colors.black.withOpacity(0.2),
-              child: Center(child: Icon(CupertinoIcons.play_circle, color: Colors.white.withOpacity(0.85), size: 60)),
+              color: Colors.black.withValues(alpha: 0.2),
+              child: Center(child: Icon(CupertinoIcons.play_circle, color: Colors.white.withValues(alpha: 0.85), size: 60)),
             ),
           if (_isInitialized)
             Positioned(
@@ -354,7 +354,7 @@ Widget _buildMediaFrame({
       decoration: BoxDecoration(
         color: bezelColor,
         borderRadius: BorderRadius.circular(30),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 5))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 5))],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -373,7 +373,7 @@ Widget _buildMediaFrame({
                 top: 8,
                 right: 8,
                 child: Material(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   shape: const CircleBorder(),
                   child: InkWell(
                     onTap: onDelete,

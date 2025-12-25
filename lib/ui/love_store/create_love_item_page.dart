@@ -249,7 +249,7 @@ class _CreateLoveItemPageState extends State<CreateLoveItemPage> {
                   decoration: InputDecoration(
                     hintText: 'Product Name...',
                     hintStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 36,
                     ),
                     border: InputBorder.none,
@@ -285,7 +285,7 @@ class _CreateLoveItemPageState extends State<CreateLoveItemPage> {
                   decoration: InputDecoration(
                     hintText: 'Describe the product or service...',
                     hintStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 18,
                     ),
                     border: InputBorder.none,
@@ -334,11 +334,11 @@ class _CreateLoveItemPageState extends State<CreateLoveItemPage> {
       ],
       style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.7)),
+        prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.7)),
         hintText: hintText,
-        hintStyle: TextStyle(color: Colors.white.withOpacity(0.5), fontWeight: FontWeight.normal),
+        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontWeight: FontWeight.normal),
         filled: true,
-        fillColor: Colors.black.withOpacity(0.2),
+        fillColor: Colors.black.withValues(alpha: 0.2),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

@@ -290,6 +290,7 @@ class FeaturedStatusStreams extends StatelessWidget {
         .collection(AppString.appFeaturedSessions)
         .where("containsAudio", isEqualTo: true)
         .where("repliesEnabled", isEqualTo: true)
+        .where("featured", isEqualTo: true)
         .where("archived", isEqualTo: false)
         .where("flagged", isEqualTo: false)
         .limit(100)

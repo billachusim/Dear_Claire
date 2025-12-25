@@ -135,7 +135,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Pallet.colorPrimary.withOpacity(0.1),
+        color: Pallet.colorPrimary.withValues(alpha: 0.1),
         border:
         Border(top: BorderSide(color: Pallet.colorSecondary, width: 0.5)),
       ),

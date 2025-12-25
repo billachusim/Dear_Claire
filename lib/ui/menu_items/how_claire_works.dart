@@ -205,9 +205,9 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
               child: Container(
                 padding: const EdgeInsets.all(20.0),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
+                  color: Colors.white.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20.0),
-                  border: Border.all(color: Colors.white.withOpacity(0.15)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                 ),
                 child: Row(
                   children: [
@@ -285,7 +285,7 @@ class _ExpandableContentCard extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16.0),
           child: Material(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             child: InkWell(
               onTap: onTap,
               child: AnimatedSize(
@@ -358,7 +358,7 @@ class _ExpandableContentCard extends StatelessWidget {
                           body,
                           style: GoogleFonts.lato(
                             fontSize: 15.0,
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                             height: 1.6,
                           ),
                         ),

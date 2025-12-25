@@ -147,7 +147,7 @@ class _SignUpPage extends State<SignUpPage> {
                     textAlign: TextAlign.center,
                     style: GoogleFonts.lato(
                       fontSize: 15.0,
-                      color: Pallet.colorWhite.withOpacity(0.85),
+                      color: Pallet.colorWhite.withValues(alpha: 0.85),
                       fontWeight: FontWeight.w400,
                     ),
                   ),
@@ -207,11 +207,11 @@ class _SignUpPage extends State<SignUpPage> {
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
-        labelStyle: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.7)),
-        hintStyle: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.5)),
+        labelStyle: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.7)),
+        hintStyle: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.5)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Pallet.colorWhite.withOpacity(0.5)),
+          borderSide: BorderSide(color: Pallet.colorWhite.withValues(alpha: 0.5)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
@@ -226,7 +226,7 @@ class _SignUpPage extends State<SignUpPage> {
           borderSide: BorderSide(color: Pallet.colorPink, width: 2),
         ),
         filled: true,
-        fillColor: Pallet.colorWhite.withOpacity(0.1),
+        fillColor: Pallet.colorWhite.withValues(alpha: 0.1),
       ),
     );
   }
@@ -298,7 +298,7 @@ class _SignUpPage extends State<SignUpPage> {
           textAlign: TextAlign.center,
           style: GoogleFonts.lato(
             fontSize: 12.0,
-            color: Pallet.colorWhite.withOpacity(0.7),
+            color: Pallet.colorWhite.withValues(alpha: 0.7),
           ),
         ),
         SizedBox(height: 8),
@@ -349,12 +349,12 @@ class _BuildPasswordFieldState extends State<BuildPasswordField> {
       decoration: InputDecoration(
         labelText: "Your secret code",
         hintText: "At least 6 characters",
-        labelStyle: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.7)),
-        hintStyle: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.5)),
+        labelStyle: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.7)),
+        hintStyle: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.5)),
         suffixIcon: IconButton(
           icon: Icon(
             _isHidden ? Icons.visibility_off : Icons.visibility,
-            color: Pallet.colorWhite.withOpacity(0.7),
+            color: Pallet.colorWhite.withValues(alpha: 0.7),
           ),
           onPressed: () {
             setState(() {
@@ -364,7 +364,7 @@ class _BuildPasswordFieldState extends State<BuildPasswordField> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Pallet.colorWhite.withOpacity(0.5)),
+          borderSide: BorderSide(color: Pallet.colorWhite.withValues(alpha: 0.5)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(15),
@@ -379,7 +379,7 @@ class _BuildPasswordFieldState extends State<BuildPasswordField> {
           borderSide: BorderSide(color: Pallet.colorPink, width: 2),
         ),
         filled: true,
-        fillColor: Pallet.colorWhite.withOpacity(0.1),
+        fillColor: Pallet.colorWhite.withValues(alpha: 0.1),
       ),
     );
   }

@@ -52,7 +52,7 @@ class AuthSelectionPage extends StatelessWidget {
                 "secret diary chat",
                 style: GoogleFonts.lato(
                   fontSize: 16.0,
-                  color: Pallet.colorWhite.withOpacity(0.8),
+                  color: Pallet.colorWhite.withValues(alpha: 0.8),
                   fontStyle: FontStyle.italic,
                 ),
               ),
@@ -100,9 +100,9 @@ class AuthSelectionPage extends StatelessWidget {
         width: getDeviceWidth(context) * 0.8,
         padding: EdgeInsets.symmetric(vertical: 15),
         decoration: BoxDecoration(
-          color: Pallet.colorWhite.withOpacity(0.15),
+          color: Pallet.colorWhite.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: Pallet.colorWhite.withOpacity(0.5), width: 1),
+          border: Border.all(color: Pallet.colorWhite.withValues(alpha: 0.5), width: 1),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -111,7 +111,7 @@ class AuthSelectionPage extends StatelessWidget {
               label,
               style: GoogleFonts.lato(
                 fontSize: 16.0,
-                color: Pallet.colorWhite.withOpacity(0.8),
+                color: Pallet.colorWhite.withValues(alpha: 0.8),
               ),
             ),
             Text(

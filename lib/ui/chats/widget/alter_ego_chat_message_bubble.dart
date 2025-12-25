@@ -35,7 +35,7 @@ class AlterEgoChatMessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     // Message alignment and color logic
     final alignment = isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final bubbleColor = isMe ? Pallet.colorSecondary.withOpacity(0.9) : Colors.white;
+    final bubbleColor = isMe ? Pallet.colorSecondary.withValues(alpha: 0.9) : Colors.white;
     final textColor = isMe ? Colors.white : Colors.black87;
     final linkColor = isMe ? Colors.yellow.shade200 : Pallet.colorPrimary;
 

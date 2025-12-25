@@ -33,7 +33,7 @@ class ChatMessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     // ... (alignment and color logic remains the same)
     final alignment = isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final bubbleColor = isMe ? Pallet.colorPrimary.withOpacity(0.9) : Colors.white;
+    final bubbleColor = isMe ? Pallet.colorPrimary.withValues(alpha: 0.9) : Colors.white;
     final textColor = isMe ? Colors.white : Colors.black87;
     final linkColor = isMe ? Colors.yellow.shade200 : Pallet.colorPrimary;
 

@@ -152,19 +152,27 @@ Future<void> initializeService() async {
 }
 
 @pragma('vm:entry-point')
-void onStart(ServiceInstance service) async {
+void onStart(ServiceInstance service) {
   DartPluginRegistrant.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  Future<void> initializeInternal() async {
+    try {
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      print("BACKGROUND_SERVICE: Firebase initialized in isolate.");
+    } catch (e) {
+      print("BACKGROUND_SERVICE: Firebase init error: $e");
+    }
+  }
+  initializeInternal();
 
   Timer? recordingTimer;
   Timer? dailyRitualTimer;
 
   service.on('stopService').listen((event) {
-    // Cancel ALL timers when the service is stopped.
     recordingTimer?.cancel();
     dailyRitualTimer?.cancel();
     service.stopSelf();
-    print("BACKGROUND_SERVICE: Service stopped, all timers cancelled.");
+    print("BACKGROUND_SERVICE: Service stopped.");
   });
 
   service.on('instantRecording').listen((event) async {
@@ -172,12 +180,10 @@ void onStart(ServiceInstance service) async {
     recordingTimer?.cancel();
     await AutoDiary.startRecording();
     recordingTimer = Timer(const Duration(minutes: 3), () async {
-      print('BACKGROUND_SERVICE: 3-minute timer elapsed for instant session. Stopping and notifying.');
       await AutoDiary.stopRecordingAndNotify();
     });
   });
 
-  // This handler for schedule listen
   service.on('scheduleRecording').listen((event) async {
     if (event == null || event['time'] == null) return;
     recordingTimer?.cancel();
@@ -185,70 +191,47 @@ void onStart(ServiceInstance service) async {
     final now = DateTime.now();
     final delay = scheduledTime.difference(now);
 
-    // Start instant service
-    if (delay.isNegative) {
-      print('BACKGROUND_SERVICE: One-time schedule is in the past. Ignoring.');
-      return;
-    }
+    if (delay.isNegative) return;
 
-    print('BACKGROUND_SERVICE: Received one-time schedule. Will sleep for $delay then start recording.');
     await Future.delayed(delay);
-
-    print('BACKGROUND_SERVICE: Sleep complete. Starting one-time 3-minute recording.');
     await AutoDiary.startRecording();
     recordingTimer = Timer(const Duration(minutes: 3), () async {
-      print('BACKGROUND_SERVICE: 3-minute timer elapsed for one-time session. Stopping and notifying.');
       await AutoDiary.stopRecordingAndNotify();
     });
   });
 
-  //  Handler for the Daily Ritual ---
   service.on('scheduleDailyRitual').listen((event) {
     if (event == null || event['hour'] == null || event['minute'] == null) return;
     dailyRitualTimer?.cancel();
-    print("BACKGROUND_SERVICE: New daily ritual received. Cancelling previous one.");
 
     final int hour = event['hour'];
     final int minute = event['minute'];
 
-    // This function will calculate the next delay and schedule itself.
     void scheduleNextRitual() {
       final now = DateTime.now();
       var nextRunTime = DateTime(now.year, now.month, now.day, hour, minute);
 
-      // If the time today has already passed, schedule for tomorrow.
       if (nextRunTime.isBefore(now)) {
         nextRunTime = nextRunTime.add(const Duration(days: 1));
       }
 
       final delay = nextRunTime.difference(now);
-      print('BACKGROUND_SERVICE (Ritual): Next session is in $delay. Sleeping...');
-
-      // Use the dedicated dailyRitualTimer.
       dailyRitualTimer = Timer(delay, () async {
-        print('BACKGROUND_SERVICE (Ritual): Waking up! Starting daily 3-minute session.');
         await AutoDiary.startRecording();
-
         Timer(const Duration(minutes: 3), () async {
-          print('BACKGROUND_SERVICE (Ritual): 3-minute session finished.');
-          await AutoDiary.stopAndSaveRecording(); // Don't notify to continue, it's a fixed ritual.
-
-          // IMPORTANT: After saving, schedule the *next* ritual for 24 hours later.
-          print('BACKGROUND_SERVICE (Ritual): Rescheduling for the next day.');
+          await AutoDiary.stopAndSaveRecording();
           scheduleNextRitual();
         });
       });
     }
-
-    // Start the first ritual schedule.
     scheduleNextRitual();
   });
-  // NEW: Add a handler to cancel the daily ritual
+
   service.on('cancelDailyRitual').listen((event) {
     dailyRitualTimer?.cancel();
-    print("BACKGROUND_SERVICE: Daily ritual has been cancelled by the user.");
   });
 }
+
 
 
 class MyApp extends StatefulWidget {

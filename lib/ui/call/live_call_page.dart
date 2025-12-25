@@ -381,7 +381,7 @@ class _LiveCallPageState extends State<LiveCallPage> {
       return Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Pallet.colorSecondary.withOpacity(0.5), Colors.black],
+            colors: [Pallet.colorSecondary.withValues(alpha: 0.5), Colors.black],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

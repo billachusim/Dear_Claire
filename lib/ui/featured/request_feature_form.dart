@@ -77,7 +77,7 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
 
   Widget _buildInfoSection(bool isDarkMode) {
     return Container(
-      color: isDarkMode ? Colors.grey[800] : Pallet.colorGrey.withOpacity(0.3),
+      color: isDarkMode ? Colors.grey[800] : Pallet.colorGrey.withValues(alpha: 0.3),
       padding: const EdgeInsets.all(20.0),
       child: Text(AppString.request_feature_form_header,
           textAlign: TextAlign.center,

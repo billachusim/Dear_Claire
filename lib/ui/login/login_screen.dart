@@ -101,7 +101,7 @@ class _LoginPage extends State<LoginPage> {
       barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Pallet.colorSecondaryDark.withOpacity(0.95),
+          backgroundColor: Pallet.colorSecondaryDark.withValues(alpha: 0.95),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
           title: Text(
             AppString.retrieve_ego_code_header,
@@ -114,7 +114,7 @@ class _LoginPage extends State<LoginPage> {
               Text(
                 "Enter your email to request your code.",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.8), fontSize: 14),
+                style: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.8), fontSize: 14),
               ),
               SizedBox(height: 20),
               _buildDialogTextField(_dialogEmailController),
@@ -122,7 +122,7 @@ class _LoginPage extends State<LoginPage> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel', style: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.7))),
+              child: Text('Cancel', style: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.7))),
               onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
@@ -197,7 +197,7 @@ class _LoginPage extends State<LoginPage> {
                   Text(
                     "Welcome back to your secret space.",
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.lato(fontSize: 15.0, color: Pallet.colorWhite.withOpacity(0.85), fontStyle: FontStyle.italic),
+                    style: GoogleFonts.lato(fontSize: 15.0, color: Pallet.colorWhite.withValues(alpha: 0.85), fontStyle: FontStyle.italic),
                   ),
                   SizedBox(height: 40),
                   _buildTextField(
@@ -260,14 +260,14 @@ class _LoginPage extends State<LoginPage> {
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
-        labelStyle: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.7)),
-        hintStyle: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.5)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorWhite.withOpacity(0.5))),
+        labelStyle: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.7)),
+        hintStyle: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.5)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorWhite.withValues(alpha: 0.5))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorWhite)),
         errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorPink)),
         focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorPink, width: 2)),
         filled: true,
-        fillColor: Pallet.colorWhite.withOpacity(0.1),
+        fillColor: Pallet.colorWhite.withValues(alpha: 0.1),
       ),
     );
   }
@@ -279,11 +279,11 @@ class _LoginPage extends State<LoginPage> {
       style: GoogleFonts.lato(color: Pallet.colorWhite),
       decoration: InputDecoration(
         hintText: "Your registered email...",
-        hintStyle: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.5)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorWhite.withOpacity(0.5))),
+        hintStyle: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.5)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorWhite.withValues(alpha: 0.5))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorWhite)),
         filled: true,
-        fillColor: Pallet.colorWhite.withOpacity(0.1),
+        fillColor: Pallet.colorWhite.withValues(alpha: 0.1),
       ),
     );
   }
@@ -333,7 +333,7 @@ class _LoginPage extends State<LoginPage> {
         Text(
           "By tapping Open Up, you are accepting Dear Claire's Terms Of Use and Privacy Policy",
           textAlign: TextAlign.center,
-          style: GoogleFonts.lato(fontSize: 12.0, color: Pallet.colorWhite.withOpacity(0.7)),
+          style: GoogleFonts.lato(fontSize: 12.0, color: Pallet.colorWhite.withValues(alpha: 0.7)),
         ),
         SizedBox(height: 8),
         GestureDetector(
@@ -382,18 +382,18 @@ class _BuildSecretCodeFieldState extends State<BuildSecretCodeField> {
       decoration: InputDecoration(
         labelText: "Your secret code",
         hintText: "At least 6 characters",
-        labelStyle: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.7)),
-        hintStyle: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.5)),
+        labelStyle: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.7)),
+        hintStyle: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.5)),
         suffixIcon: IconButton(
-          icon: Icon(_isHidden ? Icons.visibility_off : Icons.visibility, color: Pallet.colorWhite.withOpacity(0.7)),
+          icon: Icon(_isHidden ? Icons.visibility_off : Icons.visibility, color: Pallet.colorWhite.withValues(alpha: 0.7)),
           onPressed: () => setState(() => _isHidden = !_isHidden),
         ),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorWhite.withOpacity(0.5))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorWhite.withValues(alpha: 0.5))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorWhite)),
         errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorPink)),
         focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Pallet.colorPink, width: 2)),
         filled: true,
-        fillColor: Pallet.colorWhite.withOpacity(0.1),
+        fillColor: Pallet.colorWhite.withValues(alpha: 0.1),
       ),
     );
   }

@@ -75,7 +75,7 @@ class _CustomPlaySoundWidgetState extends State<CustomPlaySoundWidget> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(50),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0),

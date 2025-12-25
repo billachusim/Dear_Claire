@@ -65,7 +65,7 @@ class _DrawerRecentTransactionsListState
             return _buildTransactionTile(transaction);
           },
           separatorBuilder: (context, index) => Divider(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             height: 1,
           ),
         );
@@ -99,7 +99,7 @@ class _DrawerRecentTransactionsListState
                 const SizedBox(height: 4),
                 Text(
                   DateFormat.yMMMd().format(transaction.timestamp.toDate()),
-                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
                 ),
               ],
             ),

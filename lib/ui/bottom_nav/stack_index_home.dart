@@ -499,11 +499,13 @@ class _HomeDashboardPageState extends State<HomePage>
         appBar: AppBar(
           backgroundColor: Pallet.colorPrimary,
           centerTitle: false,
-          title: Text("Dear Claire",
-              style: GoogleFonts.philosopher(
-                  color: Pallet.colorWhite,
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.w700)),
+          title: Text(_title,
+              textAlign: TextAlign.start,
+              maxLines: 1,
+              style: GoogleFonts.lato(
+                  fontSize: 25.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600)),
           actions: [
             CupertinoButton(
                 child: RotationTransition(
@@ -527,7 +529,7 @@ class _HomeDashboardPageState extends State<HomePage>
         ),
         body: Stack(children: [
           PageView(
-              physics: AlwaysScrollableScrollPhysics(),
+              physics: NeverScrollableScrollPhysics(),
               controller: _pageController,
               onPageChanged: (index) {
                 setState(() {
@@ -800,7 +802,7 @@ class _AppDrawerState extends State<_AppDrawer> {
             border: Border.all(color: Colors.white, width: 2.5),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   spreadRadius: 2,
                   blurRadius: 6)
             ],
@@ -829,7 +831,7 @@ class _AppDrawerState extends State<_AppDrawer> {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  color: Pallet.colorWhite.withOpacity(0.95),
+                  color: Pallet.colorWhite.withValues(alpha: 0.95),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -845,9 +847,9 @@ class _AppDrawerState extends State<_AppDrawer> {
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 25),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
+        color: Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -882,8 +884,8 @@ class _AppDrawerState extends State<_AppDrawer> {
       height: 12,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: Colors.black.withOpacity(0.3),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        color: Colors.black.withValues(alpha: 0.3),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
@@ -937,7 +939,7 @@ class _AppDrawerState extends State<_AppDrawer> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.25),
+        color: Colors.black.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -1021,9 +1023,9 @@ class _AppDrawerState extends State<_AppDrawer> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.2),
+        color: Colors.black.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1243,11 +1245,11 @@ class _MenuTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: Colors.white.withOpacity(0.8)),
+      leading: Icon(icon, color: Colors.white.withValues(alpha: 0.8)),
       title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 15)),
       onTap: onTap,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      splashColor: Pallet.colorSecondary.withOpacity(0.3),
+      splashColor: Pallet.colorSecondary.withValues(alpha: 0.3),
     );
   }
 }
@@ -1326,7 +1328,7 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                 return BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: _blurAnimation.value, sigmaY: _blurAnimation.value),
                   child: Container(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withValues(alpha: 0.4),
                   ),
                 );
               },
@@ -1462,11 +1464,11 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 5,
                           offset: const Offset(0, 2),
                         )

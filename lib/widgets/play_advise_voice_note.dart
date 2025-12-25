@@ -69,7 +69,7 @@ class _PlayAdviseVoiceNoteState extends State<PlayAdviseVoiceNote> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.7),
+        color: Colors.black.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(50),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0),

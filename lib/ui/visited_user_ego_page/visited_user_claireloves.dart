@@ -274,7 +274,7 @@ Timestamp: ${DateTime.now().toIso8601String()}
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Pallet.colorSecondary.withOpacity(0.5),
+        color: Pallet.colorSecondary.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
@@ -307,7 +307,7 @@ Timestamp: ${DateTime.now().toIso8601String()}
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Pallet.colorSecondary.withOpacity(0.5),
+        color: Pallet.colorSecondary.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
@@ -353,7 +353,7 @@ Timestamp: ${DateTime.now().toIso8601String()}
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Pallet.colorSecondary.withOpacity(0.5),
+                color: Pallet.colorSecondary.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Column(

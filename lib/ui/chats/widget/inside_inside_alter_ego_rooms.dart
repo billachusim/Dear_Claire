@@ -178,7 +178,7 @@ class _InsideInsideAlterEgoChatWidgetState
                               width: 55,
                               height: 55,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.6),
+                                color: Colors.black.withValues(alpha: 0.6),
                                 shape: BoxShape.circle,
                               ),
                               child: const Center(

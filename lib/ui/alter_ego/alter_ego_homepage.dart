@@ -486,7 +486,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
                         PageRouter.gotoWidget(CreateLoveItemPage(), context);
                       },
                     ),
-                    Divider(color: Pallet.colorSecondary.withOpacity(0.5), height: 1),
+                    Divider(color: Pallet.colorSecondary.withValues(alpha: 0.5), height: 1),
                     ListTile(
                       leading: Icon(Icons.edit, color: Pallet.colorWhite),
                       title: Text('New Diary Session', style: TextStyle(color: Pallet.colorWhite)),

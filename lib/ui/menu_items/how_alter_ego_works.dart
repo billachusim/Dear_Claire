@@ -166,7 +166,7 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
     required bool isDarkMode,
     required int delay,
   }) {
-    final cardColor = isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4);
+    final cardColor = isDarkMode ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4);
     final headingColor = isDarkMode ? Colors.white : Pallet.colorSecondary;
 
     return FadeInUp(
@@ -184,7 +184,7 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
             decoration: BoxDecoration(
               color: cardColor,
               borderRadius: BorderRadius.circular(20.0),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,7 +250,7 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
                   "(Requires 2000 Loves)",
                   style: GoogleFonts.lato(
                     fontSize: 12.0,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
               ],

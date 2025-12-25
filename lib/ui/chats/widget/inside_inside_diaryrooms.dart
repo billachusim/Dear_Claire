@@ -204,7 +204,7 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
+                                color: Colors.black.withValues(alpha: 0.5),
                                 shape: BoxShape.circle,
                               ),
                               child: const Center(

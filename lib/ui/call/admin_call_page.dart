@@ -268,7 +268,7 @@ class _AdminCallPageState extends State<AdminCallPage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Pallet.colorPrimary.withOpacity(0.5), Colors.black],
+            colors: [Pallet.colorPrimary.withValues(alpha: 0.5), Colors.black],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

@@ -154,7 +154,7 @@ class _SoundRecorderWidgetState extends State<SoundRecorderWidget> with SingleTi
                           scale: _scaleAnimation,
                           child: Text(
                             "Recording...",
-                            style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 24.sp),
+                            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 24.sp),
                           ),
                         ),
                       SizedBox(height: 10.h),
@@ -224,7 +224,7 @@ class _SoundRecorderWidgetState extends State<SoundRecorderWidget> with SingleTi
               await _audioPlayer.seek(Duration(seconds: value.toInt()));
             },
             activeColor: Colors.white,
-            inactiveColor: Colors.white.withOpacity(0.3),
+            inactiveColor: Colors.white.withValues(alpha: 0.3),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

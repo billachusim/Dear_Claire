@@ -484,7 +484,7 @@ class _AlterEgoRegistrationState extends State<AlterEgoRegistration> {
           labelStyle: TextStyle(color: Colors.grey.shade700),
           hintStyle: TextStyle(color: Colors.grey.shade400),
           filled: true,
-          fillColor: Colors.black.withOpacity(0.04),
+          fillColor: Colors.black.withValues(alpha: 0.04),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,

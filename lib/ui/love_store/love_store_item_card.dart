@@ -75,7 +75,7 @@ class _LoveStoreItemCardState extends State<LoveStoreItemCard> {
           color: backgroundColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: Offset(0, 4),
             ),
@@ -179,7 +179,7 @@ class _LoveStoreItemCardState extends State<LoveStoreItemCard> {
                     padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -232,7 +232,7 @@ class _LoveStoreItemCardState extends State<LoveStoreItemCard> {
         bool isPrimary = false}) {
     return TextButton.icon(
       style: TextButton.styleFrom(
-        backgroundColor: isPrimary ? Pallet.colorBlue : Colors.black.withOpacity(0.15),
+        backgroundColor: isPrimary ? Pallet.colorBlue : Colors.black.withValues(alpha: 0.15),
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

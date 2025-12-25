@@ -156,7 +156,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                                 child: Container(
                                   padding: const EdgeInsets.all(2),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.6),
+                                    color: Colors.black.withValues(alpha: 0.6),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(Icons.close, color: Colors.white, size: 16),
@@ -216,7 +216,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(25),
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white.withOpacity(0.05)
+                          ? Colors.white.withValues(alpha: 0.05)
                           : Colors.grey.shade200,
                     ),
                     child: TextField(

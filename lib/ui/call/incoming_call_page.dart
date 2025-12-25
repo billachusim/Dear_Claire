@@ -141,7 +141,7 @@ class _IncomingCallPageState extends State<IncomingCallPage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Pallet.colorPrimary.withOpacity(0.7), Colors.black],
+            colors: [Pallet.colorPrimary.withValues(alpha: 0.7), Colors.black],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -179,7 +179,7 @@ class _IncomingCallPageState extends State<IncomingCallPage> {
                     margin: const EdgeInsets.symmetric(horizontal: 40),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(

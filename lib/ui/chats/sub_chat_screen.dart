@@ -262,7 +262,7 @@ class _SubChatScreenState extends State<SubChatScreen> {
                   if (_isSending)
                     Positioned.fill(
                       child: Container(
-                        color:Colors.black.withOpacity(0.5), // Semi-transparent overlay
+                        color:Colors.black.withValues(alpha: 0.5), // Semi-transparent overlay
                         child:  Center(
                           child: CupertinoActivityIndicator(
                             color: Colors.white,

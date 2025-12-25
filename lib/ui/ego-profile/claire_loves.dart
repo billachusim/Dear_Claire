@@ -183,7 +183,7 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
                 label: Text('Send Love', style: TextStyle(color: Colors.white)),
                 onPressed: _showSendLoveDialog,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent.withOpacity(0.8),
+                  backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
                   padding: EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -198,7 +198,7 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
                 label: Text('Receive Love', style: TextStyle(color: Colors.white)),
                 onPressed: _showReceiveLoveDialog,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.withOpacity(0.8),
+                  backgroundColor: Colors.green.withValues(alpha: 0.8),
                   padding: EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -284,7 +284,7 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
                                     padding: EdgeInsets.all(12),
                                     width: double.infinity,
                                     decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.2),
+                                        color: Colors.black.withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(8)
                                     ),
                                     child: Text(
@@ -343,7 +343,7 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
                       SizedBox(height: 20),
                       Container(
                         padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: Colors.black.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                        decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
                         child: Text(_userId, style: GoogleFonts.lato(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                       SizedBox(height: 20),
@@ -756,7 +756,7 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
     return Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Pallet.colorSecondary.withOpacity(0.5),
+          color: Pallet.colorSecondary.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Column(
@@ -789,7 +789,7 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Pallet.colorSecondary.withOpacity(0.5),
+        color: Pallet.colorSecondary.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
@@ -961,7 +961,7 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
               const SizedBox(height: 10),
               Container(
                 decoration: BoxDecoration(
-                  color: Pallet.colorSecondary.withOpacity(0.5),
+                  color: Pallet.colorSecondary.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: ListView.builder(
@@ -1038,7 +1038,7 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Pallet.colorSecondary.withOpacity(0.5),
+                color: Pallet.colorSecondary.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Column(

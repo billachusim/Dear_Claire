@@ -256,7 +256,7 @@ class _ActivityWidgetState extends State<ActivityWidget> {
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Pallet.colorSecondary.withOpacity(0.5),
+          color: Pallet.colorSecondary.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -298,7 +298,7 @@ class _ActivityWidgetState extends State<ActivityWidget> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Pallet.colorSecondary.withOpacity(0.5),
+        color: Pallet.colorSecondary.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20),
       ),
       height: 250,
@@ -310,7 +310,7 @@ class _ActivityWidgetState extends State<ActivityWidget> {
                   .map((entry) => RadarEntry(value: entry.value.toDouble()))
                   .toList(),
               borderColor: Pallet.colorPrimary,
-              fillColor: Pallet.colorPrimary.withOpacity(0.4),
+              fillColor: Pallet.colorPrimary.withValues(alpha: 0.4),
             ),
           ],
           radarShape: RadarShape.circle,
@@ -394,7 +394,7 @@ class _ActivityWidgetState extends State<ActivityWidget> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Pallet.colorSecondary.withOpacity(0.5),
+        color: Pallet.colorSecondary.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
@@ -553,15 +553,15 @@ class UserActivityCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Pallet.colorSecondary.withOpacity(0.2),
+          color: Pallet.colorSecondary.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Pallet.colorSecondary.withOpacity(0.4), width: 1),
+          border: Border.all(color: Pallet.colorSecondary.withValues(alpha: 0.4), width: 1),
         ),
         child: Row(
           children: [
             CircleAvatar(
               radius: 25,
-              backgroundColor: Pallet.colorSecondary.withOpacity(0.5),
+              backgroundColor: Pallet.colorSecondary.withValues(alpha: 0.5),
               child: Icon(_getIconForActivity(element.activityType),
                   color: Pallet.colorPrimary, size: 22),
             ),

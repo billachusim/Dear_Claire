@@ -29,6 +29,7 @@ class SetupAutoDiary extends StatefulWidget {
 class _SetupAutoDiaryState extends State<SetupAutoDiary>
     with TickerProviderStateMixin {
   // --- UI & Service State ---
+  bool _isProcessing = false;
   bool isServiceRunning = false;
   TimeOfDay? _dailyRitualTime;
   _SanctuaryView _currentView = _SanctuaryView.main;
@@ -249,69 +250,88 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
   }
 
   void _scheduleOneTime(TimeOfDay time) async {
-    if (!await _requestMicPermission()) return;
-    if (!await _handleLovesTransaction()) return;
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
 
-    final service = FlutterBackgroundService();
-    if (!isServiceRunning) {
-      await service.startService();
-      await Future.delayed(const Duration(seconds: 1));
+    try {
+      if (!await _requestMicPermission()) return;
+      if (!await _handleLovesTransaction()) return;
+
+      final service = FlutterBackgroundService();
+      if (!isServiceRunning) {
+        await service.startService();
+        await Future.delayed(const Duration(seconds: 1));
+      }
+      final now = DateTime.now();
+      var scheduledDateTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+      if (scheduledDateTime.isBefore(now)) {
+        scheduledDateTime = scheduledDateTime.add(const Duration(days: 1));
+      }
+      service.invoke('scheduleRecording', {'time': scheduledDateTime.toIso8601String()});
+      if (mounted) setState(() => isServiceRunning = true);
+      showToast("Claire scheduled for ${DateFormat.jm().format(scheduledDateTime)}. (1,000 Loves deducted)");
+
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) Navigator.of(context).pop();
+      });
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
-    final now = DateTime.now();
-    var scheduledDateTime =
-    DateTime(now.year, now.month, now.day, time.hour, time.minute);
-    if (scheduledDateTime.isBefore(now)) {
-      scheduledDateTime = scheduledDateTime.add(const Duration(days: 1));
-    }
-    service.invoke(
-        'scheduleRecording', {'time': scheduledDateTime.toIso8601String()});
-    if (mounted) setState(() => isServiceRunning = true);
-    showToast("Claire scheduled for ${DateFormat.jm().format(scheduledDateTime)}. (1,000 Loves deducted)");
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) Navigator.of(context).pop();
-    });
   }
-
 
   void _listenNow() async {
-    if (!await _requestMicPermission()) return;
-    if (!await _handleLovesTransaction()) return;
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
 
-    final service = FlutterBackgroundService();
-    if (!isServiceRunning) {
-      await service.startService();
-      await Future.delayed(const Duration(seconds: 1));
+    try {
+      if (!await _requestMicPermission()) return;
+      if (!await _handleLovesTransaction()) return;
+
+      final service = FlutterBackgroundService();
+      if (!isServiceRunning) {
+        await service.startService();
+        await Future.delayed(const Duration(seconds: 1));
+      }
+      service.invoke('instantRecording');
+      if (mounted) setState(() => isServiceRunning = true);
+      showToast("Claire is now monitoring you. (1,000 Loves deducted)");
+
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) Navigator.of(context).pop();
+      });
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
-    service.invoke('instantRecording');
-    if (mounted) setState(() => isServiceRunning = true);
-    showToast("Claire is now monitoring you. (1,000 Loves deducted)");
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) Navigator.of(context).pop();
-    });
   }
-
 
   void _scheduleDaily(TimeOfDay time) async {
-    if (!await _requestMicPermission()) return;
-    if (!await _handleLovesTransaction()) return;
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
 
-    final service = FlutterBackgroundService();
-    if (!isServiceRunning) {
-      await service.startService();
-      await Future.delayed(const Duration(seconds: 1));
+    try {
+      if (!await _requestMicPermission()) return;
+      if (!await _handleLovesTransaction()) return;
+
+      final service = FlutterBackgroundService();
+      if (!isServiceRunning) {
+        await service.startService();
+        await Future.delayed(const Duration(seconds: 1));
+      }
+      service.invoke('scheduleDailyRitual', {'hour': time.hour, 'minute': time.minute});
+      await _saveDailyRitual(time);
+      if (mounted) {
+        setState(() {
+          isServiceRunning = true;
+          _dailyRitualTime = time;
+          _currentView = _SanctuaryView.main;
+        });
+      }
+      showToast("Daily monitoring set for ${time.format(context)}. (1,000 Loves deducted)");
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
-    service
-        .invoke('scheduleDailyRitual', {'hour': time.hour, 'minute': time.minute});
-    await _saveDailyRitual(time);
-    if (mounted) {
-      setState(() {
-        isServiceRunning = true;
-        _dailyRitualTime = time;
-        _currentView = _SanctuaryView.main;
-      });
-    }
-    showToast("Daily monitoring set for ${time}. (1,000 Loves deducted)");
   }
+
 
 
   // --- Build Methods ---
@@ -321,7 +341,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text('Monitoring Spirit',
-            style: GoogleFonts.lato(color: Colors.white.withOpacity(0.8))),
+            style: GoogleFonts.lato(color: Colors.white.withValues(alpha: 0.8))),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -386,14 +406,14 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           onTap: _listenNow,
           icon: Icons.hearing_rounded,
           label: 'Monitor Now',
-          color: Pallet.colorPrimary.withOpacity(0.7),
+          color: Pallet.colorPrimary.withValues(alpha: 0.7),
         ),
         const SizedBox(height: 25),
         _buildActionButton(
           onTap: () => setState(() => _currentView = _SanctuaryView.whisper),
           icon: Icons.schedule_rounded,
           label: 'Schedule Monitor',
-          color: Pallet.colorSecondary.withOpacity(0.7),
+          color: Pallet.colorSecondary.withValues(alpha: 0.7),
         ),
         const SizedBox(height: 25),
         _dailyRitualTime == null
@@ -402,7 +422,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
               setState(() => _currentView = _SanctuaryView.ritual),
           icon: Icons.sync_rounded,
           label: 'Set Daily Monitor',
-          color: Pallet.colorPrimary.withOpacity(0.7),
+          color: Pallet.colorPrimary.withValues(alpha: 0.7),
         )
             : _buildActiveRitualDisplay(),
         const SizedBox(height: 25),
@@ -410,7 +430,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           onTap: () => setState(() => _currentView = _SanctuaryView.configure),
           icon: Icons.settings_outlined,
           label: 'Configure Your Spirit',
-          color: Pallet.colorSecondary.withOpacity(0.5),
+          color: Pallet.colorSecondary.withValues(alpha: 0.5),
         ),
         const SizedBox(height: 60),
       ],
@@ -455,8 +475,8 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           icon: isDaily ? Icons.sync_rounded : Icons.check_circle_outline,
           label: isDaily ? 'Start Daily Monitor' : 'Schedule Monitor',
           color: isDaily
-              ? Colors.amber.withOpacity(0.7)
-              : Pallet.colorSecondary.withOpacity(0.7),
+              ? Pallet.colorPrimary.withValues(alpha: 0.7)
+              : Pallet.colorSecondary.withValues(alpha: 0.7),
         ),
       ],
     );
@@ -476,7 +496,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
             decoration: InputDecoration(
               labelText: 'Default Session Title',
               labelStyle:
-              GoogleFonts.lato(color: Pallet.colorSecondary.withOpacity(0.7)),
+              GoogleFonts.lato(color: Colors.white.withValues(alpha: 0.6)),
               enabledBorder: const UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.white24)),
               focusedBorder: UnderlineInputBorder(
@@ -540,7 +560,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           textAlign: TextAlign.center,
           style: GoogleFonts.lato(
               fontSize: 16.0,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               fontStyle: FontStyle.italic),
         ),
       ),
@@ -563,7 +583,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           child: CupertinoSwitch(
             value: value,
             onChanged: onChanged,
-            activeColor: Pallet.colorSecondary,
+            activeTrackColor: Pallet.colorSecondary,
           ),
         ),
       ],
@@ -575,14 +595,14 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       width: 280, // Adjusted width for longer text
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.amber.withOpacity(0.1),
+        color: Pallet.colorPrimary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.amber.withOpacity(0.7), width: 1.5),
+        border: Border.all(color: Pallet.colorPrimary.withValues(alpha: 0.7), width: 1.5),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.sync_rounded, color: Colors.amber),
+          Icon(Icons.sync_rounded, color: Pallet.colorPrimary),
           const SizedBox(width: 12),
           Flexible(
             child: Text('Daily at ${_dailyRitualTime!.format(context)}',
@@ -590,7 +610,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
                 style: GoogleFonts.lato(
                     fontSize: 16.0, // Adjusted font size
                     fontWeight: FontWeight.w600,
-                    color: Colors.white.withOpacity(0.9))),
+                    color: Colors.white.withValues(alpha: 0.9))),
           ),
           const SizedBox(width: 8),
           GestureDetector(
@@ -631,8 +651,8 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           boxShadow: [
             BoxShadow(
               color: isServiceRunning
-                  ? Pallet.colorSecondary.withOpacity(0.6)
-                  : Colors.grey.withOpacity(0.4),
+                  ? Pallet.colorSecondary.withValues(alpha: 0.6)
+                  : Colors.grey.withValues(alpha: 0.4),
               blurRadius: 50,
               spreadRadius: 10,
             ),
@@ -644,39 +664,54 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
     );
   }
 
-  Widget _buildActionButton(
-      {required VoidCallback onTap,
-        required IconData icon,
-        required String label,
-        required Color color}) {
+  Widget _buildActionButton({
+    required VoidCallback onTap,
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 280, // Adjusted width for longer text
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: color, width: 1.5),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white.withOpacity(0.9)),
-            const SizedBox(width: 12),
-            Flexible(
-              child: Text(label,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.lato(
-                      fontSize: 16.0, // Adjusted font size
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white.withOpacity(0.9))),
-            ),
-          ],
+      onTap: _isProcessing ? null : onTap, // Disable tap when processing
+      child: Opacity(
+        opacity: _isProcessing ? 0.6 : 1.0,
+        child: Container(
+          width: 280,
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 10,
+                spreadRadius: 2,
+              )
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_isProcessing)
+                const CupertinoActivityIndicator(color: Colors.white, radius: 10)
+              else
+                Icon(icon, color: Colors.white, size: 24),
+              const SizedBox(width: 12),
+              Text(
+                _isProcessing ? "Processing..." : label,
+                style: GoogleFonts.lato(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
 
   Widget _buildFooter() {
     return Positioned(
@@ -695,7 +730,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
               textAlign: TextAlign.center,
               style: GoogleFonts.lato(
                 fontSize: 16.0,
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -719,11 +754,11 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
                 const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.red.withOpacity(0.5)),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
                 ),
                 child: Text("Pause Connection",
                     style: GoogleFonts.lato(
-                        color: Pallet.colorPrimary.withOpacity(0.8))),
+                        color: Pallet.colorPrimary.withValues(alpha: 0.8))),
               ),
             ),
         ],

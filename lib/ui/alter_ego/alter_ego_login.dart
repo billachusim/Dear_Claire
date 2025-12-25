@@ -95,7 +95,7 @@ class _AlterEgoLoginPageState extends State<AlterEgoLoginPage> {
           'Alter Ego',
           style: GoogleFonts.montserrat( // New, more stylish font
             fontSize: 22.0,
-            color: Pallet.colorWhite.withOpacity(0.9),
+            color: Pallet.colorWhite.withValues(alpha: 0.9),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -114,7 +114,7 @@ class _AlterEgoLoginPageState extends State<AlterEgoLoginPage> {
                 Icon(
                   Icons.key_rounded,
                   size: 60,
-                  color: Pallet.colorSecondary.withOpacity(0.8),
+                  color: Pallet.colorSecondary.withValues(alpha: 0.8),
                 ),
                 const SizedBox(height: 20),
                 // --- NEW: Evocative Welcome Text ---
@@ -211,12 +211,12 @@ class _AlterEgoLoginPageState extends State<AlterEgoLoginPage> {
         hintText: hintText,
         prefixIcon: Icon(icon, color: Pallet.colorTextGray, size: 20),
         labelStyle: TextStyle(color: Pallet.colorTextGray),
-        hintStyle: TextStyle(color: Pallet.colorTextGray.withOpacity(0.5)),
+        hintStyle: TextStyle(color: Pallet.colorTextGray.withValues(alpha: 0.5)),
         filled: true,
-        fillColor: Pallet.colorPrimary.withOpacity(0.2),
+        fillColor: Pallet.colorPrimary.withValues(alpha: 0.2),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide(color: Pallet.colorTextGray.withOpacity(0.3)),
+          borderSide: BorderSide(color: Pallet.colorTextGray.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),

@@ -261,7 +261,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         }),
         decoration: InputDecoration(
           hintText: "Search sessions...",
-          hintStyle: TextStyle(color: searchBarTextColor.withOpacity(0.6)),
+          hintStyle: TextStyle(color: searchBarTextColor.withValues(alpha: 0.6)),
           prefixIcon: Icon(Icons.search, color: searchBarTextColor),
           filled: true,
           fillColor: searchBarColor,
@@ -386,7 +386,7 @@ class _KeywordSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20.0),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     spreadRadius: 1,
                     blurRadius: 3,
                     offset: const Offset(0, 2),

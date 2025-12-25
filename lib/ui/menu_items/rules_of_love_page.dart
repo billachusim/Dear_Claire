@@ -113,8 +113,8 @@ class _RuleSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final headingColor = isDarkMode ? Pallet.colorPink : Pallet.colorSecondary;
-    final textColor = isDarkMode ? Colors.white70 : Colors.black.withOpacity(0.7);
-    final cardColor = isDarkMode ? Colors.black.withOpacity(0.15) : Colors.white;
+    final textColor = isDarkMode ? Colors.white70 : Colors.black.withValues(alpha: 0.7);
+    final cardColor = isDarkMode ? Colors.black.withValues(alpha: 0.15) : Colors.white;
 
     return FadeInUp(
       from: 40,
@@ -131,7 +131,7 @@ class _RuleSection extends StatelessWidget {
               ? []
               : [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.1),
               spreadRadius: 2,
               blurRadius: 10,
               offset: const Offset(0, 4),
