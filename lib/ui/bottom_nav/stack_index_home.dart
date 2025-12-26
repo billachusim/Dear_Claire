@@ -1346,7 +1346,7 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                 _buildMenuItem(
                   position: _itemPositions[0],
                   icon: Icons.edit_note_rounded,
-                  label: "Diary Session",
+                  label: "New Diary Session",
                   onPressed: () => _closeAndNavigate(() {
                     final currentUser = FirebaseAuth.instance.currentUser;
                     if (currentUser == null) {
@@ -1361,7 +1361,7 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                 _buildMenuItem(
                   position: _itemPositions[1],
                   icon: Icons.phone_in_talk_outlined,
-                  label: "Companion Session",
+                  label: "New Call Session",
                   onPressed: () {
                     _animationController.reverse().then((_) async {
                       widget.onClose();
@@ -1392,7 +1392,7 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                 _buildMenuItem(
                   position: _itemPositions[2],
                   icon: Icons.videocam_rounded,
-                  label: "Live Session",
+                  label: "New Live Session",
                   onPressed: () {
                     _animationController.reverse().then((_) async {
                       widget.onClose();
@@ -1426,7 +1426,7 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                 _buildMenuItem(
                   position: _itemPositions[3],
                   icon: Icons.psychology_alt_rounded,
-                  label: "AutoDiary Session",
+                  label: "Automatic Diary",
                   onPressed: () => _closeAndNavigate(() {
                     final currentUser = FirebaseAuth.instance.currentUser;
                     if (currentUser == null) {

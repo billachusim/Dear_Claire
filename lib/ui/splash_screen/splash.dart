@@ -6,6 +6,7 @@ import 'package:clairediary/utils/color.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../featured/notified_session_details.dart';
@@ -115,31 +116,42 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Pallet.colorPrimary,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              Expanded(
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (_, child) {
-                    return Transform.rotate(
-                      angle: _controller.value * 1 * math.pi,
-                      child: child,
-                    );
-                  },
-                  child: Image.asset(
-                    "assets/images/claire_icon.png",
-                    height: 120,
-                    width: 120,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: Pallet.colorPrimary,
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: AnimatedBuilder(
+                      animation: _controller,
+                      builder: (_, child) {
+                        return Transform.rotate(
+                          angle: _controller.value * 1 * math.pi,
+                          child: child,
+                        );
+                      },
+                      child: Image.asset(
+                        "assets/images/claire_icon.png",
+                        height: 120,
+                        width: 120,
+                      ),
+                    ),
                   ),
-                ),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 10.0),
+                    child: Text(
+                      "By Social Faculty",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
+                ],
               ),
-              Text("By Social Faculty", style: TextStyle(color: Colors.white),)
-            ],
+            ),
           ),
         ),
       ),
