@@ -33,6 +33,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
   bool isServiceRunning = false;
   TimeOfDay? _dailyRitualTime;
   _SanctuaryView _currentView = _SanctuaryView.main;
+  TimeOfDay? _tempSelectedTime;
 
   // --- Animation State ---
   late AnimationController _pulseController;
@@ -117,8 +118,19 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
+      String savedTitle = prefs.getString('autoDiaryTitle') ?? "";
+
+      // If no title is saved, generate the dynamic date-based default
+      if (savedTitle.isEmpty) {
+        final now = DateTime.now();
+        // Format: 10 am Wednesday, July 17, 2025
+        final datePart = DateFormat("EEEE, MMMM d, yyyy").format(now);
+        final timePart = DateFormat("h a").format(now).toLowerCase();
+        savedTitle = "From Auto Diary Mode At $timePart $datePart";
+      }
+
       setState(() {
-        _titleController.text = prefs.getString('autoDiaryTitle') ?? "Auto Diary";
+        _titleController.text = savedTitle;
         _isPrivate = prefs.getBool('autoDiaryIsPrivate') ?? false;
         _repliesEnabled = prefs.getBool('autoDiaryRepliesEnabled') ?? true;
         _locationEnabled = prefs.getBool('autoDiaryLocationEnabled') ?? false;
@@ -127,6 +139,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       });
     }
   }
+
 
   Future<void> _saveSettings() async {
     final prefs = await SharedPreferences.getInstance();
@@ -410,7 +423,12 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
         ),
         const SizedBox(height: 25),
         _buildActionButton(
-          onTap: () => setState(() => _currentView = _SanctuaryView.whisper),
+          onTap: () {
+            setState(() {
+              _tempSelectedTime = null;
+              _currentView = _SanctuaryView.whisper;
+            });
+          },
           icon: Icons.schedule_rounded,
           label: 'Schedule Monitor',
           color: Pallet.colorSecondary.withValues(alpha: 0.7),
@@ -418,8 +436,12 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
         const SizedBox(height: 25),
         _dailyRitualTime == null
             ? _buildActionButton(
-          onTap: () =>
-              setState(() => _currentView = _SanctuaryView.ritual),
+          onTap: () {  setState(() {
+            _tempSelectedTime = null;
+            _currentView = _SanctuaryView.ritual;
+          });
+          },
+
           icon: Icons.sync_rounded,
           label: 'Set Daily Monitor',
           color: Pallet.colorPrimary.withValues(alpha: 0.7),
@@ -438,7 +460,9 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
   }
 
   Widget _buildTimePickerView({required bool isDaily}) {
-    TimeOfDay selectedTime = _dailyRitualTime ?? TimeOfDay.now();
+    // Initialize the persistent temp variable only if it's currently null
+    _tempSelectedTime ??= _dailyRitualTime ?? TimeOfDay.now();
+
     return Column(
       key: ValueKey(isDaily ? 'ritualPicker' : 'whisperPicker'),
       mainAxisAlignment: MainAxisAlignment.center,
@@ -462,16 +486,27 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
             child: CupertinoTimerPicker(
               mode: CupertinoTimerPickerMode.hm,
               initialTimerDuration: Duration(
-                  hours: selectedTime.hour, minutes: selectedTime.minute),
-              onTimerDurationChanged: (Duration d) => selectedTime =
-                  TimeOfDay(hour: d.inHours % 24, minute: d.inMinutes % 60),
+                  hours: _tempSelectedTime!.hour, minutes: _tempSelectedTime!.minute),
+              onTimerDurationChanged: (Duration d) {
+                // Update the class-level variable directly
+                _tempSelectedTime = TimeOfDay(hour: d.inHours % 24, minute: d.inMinutes % 60);
+              },
             ),
           ),
         ),
         const SizedBox(height: 30),
         _buildActionButton(
-          onTap: () =>
-          isDaily ? _scheduleDaily(selectedTime) : _scheduleOneTime(selectedTime),
+          onTap: () {
+            final timeToSchedule = _tempSelectedTime!;
+            // Clear temp time after scheduling so next entry re-initializes
+            _tempSelectedTime = null;
+
+            if (isDaily) {
+              _scheduleDaily(timeToSchedule);
+            } else {
+              _scheduleOneTime(timeToSchedule);
+            }
+          },
           icon: isDaily ? Icons.sync_rounded : Icons.check_circle_outline,
           label: isDaily ? 'Start Daily Monitor' : 'Schedule Monitor',
           color: isDaily
@@ -481,6 +516,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       ],
     );
   }
+
 
   Widget _buildSettingsView() {
     return SingleChildScrollView(

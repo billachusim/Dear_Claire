@@ -1636,6 +1636,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
     return SafeArea(
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         backgroundColor: Pallet.colorSecondaryDark,
         appBar: AppBar(
           backgroundColor: visitedUser?.userType == 'REGULAR'

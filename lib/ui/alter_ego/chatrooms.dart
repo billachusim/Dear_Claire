@@ -65,6 +65,7 @@ class _ChatRoomsState extends State<ChatRooms> with AutomaticKeepAliveClientMixi
           return Future.value(false);
         },
         child: Scaffold(
+          resizeToAvoidBottomInset: true,
           body: Stack(
               children:[
                 CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),

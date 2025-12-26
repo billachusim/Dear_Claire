@@ -182,6 +182,7 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKee
         return Future.value(false);
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         backgroundColor: Pallet.colorSecondary,
         body: CustomScrollView(
           slivers: <Widget>[

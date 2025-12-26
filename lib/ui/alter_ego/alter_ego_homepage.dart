@@ -152,10 +152,10 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // 3. REMOVE FutureBuilder here. Just return the Scaffold.
     // If userType is empty, we show a loader while initState finishes _loadUserData.
     if (userType.isEmpty) {
       return Scaffold(
+        resizeToAvoidBottomInset: true,
         backgroundColor: Pallet.colorBottomNav,
         body: Center(child: CircularProgressIndicator()),
       );
