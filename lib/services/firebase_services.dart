@@ -825,7 +825,7 @@ class FirebaseServices extends ChangeNotifier {
 
   /// SignUp user
   Future<bool> register(
-      BuildContext context, String email, String secretCode, String nickname) async {
+      BuildContext context, String email, String secretCode, String nickname, {String? referredBy}) async {
     try {
       // 1. Create the user with Firebase Auth
       final _user = await FirebaseAuth.instance
@@ -871,9 +871,13 @@ class FirebaseServices extends ChangeNotifier {
           .signInWithEmailAndPassword(email: email, password: secretCode)
           .then((value) => setUsersId(value.user!.uid));
 
+      if (referredBy != null && referredBy.isNotEmpty && referredBy != _user.user!.uid) {
+        await _processReferralReward(newUserId: _user.user!.uid, referrerId: referredBy);
+      }
+
       // 6. Trigger a welcome email
       await FirebaseFirestore.instance.collection('mail').add({
-        'to': [email], // The recipient's email address
+        'to': [email],
         'template': {
           'name': 'welcome_template',
           'data': {
@@ -900,6 +904,32 @@ class FirebaseServices extends ChangeNotifier {
       logger.e("A general error occurred in register method: $e");
       showToast(message: AppString.open_up_error);
       return false;
+    }
+  }
+
+  Future<void> _processReferralReward({required String newUserId, required String referrerId}) async {
+    try {
+      // Verify referrer exists
+      DocumentSnapshot refDoc = await _firebaseFirestore.collection(AppString.users).doc(referrerId).get();
+      if (!refDoc.exists) return;
+
+      // 1. Reward New User (1000)
+      await updateTreasuryAndUser(
+        userId: newUserId,
+        amount: 1000,
+        type: t_model.TransactionType.credit,
+        userTransactionDescription: "Referral Welcome Bonus",
+      );
+
+      // 2. Reward Referrer (1000)
+      await updateTreasuryAndUser(
+        userId: referrerId,
+        amount: 1000,
+        type: t_model.TransactionType.credit,
+        userTransactionDescription: "Referral Reward (New User Join)",
+      );
+    } catch (e) {
+      logger.e("Referral processing error: $e");
     }
   }
 

@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../ego-profile/top_up_loves_page.dart';
+
 class HowClaireWorks extends StatefulWidget {
   const HowClaireWorks({Key? key}) : super(key: key);
 
@@ -137,8 +139,11 @@ class _HowClaireWorksState extends State<HowClaireWorks> {
                 subtitle: "Support the Dear Claire Project and get your donations back as Loves in your wallet.",
                 color: Pallet.deepGreen,
                 onTap: () {
-                  final Uri donateUrl = Uri.parse(AppString.donate_url);
-                  launchUrl(donateUrl);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => TopUpLovesPage(),
+                    ),
+                  );
                 },
                 delay: 1100,
               ),

@@ -32,6 +32,7 @@ import '../../widgets/updates/announcements_widget.dart';
 import '../Search/search_page.dart';
 import '../featured/widget/custom_post_details_screen.dart';
 import '../featured/widget/post_details_widget.dart';
+import '../menu_items/referral_program_page.dart';
 import '../menu_items/rules_of_love_page.dart';
 import '../splash_screen/custom_splash.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
@@ -73,6 +74,7 @@ class AppRoutes {
   static const games = '/games';
   static const updatesAndAnnouncements = '/updatesAndAnnouncements';
   static const setupAutoDiary = '/setupAutoDiary';
+  static const referralProgram = '/referralProgram';
 }
 
 class AppRouter {
@@ -233,6 +235,12 @@ class AppRouter {
           builder: (_) => SearchPage(title: 'Search Claire',),
           settings: settings,
           fullscreenDialog: true,
+        );
+
+      case AppRoutes.referralProgram:
+        return MaterialPageRoute(
+          builder: (_) => ReferralProgramPage(),
+          settings: settings,
         );
 
 

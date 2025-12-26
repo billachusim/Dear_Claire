@@ -8,7 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:ui'; // Needed for ImageFilter.blur
+import 'dart:ui';
+
+import '../ego-profile/top_up_loves_page.dart'; // Needed for ImageFilter.blur
 
 class HowAlterEgoWorks extends StatefulWidget {
   const HowAlterEgoWorks({Key? key}) : super(key: key);
@@ -267,12 +269,17 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
       from: 50,
       delay: const Duration(milliseconds: 1400),
       child: TextButton(
-        onPressed: onDonateClicked,
+        onPressed: () {Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => TopUpLovesPage(),
+          ),
+        );
+      },
         child: Text(
           "Top Up Loves",
           style: GoogleFonts.lato(
             fontSize: 17.0,
-            color: Pallet.colorSecondary,
+            color: Pallet.colorPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),

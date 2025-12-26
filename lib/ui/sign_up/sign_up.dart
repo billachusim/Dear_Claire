@@ -26,6 +26,7 @@ class _SignUpPage extends State<SignUpPage> {
   TextEditingController _emailController = TextEditingController();
   TextEditingController _secretCodeController = TextEditingController();
   TextEditingController _egoNameController = TextEditingController();
+  TextEditingController _referralController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final FirebaseServices _firebaseServices = FirebaseServices();
 
@@ -178,6 +179,12 @@ class _SignUpPage extends State<SignUpPage> {
                   ),
                   SizedBox(height: 20),
                   BuildPasswordField(controller: _secretCodeController),
+                  SizedBox(height: 20),
+                  _buildTextField(
+                    controller: _referralController,
+                    labelText: "Referred by (Optional ID)",
+                    hintText: "Enter the ID of who referred you",
+                  ),
                   SizedBox(height: 40),
                   _buildCreateEgoButton(),
                   SizedBox(height: 20),

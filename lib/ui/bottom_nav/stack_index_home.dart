@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'dart:async';
+import 'package:clairediary/ui/ego-profile/top_up_loves_page.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:clairediary/ui/alter_ego/alter_ego_calls_page.dart'; // For IncomingCall model
@@ -979,28 +980,34 @@ class _AppDrawerState extends State<_AppDrawer> {
               icon: Icons.info_rounded,
               onTap: () => Navigator.of(context).pushNamed(AppRoutes.howClaireWorks)),
           _MenuTile(
-              title: "Request Alter Ego Mode",
+              title: "Alter Ego Mode",
               icon: Icons.star_rounded,
               onTap: () =>
                   Navigator.of(context).pushNamed(AppRoutes.howAlterEgoWorks)),
           _MenuTile(
-            title: "Auto Diary",
+            title: "Auto Diary Mode",
             icon: Icons.auto_awesome_motion_rounded,
-            onTap: () async {
-              if (await widget.isUserSignedIn()) {
+            onTap: () {
                 Navigator.of(context).pushNamed(AppRoutes.setupAutoDiary);
               }
-            },
           ),
           ListTile(
             leading: Icon(Icons.storefront, color: Pallet.colorWhite),
-            title: Text('The Love Store', style: TextStyle(color: Pallet.colorWhite)),
+            title: Text('Buy Things With Love', style: TextStyle(color: Pallet.colorWhite)),
             onTap: () {
-              Navigator.pop(context); // Close the drawer first
+              Navigator.pop(context);
               PageRouter.gotoWidget(LoveStorePage(), context);
             },
           ),
           _MenuTile(
+              title: "Top-Up Love Wallet",
+              icon: Icons.card_giftcard,
+            onTap: () {
+              Navigator.pop(context);
+              PageRouter.gotoWidget(TopUpLovesPage(), context);
+            },
+          ),
+            _MenuTile(
             title: "More Games With Claire",
             icon: Icons.gamepad_rounded,
             onTap: () {
@@ -1008,11 +1015,15 @@ class _AppDrawerState extends State<_AppDrawer> {
               Navigator.of(context).pushNamed(AppRoutes.games);
             },
           ),
-          _MenuTile(
-              title: "Send Claire To Someone",
-              icon: Icons.share_rounded,
-              onTap: widget.sendClaireToSomeone),
-        ],
+          ListTile(
+            leading: Icon(Icons.share_rounded, color: Pallet.colorWhite),
+            title: Text('Anonymous Referral Program', style: GoogleFonts.lato()),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, AppRoutes.referralProgram);
+            },
+          ),
+            ],
       ),
     );
   }
