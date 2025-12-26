@@ -220,7 +220,7 @@ class ClairNotification {
       "If you don't tell me, I won't know.",
     ];
     final message = messages[Random().nextInt(messages.length)];
-    await Future.delayed(Duration(minutes: 5), () {
+    await Future.delayed(Duration(minutes: 10), () {
       flutterLocalNotificationsPlugin.show(0, 'Claireminder',
           message.toString(), _notificationDetails(),
           payload: message.contains("game") ? "game" : "claireminder");
@@ -251,7 +251,7 @@ class ClairNotification {
       "Don't forget to show love.",
     ];
     final message = messages[Random().nextInt(messages.length)];
-    await Future.delayed(Duration(seconds: 7), () {
+    await Future.delayed(Duration(seconds: 15), () {
       Fluttertoast.showToast(
         toastLength: Toast.LENGTH_LONG,
         msg: message.toString(),

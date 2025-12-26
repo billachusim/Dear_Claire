@@ -817,8 +817,8 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       final int currentLoves = user.currentLoveCount ?? 0;
 
       // 2. Check for 10,000 threshold requirement
-      if (currentLoves < 10000) {
-        showToast("You need at least 10,000 Loves to access this technology.");
+      if (currentLoves < 2000) {
+        showToast("You need at least 2,000 Loves to access this technology.");
         return false;
       }
 

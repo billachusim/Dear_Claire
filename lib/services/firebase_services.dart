@@ -55,8 +55,6 @@ class FirebaseServices extends ChangeNotifier {
 
 
   /// Handles all love transactions between a user and the Claire Treasury.
-  /// This logic follows the rule that `totalLoveCount` only ever increases for any user,
-  /// including Claire. Outgoing payments are reflected in `withdrawnLoveCount`.
   Future<bool> updateTreasuryAndUser({
     required String userId,
     required int amount,
@@ -73,33 +71,24 @@ class FirebaseServices extends ChangeNotifier {
     const String claireId = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
     const int treasuryMinBalance = 4000000;
     final int transactionTax = (amount * 0.10).round();
-    final DocumentReference claireDoc = _firebaseFirestore
-        .collection('users')
-        .doc(claireId);
-    final DocumentReference userDoc = _firebaseFirestore.collection('users').doc(
-        userId);
+    final DocumentReference claireDoc = _firebaseFirestore.collection('users').doc(claireId);
+    final DocumentReference userDoc = _firebaseFirestore.collection('users').doc(userId);
     final TransactionService transactionService = TransactionService();
 
-    if (type == t_model.TransactionType.credit) {
-      // USER is RECEIVING loves (deduct from Claire)
-      try {
+    try {
+      if (type == t_model.TransactionType.credit) {
+        // USER RECEIVING (Claire Withdrawing)
         final claireSnapshot = await claireDoc.get();
-        final claireCurrentLoves = (claireSnapshot.data() as Map<String,
-            dynamic>?)?['currentLoveCount'] ?? 0;
+        final claireCurrentLoves = (claireSnapshot.data() as Map<String, dynamic>?)?['currentLoveCount'] ?? 0;
 
         if (claireCurrentLoves < treasuryMinBalance) {
-          // Treasury is too low, mark as pending and DO NOT process.
           await transactionService.recordTransaction(
             userId: userId,
             amount: amount,
             type: type,
             description: userTransactionDescription,
             status: t_model.TransactionStatus.pending,
-            // Mark as pending
-            metadata: {
-              ...metadata ?? {},
-              'treasury_status': 'pending_low_balance'
-            },
+            metadata: {...?metadata, 'treasury_status': 'pending_low_balance'},
           );
           return false;
         }
@@ -107,14 +96,16 @@ class FirebaseServices extends ChangeNotifier {
         // Treasury has enough, process the transaction for both.
         await userDoc.update({
           'currentLoveCount': FieldValue.increment(amount),
-          'totalLoveCount': FieldValue.increment(amount), // User's lifetime total increases
+          'totalLoveCount': FieldValue.increment(amount),
           'fromGameWins': FieldValue.increment(fromGameWins),
           'fromRoomVisits': FieldValue.increment(fromRoomVisits),
           'fromLoveTransfer': FieldValue.increment(fromLoveTransfer),
         });
+
         await claireDoc.update({
           'currentLoveCount': FieldValue.increment(-amount),
           'forLoveTransfer': FieldValue.increment(transactionTax),
+          'withdrawnLoveCount': FieldValue.increment(amount),
           'forGameLoses': FieldValue.increment(forGameLoses),
           'forRoomVisits': FieldValue.increment(forRoomVisits),
         });
@@ -122,19 +113,24 @@ class FirebaseServices extends ChangeNotifier {
         await transactionService.recordTransaction(
           userId: userId,
           amount: amount,
-          type: type,
+          type: t_model.TransactionType.credit,
           description: userTransactionDescription,
           status: t_model.TransactionStatus.approved,
           metadata: metadata,
         );
-        return true; // Transaction approved
-      } catch (e) {
-        print("Error in treasury credit transaction: $e");
-        return false;
-      }
-    } else {
-      // USER is SPENDING/WITHDRAWING loves (debit)
-      try {
+
+        // Audit for Claire
+        await transactionService.recordTransaction(
+          userId: claireId,
+          amount: amount,
+          type: t_model.TransactionType.debit,
+          description: "Treasury Payout: $userTransactionDescription (User: $userId)",
+          metadata: metadata,
+        );
+
+        return true;
+      } else {
+        // USER DEBIT (Claire Receiving)
         await userDoc.update({
           'currentLoveCount': FieldValue.increment(-amount),
           'withdrawnLoveCount': FieldValue.increment(amount),
@@ -142,35 +138,39 @@ class FirebaseServices extends ChangeNotifier {
           'forGameLoses': FieldValue.increment(forGameLoses),
           'forRoomVisits': FieldValue.increment(forRoomVisits),
         });
-        // Update Claire's balances everytime with transaction tax
-        await claireDoc.update({
-          'currentLoveCount': FieldValue.increment(transactionTax),
-          'totalLoveCount': FieldValue.increment(transactionTax),
-          'forLoveTransfer': FieldValue.increment(transactionTax),
-          'forRoomVisits': FieldValue.increment(forRoomVisits),
 
+        await claireDoc.update({
+          'currentLoveCount': FieldValue.increment(amount),
+          'totalLoveCount': FieldValue.increment(amount),
+          'fromLoveTransfer': FieldValue.increment(amount),
+          'fromRoomVisits': FieldValue.increment(fromRoomVisits),
         });
+
         await transactionService.recordTransaction(
           userId: userId,
           amount: amount,
-          type: type,
+          type: t_model.TransactionType.debit,
           description: userTransactionDescription,
-          status: t_model.TransactionStatus.pending, // Always pending for withdrawals
+          status: t_model.TransactionStatus.approved,
           metadata: metadata,
         );
 
-        // Return true on a successful debit transaction so the UI can proceed.
+        // Audit for Claire
+        await transactionService.recordTransaction(
+          userId: claireId,
+          amount: amount,
+          type: t_model.TransactionType.credit,
+          description: "Treasury Income: $userTransactionDescription (From: $userId)",
+          metadata: metadata,
+        );
+
         return true;
-      } catch (e) {
-        print("Error in treasury debit (withdrawal) transaction: $e");
-        return false;
       }
+    } catch (e) {
+      print("Error in updateTreasuryAndUser: $e");
+      return false;
     }
   }
-
-
-
-
 
   /// Handles a direct user-to-user love transfer with a 10% tax for Claire.
   /// This is a three-way transaction:
@@ -208,14 +208,12 @@ class FirebaseServices extends ChangeNotifier {
     try {
       final senderSnapshot = await senderDoc.get();
       final senderLoves = (senderSnapshot.data() as Map<String, dynamic>?)?['currentLoveCount'] ?? 0;
-      if (senderLoves < totalDebitAmount) {
-        print('Insufficient funds');
-        return false;
-      }
+      if (senderLoves < totalDebitAmount) return false;
 
       // 1. Debit the sender (spendable loves only)
       await senderDoc.update({
         'currentLoveCount': FieldValue.increment(-totalDebitAmount),
+        'withdrawnLoveCount': FieldValue.increment(totalDebitAmount),
         'forLoveTransfer': FieldValue.increment(forLoveTransfer),
         'forRoomVisits': FieldValue.increment(forRoomVisits),
         'loveSentForThanks': FieldValue.increment(forThanks),
@@ -246,37 +244,29 @@ class FirebaseServices extends ChangeNotifier {
       // If the transaction is successful, record the individual transaction logs.
       // Sender's Debit Record
       await transactionService.recordTransaction(
-        userId: senderId,
-        amount: totalDebitAmount,
-        type: t_model.TransactionType.debit,
-        description: senderTransactionDesc,
-        metadata: metadata,
+        userId: senderId, amount: totalDebitAmount, type: t_model.TransactionType.debit,
+        description: senderTransactionDesc, metadata: metadata,
       );
 
       // Receiver's Credit Record
       await transactionService.recordTransaction(
-        userId: receiverId,
-        amount: amountToSend,
-        type: t_model.TransactionType.credit,
-        description: receiverTransactionDesc,
-        metadata: metadata,
+        userId: receiverId, amount: amountToSend, type: t_model.TransactionType.credit,
+        description: receiverTransactionDesc, metadata: metadata,
       );
 
       // Claire's Tax Credit Record (Optional but good for auditing)
       await transactionService.recordTransaction(
-        userId: claireId,
-        amount: taxAmount,
-        type: t_model.TransactionType.credit,
-        description: claireTransactionDesc,
-        metadata: metadata,
+        userId: claireId, amount: taxAmount, type: t_model.TransactionType.credit,
+        description: claireTransactionDesc, metadata: metadata,
       );
 
-      return true; // Success
+      return true;
     } catch (e) {
       print("Error during user-to-user love transfer: $e");
-      return false; // Failure
+      return false;
     }
   }
+
 
 
   /// Fetches a list of transactions for a specific user.
