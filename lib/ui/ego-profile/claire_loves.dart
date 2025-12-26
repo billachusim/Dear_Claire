@@ -1,6 +1,7 @@
 import 'dart:core';
 import 'dart:math';
 
+import 'package:clairediary/ui/ego-profile/top_up_loves_page.dart';
 import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/ego-profile/love_history_chart.dart';
@@ -12,6 +13,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:clairediary/data/models/transaction_model.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -175,34 +178,51 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Row(
+        child: Column(
           children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                icon: Icon(Icons.arrow_upward_rounded, color: Colors.white),
-                label: Text('Send Love', style: TextStyle(color: Colors.white)),
-                onPressed: _showSendLoveDialog,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: Icon(Icons.arrow_upward_rounded, color: Colors.white),
+                    label: Text('Send Love', style: TextStyle(color: Colors.white)),
+                    onPressed: _showSendLoveDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent.withValues(alpha: 0.8),
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
                 ),
-              ),
-            ),
-            SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton.icon(
-                icon: Icon(Icons.arrow_downward_rounded, color: Colors.white),
-                label: Text('Receive Love', style: TextStyle(color: Colors.white)),
-                onPressed: _showReceiveLoveDialog,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.withValues(alpha: 0.8),
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    icon: Icon(Icons.arrow_downward_rounded, color: Colors.white),
+                    label: Text('Receive Love', style: TextStyle(color: Colors.white)),
+                    onPressed: _showReceiveLoveDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.withValues(alpha: 0.8),
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16), // Spacing
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.add_shopping_cart, color: Colors.white),
+                label: Text('Top Up Loves', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  // Navigate to Top Up Page
+                  Get.to(() => TopUpLovesPage());
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Pallet.colorPrimary, // Or your preferred color
+                  padding: EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
@@ -211,6 +231,7 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
       ),
     );
   }
+
 
 
   void _showReceiveLoveDialog() {
