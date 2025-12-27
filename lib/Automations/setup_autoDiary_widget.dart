@@ -125,8 +125,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
         final now = DateTime.now();
         // Format: 10 am Wednesday, July 17, 2025
         final datePart = DateFormat("EEEE, MMMM d, yyyy").format(now);
-        final timePart = DateFormat("h a").format(now).toLowerCase();
-        savedTitle = "From Auto Diary Mode At $timePart $datePart";
+        savedTitle = "From Auto Diary Mode On $datePart";
       }
 
       setState(() {

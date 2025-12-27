@@ -33,6 +33,8 @@ import '../../widgets/pre_call_dialog.dart';
 import '../alter_ego/alter_ego_calls_page.dart';
 import '../call/admin_call_page.dart';
 import '../call/admin_live_call_page.dart';
+import '../call/companion_call_page.dart';
+import '../call/live_call_page.dart';
 import '../create_session/sound/custom_play_sound_widget.dart';
 import '../ego-profile/activity_widget.dart';
 import '/services/data/notification_model.dart' as pushNotification;
@@ -259,77 +261,62 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
   void _initiateCallToUser({required bool isVideoCall}) async {
     // 1. Show the pre-call setup dialog
-    final callDetails = await showPreCallDialog(context, isVideoCall: isVideoCall);
+    final callDetails = await showPreCallDialog(context, isVideoCall: isVideoCall);if (callDetails == null) return;
 
-    // 2. Check if the user cancelled
-    if (callDetails == null) {
-      print("Admin cancelled call setup.");
-      return;
-    }
+    // 2. Determine if the caller is an Admin
+    bool isCallerAdmin = _visitingUser?.userType == 'ADMIN' || _visitingUser?.userType == 'SUPER_ADMIN';
 
-    // 3. Prepare call data with reversed roles
-    final Uuid uuid = Uuid();
-    final callId = uuid.v4();
-    final collectionName = isVideoCall ? 'live_sessions' : 'companion_calls';
-    final channelName = isVideoCall ? 'live_session_$callId' : 'companion_call_$callId';
-    final adminId = currentUser?.uid; // The admin is the caller
-    final recipientId = widget.visitedUsersID; // The visited user is the receiver
+    if (!mounted) return;
 
-    if (adminId == null) {
-      showToast("Authentication error. Cannot place call.");
-      return;
-    }
+    if (isCallerAdmin) {
+      // --- ADMIN CALL LOGIC ---
+      final Uuid uuid = Uuid();
+      final callId = uuid.v4();
+      final collectionName = isVideoCall ? 'live_sessions' : 'companion_calls';
+      final channelName = isVideoCall ? 'live_session_$callId' : 'companion_call_$callId';
 
-    // 4. Create the call document in Firestore
-    try {
-      await FirebaseFirestore.instance.collection(collectionName).doc(callId).set({
-        'callerId': adminId, // Admin is the caller
-        'receiverId': recipientId, // User is the receiver
-        'channelName': channelName,
-        'status': 'dialing',
-        'createdAt': FieldValue.serverTimestamp(),
-        'recordingUrl': null,
-        // --- Details from the dialog ---
-        'title': callDetails.title,
-        'moodId': callDetails.moodId,
-        'isPrivate': callDetails.isPrivate,
-        'repliesEnabled': callDetails.repliesEnabled,
-        'locationEnabled': callDetails.locationEnabled,
-        'locationData': callDetails.locationData,
-        'type': isVideoCall ? 'video' : 'audio',
-      });
+      try {
+        await FirebaseFirestore.instance.collection(collectionName).doc(callId).set({
+          'callerId': currentUser?.uid,
+          'receiverId': widget.visitedUsersID,
+          'channelName': channelName,
+          'status': 'dialing',
+          'createdAt': FieldValue.serverTimestamp(),
+          'title': callDetails.title,
+          'moodId': callDetails.moodId,
+          'isPrivate': callDetails.isPrivate,
+          'repliesEnabled': callDetails.repliesEnabled,
+          'locationEnabled': callDetails.locationEnabled,
+          'locationData': callDetails.locationData,
+          'type': isVideoCall ? 'video' : 'audio',
+        });
 
-      // 5. Navigate the admin to the appropriate call page
-      // We need to create a temporary IncomingCall object to pass to the admin pages
-      final callDoc = await FirebaseFirestore.instance.collection(collectionName).doc(callId).get();
-      final tempIncomingCall = IncomingCall(doc: callDoc, isVideoCall: isVideoCall);
+        final callDoc = await FirebaseFirestore.instance.collection(collectionName).doc(callId).get();
+        final tempIncomingCall = IncomingCall(doc: callDoc, isVideoCall: isVideoCall);
 
-      if (!mounted) return;
-
-      if (isVideoCall) {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => AdminLiveCallPage(
-              user: currentUser!,
-              call: tempIncomingCall,
-            ),
+            builder: (context) => isVideoCall
+                ? AdminLiveCallPage(user: currentUser!, call: tempIncomingCall)
+                : AdminCallPage(user: currentUser!, call: tempIncomingCall),
           ),
         );
-      } else {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => AdminCallPage(
-              user: currentUser!,
-              call: tempIncomingCall,
-            ),
-          ),
-        );
+      } catch (e) {
+        showToast("Failed to initiate admin call.");
       }
-    } catch (e) {
-      print("Error initiating call to user: $e");
-      showToast("Failed to initiate call. Please try again.");
+    } else {
+      // --- REGULAR USER CALL LOGIC (To Claire) ---
+      // These pages handle their own Firestore document creation internally
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => isVideoCall
+              ? LiveCallPage(user: currentUser!, callDetails: callDetails)
+              : CompanionCallPage(user: currentUser!, callDetails: callDetails),
+        ),
+      );
     }
   }
+
 
 
   /// Query Ego stream from Firestore
@@ -1653,20 +1640,22 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
           ),
           elevation: 0,
           actions: [
-            // Only show buttons if the visiting user is an admin
-            if (_visitingUser?.userType == 'ADMIN' || _visitingUser?.userType == 'SUPER_ADMIN')
+            // Show buttons if visiting user is Admin OR if the profile being visited belongs to a SUPER_ADMIN (Claire)
+            if ((_visitingUser?.userType == 'ADMIN' || _visitingUser?.userType == 'SUPER_ADMIN') ||
+                (visitedUser?.userType == 'ADMIN' || visitedUser?.userType == 'SUPER_ADMIN')) ...[
               IconButton(
                 icon: const Icon(Icons.call),
-                tooltip: 'Companion Call User',
+                tooltip: 'Companion Call',
                 onPressed: () => _initiateCallToUser(isVideoCall: false),
               ),
-            if (_visitingUser?.userType == 'ADMIN' || _visitingUser?.userType == 'SUPER_ADMIN')
               IconButton(
                 icon: const Icon(Icons.videocam),
-                tooltip: 'Live Session with User',
+                tooltip: 'Live Session',
                 onPressed: () => _initiateCallToUser(isVideoCall: true),
               ),
+            ]
           ],
+
         ),
         body: Column(
           children: [

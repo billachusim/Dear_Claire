@@ -11,13 +11,15 @@ String timeConverter(Timestamp timestamp,
   String _date = '';
 
   if (time == TimeConverterEnum.Featured)
-    _date = DateFormat('EEE. MMM dd, yyyy. kk:mm a').format(timestamp.toDate());
+    // Changed 'kk:mm' to 'hh:mm a' for 12-hour format with AM/PM
+    _date = DateFormat('EEE. MMM dd, yyyy. hh:mm a').format(timestamp.toDate());
 
   if (time == TimeConverterEnum.Comment)
     _date = DateFormat('MMM dd, yyyy').format(timestamp.toDate());
 
   return _date;
 }
+
 
 String formatFirestoreTimestamp(Timestamp timestamp) {
   // Converts Firestore Timestamp to a DateTime object
