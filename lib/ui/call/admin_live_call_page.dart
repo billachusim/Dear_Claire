@@ -35,6 +35,8 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
   int? _remoteUid;
   bool _localUserJoined = false;
   String? _recordingPath;
+  StreamSubscription? _statusSubscription;
+  bool _isEnding = false;
 
   // --- NEW: For the call timer ---
   Timer? _timer;
@@ -65,8 +67,11 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
 
   @override
   void dispose() {
-    _timer?.cancel(); // NEW
-    _endCall();
+    _timer?.cancel();
+    _statusSubscription?.cancel();
+    if (!_isEnding) {
+      _endCall();
+    }
     super.dispose();
   }
 
@@ -105,7 +110,7 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
               _remoteUid = remoteUid;
               _callStatus = "Connected";
             });
-            _startCallTimer(); // NEW: Start timer when connected
+            _startCallTimer();
             FirebaseFirestore.instance
                 .collection('live_sessions')
                 .doc(widget.call.doc.id)
@@ -120,11 +125,32 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
           },
         ),
       );
+
+      // --- NEW: Status Listener to detect User hangup ---
+      _statusSubscription = FirebaseFirestore.instance
+          .collection('live_sessions')
+          .doc(widget.call.doc.id)
+          .snapshots()
+          .listen((snapshot) {
+        if (snapshot.exists) {
+          final data = snapshot.data() as Map<String, dynamic>;
+          final status = data['status'];
+          // If User ends or misses the call while Admin is joined/connecting
+          if ((status == 'ended' || status == 'missed') && _isJoined) {
+            _endCall();
+          }
+        }
+      });
+
       await _join();
     } catch (e) {
       print("Error setting up Agora for admin: $e");
+      setState(() {
+        _callStatus = "Failed to connect.";
+      });
     }
   }
+
 
   Future<void> _join() async {
     String token;
@@ -169,12 +195,13 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
     }
   }
 
-  Future<void> _stopRecordingAndUpload() async {
+  Future<void> _stopRecordingAndUpload({String status = 'ended'}) async {
     if (_recordingPath == null) {
       await FirebaseFirestore.instance
           .collection('live_sessions')
           .doc(widget.call.doc.id)
-          .update({'status': 'ended'}).catchError((e) => print("Error updating status: $e"));
+          .update({'status': status, 'endedAt': FieldValue.serverTimestamp()})
+          .catchError((e) => print("Error updating status: $e"));
       return;
     }
 
@@ -196,26 +223,43 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
       await FirebaseFirestore.instance
           .collection('live_sessions')
           .doc(widget.call.doc.id)
-          .update({'recordingUrl': downloadUrl, 'status': 'ended'});
+          .update({
+        'recordingUrl': downloadUrl,
+        'status': status,
+        'endedAt': FieldValue.serverTimestamp()
+      });
     } catch (e) {
       print("Error performing final update on live session document: $e");
     }
     _recordingPath = null;
   }
 
+
   Future<void> _endCall() async {
-    _timer?.cancel(); // NEW
-    await _stopRecordingAndUpload();
-    if (_engine != null) {
-      await _engine?.stopPreview();
-      await _engine?.leaveChannel();
-      await _engine?.release();
-      _engine = null;
-    }
+    if (_isEnding) return;
+    _isEnding = true;
+    _timer?.cancel();
+    _statusSubscription?.cancel();
+
+    String finalStatus = (_remoteUid != null) ? 'ended' : 'rejected';
+
+    await _stopRecordingAndUpload(status: finalStatus);
+
     if (mounted) {
       Navigator.of(context).pop();
     }
+
+    if (_engine != null) {
+      await _engine?.stopPreview();
+      await _engine?.leaveChannel();
+      Future.delayed(const Duration(milliseconds: 200), () {
+        _engine?.release();
+        _engine = null;
+      });
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

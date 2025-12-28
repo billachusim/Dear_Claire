@@ -36,6 +36,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
   RtcEngine? _engine;
   bool _isJoined = false;
   int? _remoteUid;
+  bool _isEnding = false;
 
   String? _channelName;
   String? _callDocId;
@@ -87,7 +88,9 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
   void dispose() {
     _timer?.cancel(); // NEW: Stop the timer
     _callDocSubscription?.cancel();
-    _endCall();
+    if (!_isEnding) {
+      _endCall(manual: false);
+    }
     super.dispose();
   }
 
@@ -129,24 +132,31 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
   }
 
   void _listenForRecording() {
-    if (_callDocId == null) return;
     _callDocSubscription = FirebaseFirestore.instance
         .collection('companion_calls')
         .doc(_callDocId)
-        .snapshots()
-        .listen((snapshot) async {
-      if (!snapshot.exists || _diaryCreationInProgress) return;
+        .snapshots().listen((snapshot) async {
+      if (!snapshot.exists) return;
 
       final data = snapshot.data() as Map<String, dynamic>;
       final recordingUrl = data['recordingUrl'] as String?;
       final status = data['status'] as String?;
 
-      if (recordingUrl != null && recordingUrl.isNotEmpty && status == 'ended') {
-        _diaryCreationInProgress = true; // Prevent multiple executions
-        await _createDiarySessionFromCall(recordingUrl);
-        _callDocSubscription?.cancel();
+      // 1. If Claire ended the call, the status becomes 'ended'
+      if (status == 'ended' || status == 'rejected') {
+        // 2. If there is a recording, wait for it to create the diary
+        if (recordingUrl != null && recordingUrl.isNotEmpty && !_diaryCreationInProgress) {
+          _diaryCreationInProgress = true;
+          await _createDiarySessionFromCall(recordingUrl);
+          _endCall(manual: false); // Now safely pop
+        }
+        // 3. If no recording is expected or it's been a few seconds, just pop
+        else if (!_diaryCreationInProgress) {
+          _endCall(manual: false);
+        }
       }
     });
+
   }
 
   Future<void> _createDiarySessionFromCall(String audioUrl) async {
@@ -245,7 +255,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
           }
         },
         onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
-          _endCall();
+          _endCall(manual: false);
         },
         onError: (ErrorCodeType err, String msg) {
           print('[Agora Error] err: $err, msg: $msg');
@@ -290,43 +300,73 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
   }
 
 
-  Future<void> _endCall() async {
+  Future<void> _endCall({bool manual = false}) async {
+    if (_isEnding) return; // Prevent re-entry
+
+    if (manual && (_remoteUid != null || _callStatus == "Connected")) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("End Session?"),
+          content: const Text("Please ask Claire to end the call so she can save this as a diary session for you."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    _isEnding = true; // Mark as ending immediately
+
+    // 1. Stop all listeners and timers first
     _timer?.cancel();
     await _callDocSubscription?.cancel();
 
-    // --- FIX: Update status on hangup if call was not connected ---
-    if (_remoteUid == null && _callDocId != null) {
-      // If no admin ever joined, mark the call as 'missed'.
-      await FirebaseFirestore.instance
-          .collection('companion_calls')
-          .doc(_callDocId)
-          .update({'status': 'missed'})
-          .catchError((e) => print("Error marking call as missed: $e"));
+    // 2. Handle Firestore Status
+    if (_callDocId != null) {
+      try {
+        final docRef = FirebaseFirestore.instance
+            .collection('companion_calls')
+            .doc(_callDocId);
+
+        final snapshot = await docRef.get();
+        if (snapshot.exists) {
+          String currentStatus = snapshot.data()?['status'] ?? '';
+          if (currentStatus != 'ended' && currentStatus != 'rejected') {
+            await docRef.update({
+              'status': 'ended',
+              'endedAt': FieldValue.serverTimestamp(),
+            });
+          }
+        }
+      } catch (e) {
+        print("Error updating status during end: $e");
+      }
     }
 
+    // 3. NAVIGATE FIRST
+    // We pop BEFORE releasing the engine to prevent the black screen renderer error
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+
+    // 4. CLEANUP AFTER POP
     if (_engine != null) {
       await _engine?.leaveChannel();
-      await _engine?.release();
-      _engine = null;
-    }
-
-    _isJoined = false;
-    _remoteUid = null;
-
-    if (mounted) {
-      setState(() {
-        _callStatus = "Call Ended";
-      });
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
+      // Small delay to ensure the UI is unmounted before full release
+      Future.delayed(const Duration(milliseconds: 200), () {
+        _engine?.release();
+        _engine = null;
       });
     }
   }
 
 
-  // In /lib/ui/call/companion_call_page.dart
+
 
   @override
   Widget build(BuildContext context) {
@@ -420,7 +460,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
   Widget _buildHangUpButton() {
     return GestureDetector(
       onTap: () {
-        _endCall();
+        _endCall(manual: true);
       },
       child: const CircleAvatar(
         radius: 35,

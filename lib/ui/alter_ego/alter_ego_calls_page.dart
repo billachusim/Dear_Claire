@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart' hide AudioPlayer;
 import 'package:rxdart/rxdart.dart';
 import 'package:vibration/vibration.dart';
@@ -25,8 +26,7 @@ class IncomingCall {
   String get callerId => (doc.data() as Map<String, dynamic>)['callerId'] ?? 'Unknown User';
   int get moodId => (doc.data() as Map<String, dynamic>)['moodId'] ?? 17; // Default to Claire mood
   String get locationData => (doc.data() as Map<String, dynamic>)['locationData'] ?? '';
-  String get status => (doc.data() as Map<String, dynamic>)['status'] ?? 'unknown'; // Getter for status
-
+  String get status => (doc.data() as Map<String, dynamic>)['status'] ?? 'unknown';
   String get channelName => (doc.data() as Map<String, dynamic>)['channelName'];
   Timestamp get createdAt => (doc.data() as Map<String, dynamic>)['createdAt'];
 }
@@ -80,7 +80,7 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKee
         .instance
         .collection('companion_calls')
         .where('receiverId', isEqualTo: adminId)
-        .where('status', whereIn: ['ended', 'missed']) // FIX: Query for both statuses
+        .where('status', whereIn: ['ended', 'missed', 'rejected'])
         .orderBy('createdAt', descending: true)
         .limit(10)
         .snapshots()
@@ -92,7 +92,7 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKee
         .instance
         .collection('live_sessions')
         .where('receiverId', isEqualTo: adminId)
-        .where('status', whereIn: ['ended', 'missed']) // FIX: Query for both statuses
+        .where('status', whereIn: ['ended', 'missed', 'rejected'])
         .orderBy('createdAt', descending: true)
         .limit(10)
         .snapshots()
@@ -166,20 +166,23 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKee
     FirebaseFirestore.instance
         .collection(collectionName)
         .doc(call.doc.id)
-        .update({'status': 'ended'});
+        .update({
+      'status': 'rejected',
+      'endedAt': FieldValue.serverTimestamp(),
+    });
   }
 
-  // In /lib/ui/alter_ego/alter_ego_calls_page.dart
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return WillPopScope(
-      onWillPop: (){
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop) return;
         Navigator.of(context)
             .pushReplacementNamed(AppRoutes.alterEgoHomepage);
         showToast("Shake device or use menu to switch back to Ego Mode.");
-        return Future.value(false);
       },
       child: Scaffold(
         resizeToAvoidBottomInset: true,
@@ -337,10 +340,27 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKee
     final moodIcon = Constant.USER_SESSION_MOODS[call.moodId];
     final hasLocation = call.locationData.isNotEmpty;
 
-    // --- Differentiate between ended and missed calls ---
-    final bool isMissed = call.status == 'missed';
-    final subtitleText = isMissed ? "Missed call" : "Call ended";
-    final subtitleColor = isMissed ? Colors.orange.shade300 : Colors.grey.shade600;
+    // --- Format Date and Time ---
+    final String formattedDate = DateFormat('MMM dd, yyyy').format(call.createdAt.toDate());
+    final String formattedTime = DateFormat('hh:mm a').format(call.createdAt.toDate());
+
+    // --- Detailed Status Mapping ---
+    String subtitleText;
+    Color subtitleColor;
+
+    switch (call.status) {
+      case 'missed':
+        subtitleText = "Missed call";
+        subtitleColor = Colors.orange.shade400;
+        break;
+      case 'rejected':
+        subtitleText = "Call rejected";
+        subtitleColor = Colors.red.shade400;
+        break;
+      default:
+        subtitleText = "Call ended";
+        subtitleColor = Colors.grey.shade600;
+    }
 
     return Opacity(
       opacity: 0.8,
@@ -349,35 +369,60 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKee
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         child: ListTile(
           leading: Icon(icon, color: Colors.grey.shade500, size: 40),
-          title: Text(
-            call.title,
-            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  call.title,
+                  style: const TextStyle(
+                      color: Colors.white70, fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                formattedTime,
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+              ),
+            ],
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                subtitleText,
-                style: TextStyle(
-                  color: subtitleColor,
-                  fontSize: 12,
-                  fontStyle: isMissed ? FontStyle.italic : FontStyle.normal,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    subtitleText,
+                    style: TextStyle(
+                      color: subtitleColor,
+                      fontSize: 12,
+                      fontWeight: call.status != 'ended'
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  Text(
+                    formattedDate,
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                  ),
+                ],
               ),
               const SizedBox(height: 5),
               Row(
                 children: [
                   Text(moodIcon, style: const TextStyle(fontSize: 16)),
                   const SizedBox(width: 8),
-                  if (hasLocation) Icon(Icons.location_on, color: Colors.grey.shade500, size: 14),
+                  if (hasLocation) Icon(
+                      Icons.location_on, color: Colors.grey.shade500, size: 14),
                   if (hasLocation) const SizedBox(width: 4),
                   if (hasLocation)
                     Expanded(
                       child: Text(
                         call.locationData,
-                        style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                        style: TextStyle(
+                            color: Colors.grey.shade500, fontSize: 12),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -386,10 +431,6 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKee
             ],
           ),
           isThreeLine: true,
-          // trailing: isMissed ? IconButton(
-          //   icon: Icon(Icons.phone_forwarded, color: Pallet.colorSecondary),
-          //   onPressed: () { /* TODO: Implement call back logic */ },
-          // ) : null,
         ),
       ),
     );

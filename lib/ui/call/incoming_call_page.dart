@@ -120,13 +120,17 @@ class _IncomingCallPageState extends State<IncomingCallPage> {
     RingtoneService.stopRingtone();
     final collectionName =
     widget.call.isVideoCall ? 'live_sessions' : 'companion_calls';
-    // Mark as missed, which the admin's 'Recent Calls' list will show
+
     FirebaseFirestore.instance
         .collection(collectionName)
         .doc(widget.call.doc.id)
-        .update({'status': 'missed'});
+        .update({
+      'status': 'rejected',
+      'endedAt': FieldValue.serverTimestamp(),
+    });
     _closePage();
   }
+
 
   @override
   Widget build(BuildContext context) {

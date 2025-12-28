@@ -33,6 +33,8 @@ class _AdminCallPageState extends State<AdminCallPage> {
   bool _isJoined = false;
   int? _remoteUid;
   String? _recordingPath;
+  StreamSubscription? _statusSubscription;
+  bool _isEnding = false;
 
   // --- NEW: For the call timer ---
   Timer? _timer;
@@ -58,13 +60,16 @@ class _AdminCallPageState extends State<AdminCallPage> {
   @override
   void initState() {
     super.initState();
-    _setupAndJoin(); // Directly initiate the call
+    _setupAndJoin();
   }
 
   @override
   void dispose() {
-    _timer?.cancel(); // Stop the timer on dispose
-    _endCall();
+    _timer?.cancel();
+    _statusSubscription?.cancel();
+    if (!_isEnding) {
+      _endCall();
+    }
     super.dispose();
   }
 
@@ -107,9 +112,7 @@ class _AdminCallPageState extends State<AdminCallPage> {
               _remoteUid = remoteUid;
               _callStatus = "Connected";
             });
-            // --- NEW: Start the timer when connected ---
             _startCallTimer();
-            // --- END NEW ---
             FirebaseFirestore.instance
                 .collection('companion_calls')
                 .doc(widget.call.doc.id)
@@ -126,6 +129,22 @@ class _AdminCallPageState extends State<AdminCallPage> {
         ),
       );
 
+      // --- NEW: Status Listener to detect User hangup ---
+      _statusSubscription = FirebaseFirestore.instance
+          .collection('companion_calls')
+          .doc(widget.call.doc.id)
+          .snapshots()
+          .listen((snapshot) {
+        if (snapshot.exists) {
+          final data = snapshot.data() as Map<String, dynamic>;
+          final status = data['status'];
+          // If User ends or misses the call while Admin is joined/connecting
+          if ((status == 'ended' || status == 'missed') && _isJoined) {
+            _endCall();
+          }
+        }
+      });
+
       await _join();
     } catch (e) {
       print("Error setting up Agora for admin: $e");
@@ -134,6 +153,7 @@ class _AdminCallPageState extends State<AdminCallPage> {
       });
     }
   }
+
 
   Future<void> _join() async {
     String token;
@@ -184,20 +204,17 @@ class _AdminCallPageState extends State<AdminCallPage> {
     }
   }
 
-  Future<void> _stopRecordingAndUpload() async {
+  Future<void> _stopRecordingAndUpload({String status = 'ended'}) async {
     if (_recordingPath == null) {
-      print("No recording path, likely because starting the recording failed.");
       await FirebaseFirestore.instance
           .collection('companion_calls')
           .doc(widget.call.doc.id)
-          .update({'status': 'ended'}).catchError(
-              (e) => print("Error updating status: $e"));
+          .update({'status': status, 'endedAt': FieldValue.serverTimestamp()})
+          .catchError((e) => print("Error updating status: $e"));
       return;
     }
 
     await _engine?.stopAudioRecording();
-    print("Recording stopped.");
-
     File file = File(_recordingPath!);
     if (await file.exists()) {
       try {
@@ -210,51 +227,52 @@ class _AdminCallPageState extends State<AdminCallPage> {
         await FirebaseFirestore.instance
             .collection('companion_calls')
             .doc(widget.call.doc.id)
-            .update({'recordingUrl': downloadUrl, 'status': 'ended'});
-        print("Recording uploaded to: $downloadUrl");
-
+            .update({
+          'recordingUrl': downloadUrl,
+          'status': status,
+          'endedAt': FieldValue.serverTimestamp()
+        });
         await file.delete();
       } catch (e) {
-        print("Error uploading recording: $e");
         await FirebaseFirestore.instance
             .collection('companion_calls')
             .doc(widget.call.doc.id)
-            .update({'status': 'ended'});
+            .update({'status': status, 'endedAt': FieldValue.serverTimestamp()});
       }
     } else {
-      print("Recording file was expected but not found at: $_recordingPath");
       await FirebaseFirestore.instance
           .collection('companion_calls')
           .doc(widget.call.doc.id)
-          .update({'status': 'ended'});
+          .update({'status': status, 'endedAt': FieldValue.serverTimestamp()});
     }
     _recordingPath = null;
   }
 
+
   Future<void> _endCall() async {
+    if (_isEnding) return;
+    _isEnding = true;
     _timer?.cancel();
-    await _stopRecordingAndUpload();
+    _statusSubscription?.cancel();
+
+    String finalStatus = (_remoteUid != null) ? 'ended' : 'rejected';
+
+    await _stopRecordingAndUpload(status: finalStatus);
+
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
 
     if (_engine != null) {
       await _engine?.leaveChannel();
-      await _engine?.release();
-      _engine = null;
-    }
-
-    _isJoined = false;
-    _remoteUid = null;
-
-    if (mounted) {
-      setState(() {
-        _callStatus = "Call Ended";
-      });
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
+      Future.delayed(const Duration(milliseconds: 200), () {
+        _engine?.release();
+        _engine = null;
       });
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

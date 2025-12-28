@@ -31,14 +31,13 @@ class LiveCallPage extends StatefulWidget {
   State<LiveCallPage> createState() => _LiveCallPageState();
 }
 
-// In /lib/ui/call/live_call_page.dart
 
 class _LiveCallPageState extends State<LiveCallPage> {
   String _callStatus = "Calling Claire for a Live Session...";
   RtcEngine? _engine;
   int? _remoteUid;
   bool _localUserJoined = false;
-
+  bool _isEnding = false;
   String? _channelName;
   String? _callDocId;
 
@@ -90,7 +89,9 @@ class _LiveCallPageState extends State<LiveCallPage> {
   void dispose() {
     _timer?.cancel(); // NEW: Stop the timer
     _callDocSubscription?.cancel();
-    _endCall();
+    if (!_isEnding) {
+      _endCall(manual: false);
+    }
     super.dispose();
   }
 
@@ -137,24 +138,32 @@ class _LiveCallPageState extends State<LiveCallPage> {
 
 
   void _listenForRecording() {
-    if (_callDocId == null) return;
+    // Inside _listenForRecording()
     _callDocSubscription = FirebaseFirestore.instance
         .collection('live_sessions')
         .doc(_callDocId)
-        .snapshots()
-        .listen((snapshot) async {
-      if (!snapshot.exists || _diaryCreationInProgress) return;
+        .snapshots().listen((snapshot) async {
+      if (!snapshot.exists) return;
 
       final data = snapshot.data() as Map<String, dynamic>;
       final recordingUrl = data['recordingUrl'] as String?;
       final status = data['status'] as String?;
 
-      if (recordingUrl != null && recordingUrl.isNotEmpty && status == 'ended') {
-        _diaryCreationInProgress = true;
-        await _createDiarySessionFromCall(recordingUrl);
-        _callDocSubscription?.cancel();
+      // 1. If Claire ended the call, the status becomes 'ended'
+      if (status == 'ended' || status == 'rejected') {
+        // 2. If there is a recording, wait for it to create the diary
+        if (recordingUrl != null && recordingUrl.isNotEmpty && !_diaryCreationInProgress) {
+          _diaryCreationInProgress = true;
+          await _createDiarySessionFromCall(recordingUrl);
+          _endCall(manual: false); // Now safely pop
+        }
+        // 3. If no recording is expected or it's been a few seconds, just pop
+        else if (!_diaryCreationInProgress) {
+          _endCall(manual: false);
+        }
       }
     });
+
   }
 
   Future<void> _createDiarySessionFromCall(String audioUrl) async {
@@ -251,7 +260,7 @@ class _LiveCallPageState extends State<LiveCallPage> {
               .update({'status': 'active'});
         },
         onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
-          _endCall();
+          _endCall(manual: false);
         },
         onError: (ErrorCodeType err, String msg) {
           print('[Agora Error] err: $err, msg: $msg');
@@ -296,37 +305,71 @@ class _LiveCallPageState extends State<LiveCallPage> {
   }
 
 
-  Future<void> _endCall() async {
+  Future<void> _endCall({bool manual = false}) async {
+    if (_isEnding) return; // Prevent re-entry
+
+    // 1. Gatekeeper: Only show popup if USER manually hangs up an active call
+    if (manual && (_remoteUid != null || _callStatus == "Connected")) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("End Session?"),
+          content: const Text("Please ask Claire to end the call so she can save this as a diary session for you."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    _isEnding = true; // Mark as terminating immediately
+
+    // 2. Stop logic first
     _timer?.cancel();
     await _callDocSubscription?.cancel();
 
-    // --- FIX: Update status on hangup if call was not connected ---
-    if (_remoteUid == null && _callDocId != null) {
-      // If no admin ever joined, mark the call as 'missed'.
-      await FirebaseFirestore.instance
-          .collection('live_sessions')
-          .doc(_callDocId)
-          .update({'status': 'missed'})
-          .catchError((e) => print("Error marking call as missed: $e"));
-    }
-    // --- END FIX ---
+    // 3. Update Firestore status ONLY if it's not already ended/rejected
+    if (_callDocId != null) {
+      try {
+        final docRef = FirebaseFirestore.instance.collection('live_sessions').doc(_callDocId);
+        final snapshot = await docRef.get();
+        if (snapshot.exists) {
+          String currentStatus = snapshot.data()?['status'] ?? '';
 
+          if (currentStatus != 'ended' && currentStatus != 'rejected') {
+            await docRef.update({
+              'status': 'ended',
+              'endedAt': FieldValue.serverTimestamp(),
+            });
+          }
+        }
+      } catch (e) {
+        print("Error updating status: $e");
+      }
+    }
+
+    // 4. POP FIRST - This removes the video renderer from the widget tree
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+
+    // 5. CLEANUP AFTER POP - Prevents the black screen/renderer crash
     if (_engine != null) {
       await _engine?.stopPreview();
       await _engine?.leaveChannel();
-      await _engine?.release();
-      _engine = null;
-    }
-    _localUserJoined = false;
-    _remoteUid = null;
-    if (mounted) {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
+      // Delay release slightly so the route transition can complete
+      Future.delayed(const Duration(milliseconds: 200), () {
+        _engine?.release();
+        _engine = null;
       });
     }
   }
+
+
 
 
   @override
@@ -460,7 +503,7 @@ class _LiveCallPageState extends State<LiveCallPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           RawMaterialButton(
-            onPressed: _endCall,
+            onPressed: () => _endCall(manual: true),
             shape: const CircleBorder(),
             elevation: 2.0,
             fillColor: Colors.redAccent,
