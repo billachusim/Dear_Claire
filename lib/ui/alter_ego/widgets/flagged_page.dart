@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../helpers/toast_helper.dart';
 import '../../../utils/color.dart';
 import '../../../utils/helper.dart';
 import '../../ego-profile/archive.dart';
@@ -44,12 +45,11 @@ class _FlaggedPageState extends State<FlaggedPage>
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: WillPopScope(
-
-        onWillPop: (){
-          Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.alterEgoHomepage);
-          return Future.value(false);
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          if (didPop) return;
+          Navigator.of(context).pushReplacementNamed(AppRoutes.alterEgoHomepage);
         },
         child: Scaffold(
           body: Stack(

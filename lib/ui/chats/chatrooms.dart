@@ -51,11 +51,12 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: WillPopScope(
-        onWillPop: () {
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          if (didPop) return;
           Navigator.of(context).pushReplacementNamed(AppRoutes.home);
           showToast("Press back again to exit.");
-          return Future.value(false);
         },
         child: Scaffold(
           body: Stack(

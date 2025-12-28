@@ -27,12 +27,12 @@ class _FlaggedDiariesPageState extends State<FlaggedDiariesPage> with AutomaticK
   Widget build(BuildContext context) {
     super.build(context);
     return SafeArea(
-      child: WillPopScope(
-        onWillPop: (){
-          Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.alterEgoHomepage);
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          if (didPop) return;
+          Navigator.of(context).pushReplacementNamed(AppRoutes.alterEgoHomepage);
           showToast("Press back again to exit alter ego home.");
-          return Future.value(false);
         },
         child: Scaffold(
           body: Stack(

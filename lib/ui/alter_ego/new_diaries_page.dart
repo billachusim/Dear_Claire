@@ -7,6 +7,7 @@ import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../helpers/toast_helper.dart';
 import '../../utils/helper.dart';
 import '../routes/routes.dart';
 import '../splash_screen/custom_rotate_bacground.dart';
@@ -23,12 +24,11 @@ class _NewDiariesPageState extends State<NewDiariesPage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: WillPopScope(
-
-        onWillPop: (){
-          Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.alterEgoHomepage);
-          return Future.value(false);
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          if (didPop) return;
+          Navigator.of(context).pushReplacementNamed(AppRoutes.alterEgoHomepage);
         },
         child: Scaffold(
           body: Stack(

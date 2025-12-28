@@ -145,12 +145,12 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return WillPopScope(
-      onWillPop: (){
-        Navigator.of(context)
-            .pushReplacementNamed(AppRoutes.home);
-        showToast("Press back again to exit alter ego home.");
-        return Future.value(false);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop) return;
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        showToast("Press back again to exit.");
       },
       child: Scaffold(
         backgroundColor: Pallet.colorSecondaryDark,

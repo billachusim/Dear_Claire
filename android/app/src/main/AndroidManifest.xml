@@ -39,6 +39,7 @@
         android:label="Dear Claire"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
+        android:enableOnBackInvokedCallback="true">
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
