@@ -148,7 +148,7 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
     return WillPopScope(
       onWillPop: (){
         Navigator.of(context)
-            .pushReplacementNamed(AppRoutes.alterEgoHomepage);
+            .pushReplacementNamed(AppRoutes.home);
         showToast("Press back again to exit alter ego home.");
         return Future.value(false);
       },
