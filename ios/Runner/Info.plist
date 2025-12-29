@@ -42,22 +42,22 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-		<key>NSCameraUsageDescription</key>
-    	<string>Dear Claire needs camera access so you can take photos to attach to your diary entries.</string>
-    	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    	<string>Dear Claire uses your location to automatically tag where your diary entries were written.</string>
-    	<key>NSLocationAlwaysUsageDescription</key>
-    	<string>Dear Claire uses background location to provide location-based reminders for your diary.</string>
-    	<key>NSLocationWhenInUseUsageDescription</key>
-    	<string>Dear Claire uses your location to tag your current entries with a place name.</string>
-    	<key>NSMicrophoneUsageDescription</key>
-    	<string>Dear Claire requires microphone access to record voice-to-text entries and audio memos for your diary.</string>
-    	<key>NSPhotoLibraryAddUsageDescription</key>
-    	<string>Dear Claire needs permission to save photos and media from your diary back to your library.</string>
-    	<key>NSPhotoLibraryUsageDescription</key>
-    	<string>Dear Claire needs access to your photos so you can select and upload images to your diary entries.</string>
-    	<key>NSUserTrackingUsageDescription</key>
-    	<string>This identifier will be used to deliver personalized ads and content to improve your experience.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Dear Claire needs camera access so you can take photos to attach to your diary entries.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Dear Claire uses your location to automatically tag where your diary entries were written.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Dear Claire uses background location to provide location-based reminders for your diary.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Dear Claire uses your location to tag your current entries with a place name.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Dear Claire requires microphone access to record voice-to-text entries and audio memos for your diary.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Dear Claire needs permission to save photos and media from your diary back to your library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Dear Claire needs access to your photos so you can select and upload images to your diary entries.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This identifier will be used to deliver personalized ads and content to improve your experience.</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>
