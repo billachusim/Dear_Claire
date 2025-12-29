@@ -955,8 +955,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                             try {
                                             // --- 1. SETUP TRANSACTION DETAILS ---
                                             final visitingUser = await firebaseServices.getUserInfo();
-                                            final String visitedUserId = data['userId'].toString();
-                                            final String visitedEgoName = data['nickname'].toString();
+                                            final String visitedUserId = data['senderId'].toString();
+                                            final String visitedEgoName = data['egoName'].toString();
                                             const int visitCost = 1;
                                             // --- 2. HANDLE SELF-VISIT ---
                                             if (visitingUser.userId == visitedUserId) {
@@ -1059,7 +1059,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                               CachedNetworkImage(
                                                 width: 40,
                                                 height: 40,
-                                                imageUrl: data['avatarUrl'] ?? "",
+                                                imageUrl: data['egoImage'] ?? "",
                                                 imageBuilder: (context, imageProvider) => Container(
                                                   decoration: BoxDecoration(
                                                     image: DecorationImage(

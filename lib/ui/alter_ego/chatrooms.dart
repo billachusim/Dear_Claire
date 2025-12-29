@@ -57,13 +57,15 @@ class _ChatRoomsState extends State<ChatRooms> with AutomaticKeepAliveClientMixi
     super.build(context);
     return SafeArea(
       child: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (bool didPop, dynamic result) {
-          if (didPop) return;
-          Navigator.of(context).pushReplacementNamed(AppRoutes.alterEgoHomepage);
-          showToast("Press back again to exit alter ego home.");
-        },
-        child: Scaffold(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop) return;
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRoutes.alterEgoHomepage,
+              (Route<dynamic> route) => false,
+        );
+      },
+      child: Scaffold(
           resizeToAvoidBottomInset: true,
           body: Stack(
               children:[

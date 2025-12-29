@@ -1618,9 +1618,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
   @override
   Widget build(BuildContext context) {
-    print("User nickname::: ${visitedUserModel.nickname}");
-    print("User type::: ${visitedUserModel.userType}");
-
     return SafeArea(
       child: Scaffold(
         resizeToAvoidBottomInset: true,

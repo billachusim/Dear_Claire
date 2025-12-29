@@ -443,44 +443,40 @@ class _HomeDashboardPageState extends State<HomePage>
   void shakeDevice() {
     detector = ShakeDetector.autoStart(
       shakeThresholdGravity: 5.5,
-      // The callback now accepts a 'ShakeEvent' parameter
       onPhoneShake: (ShakeEvent event) {
-        // Immediately invoke an anonymous async function to handle async operations
         () async {
-          // Use a mounted check for safety in async callbacks
           if (!mounted) return;
 
-          // Vibrate the device if possible
           if (await Vibration.hasVibrator()) {
-            Vibration.vibrate();
-          }
+        Vibration.vibrate();
+        }
 
-          Fluttertoast.showToast(
-            toastLength: Toast.LENGTH_LONG,
-            msg: "Switching Ego",
-            textColor: Colors.white,
-            backgroundColor: Pallet.colorSplashScreen,
-          );
+        Fluttertoast.showToast(
+        toastLength: Toast.LENGTH_LONG,
+        msg: "Switching Ego",
+        textColor: Colors.white,
+        backgroundColor: Pallet.colorSplashScreen,
+        );
 
-          // Get Alter Ego details
-          String id = await sharedPreference.getAlterEgoId();
-          String accessCode = await sharedPreference.getAlterEgoAccessCode();
-          print("Show Alter details:: $id || $accessCode");
+        String id = await sharedPreference.getAlterEgoId();
+        String accessCode = await sharedPreference.getAlterEgoAccessCode();
 
-          // Add another mounted check before using context for navigation
-          if (!mounted) return;
+        if (!mounted) return;
 
-          if (id.isNotEmpty && accessCode.isNotEmpty) {
-            await firebaseServices.getUserAlterEgo(context, id, accessCode);
-          } else {
-            Navigator.of(context).pushNamed(AppRoutes.alterEgoLogin);
-          }
-        }(); // The '()' here calls the anonymous function immediately
+        if (id.isNotEmpty && accessCode.isNotEmpty) {
+        await firebaseServices.getUserAlterEgo(context, id, accessCode);
+        } else {
+        // DESTROY stack when shaking into Login
+        Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.alterEgoLogin,
+        (Route<dynamic> route) => false,
+        );
+        }
+      }();
       },
       minimumShakeCount: 1,
-      //shakeThresholdGravity: 1.5, // You can adjust this for sensitivity
     );
   }
+
 
   @override
   void dispose() {
@@ -589,11 +585,17 @@ class _HomeDashboardPageState extends State<HomePage>
         onAlterEgoTapped: () async {
           String id = await sharedPreference.getAlterEgoId();
           String accessCode = await sharedPreference.getAlterEgoAccessCode();
-          print("Show Alter details:: $id || $accessCode");
-          id.isNotEmpty && accessCode.isNotEmpty
-              ? await firebaseServices.getUserAlterEgo(context, id, accessCode)
-              : Navigator.of(context).pushNamed(AppRoutes.alterEgoLogin);
+
+          if (id.isNotEmpty && accessCode.isNotEmpty) {
+            await firebaseServices.getUserAlterEgo(context, id, accessCode);
+          } else {
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              AppRoutes.alterEgoLogin,
+                  (Route<dynamic> route) => false,
+            );
+          }
         },
+
         onDonateClicked: onDonateClicked,
         sendClaireToSomeone: sendClaireToSomeone,
         launchEmailApp: launchEmailApp,

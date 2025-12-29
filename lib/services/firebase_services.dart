@@ -795,8 +795,11 @@ class FirebaseServices extends ChangeNotifier {
 
         // Use a mounted check before navigating
         if (context.mounted) {
-          Navigator.of(context)
-              .pushReplacementNamed(AppRoutes.alterEgoHomepage);
+          // REMOVE ALL PREVIOUS ROUTES when switching to Alter Ego Mode
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.alterEgoHomepage,
+                (Route<dynamic> route) => false,
+          );
         }
         return true; // Indicate success
       } else {
@@ -813,7 +816,7 @@ class FirebaseServices extends ChangeNotifier {
     }
   }
 
-  
+
 
   /// Listens to real-time updates for an influencer application
   Stream<DocumentSnapshot> streamInfluencerApplication(String uid) {

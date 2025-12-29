@@ -15,6 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shake/shake.dart';
 import 'package:vibration/vibration.dart';
+import '../../helpers/toast_helper.dart';
 import '../../utils/constant.dart';
 import '../../utils/helper.dart';
 import '../../utils/strings.dart';
@@ -109,30 +110,35 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
 
 
 
-  shakeDevice() {
-    detector = ShakeDetector.autoStart(
-      shakeThresholdGravity: 5.5,
-      onPhoneShake: (ShakeEvent event) {
-        () async {
-          if (!mounted) return;
-          if (await Vibration.hasVibrator() ?? false) {
-            Vibration.vibrate();
-          }
-          Fluttertoast.showToast(
-            toastLength: Toast.LENGTH_SHORT, // Shorter toast
-            msg: "Returning to Ego...",
-            textColor: Colors.white,
-            backgroundColor: Pallet.colorSplashScreen,
-          );
-          detector.stopListening();
-          await Future.delayed(const Duration(milliseconds: 100));
-          if (!mounted) return;
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-        }();
-      },
-      minimumShakeCount: 1,
-    );
+  shakeDevice() {detector = ShakeDetector.autoStart(
+    shakeThresholdGravity: 5.5,
+    onPhoneShake: (ShakeEvent event) {
+      () async {
+        if (!mounted) return;
+        if (await Vibration.hasVibrator() ?? false) {
+      Vibration.vibrate();
+      }
+      Fluttertoast.showToast(
+      toastLength: Toast.LENGTH_SHORT,
+      msg: "Returning to Ego...",
+      textColor: Colors.white,
+      backgroundColor: Pallet.colorSplashScreen,
+      );
+      detector.stopListening();
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+
+      // COMPLETELY DESTROY the stack when returning to Standard Ego
+      Navigator.of(context).pushNamedAndRemoveUntil(
+      AppRoutes.home,
+      (Route<dynamic> route) => false,
+      );
+    }();
+    },
+    minimumShakeCount: 1,
+  );
   }
+
 
   dispose() {
     _pageController!.dispose();
@@ -152,17 +158,15 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // If userType is empty, we show a loader while initState finishes _loadUserData.
-    if (userType.isEmpty) {
-      return Scaffold(
-        resizeToAvoidBottomInset: true,
-        backgroundColor: Pallet.colorBottomNav,
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return SafeArea(
+    return PopScope(
+      canPop: false, // Prevents the back button from popping this page
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop) return;
+        // Notify the user how to actually exit this mode
+        showToast(message: "Shake device to exit Alter Ego Mode.");
+      },
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         key: _scaffoldKey,
         appBar: AppBar(
           backgroundColor: Pallet.colorBottomNav,

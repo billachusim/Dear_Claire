@@ -30,8 +30,10 @@ class _AdvisedPageState extends State<AdvisedPage> with AutomaticKeepAliveClient
         canPop: false,
         onPopInvokedWithResult: (bool didPop, dynamic result) {
           if (didPop) return;
-          Navigator.of(context).pushReplacementNamed(AppRoutes.alterEgoHomepage);
-          showToast("Press back again to exit alter ego home.");
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.alterEgoHomepage,
+                (Route<dynamic> route) => false,
+          );
         },
         child: Scaffold(
           body: Stack(
