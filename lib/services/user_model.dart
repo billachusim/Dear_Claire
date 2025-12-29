@@ -9,6 +9,12 @@ class UserModel {
   String? gender;
   String? nickname;
   String? secretCode;
+  String? referredBy;
+  String? influencerStatus;
+  String? tiktok;
+  String? instagram;
+  String? twitter;
+  String? whatsapp;
   Timestamp? timeLastUnlocked;
   Timestamp? timeRegistered;
   String? userId;
@@ -31,6 +37,12 @@ class UserModel {
     this.fcmId,
     this.nickname,
     this.secretCode,
+    this.referredBy,
+    this.influencerStatus,
+    this.tiktok,
+    this.instagram,
+    this.twitter,
+    this.whatsapp,
     this.timeLastUnlocked,
     this.timeRegistered,
     this.gender,
@@ -61,6 +73,12 @@ class UserModel {
       timeRegistered: json['timeRegistered'] ?? '',
       userId: json['userId'] ?? '',
       userType: json['userType'] ?? '',
+      referredBy: json['referredBy'] ?? '',
+      influencerStatus: json['influencerStatus'] ?? 'none',
+      tiktok: json['tiktok'] ?? '',
+      instagram: json['instagram'] ?? '',
+      twitter: json['twitter'] ?? '',
+      whatsapp: json['whatsapp'] ?? '',
       sessionCount: json['sessionCount'] ?? 0,
       adviseCount: json['adviseCount'] ?? 0,
       totalLoveCount: json['totalLoveCount'] ?? 0,
@@ -87,6 +105,12 @@ class UserModel {
       timeRegistered: json['timeRegistered'] ?? '',
       userId: json['userId'] ?? '',
       userType: json['userType'] ?? '',
+      referredBy: json['referredBy'] ?? '',
+      influencerStatus: json['influencerStatus'] ?? 'none',
+      tiktok: json['tiktok'] ?? '',
+      instagram: json['instagram'] ?? '',
+      twitter: json['twitter'] ?? '',
+      whatsapp: json['whatsapp'] ?? '',
       sessionCount: json['sessionCount'] ?? 0,
       adviseCount: json['adviseCount'] ?? 0,
       totalLoveCount: json['totalLoveCount'] ?? 0,
@@ -112,6 +136,8 @@ class UserModel {
         'timeRegistered': timeRegistered,
         'userId': userId,
         'userType': userType,
+        'referredBy': referredBy,
+        'influencerStatus': influencerStatus,
         'sessionCount': sessionCount,
         'adviseCount': adviseCount,
         'totalLoveCount': totalLoveCount,

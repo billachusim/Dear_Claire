@@ -1017,7 +1017,7 @@ class _AppDrawerState extends State<_AppDrawer> {
           ),
           ListTile(
             leading: Icon(Icons.share_rounded, color: Pallet.colorWhite),
-            title: Text('Anonymous Referral Program', style: GoogleFonts.lato()),
+            title: Text('Anonymous Referral Program', style: TextStyle(color: Pallet.colorWhite)),
             onTap: () {
               Navigator.pop(context);
               Navigator.pushNamed(context, AppRoutes.referralProgram);

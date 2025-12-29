@@ -253,6 +253,7 @@ class _SignUpPage extends State<SignUpPage> {
             _emailController.text,
             _secretCodeController.text,
             _egoNameController.text,
+            referredBy: _referralController.text.trim(),
           );
           // Ad logic as per your original file
           Future.delayed(Duration(seconds: 4), () {

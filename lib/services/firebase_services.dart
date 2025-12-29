@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:clairediary/services/transaction_service.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/data/models/profile_page_model.dart';
@@ -25,6 +26,7 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import '../data/models/transaction_model.dart' as t_model;
+import '../ui/ego-profile/claire_loves.dart';
 import '../ui/love_store/cart_item_model.dart';
 import '../ui/love_store/order_model.dart';
 import '../ui/love_store/product_model.dart';
@@ -811,6 +813,16 @@ class FirebaseServices extends ChangeNotifier {
     }
   }
 
+  
+
+  /// Listens to real-time updates for an influencer application
+  Stream<DocumentSnapshot> streamInfluencerApplication(String uid) {
+    return _firebaseFirestore
+        .collection('influencer_applications')
+        .doc(uid)
+        .snapshots();
+  }
+
 
 
 
@@ -856,6 +868,7 @@ class FirebaseServices extends ChangeNotifier {
         "withdrawnLoveCount": 0,
         "forLoveTransfer": 0,
         "fromLoveTransfer": 0,
+        "referredBy": referredBy ?? ''
       };
 
       // 4. Create the user document in Firestore
@@ -909,11 +922,26 @@ class FirebaseServices extends ChangeNotifier {
 
   Future<void> _processReferralReward({required String newUserId, required String referrerId}) async {
     try {
-      // Verify referrer exists
-      DocumentSnapshot refDoc = await _firebaseFirestore.collection(AppString.users).doc(referrerId).get();
-      if (!refDoc.exists) return;
+      final String cleanReferrerId = referrerId.trim();
 
-      // 1. Reward New User (1000)
+      // 1. Basic Validation
+      if (cleanReferrerId.isEmpty || cleanReferrerId == newUserId) {
+        logger.w("Referral skipped: Invalid ID or self-referral.");
+        return;
+      }
+
+      // 2. Verify Referrer exists in Firestore
+      DocumentSnapshot refDoc = await _firebaseFirestore
+          .collection(AppString.users)
+          .doc(cleanReferrerId)
+          .get();
+
+      if (!refDoc.exists) {
+        logger.e("Referral fulfillment failed: Referrer ID $cleanReferrerId does not exist.");
+        return;
+      }
+
+      // 3. Reward New User (1000 Loves)
       await updateTreasuryAndUser(
         userId: newUserId,
         amount: 1000,
@@ -921,17 +949,149 @@ class FirebaseServices extends ChangeNotifier {
         userTransactionDescription: "Referral Welcome Bonus",
       );
 
-      // 2. Reward Referrer (1000)
+      // 4. Reward Referrer (1000 Loves)
       await updateTreasuryAndUser(
-        userId: referrerId,
+        userId: cleanReferrerId,
         amount: 1000,
         type: t_model.TransactionType.credit,
         userTransactionDescription: "Referral Reward (New User Join)",
       );
+
+      logger.d("Referral fulfillment complete for NewUser: $newUserId from Referrer: $cleanReferrerId");
     } catch (e) {
       logger.e("Referral processing error: $e");
     }
   }
+
+
+  Future<Map<String, dynamic>> getReferralStats() async {
+    try {
+      final uid = currentUser?.uid;
+      if (uid == null) return {'count': 0, 'earned': 0};
+
+      // Query users where referredBy matches current user
+      final query = await _firebaseFirestore
+          .collection('users')
+          .where('referredBy', isEqualTo: uid)
+          .get();
+
+      int count = query.docs.length;
+      return {
+        'count': count,
+        'earned': count * 1000, // 1000 Loves per referral
+      };
+    } catch (e) {
+      return {'count': 0, 'earned': 0};
+    }
+  }
+
+
+
+  /// Submits an application for the Micro-Influencer program
+  Future<void> submitInfluencerApplication({
+    required String motivation,
+    required String tiktok,
+    required String instagram,
+    required String twitter,
+    required String whatsapp,
+  }) async {
+    try {
+      final uid = currentUser?.uid;
+      if (uid == null) return;
+
+      final applicationData = {
+        "userId": uid,
+        "motivation": motivation,
+        "tiktok": tiktok,
+        "instagram": instagram,
+        "twitter": twitter,
+        "whatsapp": whatsapp,
+        "status": "pending",
+        "timestamp": FieldValue.serverTimestamp(),
+      };
+
+      // 1. Save to Firestore
+      await _firebaseFirestore
+          .collection('influencer_applications')
+          .doc(uid)
+          .set(applicationData);
+      await _firebaseFirestore.collection('users').doc(uid).update({
+        'influencerStatus': 'pending',
+        'tiktok': tiktok,
+        'instagram': instagram,
+        'twitter': twitter,
+        'whatsapp': whatsapp,
+      });
+
+      // 2. Trigger Email
+      final Email email = Email(
+        body: '''
+New Influencer Application
+User ID: $uid
+TikTok: $tiktok
+Instagram: $instagram
+X/Twitter: $twitter
+WhatsApp: $whatsapp
+
+Motivation:
+$motivation
+''',
+        subject: 'Micro-Influencer Application: $uid',
+        recipients: ['dearclaireapp@gmail.com'],
+        isHTML: false,
+      );
+
+      await FlutterEmailSender.send(email);
+      AppToast.show("Application submitted & Email draft created!");
+    } catch (e) {
+      logger.e("Application Error: $e");
+      AppToast.showError("Failed to submit application.");
+    }
+  }
+
+
+  /// Specialized method for Referral Cash Out
+  Future<bool> requestReferralWithdrawal(int amount) async {
+    try {
+      final uid = currentUser?.uid;
+      if (uid == null) return false;
+
+      final userDoc = await _firebaseFirestore.collection('users').doc(uid).get();
+      final currentLoves = userDoc.data()?['currentLoveCount'] ?? 0;
+
+      if (currentLoves < amount) {
+        AppToast.showError("Insufficient Loves for this withdrawal.");
+        return false;
+      }
+
+      // 1. Record the pending withdrawal globally for Admin
+      final withdrawalDoc = _firebaseFirestore.collection('withdrawals').doc();
+      await withdrawalDoc.set({
+        "withdrawalId": withdrawalDoc.id,
+        "userId": uid,
+        "amount": amount,
+        "status": "pending",
+        "type": "referral_cashout",
+        "timestamp": FieldValue.serverTimestamp(),
+      });
+
+      // 2. Debit the user and record transaction via Treasury logic
+      // This ensures the currentLoveCount is updated correctly
+      return await updateTreasuryAndUser(
+        userId: uid,
+        amount: amount,
+        type: t_model.TransactionType.debit,
+        userTransactionDescription: "Referral Cash Out Request (Pending)",
+        metadata: {"withdrawalId": withdrawalDoc.id},
+      );
+    } catch (e) {
+      logger.e("Withdrawal Request Error: $e");
+      return false;
+    }
+  }
+
+
+
 
 
 
