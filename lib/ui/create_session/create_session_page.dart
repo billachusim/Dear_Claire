@@ -1217,6 +1217,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     bool isSuccessfull =
     await _firebaseServices.createSession(session: sessionObject);
 
+    await _firebaseServices.updateUserMoods(mood);
+
     // Call saveUserActivity
     await _firebaseServices.saveUserActivity(
       activityType: 'session',
@@ -1239,7 +1241,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
 
   /// CREATE NEW SESSION METHOD IS HERE
-  createSession() async {// Set loading to true immediately.
+  createSession() async {
     setState(() {
       isLoading = true;
     });
@@ -1309,6 +1311,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.timeLastActivity = Timestamp.now();
 
       await _firebaseServices.createSession(session: sessionObject);
+
+      await _firebaseServices.updateUserMoods(Constant.USER_SESSION_MOODS.indexOf(c.sessionMood.value));
 
       await _firebaseServices.saveUserActivity(
         activityType: 'session',

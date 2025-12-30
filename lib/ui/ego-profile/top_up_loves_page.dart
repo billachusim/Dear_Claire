@@ -9,6 +9,9 @@ import '../../utils/strings.dart';
 import '../visited_user_ego_page/visited_user_claireloves.dart';
 
 class TopUpLovesPage extends StatefulWidget {
+  final String? feature;
+  const TopUpLovesPage({Key? key, this.feature}) : super(key: key);
+
   @override
   State<TopUpLovesPage> createState() => _TopUpLovesPageState();
 }
@@ -94,6 +97,7 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
               child: Column(
                 children: [
                   const SizedBox(height: 120),
+                  _buildFeatureAd(),
 
                   // Circular Rolling Carousel
                   SizedBox(
@@ -311,4 +315,81 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
       ),
     );
   }
+
+  Widget _buildFeatureAd() {
+    if (widget.feature == null) return const SizedBox.shrink();
+
+    Map<String, dynamic> ad;
+    switch (widget.feature) {
+      case 'autodiary':
+        ad = {
+          'title': 'Activate Monitoring Spirit',
+          'desc': 'Auto Diary, AKA Monitoring Spirit requires 1,000 Loves each time you use it, so top up loves to your wallet and unlock the magical feature of recording your diary and getting advises without touching your phone.',
+          'icon': Icons.auto_awesome,
+          'color': Colors.purpleAccent
+        };
+        break;
+      case 'companion_call':
+        ad = {
+          'title': 'Unlock Voice Calls With Claire',
+          'desc': 'Connect deeply with Claire to discuss your current situation and receive guidance. Audio calls require a small Love contribution.',
+          'icon': Icons.phone_in_talk,
+          'color': Colors.pinkAccent
+        };
+        break;
+      case 'live_call':
+        ad = {
+          'title': 'Show Claire What Is Going On',
+          'desc': 'Enter a Live Video session to show Claire what you are dealing with. Premium presence requires Love tokens.',
+          'icon': Icons.videocam,
+          'color': Colors.blueAccent
+        };
+        break;
+      case 'alterego':
+        ad = {
+          'title': 'Access The Very Powerful Alter Ego Mode',
+          'desc': 'Unlock the ultimate power of this app. Alter and Super Ego Access gives you access to a whole new side of this app that regular users can not see or use.',
+          'icon': Icons.psychology,
+          'color': Colors.orangeAccent
+        };
+        break;
+      case 'diary_rooms':
+        ad = {
+          'title': 'Enter Diary Rooms With Love And Vibes',
+          'desc': 'Join the collective consciousness in Diary Rooms. Entry fee always required to access different room corners so you must have enough love.',
+          'icon': Icons.meeting_room_rounded,
+          'color': Pallet.deepGreen
+        };
+        break;
+      default:
+        return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: ad['color'].withOpacity(0.1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: ad['color'].withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(ad['icon'], color: ad['color'], size: 36),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(ad['title'], style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                Text(ad['desc'], style: GoogleFonts.lato(fontSize: 12, color: Colors.white70)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 }

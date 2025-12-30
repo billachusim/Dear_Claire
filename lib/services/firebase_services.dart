@@ -827,6 +827,36 @@ class FirebaseServices extends ChangeNotifier {
   }
 
 
+  Future<void> updateUserMoods(int moodId) async {
+    if (currentUser == null) return;
+    final userDoc = _firebaseFirestore.collection(AppString.users).doc(currentUser!.uid);
+
+    try {
+      await _firebaseFirestore.runTransaction((transaction) async {
+        DocumentSnapshot snapshot = await transaction.get(userDoc);
+        if (!snapshot.exists) return;
+
+        // SAFE ACCESS: Use data() map to check for key existence instead of snapshot.get()
+        Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
+        List<int> moods = data.containsKey('moods')
+            ? List<int>.from(data['moods'] ?? [])
+            : [];
+
+        moods.add(moodId);
+
+        // Keep only the last 100 moods for performance
+        if (moods.length > 100) {
+          moods = moods.sublist(moods.length - 100);
+        }
+
+        transaction.update(userDoc, {'moods': moods});
+      });
+      logger.d('Mood $moodId saved to user history.');
+    } catch (e) {
+      logger.e('Error updating user moods: $e');
+    }
+  }
+
 
 
 

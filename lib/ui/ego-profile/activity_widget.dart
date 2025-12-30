@@ -10,6 +10,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/user_model.dart';
 import '../../utils/constant.dart';
 import '../../widgets/toast.dart';
 import '../chats/data/chatroompodo.dart';
@@ -30,8 +31,8 @@ class ActivityWidget extends StatefulWidget {
   State<ActivityWidget> createState() => _ActivityWidgetState();
 }
 
-class _ActivityWidgetState extends State<ActivityWidget> {
-  // --- STATE FOR PAGINATION ---
+class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _moodPulseController;
   List<UserActivityModel> _activities = [];
   bool _isLoading = true;
   bool _isLoadingMore = false;
@@ -50,6 +51,18 @@ class _ActivityWidgetState extends State<ActivityWidget> {
   void initState() {
     super.initState();
     _fetchInitialData();
+
+    // Initialize infinite pulse: 2 seconds per cycle
+    _moodPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _moodPulseController.dispose();
+    super.dispose();
   }
 
   // --- NEW DATA FETCHING LOGIC WITH PAGINATION ---
@@ -110,17 +123,14 @@ class _ActivityWidgetState extends State<ActivityWidget> {
       return;
     }
 
-    // --- Analyze Activities ---
-// First, sort all activities to find the absolute most recent one for the "Current Activity" card.
+    // --- 1. Analyze Activities (Existing Logic) ---
     activities.sort((a, b) => b.dateCreated!.compareTo(a.dateCreated!));
     _currentActivity = _formatActivityType(activities.first.activityType);
 
-// Create a new list containing ONLY the activities performed by the current user.
     final userPerformedActivities = activities
         .where((act) => act.clientId == widget.userId)
         .toList();
 
-// Now, build the chart data (_activityCounts) and popular activity from this filtered list.
     _activityCounts =
         groupBy(userPerformedActivities, (UserActivityModel act) => act.activityType!)
             .map((key, value) => MapEntry(_formatActivityType(key), value.length));
@@ -129,28 +139,41 @@ class _ActivityWidgetState extends State<ActivityWidget> {
       _popularActivity =
           _activityCounts.entries.sortedBy<num>((e) => -e.value).first.key;
     } else {
-      // If the user has not performed any actions themselves, set popular activity to N/A.
       _popularActivity = 'Not Available';
     }
 
-    // Analyze Moods (Simplified logic)
-    final mostRecentSessionActivity = activities.firstWhereOrNull(
-          (act) => act.activityType == 'session' && act.sessionId != null,
-    );
+    // --- 2. NEW Mood Analysis Logic (Using UserModel moods array) ---
+    try {
+      // Fetch user info directly to get the persistent moods array
+      UserModel? user = await firebaseServices.getUserInfo();
 
-    if (mostRecentSessionActivity != null) {
-      final sessions = await firebaseServices.getSessionsByIds([mostRecentSessionActivity.sessionId!]);
-      if (sessions.isNotEmpty) {
-        final session = sessions.first;
-        if (session.moodId != null) {
-          _currentMood = Mood.getMood(session.moodId) ?? 'Unknown';
-          _popularMood = _currentMood; // Simple and reliable
+      if (user.moods.isNotEmpty) {
+        // Current Mood: The most recently added mood (last item in the array)
+        _currentMood = Mood.getMood(user.moods.last) ?? 'Not Available';
+
+        // Popular Mood: The mode (most frequent) mood in the history
+        var counts = <int, int>{};
+        for (var moodId in user.moods) {
+          counts[moodId] = (counts[moodId] ?? 0) + 1;
         }
+
+        // Sort by frequency descending and pick the top one
+        final popularMoodId = counts.entries
+            .sortedBy<num>((e) => -e.value)
+            .first.key;
+
+        _popularMood = Mood.getMood(popularMoodId) ?? 'Not Available';
+      } else {
+        _currentMood = 'Not Available';
+        _popularMood = 'Not Available';
       }
-    } else {
+    } catch (e) {
+      print("Error analyzing moods from user model: $e");
       _currentMood = 'Not Available';
       _popularMood = 'Not Available';
     }
+
+    if (mounted) setState(() {});
   }
 
   // Your formatting function remains the same
@@ -370,45 +393,192 @@ class _ActivityWidgetState extends State<ActivityWidget> {
     );
   }
 
-  // Other UI widgets (_buildStatsSection, _buildStatCard, UserActivityCard) remain the same.
-  // ... (Paste the rest of your unchanged UI methods here) ...
+  // Helper to separate text from emoji
+  Map<String, String> _splitMood(String moodText) {
+    if (moodText == 'Not Available' || moodText.isEmpty) {
+      return {'text': moodText, 'emoji': ''};
+    }
+
+    // Emojis are usually at the end. This splits the string before the last emoji character.
+    final regex = RegExp(r'(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])');
+    final match = regex.allMatches(moodText).lastOrNull;
+
+    if (match != null) {
+      return {
+        'text': moodText.substring(0, match.start).trim(),
+        'emoji': moodText.substring(match.start).trim(),
+      };
+    }
+    return {'text': moodText, 'emoji': ''};
+  }
+
 
   Widget _buildStatsSection() {
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 1.5,
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _statCard(
+                    title: "Vibe Check", // Modern terminology
+                    value: _currentMood,
+                    subtitle: "Current Energy",
+                    icon: Icons.auto_awesome_outlined,
+                    color: Colors.green,
+                    pulseAnimation: _moodPulseController,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _statCard(
+                    title: "Most Frequent",
+                    value: _popularMood,
+                    subtitle: "Mood Pattern",
+                    icon: Icons.psychology_outlined,
+                    color: Colors.green,
+                    pulseAnimation: _moodPulseController,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _statCard(
+                    title: "Latest Action",
+                    value: _currentActivity,
+                    subtitle: "Fresh Activity",
+                    icon: Icons.bolt_rounded,
+                    color: Colors.pinkAccent,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _statCard(
+                    title: "Main Character",
+                    value: _popularActivity,
+                    subtitle: "Top Pursuit",
+                    icon: Icons.star_outline_rounded,
+                    color: Colors.pinkAccent,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        delegate: SliverChildListDelegate([
-          _buildStatCard(Icons.sentiment_satisfied_alt, "Current Mood", _currentMood),
-          _buildStatCard(Icons.celebration, "Popular Mood", _popularMood),
-          _buildStatCard(Icons.directions_run, "Current Activity", _currentActivity),
-          _buildStatCard(Icons.whatshot, "Popular Activity", _popularActivity),
-        ]),
       ),
     );
   }
 
-  Widget _buildStatCard(IconData icon, String title, String value) {
+  Widget _statCard({
+    required String title,
+    required String value,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    Animation<double>? pulseAnimation, // New optional parameter
+  }) {
+    final moodParts = _splitMood(value);
+    final bool hasEmoji = moodParts['emoji']!.isNotEmpty;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Pallet.colorSecondary.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(15),
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Icon(icon, color: Pallet.colorPrimary, size: 28),
-          const SizedBox(height: 8),
-          Text(title, style: GoogleFonts.lato(fontSize: 14, color: Colors.white70)),
-          Text(value, style: GoogleFonts.lato(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white), overflow: TextOverflow.ellipsis),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.5,
+                  color: Colors.white54,
+                ),
+              ),
+              Icon(icon, color: color, size: 18),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text(
+                  hasEmoji ? moodParts['text']! : value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              if (hasEmoji && pulseAnimation != null)
+                AnimatedBuilder(
+                  animation: pulseAnimation,
+                  builder: (context, child) {
+                    // Map 0.0-1.0 to 0.9-1.2 for scale
+                    double scale = 0.9 + (pulseAnimation.value * 0.3);
+                    return Transform.scale(
+                      scale: scale,
+                      child: Container(
+                        margin: const EdgeInsets.only(left: 4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withOpacity(0.4 * pulseAnimation.value),
+                              blurRadius: 15 * scale,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          moodParts['emoji']!,
+                          style: const TextStyle(fontSize: 28), // Bigger emoji
+                        ),
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              color: color.withOpacity(0.9),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
   }
+
+
+
 }
 
 

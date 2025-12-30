@@ -7,6 +7,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../ui/ego-profile/top_up_loves_page.dart';
+
 // A model to hold the data from the dialog
 class CallSetupDetails {
   final String title;
@@ -36,6 +38,7 @@ Future<CallSetupDetails?> showPreCallDialog(BuildContext context, {required bool
   bool locationEnabled = false;
   String locationData = '';
   bool isFetchingLocation = false;
+  bool _isVerifying = false;
 
   // --- Location fetching logic from setup_autoDiary_widget.dart ---
   Future<void> determinePositionAndSave(Function(void Function()) setState) async {
@@ -183,22 +186,55 @@ Future<CallSetupDetails?> showPreCallDialog(BuildContext context, {required bool
                   Navigator.of(context).pop(); // Return null
                 },
               ),
-              TextButton(
+              _isVerifying
+                  ? const Padding(
+                padding: EdgeInsets.only(right: 16.0),
+                child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth:2)),
+              )
+                  : TextButton(
                 child: Text('Start Call', style: TextStyle(color: Pallet.colorSecondary, fontWeight: FontWeight.bold)),
-                onPressed: () {
-                  final details = CallSetupDetails(
-                    title: titleController.text.trim().isEmpty
-                        ? (isVideoCall ? "Live Session" : "Companion Call")
-                        : titleController.text.trim(),
-                    moodId: Constant.USER_SESSION_MOODS.indexOf(selectedMood),
-                    isPrivate: isPrivate,
-                    repliesEnabled: repliesEnabled,
-                    locationEnabled: locationEnabled,
-                    locationData: locationData,
-                  );
-                  Navigator.of(context).pop(details); // Return the collected data
+                onPressed: () async {
+                  setState(() => _isVerifying = true);
+
+                  try {
+                    // 1. Check Love Balance
+                    final user = await firebaseServices.getUserInfo();
+                    final double balance = (user.currentLoveCount ?? 0).toDouble();
+
+                    if (balance < 500) {
+                      if (context.mounted) {
+                        Navigator.of(context).pop(); // Close dialog
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (context) => TopUpLovesPage(
+                              feature: isVideoCall ? 'live_call' : 'companion_call'
+                          ),
+                        ));
+                      }
+                      return;
+                    }
+
+                    // 2. Proceed if balance is sufficient
+                    final details = CallSetupDetails(
+                      title: titleController.text.trim().isEmpty
+                          ? (isVideoCall ? "Live Session" : "Companion Call")
+                          : titleController.text.trim(),
+                      moodId: Constant.USER_SESSION_MOODS.indexOf(selectedMood),
+                      isPrivate: isPrivate,
+                      repliesEnabled: repliesEnabled,
+                      locationEnabled: locationEnabled,
+                      locationData: locationData,
+                    );
+
+                    if (context.mounted) Navigator.of(context).pop(details);
+
+                  } catch (e) {
+                    showToast("Error verifying balance. Try again.");
+                  } finally {
+                    if (context.mounted) setState(() => _isVerifying = false);
+                  }
                 },
               ),
+
             ],
           );
         },

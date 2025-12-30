@@ -451,6 +451,31 @@ class _HomeDashboardPageState extends State<HomePage>
         Vibration.vibrate();
         }
 
+        String id = await sharedPreference.getAlterEgoId();
+        String accessCode = await sharedPreference.getAlterEgoAccessCode();
+
+        if (!mounted) return;
+
+        // --- FIX: Only gatekeep if they DON'T have credentials yet ---
+        if (id.isEmpty || accessCode.isEmpty) {
+        UserModel user = await firebaseServices.getUserInfo();
+        // If they are "broke" and haven't set up an Alter Ego, send to Top Up
+        if ((user.currentLoveCount ?? 0) < 5000) {
+        Navigator.push(context, MaterialPageRoute(
+        builder: (context) => const TopUpLovesPage(feature: 'alterego'),
+        ));
+        return;
+        }
+
+        // If they have loves but no credentials, send to Login/Setup
+        Navigator.of(context).pushNamedAndRemoveUntil(
+        AppRoutes.alterEgoLogin,
+        (Route<dynamic> route) => false,
+        );
+        return;
+        }
+
+        // --- If credentials exist, proceed directly ---
         Fluttertoast.showToast(
         toastLength: Toast.LENGTH_LONG,
         msg: "Switching Ego",
@@ -458,24 +483,13 @@ class _HomeDashboardPageState extends State<HomePage>
         backgroundColor: Pallet.colorSplashScreen,
         );
 
-        String id = await sharedPreference.getAlterEgoId();
-        String accessCode = await sharedPreference.getAlterEgoAccessCode();
-
-        if (!mounted) return;
-
-        if (id.isNotEmpty && accessCode.isNotEmpty) {
         await firebaseServices.getUserAlterEgo(context, id, accessCode);
-        } else {
-        // DESTROY stack when shaking into Login
-        Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.alterEgoLogin,
-        (Route<dynamic> route) => false,
-        );
-        }
       }();
       },
       minimumShakeCount: 1,
     );
   }
+
 
 
   @override
@@ -587,14 +601,24 @@ class _HomeDashboardPageState extends State<HomePage>
           String accessCode = await sharedPreference.getAlterEgoAccessCode();
 
           if (id.isNotEmpty && accessCode.isNotEmpty) {
+            // User already has access, skip gate
             await firebaseServices.getUserAlterEgo(context, id, accessCode);
           } else {
-            Navigator.of(context).pushNamedAndRemoveUntil(
-              AppRoutes.alterEgoLogin,
-                  (Route<dynamic> route) => false,
-            );
+            // User needs to unlock/login
+            UserModel user = await firebaseServices.getUserInfo();
+            if ((user.currentLoveCount ?? 0) < 5000) {
+              Navigator.push(context, MaterialPageRoute(
+                builder: (context) => const TopUpLovesPage(feature: 'alterego'),
+              ));
+            } else {
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                AppRoutes.alterEgoLogin,
+                    (Route<dynamic> route) => false,
+              );
+            }
           }
         },
+
 
         onDonateClicked: onDonateClicked,
         sendClaireToSomeone: sendClaireToSomeone,
@@ -1389,6 +1413,7 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                       await showPreCallDialog(widget.parentContext, isVideoCall: false);
 
                       if (callDetails != null) {
+                        await firebaseServices.updateUserMoods(callDetails.moodId);
                         Navigator.of(widget.parentContext).push(
                           MaterialPageRoute(
                             builder: (context) => CompanionCallPage(
@@ -1420,6 +1445,7 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                       await showPreCallDialog(widget.parentContext, isVideoCall: true);
 
                       if (callDetails != null) {
+                        await firebaseServices.updateUserMoods(callDetails.moodId);
                         Navigator.of(widget.parentContext).push(
                           MaterialPageRoute(
                             builder: (context) => LiveCallPage(

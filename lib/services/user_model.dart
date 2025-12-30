@@ -19,6 +19,7 @@ class UserModel {
   Timestamp? timeRegistered;
   String? userId;
   String? userType;
+  List<int> moods;
   int? sessionCount;
   int? adviseCount;
   int? totalLoveCount;
@@ -48,6 +49,7 @@ class UserModel {
     this.gender,
     this.userId,
     this.userType,
+    this.moods = const [],
     this.sessionCount,
     this.adviseCount,
     this.totalLoveCount,
@@ -73,6 +75,7 @@ class UserModel {
       timeRegistered: json['timeRegistered'] ?? '',
       userId: json['userId'] ?? '',
       userType: json['userType'] ?? '',
+      moods: List<int>.from(json['moods'] ?? []),
       referredBy: json['referredBy'] ?? '',
       influencerStatus: json['influencerStatus'] ?? 'none',
       tiktok: json['tiktok'] ?? '',
@@ -105,6 +108,7 @@ class UserModel {
       timeRegistered: json['timeRegistered'] ?? '',
       userId: json['userId'] ?? '',
       userType: json['userType'] ?? '',
+      moods: List<int>.from(json['moods'] ?? []),
       referredBy: json['referredBy'] ?? '',
       influencerStatus: json['influencerStatus'] ?? 'none',
       tiktok: json['tiktok'] ?? '',
@@ -136,6 +140,7 @@ class UserModel {
         'timeRegistered': timeRegistered,
         'userId': userId,
         'userType': userType,
+        'moods': moods,
         'referredBy': referredBy,
         'influencerStatus': influencerStatus,
         'sessionCount': sessionCount,

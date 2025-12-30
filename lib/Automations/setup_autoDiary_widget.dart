@@ -15,7 +15,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/models/transaction_model.dart' as t_model;
+import '../services/firebase_services.dart';
 import '../services/user_model.dart' as t_model;
+import '../ui/ego-profile/top_up_loves_page.dart';
 
 enum _SanctuaryView { main, whisper, ritual, configure }
 
@@ -148,6 +150,11 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
     await prefs.setBool('autoDiaryLocationEnabled', _locationEnabled);
     await prefs.setInt(
         'autoDiaryMoodId', Constant.USER_SESSION_MOODS.indexOf(_selectedMood));
+    final int moodId = Constant.USER_SESSION_MOODS.indexOf(_selectedMood);
+    await prefs.setInt('autoDiaryMoodId', moodId);
+    final firebaseServices = FirebaseServices();
+    await firebaseServices.updateUserMoods(moodId);
+
 
     if (!_locationEnabled) {
       await prefs.remove('autoDiaryLocationData');
@@ -815,11 +822,16 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       await firebaseServices.getUserWithId(id: userId);
       final int currentLoves = user.currentLoveCount ?? 0;
 
-      // 2. Check for 10,000 threshold requirement
-      if (currentLoves < 2000) {
-        showToast("You need at least 2,000 Loves to access this technology.");
+      // 2. Check for requirement
+      if (currentLoves < 2000 || currentLoves < 1000) {
+        showToast("Insufficient Loves to activate Monitoring Spirit.");
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TopUpLovesPage(feature: 'autodiary')),
+        );
         return false;
       }
+
 
       // 3. Check if they can afford the 1,000 cost
       if (currentLoves < 1000) {

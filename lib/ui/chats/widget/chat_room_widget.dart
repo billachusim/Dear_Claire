@@ -12,6 +12,7 @@ import '../../../data/models/transaction_model.dart' as t_model;
 import '../../../services/user_model.dart';
 import '../../../utils/constant.dart';
 import '../../../widgets/toast.dart';
+import '../../ego-profile/top_up_loves_page.dart';
 import '../inside_chatroom.dart';
 
 class ChatRoomWidget extends StatefulWidget {
@@ -47,6 +48,13 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
           final isSpecialRoom = widget.element.title == "One On One Room" ||
               widget.element.title == "Five Aside Room" ||
               widget.element.title == "One On One Eavedrop With ClAIre";
+
+          if (isSpecialRoom && user.currentLoveCount <= specialRoomLoveRequirement) {
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) => TopUpLovesPage(feature: 'diary_rooms'),
+            ));
+            return;
+          }
 
           if (isSpecialRoom && user.currentLoveCount <= specialRoomLoveRequirement) {
             showToast("You need more than $specialRoomLoveRequirement Loves for this room.");

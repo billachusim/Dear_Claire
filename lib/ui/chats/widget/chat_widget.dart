@@ -27,6 +27,7 @@ import '../../../utils/strings.dart';
 import '../../../widgets/custom_image_widget.dart';
 import '../../../widgets/play_advise_voice_note.dart';
 import '../../../widgets/toast.dart';
+import '../../ego-profile/top_up_loves_page.dart';
 
 class ChatWidget extends StatefulWidget {
 
@@ -898,6 +899,13 @@ class _ChatWidgetState extends State<ChatWidget> {
                         const int entryCost = 3;
                         const int taxAmount = 2;
                         const int totalDebit = entryCost + taxAmount;
+
+                        if (visitor.currentLoveCount < totalDebit) {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (context) => TopUpLovesPage(feature: 'diary_rooms'),
+                          ));
+                        }
+
 
                         if (visitor.currentLoveCount < totalDebit) {
                           showToast("You need at least $totalDebit❤️ to enter this corner.");
