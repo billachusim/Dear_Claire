@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:clairediary/services/user_activity_model.dart';
 import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/utils/color.dart';
@@ -6,6 +8,8 @@ import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:clairediary/utils/mood.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -173,7 +177,13 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
       _popularMood = 'Not Available';
     }
 
-    if (mounted) setState(() {});
+    if (mounted) {
+      setState(() {});
+      // Trigger the emoji flood once analysis is complete and mood is set
+      if (_currentMood != 'Not Available') {
+        _triggerMoodConfetti();
+      }
+    }
   }
 
   // Your formatting function remains the same
@@ -182,7 +192,7 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
     switch (type) {
       case 'session': return 'Diary Session';
       case 'comment': return 'Advising';
-      case 'react': return 'Reacting'; // Keep old 'react' for historical data
+      case 'react': return 'Reacting';
       case 'thank': return 'Thanksgiving';
       case 'follow': return 'Following';
       case 'game_win': return 'Winning Games';
@@ -271,94 +281,118 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
         .take(5)
         .toList();
 
+    // Reusable decoration for Glassmorphism
+    BoxDecoration glassDecoration() => BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Pallet.colorPrimary.withValues(alpha: 0.9),
+          Pallet.colorSecondary.withValues(alpha: 0.1),
+        ],
+      ),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.2),
+        width: 1.5,
+      ),
+    );
+
     // --- FALLBACK UI ---
-    // If there are fewer than 3 activity types, show a simple list instead of crashing.
     if (topActivities.length < 3) {
-      return Container(
-        width: double.infinity, // Ensure it takes full width
-        margin: const EdgeInsets.all(16),
+      return Padding(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Pallet.colorSecondary.withValues(alpha: 0.5),
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Activity Breakdown",
-              style: GoogleFonts.lato(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(height: 10),
-            // Handle the case where there are no activities at all
-            if (topActivities.isEmpty)
-              Text(
-                "No activities with distinct types found yet.",
-                style: GoogleFonts.lato(color: Colors.white70, fontSize: 14),
-              )
-            else
-            // If there are 1 or 2, list them
-              for (var activity in topActivities)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: Text(
-                    "• ${activity.key} (${activity.value} times)",
-                    style: GoogleFonts.lato(color: Colors.white70, fontSize: 14),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: glassDecoration(),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Activity Breakdown",
+                    style: GoogleFonts.lato(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
-                ),
-          ],
+                  const SizedBox(height: 10),
+                  if (topActivities.isEmpty)
+                    Text(
+                      "No activities with distinct types found yet.",
+                      style: GoogleFonts.lato(color: Colors.white70, fontSize: 14),
+                    )
+                  else
+                    for (var activity in topActivities)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4.0),
+                        child: Text(
+                          "• ${activity.key} (${activity.value} times)",
+                          style: GoogleFonts.lato(color: Colors.white70, fontSize: 14),
+                        ),
+                      ),
+                ],
+              ),
+            ),
+          ),
         ),
       );
     }
 
     // --- RADAR CHART UI ---
-    // If we have 3 or more activities, build the full RadarChart.
-    return Container(
-      margin: const EdgeInsets.all(16),
+    return Padding(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Pallet.colorSecondary.withValues(alpha: 0.5),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-      ),
-      height: 250,
-      child: RadarChart(
-        RadarChartData(
-          dataSets: [
-            RadarDataSet(
-              dataEntries: topActivities
-                  .map((entry) => RadarEntry(value: entry.value.toDouble()))
-                  .toList(),
-              borderColor: Pallet.colorPrimary,
-              fillColor: Pallet.colorPrimary.withValues(alpha: 0.4),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: glassDecoration(),
+            height: 250,
+            child: RadarChart(
+              RadarChartData(
+                dataSets: [
+                  RadarDataSet(
+                    dataEntries: topActivities
+                        .map((entry) => RadarEntry(value: entry.value.toDouble()))
+                        .toList(),
+                    borderColor: Pallet.colorWhite,
+                    fillColor: Pallet.colorWhite.withValues(alpha: 0.4),
+                  ),
+                ],
+                radarShape: RadarShape.circle,
+                radarBackgroundColor: Colors.transparent,
+                borderData: FlBorderData(show: false),
+                radarBorderData: const BorderSide(color: Colors.white24, width: 1.5),
+                getTitle: (index, angle) {
+                  if (index < topActivities.length) {
+                    final entry = topActivities[index];
+                    return RadarChartTitle(
+                      text: entry.key,
+                      angle: angle,
+                    );
+                  }
+                  return RadarChartTitle(text: '');
+                },
+                tickCount: 4,
+                ticksTextStyle: const TextStyle(color: Colors.transparent),
+                tickBorderData: const BorderSide(color: Colors.white24),
+                gridBorderData: const BorderSide(color: Colors.white24, width: 1.5),
+              ),
+              swapAnimationDuration: const Duration(milliseconds: 400),
             ),
-          ],
-          radarShape: RadarShape.circle,
-          radarBackgroundColor: Colors.transparent,
-          borderData: FlBorderData(show: false),
-          radarBorderData: const BorderSide(color: Colors.white24, width: 1.5),
-          getTitle: (index, angle) {
-            if (index < topActivities.length) {
-              final entry = topActivities[index];
-              return RadarChartTitle(
-                text: entry.key,
-                angle: angle,
-              );
-            }
-            return RadarChartTitle(text: '');
-          },
-          tickCount: 4,
-          ticksTextStyle: const TextStyle(color: Colors.transparent),
-          tickBorderData: const BorderSide(color: Colors.white24),
-          gridBorderData: const BorderSide(color: Colors.white24, width: 1.5),
+          ),
         ),
-        swapAnimationDuration: Duration(milliseconds: 400),
       ),
     );
   }
+
 
 
   // --- NEW: Smart "Load More" button ---
@@ -422,21 +456,27 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
             Row(
               children: [
                 Expanded(
-                  child: _statCard(
-                    title: "Vibe Check", // Modern terminology
-                    value: _currentMood,
-                    subtitle: "Current Energy",
-                    icon: Icons.auto_awesome_outlined,
-                    color: Colors.green,
-                    pulseAnimation: _moodPulseController,
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _triggerMoodConfetti();
+                    },
+                    child: _statCard(
+                      title: "Vibe Check", // Modern terminology
+                      value: _currentMood,
+                      subtitle: "Current Mood",
+                      icon: Icons.auto_awesome_outlined,
+                      color: Colors.green,
+                      pulseAnimation: _moodPulseController,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _statCard(
-                    title: "Most Frequent",
+                    title: "Mood Swing",
                     value: _popularMood,
-                    subtitle: "Mood Pattern",
+                    subtitle: "Observed Pattern",
                     icon: Icons.psychology_outlined,
                     color: Colors.green,
                     pulseAnimation: _moodPulseController,
@@ -522,16 +562,22 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
-                child: Text(
-                  hasEmoji ? moodParts['text']! : value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                child: ShaderMask(
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: [Colors.white, color.withValues(alpha: 0.5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(bounds),
+                  child: Text(
+                    hasEmoji ? moodParts['text']! : value,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18, // Slightly larger
+                      fontWeight: FontWeight.w800, // Extra bold for that premium look
+                      color: Colors.white, // Required for ShaderMask
+                    ),
                   ),
                 ),
+
               ),
               if (hasEmoji && pulseAnimation != null)
                 AnimatedBuilder(
@@ -576,6 +622,51 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
       ),
     );
   }
+
+
+
+
+
+  void _triggerMoodConfetti() {
+    final moodData = _splitMood(_currentMood);
+    final emoji = moodData['emoji'] ?? '✨'; // Fallback if no emoji found
+
+    if (emoji.isEmpty) return;
+
+    // Configuration for "Flooding" from the bottom edges
+    final options = ConfettiOptions(
+      particleCount: 25,
+      spread: 70,
+      startVelocity: 40,
+      gravity: 0.8, // Slightly heavy so they "settle" or fall back down
+      ticks: 300,   // How long they stay on screen
+      colors: [const Color(0xffffffff)], // Base color
+    );
+
+    // Launch from Bottom Left
+    Confetti.launch(
+      context,
+      options: options.copyWith(x: 0.1, y: 1.0, angle: 60),
+      // Use 'Emoji' class from the flutter_confetti package
+      particleBuilder: (index) => Emoji(
+        emoji: emoji,
+        textStyle: const TextStyle(fontSize: 30),
+      ),
+    );
+
+    // Launch from Bottom Right
+    Confetti.launch(
+      context,
+      options: options.copyWith(x: 0.9, y: 1.0, angle: 120),
+      // Use 'Emoji' class from the flutter_confetti package
+      particleBuilder: (index) => Emoji(
+        emoji: emoji,
+        textStyle: const TextStyle(fontSize: 30),
+      ),
+    );
+  }
+
+
 
 
 

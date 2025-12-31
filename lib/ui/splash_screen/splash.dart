@@ -8,6 +8,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../featured/notified_session_details.dart';
 
@@ -116,40 +117,60 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
+    final Size size = MediaQuery
+        .of(context)
+        .size;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
       child: Scaffold(
-        backgroundColor: Pallet.colorPrimary,
-        body: SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: AnimatedBuilder(
-                      animation: _controller,
-                      builder: (_, child) {
-                        return Transform.rotate(
-                          angle: _controller.value * 1 * math.pi,
-                          child: child,
-                        );
-                      },
-                      child: Image.asset(
-                        "assets/images/claire_icon.png",
-                        height: 120,
-                        width: 120,
+        body: Container(
+          width: size.width,
+          height: size.height,
+          decoration: BoxDecoration(
+            // Apply the same gradient used in AuthSelectionPage
+            gradient: LinearGradient(
+              colors: [Pallet.colorPrimary, Pallet.colorSecondary],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: AnimatedBuilder(
+                        animation: _controller,
+                        builder: (_, child) {
+                          return Transform.rotate(
+                            angle: _controller.value * 1 * math.pi,
+                            child: child,
+                          );
+                        },
+                        child: Image.asset(
+                          "assets/images/claire_icon.png",
+                          height: 120,
+                          width: 120,
+                        ),
                       ),
                     ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 10.0),
-                    child: Text(
-                      "By Social Faculty",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  )
-                ],
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10.0),
+                      child: Text(
+                        "By Social Faculty",
+                        style: GoogleFonts.lato(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
           ),

@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:clairediary/ui/create_session/sound/custom_play_sound_widget.dart';
 import 'package:clairediary/widgets/audio_recorder.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/firebase_services.dart';
@@ -32,18 +34,19 @@ import '../splash_screen/rotate_logo.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'clairevatar.dart';
 
-
 class EgoProfilePage extends StatefulWidget {
   final String title;
-  const EgoProfilePage({Key? key, required this.title,}) : super(key: key);
+  const EgoProfilePage({
+    Key? key,
+    required this.title,
+  }) : super(key: key);
 
   @override
   _EgoProfilePageState createState() => _EgoProfilePageState();
 }
+
 bool _isAvatarLoading = false;
 const int maxFailedLoadAttempts = 3;
-
-
 
 class _EgoProfilePageState extends State<EgoProfilePage>
     with SingleTickerProviderStateMixin {
@@ -58,9 +61,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   String _audioStatusHint = "...write a new ego mantra...";
   String? _recordedAudioPath;
   bool _isUploadingAudio = false;
-
-
-
 
   @override
   void initState() {
@@ -80,6 +80,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     super.dispose();
     _interstitialAd?.dispose();
     _interstitialAd2?.dispose();
+    _recordedAudioPath = null;
   }
 
   int currentTabIndex = 0;
@@ -95,12 +96,10 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   Future<void> editNickName() async {
     final nickname = _nicknameController.text;
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser?.uid)
-        .update({
-      "nickname": nickname,
-    },
+    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).update(
+      {
+        "nickname": nickname,
+      },
     );
     logger.d('Successfully saved new nickname');
     print('Nickname: $nickname');
@@ -112,12 +111,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     userModel = await firebaseServices.getUserInfo();
   }
 
-
-
   /// Query Ego stream from Firestore
 
   Stream<QuerySnapshot<Map<String, dynamic>>> getUserEgoStream() {
-
     return FirebaseFirestore.instance
         .collection('ego_stream')
         .where("userId", isEqualTo: currentUser?.uid)
@@ -125,7 +121,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
         .orderBy('egoTime', descending: true)
         .snapshots();
   }
-
 
   /// Save Ego mantra
 
@@ -136,22 +131,22 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     final egoImage = userModel.avatarUrl;
     final userId = userModel.userId;
     final senderId = currentUser?.uid;
-    FirebaseFirestore.instance
-        .collection('ego_stream')
-        .add({
-      "egoMessage": egoMessage,
-      "egoTime": egoTime,
-      "egoName": egoName,
-      "egoImage": egoImage,
-      "userId": userId,
-      "senderId": senderId,
-    },
+    FirebaseFirestore.instance.collection('ego_stream').add(
+      {
+        "egoMessage": egoMessage,
+        "egoTime": egoTime,
+        "egoName": egoName,
+        "egoImage": egoImage,
+        "userId": userId,
+        "senderId": senderId,
+      },
       //SetOptions(merge: true)
     );
     logger.d('Successfully saved your Ego message');
     await firebaseServices.saveUserActivity(
       activityType: 'mantra', // A new activity type
-      activityMessage: "You left a new mantra for yourself, $egoName.",);
+      activityMessage: "You left a new mantra for yourself, $egoName.",
+    );
   }
 
   /// Save Ego audio mantra
@@ -162,29 +157,27 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     final egoImage = userModel.avatarUrl;
     final userId = userModel.userId;
     final senderId = currentUser?.uid;
-    FirebaseFirestore.instance
-        .collection('ego_stream')
-        .add({
-      "egoAudioMessage": audioPath,
-      "egoTime": egoTime,
-      "egoName": egoName,
-      "egoImage": egoImage,
-      "userId": userId,
-      "senderId": senderId,
-    },
+    FirebaseFirestore.instance.collection('ego_stream').add(
+      {
+        "egoAudioMessage": audioPath,
+        "egoTime": egoTime,
+        "egoName": egoName,
+        "egoImage": egoImage,
+        "userId": userId,
+        "senderId": senderId,
+      },
       //SetOptions(merge: true)
     );
     logger.d('Successfully saved your Ego audio message');
     print('Ego Audio Message: $audioPath');
-
   }
-
 
   /// Delete an ego message
 
   Future<void> deleteEgoStreamMessage(String documentId) async {
     try {
-      await FirebaseFirestore.instance        .collection('ego_stream')
+      await FirebaseFirestore.instance
+          .collection('ego_stream')
           .doc(documentId)
           .delete();
       logger.d('Successfully deleted ego stream message: $documentId');
@@ -195,8 +188,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     }
   }
 
-
-
   InterstitialAd? _interstitialAd;
   InterstitialAd? _interstitialAd2;
   int _interstitialLoadAttempts = 0;
@@ -205,9 +196,11 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   void _createEgoNameInterstitialAd() {
     InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/9680520067" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/7910759937" :
-      '',
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/9680520067"
+          : Platform.isIOS
+              ? "ca-app-pub-2404156870680632/7910759937"
+              : '',
       request: AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
@@ -228,9 +221,11 @@ class _EgoProfilePageState extends State<EgoProfilePage>
 
   void _createEgoMantraInterstitialAd() {
     InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/2338869057" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/5936716173" :
-      '',
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/2338869057"
+          : Platform.isIOS
+              ? "ca-app-pub-2404156870680632/5936716173"
+              : '',
       request: AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
@@ -265,7 +260,6 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     }
   }
 
-
   void _showEgoMantraInterstitialAd() {
     if (_interstitialAd2 != null) {
       _interstitialAd2!.fullScreenContentCallback = FullScreenContentCallback(
@@ -282,20 +276,18 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     }
   }
 
-
   flagEgoAlertDialog(BuildContext context) {
-
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text("Back"),
-      onPressed:  () {
+      onPressed: () {
         Navigator.of(context).pop();
       },
     );
 
     Widget continueButton = TextButton(
       child: Text("Okay"),
-      onPressed:  () {
+      onPressed: () {
         Navigator.of(context).pop();
       },
     );
@@ -319,916 +311,595 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     );
   }
 
-
-
-
-
-  /// Profile Cover header
-
-  Widget _pageHeader(
-      {String? avatarUrl, String? userName, String? userType,
-        var sessionCount, var totalLoveCount, var advisesCount})
-  {
-    // Determine if the current theme is dark
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    // Define colors based on the theme
-    Color getCardBackgroundColor() {
-      if (userType == 'REGULAR') {
-        return isDarkMode ? Pallet.colorPrimary : Colors.white;
-      } else if (userType == 'ADMIN' || userType == 'SUPER_ADMIN') {
-        return isDarkMode ? Pallet.colorSecondary : Colors.white;
-      }
-      // Default fallback
-      return isDarkMode ? Color(0xFF2C2C2E) : Colors.white;
-    }
-
-    final cardBackgroundColor = getCardBackgroundColor();    final cardTextColor = isDarkMode ? Colors.white : Colors.black;
-    final hintTextColor = isDarkMode ? Colors.white54 : Colors.black54;
-
-
-    return Material(
-      color: Colors.transparent, // Use transparent to show the container's decoration
-      child: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(
-              AppImages.appChatBg,
+  // --- HELPER: NICKNAME EDIT FIELD (BACK OF CARD) ---
+  Widget _buildNicknameEditField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _nicknameController,
+              cursorColor: Colors.white,
+              style: GoogleFonts.plusJakartaSans(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16),
+              decoration: InputDecoration(
+                hintText: "...change ego name...",
+                hintStyle: GoogleFonts.plusJakartaSans(
+                    color: Colors.white38, fontSize: 13),
+                border: InputBorder.none,
+              ),
+              maxLength: 35,
             ),
-            fit: BoxFit.fill,
           ),
-        ),
-        width: getDeviceWidth(context),
-        margin: EdgeInsets.only(bottom: 3),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Edit Clairevatar icon is here
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushAndRemoveUntil<dynamic>(
-                            context,
-                            MaterialPageRoute<dynamic>(
-                              builder: (BuildContext context) => EditClairevatar(),
-                            ),
-                                (route) => false,//if you want to disable back feature set to false
-                          );
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                              color: userType == 'REGULAR'? Pallet.colorPrimary
-                                  : userType == 'ADMIN'? Pallet.colorSecondary
-                                  : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                                  :Pallet.colorBlue,
-                              borderRadius: BorderRadius.circular(100)
-                          ),
-                          height: 22,
-                          width: 20,
-                          margin: EdgeInsets.only(left: 4),
-                          child: IconButton(
-                              padding: EdgeInsets.only(right: 1),
-                              icon: Icon(Icons.edit),
-                              iconSize: 15,
-                              color: Pallet.colorWhite,
-                              onPressed: () {
-                                Navigator.of(context)
-                                    .pushNamed(AppRoutes.editClairevatar);
-                              }
-                          ),
-                        ),
-                      ),
+          IconButton(
+            icon: const Icon(Icons.check_circle, color: Colors.greenAccent),
+            onPressed: () {
+              if (_nicknameController.text.isNotEmpty) editNickName();
+              _nicknameController.clear();
+              cardKey2.currentState?.toggleCard();
+              HapticFeedback.mediumImpact();
+            },
+          )
+        ],
+      ),
+    );
+  }
 
-                      //Clairevatar Container is here
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.of(context)
-                              .pushNamed(AppRoutes.editClairevatar);
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: userType == 'REGULAR'? Pallet.colorPrimary
-                                : userType == 'ADMIN'? Pallet.colorSecondary
-                                : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                                :Pallet.colorBlue,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          margin: EdgeInsets.only(left: 0),
-                          child: Container(
-                            height: 75,
-                            width: 75,
-                            margin: EdgeInsets.all(4),
-                            child: CachedNetworkImage(
-                                width: 70,
-                                height: 70,
-                                imageUrl: avatarUrl ??"",
-                                imageBuilder: (context, imageProvider) => Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(100),
-                                    image: DecorationImage(
-                                      image: imageProvider,
-                                      fit: BoxFit.fill,
-                                    ),
-                                  ),
-                                ),
-                                placeholder: (context, url) =>
-                                    CircularProgressIndicator(),
-                                errorWidget: (context, url, error) => Image.asset(
-                                  "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                  width: 50,
-                                  height: 50,
-                                ) //Icon(Icons.error),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+  // --- HELPER: MANTRA DISPLAY (FRONT OF CARD) ---
+  Widget _buildMantraDisplay() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-                  // The count columns (stats cards) are here
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildStatCard(sessionCount, "Sessions", userType, context),
-                        _buildStatCard(advisesCount, "Advises", userType, context),
-                        _buildStatCard(totalLoveCount, "Loves", userType, context),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 6,),
-                ],
+    // Dynamic colors for readability
+    final mainTextColor = isDarkMode ? Colors.white : Colors.white;
+    final secondaryTextColor = isDarkMode ? Colors.white70 : Colors.white60;
+    final hintTextColor = isDarkMode ? Colors.white38 : Colors.white38;
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: getUserEgoStream(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Text(
+                'Tap to write a mantra you wish to live by...',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.plusJakartaSans(
+                    color: secondaryTextColor,
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic),
               ),
             ),
+          );
+        }
+        return ListView(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          children: snapshot.data!.docs.map((doc) {
+            Map<String, dynamic> data = doc.data()! as Map<String, dynamic>;
+            return ListTile(
+              dense: true,
+              leading: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: isDarkMode ? Colors.white10 : Colors.black12,
+                      width: 1),
+                ),
+                child: ClipOval(
+                  child: GestureDetector(
+                    onTap: () async {
+                      setState(() {
+                        _isAvatarLoading = true;
+                      });
+                      try {
+                        // --- 1. SETUP TRANSACTION DETAILS ---
+                        final visitingUser = await firebaseServices.getUserInfo();
+                        final String visitedUserId = data['senderId'].toString();
+                        final String visitedEgoName = data['egoName'].toString();
+                        const int visitCost = 1;
+                        // --- 2. HANDLE SELF-VISIT ---
+                        if (visitingUser.userId == visitedUserId) {
+                          // If visiting self, just navigate without a transaction.
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(
+                                  visitedUsersID: visitedUserId,
+                                  visitedEgoName: visitedEgoName),
+                              context);
+                          return;
+                        }
 
+                        // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
+                        // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
+                        if (visitingUser.userType == "REGULAR" &&
+                            visitingUser.currentLoveCount < 500) { // Changed from 50 to 500 for consistency
+                          showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
+                          return;
+                        }
 
+                        if (visitingUser.currentLoveCount < visitCost) {
+                          showToast("You need at least 1 ❤️ to visit a profile.");
+                          return;
+                        }
 
-            /// Nickname and edit nickname FlipCard method
+                        // --- 4. PERFORM THE LOVE TRANSACTION ---
+                        final bool success =
+                        await firebaseServices.transferLoveBetweenUsers(
+                          senderId: visitingUser.userId!,
+                          receiverId: visitedUserId,
+                          amountToSend: visitCost,
+                          taxAmount: 0,
+                          totalDebitAmount: visitCost,
+                          senderTransactionDesc:
+                          "1❤️ for visiting ${visitedEgoName}'s Ego.",
+                          receiverTransactionDesc:
+                          "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                          claireTransactionDesc:
+                          "Tax from a profile visit.", // Will be 0, but required
+                          forProfileVisits: 1, // Stat for the sender
+                          fromProfileVisits: 1, // Stat for the receiver
+                          metadata: {
+                            'reason': 'profile_visit',
+                            'visitedUserId': visitedUserId
+                          },
+                        );
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+                        // --- 5. NAVIGATE ON SUCCESS ---
+                        if (success) {
+                          showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
-                Container(
-                  margin: EdgeInsets.all(4),
-                  height: 40,
-                  width: 250,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(25)),
-                    color: userType == 'REGULAR'? Pallet.colorPrimary
-                        : userType == 'ADMIN'? Pallet.colorSecondary
-                        : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                        :Pallet.colorBlue,
-                  ),
-                  child: FlipCard(
-                    key: cardKey2,
-                    direction: FlipDirection.VERTICAL, // default
-                    front: Stack(
-                      alignment: Alignment.centerLeft,
+                          // --- START TARGETED NOTIFICATION LOGIC ---
+                          try {
+                            // We already have the visiting user's info, now get the visited user's token.
+                            final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(visitedUserId).get();
+                            if (receiverDoc.exists) {
+                              final receiverToken = receiverDoc.data()?['fcmId'] as String?;
+                              final senderName = visitingUser.nickname ?? 'A user';
+
+                              if (receiverToken != null && receiverToken.isNotEmpty) {
+                                await notificationService.sendNotification({
+                                  "token": receiverToken,
+                                  "notification": {
+                                    "title": "Your Ego profile has a visitor!",
+                                    "body": "$senderName just visited your profile with a kola of 1❤️."
+                                  },
+                                  "data": {
+                                    // Navigate the user to their own profile page to see the updated stats.
+                                    "route": "egoPage"
+                                  }
+                                });
+                              }
+                            }
+                          } catch (e) {
+                            print("Error sending profile visit notification: $e");
+                            // Don't block the user flow if notifications fail.
+                          }
+                          // --- END TARGETED NOTIFICATION LOGIC ---
+
+                          // --- NAVIGATE ---
+                          // Only navigate to the profile if the transaction was successful.
+                          PageRouter.gotoWidget(
+                              VisitedUserEgoProfilePage(
+                                  visitedUsersID: visitedUserId,
+                                  visitedEgoName: visitedEgoName),
+                              context);
+                        }
+                      } finally {
+                        // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                        // This runs no matter how the try block exits.
+                        if (mounted) {
+                          setState(() {
+                            _isAvatarLoading = false;
+                          });
+                        }
+                      }
+                    },
+                    child: Stack(
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: cardBackgroundColor,
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          margin: EdgeInsets.only(left: 17, right: 4, top: 4, bottom: 4),
-                          alignment: Alignment.centerLeft,
-                          width: 250,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-
-                              SizedBox(width: 4,),
-
-                              Text(
-                                userName ??"",
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    color: cardTextColor,
-                                    fontWeight: FontWeight.w700),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        Icon(Icons.edit_rounded,
-                          color: Pallet.colorWhite,
-                          size: 16,
-                        ),
-
-                      ],
-                    ),
-                    back: Stack(
-                      alignment: Alignment.centerLeft,
-                      children: [
-                        Container(
-                          margin: EdgeInsets.only(left: 4),
+                        CachedNetworkImage(
+                          width: 40,
                           height: 40,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(25),
-                              color: Pallet.colorPrimary),
-                          child: Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: Row(
-                              children: [
-                                new ConstrainedBox(
-                                  constraints: new BoxConstraints(
-                                    minWidth: 125,
-                                    maxWidth: 190,
-                                    minHeight: 40.0,
-                                    maxHeight: 60.0,
-                                  ),
-                                  child: new Scrollbar(
-                                    child: Container(
-                                      padding: EdgeInsets.zero,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(30),
-                                        color: cardBackgroundColor,
-                                      ),
-                                      child: TextField(
-                                        cursorColor: Pallet.colorSplashScreen,
-                                        keyboardType: TextInputType.text,
-                                        style: TextStyle(color: cardTextColor),
-                                        maxLines: 1,
-                                        controller: _nicknameController,
-                                        decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          contentPadding:
-                                          EdgeInsets.only(left: 13.0, bottom: 18, right: 13.0),
-                                          hintText: "...change ego name...",
-                                          hintStyle: TextStyle(
-                                            fontStyle: FontStyle.italic,
-                                            color: hintTextColor,
-                                            fontSize: 13,
-                                          ),
-                                          counterText: '',
-                                        ),
-                                        maxLength: 35,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                                FloatingActionButton(
-                                  heroTag: "edit_nickname",
-                                    mini: true,
-                                    backgroundColor: Pallet.colorWhite,
-                                    child: SvgPicture.asset(
-                                      AppImages.appSend,
-                                      colorFilter: ColorFilter.mode(Pallet.colorPrimary, BlendMode.srcIn),
-                                      height: 20,
-                                    ),
-                                    onPressed: () {
-                                      if (_nicknameController.text.isNotEmpty)
-                                        editNickName();
-                                      _nicknameController.clear();
-                                      if(cardKey2.currentState != null) { //null safety
-                                        cardKey2.currentState!.toggleCard();
-                                      }
-                                      setState(() {
-
-                                      });
-                                      showToast(AppString.change_ego_name);
-
-                                      Future.delayed(Duration(seconds: 3), () {
-                                        _showEgoNameInterstitialAd();
-                                      });
-                                    }
-                                ),
-
-                              ],
+                          imageUrl: data['egoImage'] ?? "",
+                          imageBuilder: (context, imageProvider) => Container(
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                image: imageProvider,
+                                fit: BoxFit.fill,
+                              ),
                             ),
                           ),
+                          placeholder: (context, url) =>
+                              CircularProgressIndicator(),
+                          errorWidget: (context, url, error) => Image.asset(
+                            "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                            width: 30,
+                            height: 30,
+                          ),
                         ),
+                        if (_isAvatarLoading)
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.black
+                                  .withValues(alpha: 0.5),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Center(
+                              child:
+                              CupertinoActivityIndicator(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
                 ),
+              ),
+              title: Text(data['egoName'] ?? "",
+                  style: GoogleFonts.plusJakartaSans(
+                      color: mainTextColor,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12)),
+              subtitle: data.containsKey('egoAudioMessage')
+                  ? CustomPlaySoundWidget(filePath: data['egoAudioMessage'])
+                  : Text(data['egoMessage'] ?? '',
+                      style: GoogleFonts.plusJakartaSans(
+                          color: mainTextColor,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600)),
+              trailing: IconButton(
+                icon: Icon(Icons.delete_outline_rounded,
+                    color: hintTextColor, size: 18),
+                onPressed: () => deleteEgoStreamMessage(doc.id),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
 
-                Spacer(flex: 1,),
-
-
-                /// Here is the Ego badge showing user's usertype
-
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.only(
-                              left: 8, right: 4, top: 4, bottom: 4),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: userType == 'REGULAR'? Pallet.colorPrimary
-                                : userType == 'ADMIN'? Pallet.colorSecondary
-                                : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                                :Pallet.colorBlue,
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                userType == 'REGULAR'? 'Ego' :
-                                userType == 'ADMIN'? 'Alter Ego' :
-                                userType == 'SUPER_ADMIN'? 'Super Ego' :
-                                'Ego',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              topBarWidget(),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 6,)
-                      ],
+  // --- HELPER: MANTRA INPUT (BACK OF CARD) ---
+  Widget _buildMantraInput() {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("NEW MANTRA",
+              style: GoogleFonts.plusJakartaSans(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white70,
+                  letterSpacing: 1.1)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              AudioRecorder(
+                onStart: () => setState(() => _mantraController.clear()),
+                onStop: (path) => setState(() => _recordedAudioPath = path),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(15)),
+                  child: TextField(
+                    controller: _mantraController,
+                    maxLines: 2,
+                    style: GoogleFonts.plusJakartaSans(
+                        color: Colors.white, fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: _recordedAudioPath != null
+                          ? "Audio ready..."
+                          : "Write or record...",
+                      hintStyle: GoogleFonts.plusJakartaSans(
+                          color: Colors.white30, fontSize: 13),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                     ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FloatingActionButton(
+                mini: true,
+                backgroundColor: Colors.white,
+                onPressed: () {
+                  if (_recordedAudioPath != null) {
+                    saveEgoAudioMantra(_recordedAudioPath!);
+                  } else if (_mantraController.text.isNotEmpty) {
+                    saveEgoMantra();
+                  }
+                  cardKey.currentState?.toggleCard();
+                },
+                child: Icon(Icons.send_rounded,
+                    color: Pallet.colorPrimary, size: 18),
+              )
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
+  // --- FULL PAGE HEADER ---
+  Widget _pageHeader({
+    String? avatarUrl,
+    String? userName,
+    String? userType,
+    var sessionCount,
+    var totalLoveCount,
+    var advisesCount,
+  }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-                    SizedBox(height: 3,),
+    // FIX: Dynamic colors based on theme to prevent "misty/white" washout
+    List<Color> getGlassColors() {
+      if (userType == 'REGULAR') {
+        return [
+          Pallet.colorPrimary,
+          Pallet.colorPrimary,
+        ];
+      } else if (userType == 'ADMIN' || userType == 'SUPER_ADMIN') {
+        return [
+          Pallet.colorSecondary,
+          Pallet.colorSecondary,
+        ];
+      }
+      return [
+        isDarkMode
+            ? Colors.white.withValues(alpha: 0.1)
+            : Colors.black.withValues(alpha: 0.05),
+        Colors.transparent
+      ];
+    }
 
-                    /// Flagged user label
+    final glassColors = getGlassColors();
+    final mainTextColor = isDarkMode ? Colors.white : Colors.white;
 
-                    Visibility(
-                      visible: userModel.flagged == true,
-                      child: GestureDetector(
-                        onTap: () {
-                          if (userModel.flagged == true)
-                            flagEgoAlertDialog(context);
-                        },
-                        child: Container(
-                          margin: EdgeInsets.only(right: 6),
-                          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 5),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Pallet.colorPrimaryDark,
-                              )),
-                          child: Row(
-                            children: [
-                              Icon(
-                                userModel.flagged == true ? Icons.flag : Icons.flag_outlined,
-                                color: Pallet.colorPrimaryDark,
-                                size: 15,
-                              ),
-                              SizedBox(width: 2,),
-                              Text(
-                                "You Are Flagged!",
-                                style: GoogleFonts.lato(
-                                    fontSize: 11.0,
-                                    color: Pallet.colorPrimaryDark,
-                                    fontWeight: FontWeight.w800),
-                              ),
-                            ],
-                          ),
+    return Container(
+      width: getDeviceWidth(context),
+      padding: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Pallet.colorSecondaryDark : Pallet.colorWhite,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context)
+                      .pushNamed(AppRoutes.editClairevatar),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                        color: isDarkMode ? Colors.black87 : Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color:
+                                isDarkMode ? Colors.white24 : Colors.black12),
+                        boxShadow: isDarkMode
+                            ? []
+                            : [
+                                BoxShadow(color: Colors.black12, blurRadius: 4)
+                              ]),
+                    child: Icon(Icons.edit,
+                        size: 14,
+                        color: isDarkMode ? Colors.white : Colors.black87),
+                  ),
+                ),
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(colors: glassColors),
+                        border: Border.all(
+                            color: isDarkMode ? Colors.white24 : Colors.black12,
+                            width: 1.5),
+                      ),
+                      child: ClipOval(
+                        child: CachedNetworkImage(
+                          width: 80,
+                          height: 80,
+                          imageUrl: avatarUrl ?? "",
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) =>
+                              const CircularProgressIndicator(),
+                          errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                              width: 80,
+                              height: 80),
                         ),
                       ),
                     ),
-
-
                   ],
+                ),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildGlassStat(sessionCount.toString(), "Sessions"),
+                      _buildGlassStat(advisesCount.toString(), "Advises"),
+                      _buildGlassStat(totalLoveCount.toString(), "Loves"),
+                    ],
+                  ),
                 ),
               ],
             ),
-
-            SizedBox(
-              height: 2,
-            ),
-
-
-
-            /// Front card: Write Ego mantra and send to stream
-
-
-        Container(
-          width: getDeviceWidth(context),
-          height: 100,
-          margin: EdgeInsets.only(left: 4, right: 4, bottom: 4),
-          child: FlipCard(
-              key: cardKey,
-              direction: FlipDirection.HORIZONTAL, // default
-              back: SingleChildScrollView( // Fixes bottom overflow
-                physics: NeverScrollableScrollPhysics(),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      height: 44,
+                      width: getDeviceWidth(context) * 0.6,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(25),
-                        color: userType == 'REGULAR'
-                            ? Pallet.colorPrimary
-                            : userType == 'ADMIN'
-                            ? Pallet.colorSecondary
-                            : userType == 'SUPER_ADMIN'
-                            ? Pallet.colorSecondary
-                            : Pallet.colorBlue,
+                        gradient: LinearGradient(colors: glassColors),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color:
+                                isDarkMode ? Colors.white24 : Colors.black12),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                userType == 'REGULAR'
-                                    ? 'Ego Stream:'
-                                    : userType == 'ADMIN'
-                                    ? 'Alter Ego Stream:'
-                                    : userType == 'SUPER_ADMIN'
-                                    ? 'Super Ego Stream:'
-                                    : '',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
+                      child: FlipCard(
+                        key: cardKey2,
+                        front: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                    color: isDarkMode
+                                        ? Colors.black87
+                                        : Colors.white,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: isDarkMode
+                                            ? Colors.white24
+                                            : Colors.black12),
+                                    boxShadow: isDarkMode
+                                        ? []
+                                        : [
+                                            BoxShadow(
+                                                color: Colors.black12,
+                                                blurRadius: 4)
+                                          ]),
+                                child: Icon(Icons.edit,
+                                    size: 14,
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black87),
                               ),
-                            ),
-                            SizedBox(height: 3),
-                            Row(
-                              children: [
-                                AudioRecorder(
-                                  onStart: () {
-                                    // When recording starts, update the UI
-                                    setState(() {
-                                      _recordedAudioPath = null;
-                                      _audioStatusHint = "Recording audio...";
-                                      _mantraController.clear(); // Clear text field
-                                    });
-                                  },
-                                  onStop: (String path) {
-                                    // When recording stops, store the path and update the hint
-                                    setState(() {
-                                      _recordedAudioPath = path;
-                                      _audioStatusHint = "Audio recorded! Hit send.";
-                                    });
-                                  },
-                                  onCancel: () {
-                                    // If recording is cancelled, reset everything
-                                    setState(() {
-                                      _recordedAudioPath = null;
-                                      _audioStatusHint = "...write a new ego mantra...";
-                                    });
-                                  },
-                                ),
-                                Expanded(
-                                  child: ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      minWidth: getDeviceWidth(context),
-                                      maxWidth: getDeviceWidth(context),
-                                      minHeight: 50.0,
-                                      maxHeight: 90.0,
-                                    ),
-                                    child: Scrollbar(
-                                      child: Container(
-                                        padding: EdgeInsets.zero,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(30),
-                                          color: cardBackgroundColor,
-                                        ),
-                                        child: TextField(
-                                          // Make field read-only when recording or uploading
-                                          readOnly: _recordedAudioPath != null || _isUploadingAudio,
-                                          cursorColor: Pallet.colorSplashScreen,
-                                          keyboardType: TextInputType.multiline,
-                                          style: TextStyle(color: cardTextColor),
-                                          maxLines: 2,
-                                          controller: _mantraController, // Use your profile's controller
-                                          decoration: InputDecoration(
-                                            border: InputBorder.none,
-                                            contentPadding: EdgeInsets.only(
-                                                left: 13.0,
-                                                right: 13.0,
-                                                top: 10,
-                                                bottom: 10),
-                                            // Use the dynamic hint text from your state
-                                            hintText: _audioStatusHint,
-                                            hintStyle: TextStyle(
-                                              fontStyle: FontStyle.italic,
-                                              color: hintTextColor,
-                                              fontSize: 14,
-                                            ),
-                                            counterText: '',
-                                          ),
-                                          maxLength: 160,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                FloatingActionButton(
-                                    onPressed: () {
-                                      // --- NEW SMART SEND LOGIC ---
-                                      // Check if we are sending an AUDIO message
-                                      if (_recordedAudioPath != null) {
-                                        if (_isUploadingAudio) return; // Prevent double taps
-
-                                        setState(() {
-                                          _isUploadingAudio = true;
-                                          _audioStatusHint = "Uploading audio...";
-                                        });
-
-                                        // Call your audio save method
-                                        saveEgoAudioMantra(_recordedAudioPath!).then((_) {
-                                          showToast(AppString.change_ego_mantra);
-                                          setState(() {
-                                            _isUploadingAudio = false;
-                                            _recordedAudioPath = null;
-                                            _audioStatusHint = "...write a new ego mantra...";
-                                          });
-                                          if (cardKey.currentState?.isFront == false) {
-                                            cardKey.currentState!.toggleCard();
-                                          }
-                                          Future.delayed(Duration(seconds: 4), () {
-                                            _showEgoMantraInterstitialAd();
-                                          });
-                                        });
-                                      }
-                                      // Check if we are sending a TEXT message
-                                      else if (_mantraController.text.trim().isNotEmpty) {
-                                        if (userModel.nickname != null) {
-                                          saveEgoMantra();
-                                          _mantraController.clear();
-
-                                          if (cardKey.currentState?.isFront == false) {
-                                            cardKey.currentState!.toggleCard();
-                                          }
-                                          showToast(AppString.change_ego_mantra);
-                                          Future.delayed(Duration(seconds: 4), () {
-                                            _showEgoMantraInterstitialAd();
-                                          });
-                                        }
-                                      }
-                                      // If neither is ready
-                                      else {
-                                        showToast("Write a mantra or record audio.");
-                                      }
-                                    },
-                                    mini: true,
-                                    backgroundColor: Pallet.colorWhite,
-                                    child: SvgPicture.asset(
-                                      AppImages.appSend,
-                                      colorFilter: ColorFilter.mode(
-                                          Pallet.colorPrimary, BlendMode.srcIn),
-                                      height: 20,
-                                    )),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-
-
-        /// Back of card is Ego Stream for display
-
-
-                front: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(25)),
-                        color: userType == 'REGULAR'? Pallet.colorPrimary
-                            : userType == 'ADMIN'? Pallet.colorSecondary
-                            : userType == 'SUPER_ADMIN'?  Pallet.colorSecondary
-                            :Pallet.colorBlue,
-                      ),
-                    ),
-
-                    /// Build Ego stream from Firebase on a ListView
-
-                    Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: StreamBuilder<QuerySnapshot>(
-                              stream: getUserEgoStream(),
-                              builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                                if (snapshot.hasError) {
-                                  return Text('Something went wrong');
-                                }
-                                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                                  return Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                                      child: Text('Write a mantra that you wish to live by currently by tapping on this space',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.white, fontSize: 14),),
-                                    ),
-                                  );
-                                }
-
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return Center(child: Text("Loading", style: TextStyle(color: Colors.white)));
-                                }
-
-                                return ListView(
-                                  children: snapshot.data!.docs.map((DocumentSnapshot document) {
-                                    Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
-                                    return ListTile(
-                                      leading: ClipOval(
-                                        child: GestureDetector(
-                                          onTap: () async {
-                                            setState(() {
-                                              _isAvatarLoading = true;
-                                            });
-                                            try {
-                                            // --- 1. SETUP TRANSACTION DETAILS ---
-                                            final visitingUser = await firebaseServices.getUserInfo();
-                                            final String visitedUserId = data['senderId'].toString();
-                                            final String visitedEgoName = data['egoName'].toString();
-                                            const int visitCost = 1;
-                                            // --- 2. HANDLE SELF-VISIT ---
-                                            if (visitingUser.userId == visitedUserId) {
-                                              // If visiting self, just navigate without a transaction.
-                                              PageRouter.gotoWidget(
-                                                  VisitedUserEgoProfilePage(
-                                                      visitedUsersID: visitedUserId,
-                                                      visitedEgoName: visitedEgoName),
-                                                  context);
-                                              return;
-                                            }
-
-                                            // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
-                                            // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
-                                            if (visitingUser.userType == "REGULAR" &&
-                                                visitingUser.currentLoveCount < 500) { // Changed from 50 to 500 for consistency
-                                              showToast("Need up to 500 Loves or Alter Ego to view other Ego Profiles.");
-                                              return;
-                                            }
-
-                                            if (visitingUser.currentLoveCount < visitCost) {
-                                              showToast("You need at least 1 ❤️ to visit a profile.");
-                                              return;
-                                            }
-
-                                            // --- 4. PERFORM THE LOVE TRANSACTION ---
-                                            final bool success =
-                                            await firebaseServices.transferLoveBetweenUsers(
-                                              senderId: visitingUser.userId!,
-                                              receiverId: visitedUserId,
-                                              amountToSend: visitCost,
-                                              taxAmount: 0,
-                                              totalDebitAmount: visitCost,
-                                              senderTransactionDesc:
-                                              "1❤️ for visiting ${visitedEgoName}'s Ego.",
-                                              receiverTransactionDesc:
-                                              "Received 1❤️ from ${visitingUser.nickname} visiting your Ego.",
-                                              claireTransactionDesc:
-                                              "Tax from a profile visit.", // Will be 0, but required
-                                              forProfileVisits: 1, // Stat for the sender
-                                              fromProfileVisits: 1, // Stat for the receiver
-                                              metadata: {
-                                                'reason': 'profile_visit',
-                                                'visitedUserId': visitedUserId
-                                              },
-                                            );
-
-                                            // --- 5. NAVIGATE ON SUCCESS ---
-                                            if (success) {
-                                              showToast("You are visiting ${visitedEgoName} with a kola of 1❤️.");
-
-                                              // --- START TARGETED NOTIFICATION LOGIC ---
-                                              try {
-                                                // We already have the visiting user's info, now get the visited user's token.
-                                                final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(visitedUserId).get();
-                                                if (receiverDoc.exists) {
-                                                  final receiverToken = receiverDoc.data()?['fcmId'] as String?;
-                                                  final senderName = visitingUser.nickname ?? 'A user';
-
-                                                  if (receiverToken != null && receiverToken.isNotEmpty) {
-                                                    await notificationService.sendNotification({
-                                                      "token": receiverToken,
-                                                      "notification": {
-                                                        "title": "Your Ego profile has a visitor!",
-                                                        "body": "$senderName just visited your profile with a kola of 1❤️."
-                                                      },
-                                                      "data": {
-                                                        // Navigate the user to their own profile page to see the updated stats.
-                                                        "route": "egoPage"
-                                                      }
-                                                    });
-                                                  }
-                                                }
-                                              } catch (e) {
-                                                print("Error sending profile visit notification: $e");
-                                                // Don't block the user flow if notifications fail.
-                                              }
-                                              // --- END TARGETED NOTIFICATION LOGIC ---
-
-                                              // --- NAVIGATE ---
-                                              // Only navigate to the profile if the transaction was successful.
-                                              PageRouter.gotoWidget(
-                                                  VisitedUserEgoProfilePage(
-                                                      visitedUsersID: visitedUserId,
-                                                      visitedEgoName: visitedEgoName),
-                                                  context);
-                                            }
-                                            } finally {
-                                              // --- 3. HIDE THE LOADER (GUARANTEED) ---
-                                              // This runs no matter how the try block exits.
-                                              if (mounted) {
-                                                setState(() {
-                                                  _isAvatarLoading = false;
-                                                });
-                                              }
-                                            }
-                                          },
-                                          child: Stack(
-                                            children: [
-                                              CachedNetworkImage(
-                                                width: 40,
-                                                height: 40,
-                                                imageUrl: data['egoImage'] ?? "",
-                                                imageBuilder: (context, imageProvider) => Container(
-                                                  decoration: BoxDecoration(
-                                                    image: DecorationImage(
-                                                      image: imageProvider,
-                                                      fit: BoxFit.fill,
-                                                    ),
-                                                  ),
-                                                ),
-                                                placeholder: (context, url) =>
-                                                    CircularProgressIndicator(),
-                                                errorWidget: (context, url, error) => Image.asset(
-                                                  "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                                  width: 30,
-                                                  height: 30,
-                                                ),
-                                              ),
-                                              if (_isAvatarLoading)
-                                                Container(
-                                                  width: 40,
-                                                  height: 40,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.black
-                                                        .withValues(alpha: 0.5),
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: const Center(
-                                                    child:
-                                                    CupertinoActivityIndicator(
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      title: Row(
-                                        // Use baseline alignment for perfect vertical text alignment
-                                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                                        textBaseline: TextBaseline.alphabetic, // Required for baseline alignment
-                                        children: [
-                                          Text(
-                                            data['egoName'].toString(),
-                                            style: GoogleFonts.lato( // Using GoogleFonts.lato for consistency
-                                              color: Colors.white, // Increased contrast for better readability
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold, // Make the name stand out
-                                            ),
-                                          ),
-                                          SizedBox(width: 8),
-                                          // Display the formatted timestamp
-                                          Expanded(
-                                            child: Text(
-                                              // Check if egoTime exists and is a Timestamp
-                                              (data['egoTime'] is Timestamp)
-                                                  ? formatFirestoreTimestamp(data['egoTime'])
-                                                  : '', // Show nothing if data is invalid
-                                              overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.lato( // Using GoogleFonts.lato
-                                                color: Colors.white60, // Slightly dimmed for hierarchy
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.normal,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      subtitle: data.containsKey('egoAudioMessage') ? CustomPlaySoundWidget(filePath: data['egoAudioMessage']) :
-                                      Text(data['egoMessage'] ?? '',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      trailing: GestureDetector(
-                                        onTap: () {
-                                          // Get the unique document ID
-                                          final String documentId = document.id;
-
-                                          showCustomDialog(context,
-                                              message: AppString.delete_mantra_alert_note,
-                                              onPressed: () {
-                                                PageRouter.goBack(context);
-                                                // Call the new universal delete method
-                                                deleteEgoStreamMessage(documentId);
-                                              });
-                                        },
-                                        child: Icon(
-                                          Icons.delete_forever_rounded,
-                                          color: Colors.white70,
-                                          size: 18,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                );
-                              },
-                            ),
+                              const SizedBox(width: 4),
+                              Text(userName ?? "",
+                                  style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 18,
+                                      color: mainTextColor,
+                                      fontWeight: FontWeight.w800)),
+                            ],
                           ),
-                        ],
+                        ),
+                        back: _buildNicknameEditField(),
                       ),
                     ),
-                  ],
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: glassColors),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: isDarkMode ? Colors.white10 : Colors.black12)),
+                  child: Row(
+                    children: [
+                      Text(
+                        userType == 'SUPER_ADMIN'
+                            ? 'SUPER EGO'
+                            : userType == 'ADMIN'
+                                ? 'ALTER EGO'
+                                : 'EGO',
+                        style: GoogleFonts.plusJakartaSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.1,
+                            color: mainTextColor),
+                      ),
+                      const SizedBox(width: 4),
+                      topBarWidget(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(25),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  width: double.infinity,
+                  height: 110,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: glassColors),
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(
+                        color: isDarkMode ? Colors.white24 : Colors.black12,
+                        width: 1.5),
+                  ),
+                  child: FlipCard(
+                    key: cardKey,
+                    front: _buildMantraDisplay(),
+                    back: _buildMantraInput(),
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-// Helper widget for the stat cards
-  Widget _buildStatCard(var count, String label, String? userType, BuildContext context) {
+  Widget _buildGlassStat(String value, String label) {
+    // Dynamic color for text to ensure visibility in light mode
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final primaryTextColor = isDarkMode ? Colors.white : Colors.black87;
+    final secondaryTextColor = isDarkMode ? Colors.white54 : Colors.black54;
 
-    Color getCardBackgroundColor() {
-      if (userType == 'REGULAR') {
-        return isDarkMode ? Pallet.colorPrimary : Colors.white;
-      } else if (userType == 'ADMIN' || userType == 'SUPER_ADMIN') {
-        return isDarkMode ? Pallet.colorSecondary : Colors.white;
-      }
-      // Default fallback
-      return isDarkMode ? Color(0xFF2C2C2E) : Colors.white;
-    }
-
-    final cardBackgroundColor = getCardBackgroundColor();
-    final cardTextColor = isDarkMode ? Colors.white : Colors.black;
-    final labelTextColor = isDarkMode ? Colors.white70 : Colors.black54;
-
-    return Card(
-      elevation: 4,
-      color: cardBackgroundColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Container(
-        width: (getDeviceWidth(context) / 4) - 16,
-        height: 60,
-        padding: const EdgeInsets.all(4),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              count ?? "---",
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: cardTextColor),
-            ),
-            SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: labelTextColor),
-            ),
-          ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          value == "null" || value.isEmpty ? "0" : value,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: primaryTextColor,
+          ),
         ),
-      ),
+        const SizedBox(height: 2),
+        Text(
+          label.toUpperCase(),
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+            color: secondaryTextColor,
+          ),
+        ),
+      ],
     );
   }
-
-
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -1259,14 +930,15 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                         sessionCount: data?["sessionCount"].toString() ?? "0",
                         advisesCount: data?["adviseCount"].toString() ?? "0",
                         totalLoveCount:
-                        data?["totalLoveCount"].toString() ?? "0",
+                            data?["totalLoveCount"].toString() ?? "0",
                         userType: data?["userType"] ?? "Ego",
                         avatarUrl: data?["avatarUrl"] ?? " ",
                       );
                     }
                     // Show a placeholder or compact loader while the header loads
                     return SizedBox(
-                        height: 150, // Give it a fixed height to avoid layout jumps
+                        height:
+                            150, // Give it a fixed height to avoid layout jumps
                         child: Center(child: CircularProgressIndicator()));
                   },
                 ),
@@ -1320,13 +992,12 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                     decoration: BoxDecoration(
                                         border: currentTabIndex != 0
                                             ? Border.all(
-                                            color: Pallet.colorPrimary,
-                                            width: 3)
+                                                color: Pallet.colorPrimary,
+                                                width: 3)
                                             : Border.all(
-                                            color: Pallet.colorPrimary,
-                                            width: 6),
-                                        borderRadius:
-                                        BorderRadius.circular(25),
+                                                color: Pallet.colorPrimary,
+                                                width: 6),
+                                        borderRadius: BorderRadius.circular(25),
                                         color: currentTabIndex != 0
                                             ? Pallet.colorWhite
                                             : Pallet.colorWhite),
@@ -1339,20 +1010,17 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                               style: TextStyle(
                                                   color: Pallet.colorPrimary,
                                                   fontWeight:
-                                                  currentTabIndex != 0
-                                                      ? FontWeight.w500
-                                                      : FontWeight.w700,
-                                                  fontSize:
-                                                  currentTabIndex != 0
+                                                      currentTabIndex != 0
+                                                          ? FontWeight.w500
+                                                          : FontWeight.w700,
+                                                  fontSize: currentTabIndex != 0
                                                       ? 14
                                                       : 14)),
                                           SizedBox(width: 14),
                                           currentTabIndex != 0
                                               ? SizedBox.shrink()
-                                              : Icon(
-                                              Icons
-                                                  .circle_notifications,
-                                              color: Pallet.colorPrimary)
+                                              : Icon(Icons.circle_notifications,
+                                                  color: Pallet.colorPrimary)
                                         ],
                                       ),
                                     ),
@@ -1376,13 +1044,12 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                     decoration: BoxDecoration(
                                         border: currentTabIndex != 1
                                             ? Border.all(
-                                            color: Pallet.colorSecondary,
-                                            width: 3)
+                                                color: Pallet.colorSecondary,
+                                                width: 3)
                                             : Border.all(
-                                            color: Pallet.colorSecondary,
-                                            width: 6),
-                                        borderRadius:
-                                        BorderRadius.circular(25),
+                                                color: Pallet.colorSecondary,
+                                                width: 6),
+                                        borderRadius: BorderRadius.circular(25),
                                         color: currentTabIndex != 1
                                             ? Pallet.colorWhite
                                             : Pallet.colorWhite),
@@ -1393,24 +1060,20 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                         children: [
                                           Text("Wallet",
                                               style: TextStyle(
-                                                  color:
-                                                  Pallet.colorSecondary,
+                                                  color: Pallet.colorSecondary,
                                                   fontWeight:
-                                                  currentTabIndex != 1
-                                                      ? FontWeight.w500
-                                                      : FontWeight.w700,
-                                                  fontSize:
-                                                  currentTabIndex != 1
+                                                      currentTabIndex != 1
+                                                          ? FontWeight.w500
+                                                          : FontWeight.w700,
+                                                  fontSize: currentTabIndex != 1
                                                       ? 14
                                                       : 14)),
                                           SizedBox(width: 14),
                                           currentTabIndex != 1
                                               ? SizedBox.shrink()
                                               : Icon(
-                                              Icons
-                                                  .monetization_on_rounded,
-                                              color:
-                                              Pallet.colorSecondary)
+                                                  Icons.monetization_on_rounded,
+                                                  color: Pallet.colorSecondary)
                                         ],
                                       ),
                                     ),
@@ -1434,13 +1097,12 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                     decoration: BoxDecoration(
                                         border: currentTabIndex != 2
                                             ? Border.all(
-                                            color: Pallet.deepGreen,
-                                            width: 3)
+                                                color: Pallet.deepGreen,
+                                                width: 3)
                                             : Border.all(
-                                            color: Pallet.deepGreen,
-                                            width: 6),
-                                        borderRadius:
-                                        BorderRadius.circular(25),
+                                                color: Pallet.deepGreen,
+                                                width: 6),
+                                        borderRadius: BorderRadius.circular(25),
                                         color: currentTabIndex != 2
                                             ? Pallet.colorWhite
                                             : Pallet.colorWhite),
@@ -1453,18 +1115,17 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                               style: TextStyle(
                                                   color: Pallet.deepGreen,
                                                   fontWeight:
-                                                  currentTabIndex != 2
-                                                      ? FontWeight.w500
-                                                      : FontWeight.w700,
-                                                  fontSize:
-                                                  currentTabIndex != 2
+                                                      currentTabIndex != 2
+                                                          ? FontWeight.w500
+                                                          : FontWeight.w700,
+                                                  fontSize: currentTabIndex != 2
                                                       ? 14
                                                       : 14)),
                                           SizedBox(width: 14),
                                           currentTabIndex != 2
                                               ? SizedBox.shrink()
                                               : Icon(Icons.archive_rounded,
-                                              color: Pallet.deepGreen)
+                                                  color: Pallet.deepGreen)
                                         ],
                                       ),
                                     ),
@@ -1481,8 +1142,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                               controller: _tabController,
                               children: [
                                 // Pass the CORRECT userId from the loaded data
-                                ActivityWidget(
-                                    userId: loadedUserModel.userId!),
+                                ActivityWidget(userId: loadedUserModel.userId!),
                                 ClaireLoves(),
                                 ArchiveWidget(),
                               ],
@@ -1500,13 +1160,13 @@ class _EgoProfilePageState extends State<EgoProfilePage>
       ),
     );
   }
-
 }
 
 class AudioPlayerWidget extends StatefulWidget {
   final String audioPath;
 
-  const AudioPlayerWidget({Key? key, required this.audioPath}) : super(key: key);
+  const AudioPlayerWidget({Key? key, required this.audioPath})
+      : super(key: key);
 
   @override
   _AudioPlayerWidgetState createState() => _AudioPlayerWidgetState();
@@ -1603,58 +1263,62 @@ class topBarWidget extends StatelessWidget {
               bottomOffsetHeight: 80.0,
               // Offset height to consider, for showing the menu item ( for example bottom navigation bar), so that the popup menu will be shown on top of selected item.
               menuItems: <FocusedMenuItem>[
-                FocusedMenuItem(title: Text("< SWITCH >", style: TextStyle(color: Pallet.colorSecondary),),
+                FocusedMenuItem(
+                  title: Text(
+                    "< SWITCH >",
+                    style: TextStyle(color: Pallet.colorSecondary),
+                  ),
                   onPressed: () async {
                     String id = await sharedPreference.getAlterEgoId();
-                    String accessCode = await sharedPreference.getAlterEgoAccessCode();
+                    String accessCode =
+                        await sharedPreference.getAlterEgoAccessCode();
                     print("Show Alter details:: $id || $accessCode");
-                    id.isNotEmpty && accessCode.isNotEmpty ? await firebaseServices.getUserAlterEgo(context,id, accessCode)
+                    id.isNotEmpty && accessCode.isNotEmpty
+                        ? await firebaseServices.getUserAlterEgo(
+                            context, id, accessCode)
                         : Navigator.of(context)
-                        .pushNamed(AppRoutes.alterEgoLogin);
-                  },),
+                            .pushNamed(AppRoutes.alterEgoLogin);
+                  },
+                ),
                 FocusedMenuItem(
                   title: Text(
                     "Lock Out",
                     style: TextStyle(color: Colors.redAccent),
                   ),
-                  onPressed: () async =>
-                      lockAlertDialog(context),
+                  onPressed: () async => lockAlertDialog(context),
                 ),
                 FocusedMenuItem(
                   title: Text(
                     "Delete Account",
                     style: TextStyle(color: Colors.redAccent),
                   ),
-                  onPressed: () async =>
-                      deleteEgoAlertDialog(context),
+                  onPressed: () async => deleteEgoAlertDialog(context),
                 ),
               ],
               onPressed: () {},
-              child: Icon(Icons.unfold_more_sharp,
+              child: Icon(
+                Icons.unfold_more_sharp,
                 color: Pallet.colorWhite,
                 size: 19,
-              )
-          )
+              ))
         ],
       ),
     );
   }
 }
 
-
 lockAlertDialog(BuildContext context) {
-
   // set up the buttons
   Widget cancelButton = TextButton(
     child: Text("No, Wait."),
-    onPressed:  () {
+    onPressed: () {
       Navigator.of(context).pop();
     },
   );
 
   Widget continueButton = TextButton(
     child: Text("Yes, Lock Out."),
-    onPressed:  () {
+    onPressed: () {
       firebaseServices.logUserOut(context);
       Navigator.pushReplacementNamed(context, AppRoutes.home);
     },
@@ -1679,13 +1343,11 @@ lockAlertDialog(BuildContext context) {
   );
 }
 
-
 deleteEgoAlertDialog(BuildContext context) {
-
   // set up the buttons
   Widget cancelButton = TextButton(
     child: Text("NO, WAIT!"),
-    onPressed:  () {
+    onPressed: () {
       Navigator.of(context).pop();
     },
   );
@@ -1695,7 +1357,7 @@ deleteEgoAlertDialog(BuildContext context) {
     onPressed: () {
       showToast("Long press to delete account.");
     },
-    onLongPress:  () {
+    onLongPress: () {
       firebaseServices.deleteEgoAccount(context, currentUser!.uid);
       Navigator.pushReplacementNamed(context, AppRoutes.authSelection);
     },

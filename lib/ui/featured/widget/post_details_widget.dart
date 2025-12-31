@@ -419,13 +419,19 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             height: 13,
                           ),
                           Center(
-                            child: Text(_session.title!,
-                                textAlign: TextAlign.center,
-                                maxLines: 3,
-                                style: GoogleFonts.lato(
-                                    fontSize: 28.0,
-                                    color: textColor,
-                                    fontWeight: FontWeight.w800)),
+                            child: Text(
+                              _session.title!,
+                              textAlign: TextAlign.center,
+                              maxLines: 3,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 26.0,
+                                color: textColor,
+                                fontWeight: FontWeight.w800, // Extra Bold
+                                height: 1.1,
+                                letterSpacing: -0.7,
+                              ),
+                            ),
+
                           ),
                           SizedBox(
                             height: 13,
@@ -434,23 +440,30 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             children: [
                               Expanded(
                                 child: SelectableLinkify(
-                                  onOpen: (link) async {
-                                    final Uri url = Uri.parse("${link.url}");
-                                    if (await canLaunchUrl(url)) {
-                                      await launchUrl(url);
-                                    } else {
-                                      throw 'Could not launch $link';
-                                    }
+                                  onOpen: (link) async {      final Uri url = Uri.parse("${link.url}");
+                                  if (await canLaunchUrl(url)) {
+                                    await launchUrl(url);
+                                  } else {
+                                    throw 'Could not launch $link';
+                                  }
                                   },
-                                  linkStyle: TextStyle(color: Colors.blue),
+                                  linkStyle: GoogleFonts.plusJakartaSans(
+                                    color: Colors.blueAccent,
+                                    fontWeight: FontWeight.w700,
+                                    decoration: TextDecoration.underline,
+                                  ),
                                   text: _session.message!,
                                   textAlign: TextAlign.justify,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 22.0,
-                                      color: textColor,
-                                      fontWeight: FontWeight.w600),
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 20.0,
+                                    color: textColor.withValues(alpha: 0.9),
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.5,
+                                    letterSpacing: -0.1,
+                                  ),
                                 ),
                               ),
+
                             ],
                           ),
 

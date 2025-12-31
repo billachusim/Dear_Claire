@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:clairediary/utils/color.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/ui/featured/model/comment_session_model.dart';
@@ -118,7 +121,8 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
       userId: currentUser!.uid,
       amount: 10,
       type: t_model.TransactionType.debit,
-      userTransactionDescription: "10 Loves deducted for archiving session: '${widget.element.title}'.",
+      userTransactionDescription:
+          "10 Loves deducted for archiving session: '${widget.element.title}'.",
       metadata: {
         'sessionId': widget.element.sessionId,
         'sessionTitle': widget.element.title
@@ -132,7 +136,10 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
       // --- START: NEW TARGETED NOTIFICATION LOGIC ---
       try {
         // Fetch the current user's document to get their up-to-date FCM token.
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).get();
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .get();
         if (userDoc.exists) {
           final userToken = userDoc.data()?['fcmId'] as String?;
 
@@ -141,7 +148,8 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
               "token": userToken,
               "notification": {
                 "title": "Session Archived",
-                "body": "Your session has been archived. 10❤️ were deducted from your wallet."
+                "body":
+                    "Your session has been archived. 10❤️ were deducted from your wallet."
               },
               "data": {
                 // Navigate the user to their own profile page to see the updated balance.
@@ -168,14 +176,14 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
       });
       showToast(message: "Session archived. 10 Loves deducted.");
       return true;
-
     } else {
       // If the treasury transaction failed (e.g., insufficient funds).
-      showToast(message: "Could not archive session. Please check your Love balance.");
+      showToast(
+          message:
+              "Could not archive session. Please check your Love balance.");
       return false;
     }
   }
-
 
   Future<bool?> removeFromArchive() async {
     final value = false;
@@ -217,182 +225,51 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
               context);
         }
       },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 7, horizontal: 7),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(25), color: backgroundColor),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    // --- 1. SHOW THE LOADER ---
-                    setState(() {
-                      _isAvatarLoading = true;
-                    });
-                    try {
-                      // --- 1. SETUP TRANSACTION DETAILS ---
-                      final visitingUser = await firebaseServices.getUserInfo();
-                      final String visitedUserId = widget.element.userId!;
-                      final String visitedEgoName =
-                          widget.element.userNickname!;
-                      const int visitCost = 1;
-
-                      // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
-                      if (visitingUser.userId == visitedUserId) {
-                        // If visiting self, just navigate without a transaction.
-                        PageRouter.gotoWidget(
-                            VisitedUserEgoProfilePage(
-                                visitedUsersID: visitedUserId,
-                                visitedEgoName: visitedEgoName),
-                            context);
-                        return;
-                      }
-
-                      if (visitingUser.userType == "REGULAR" &&
-                          visitingUser.currentLoveCount < 100) {
-                        showToast(
-                            message:
-                                "Need to have 100 Loves or Alter Ego Access to view Ego Profiles.");
-                        return;
-                      }
-
-                      if (currentUser?.uid == null) {
-                        showToast(
-                            message:
-                                "You need to log in to visit an ego profile.");
-                        return;
-                      }
-
-                      // --- 3. PERFORM THE LOVE TRANSACTION ---
-                      final bool success =
-                          await firebaseServices.transferLoveBetweenUsers(
-                        senderId: visitingUser.userId!,
-                        receiverId: visitedUserId,
-                        amountToSend: visitCost,
-                        taxAmount: 0,
-                        totalDebitAmount: visitCost,
-                        senderTransactionDesc:
-                            "1❤️ for visiting ${visitedEgoName}'s Ego.",
-                        receiverTransactionDesc:
-                            "1❤️ from ${visitingUser.nickname} visiting your Ego.",
-                        claireTransactionDesc: "Tax from a profile visit.",
-                        // Will be 0, but required
-                        forProfileVisits: 1,
-                        // Stat for the sender
-                        fromProfileVisits: 1,
-                        // Stat for the receiver
-                        metadata: {
-                          'reason': 'profile_visit',
-                          'visitedUserId': visitedUserId
-                        },
-                      );
-
-                      // ---4. NAVIGATE AND NOTIFY ON SUCCESS ---
-                      if (success) {
-                        showToast(message: "You are visiting ${visitedEgoName} with a kola of 1❤️.");
-
-                        // --- START TARGETED NOTIFICATION LOGIC ---
-                        try {
-                          // We already have the visiting user's info, now get the visited user's token.
-                          final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(visitedUserId).get();
-                          if (receiverDoc.exists) {
-                            final receiverToken = receiverDoc.data()?['fcmId'] as String?;
-                            final senderName = visitingUser.nickname ?? 'A user';
-
-                            if (receiverToken != null && receiverToken.isNotEmpty) {
-                              await notificationService.sendNotification({
-                                "token": receiverToken,
-                                "notification": {
-                                  "title": "Your Ego profile has a visitor!",
-                                  "body": "$senderName just visited your profile with a kola of 1❤️."
-                                },
-                                "data": {
-                                  // Navigate the user to their own profile page to see the updated stats.
-                                  "route": "egoPage"
-                                }
-                              });
-                            }
-                          }
-                        } catch (e) {
-                          print("Error sending profile visit notification: $e");
-                          // Don't block the user flow if notifications fail.
-                        }
-                        // --- END TARGETED NOTIFICATION LOGIC ---
-
-                        // --- NAVIGATE ---
-                        // Only navigate to the profile if the transaction was successful.
-                        PageRouter.gotoWidget(
-                            VisitedUserEgoProfilePage(
-                                visitedUsersID: visitedUserId,
-                                visitedEgoName: visitedEgoName),
-                            context);
-                      }
-                    } finally {
-                      // --- 3. HIDE THE LOADER (GUARANTEED) ---
-                      // This runs no matter how the try block exits.
-                      if (mounted) {
-                        setState(() {
-                          _isAvatarLoading = false;
-                        });
-                      }
-                    }
-                  },
-                  child: Stack(
-                    alignment: AlignmentGeometry.center,
-                    children: [
-                      CachedNetworkImage(
-                          width: 50,
-                          height: 50,
-                          imageUrl: widget.element.userAvatarUrl!,
-                          imageBuilder: (context, imageProvider) => Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  image: DecorationImage(
-                                    image: imageProvider,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                          placeholder: (context, url) =>
-                              CircularProgressIndicator(),
-                          errorWidget: (context, url, error) => Image.asset(
-                                "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                width: 50,
-                                height: 50,
-                              )),
-
-                      // --- 2. ADD THE OVERLAY LOADER ---
-                      if (_isAvatarLoading)
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Center(
-                            child: CupertinoActivityIndicator(
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                    ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 7),
+        child: ClipRRect(
+          // 1. Clip the blur to the border radius
+          borderRadius: BorderRadius.circular(25),
+          child: BackdropFilter(
+            // 2. The frosted glass effect
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25),
+                // Fix: Dynamic opacity based on luminance to prevent "misty" washout
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    // Reduce alpha in light mode (luminance > 0.5) to keep it clear
+                    backgroundColor,
+                    Pallet.colorSecondaryDark,
+                  ],
+                ),
+                // Fix: Use dark border for light cards, light border for dark cards
+                border: Border.all(
+                  color: backgroundColor.computeLuminance() > 0.5
+                      ? Colors.black.withValues(alpha: 0.08)
+                      : Colors.white.withValues(alpha: 0.2),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                ),
-                SizedBox(
-                  width: 8,
-                ),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                ],
+              ),
+
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       GestureDetector(
                         onTap: () async {
@@ -403,13 +280,13 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                           try {
                             // --- 1. SETUP TRANSACTION DETAILS ---
                             final visitingUser =
-                            await firebaseServices.getUserInfo();
+                                await firebaseServices.getUserInfo();
                             final String visitedUserId = widget.element.userId!;
                             final String visitedEgoName =
-                            widget.element.userNickname!;
+                                widget.element.userNickname!;
                             const int visitCost = 1;
 
-                            // --- 2. HANDLE SELF-VISIT ---
+                            // --- 2. HANDLE SELF-VISIT, INSUFFICIENT LOVES & PERMISSIONS ---
                             if (visitingUser.userId == visitedUserId) {
                               // If visiting self, just navigate without a transaction.
                               PageRouter.gotoWidget(
@@ -420,38 +297,35 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                               return;
                             }
 
-                            // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
-                            // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
                             if (visitingUser.userType == "REGULAR" &&
                                 visitingUser.currentLoveCount < 100) {
                               showToast(
                                   message:
-                                  "Need to have 100 Loves or Alter Ego Access to view Ego Profiles.");
+                                      "Need to have 100 Loves or Alter Ego Access to view Ego Profiles.");
                               return;
                             }
 
                             if (currentUser?.uid == null) {
                               showToast(
                                   message:
-                                  "You need to log in to visit an ego profile.");
+                                      "You need to log in to visit an ego profile.");
                               return;
                             }
 
-                            // --- 4. PERFORM THE LOVE TRANSACTION ---
+                            // --- 3. PERFORM THE LOVE TRANSACTION ---
                             final bool success =
-                            await firebaseServices.transferLoveBetweenUsers(
+                                await firebaseServices.transferLoveBetweenUsers(
                               senderId: visitingUser.userId!,
                               receiverId: visitedUserId,
                               amountToSend: visitCost,
                               taxAmount: 0,
                               totalDebitAmount: visitCost,
                               senderTransactionDesc:
-                              "1❤️ for visiting ${visitedEgoName}'s Ego.",
+                                  "1❤️ for visiting ${visitedEgoName}'s Ego.",
                               receiverTransactionDesc:
-                              "1❤️ from ${visitingUser
-                                  .nickname} visiting your Ego.",
+                                  "1❤️ from ${visitingUser.nickname} visiting your Ego.",
                               claireTransactionDesc:
-                              "Tax from a profile visit.",
+                                  "Tax from a profile visit.",
                               // Will be 0, but required
                               forProfileVisits: 1,
                               // Stat for the sender
@@ -463,24 +337,35 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                               },
                             );
 
-                            // --- 5. NAVIGATE ON SUCCESS ---
+                            // ---4. NAVIGATE AND NOTIFY ON SUCCESS ---
                             if (success) {
-                              showToast(message: "You are visiting ${visitedEgoName} with a kola of 1❤️.");
+                              showToast(
+                                  message:
+                                      "You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
                               // --- START TARGETED NOTIFICATION LOGIC ---
                               try {
                                 // We already have the visiting user's info, now get the visited user's token.
-                                final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(visitedUserId).get();
+                                final receiverDoc = await FirebaseFirestore
+                                    .instance
+                                    .collection('users')
+                                    .doc(visitedUserId)
+                                    .get();
                                 if (receiverDoc.exists) {
-                                  final receiverToken = receiverDoc.data()?['fcmId'] as String?;
-                                  final senderName = visitingUser.nickname ?? 'A user';
+                                  final receiverToken =
+                                      receiverDoc.data()?['fcmId'] as String?;
+                                  final senderName =
+                                      visitingUser.nickname ?? 'A user';
 
-                                  if (receiverToken != null && receiverToken.isNotEmpty) {
+                                  if (receiverToken != null &&
+                                      receiverToken.isNotEmpty) {
                                     await notificationService.sendNotification({
                                       "token": receiverToken,
                                       "notification": {
-                                        "title": "Your Ego profile has a visitor!",
-                                        "body": "$senderName just visited your profile with a kola of 1❤️."
+                                        "title":
+                                            "Your Ego profile has a visitor!",
+                                        "body":
+                                            "$senderName just visited your profile with a kola of 1❤️."
                                       },
                                       "data": {
                                         // Navigate the user to their own profile page to see the updated stats.
@@ -490,7 +375,8 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                                   }
                                 }
                               } catch (e) {
-                                print("Error sending profile visit notification: $e");
+                                print(
+                                    "Error sending profile visit notification: $e");
                                 // Don't block the user flow if notifications fail.
                               }
                               // --- END TARGETED NOTIFICATION LOGIC ---
@@ -503,7 +389,6 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                                       visitedEgoName: visitedEgoName),
                                   context);
                             }
-                            // If !success, the service method already shows a toast.
                           } finally {
                             // --- 3. HIDE THE LOADER (GUARANTEED) ---
                             // This runs no matter how the try block exits.
@@ -514,405 +399,657 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                             }
                           }
                         },
-                        child: Text(widget.element.userNickname!,
-                            textAlign: TextAlign.start,
-                            maxLines: 1,
-                            style: GoogleFonts.lato(
-                                fontSize: 18.0,
-                                color: textColor,
-                                fontWeight: FontWeight.w800)),
+                        child: Stack(
+                          alignment: AlignmentGeometry.center,
+                          children: [
+                            CachedNetworkImage(
+                                width: 50,
+                                height: 50,
+                                imageUrl: widget.element.userAvatarUrl!,
+                                imageBuilder: (context, imageProvider) =>
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        image: DecorationImage(
+                                          image: imageProvider,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                placeholder: (context, url) =>
+                                    CircularProgressIndicator(),
+                                errorWidget: (context, url, error) =>
+                                    Image.asset(
+                                      "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                      width: 50,
+                                      height: 50,
+                                    )),
 
+                            // --- 2. ADD THE OVERLAY LOADER ---
+                            if (_isAvatarLoading)
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Center(
+                                  child: CupertinoActivityIndicator(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                       SizedBox(
-                        height: 4,
+                        width: 8,
                       ),
-                      Text(timeConverter(widget.element.timeCreated!),
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 12.0,
-                              color: secondaryTextColor,
-                              fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                          Mood.getMood(widget.element.moodId) ??
-                              "${Mood.getMood(1)}",
-                          textAlign: TextAlign.end,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 12.0,
-                              color: textColor,
-                              fontWeight: FontWeight.w700)),
-                      SizedBox(
-                        height: 3,
-                      ),
-                      Text(
-                        widget.element.location ?? "",
-                        textAlign: TextAlign.end,
-                        maxLines: 1,
-                        style: GoogleFonts.lato(
-                            fontSize: 12.0,
-                            color: secondaryTextColor,
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ],
-                  ),
-                )
-              ],
-            ),
-            SizedBox(
-              height: 8,
-            ),
-            Center(
-              child: Text(widget.element.title!,
-                  textAlign: TextAlign.center,
-                  maxLines: widget.element.imageUrls!.isNotEmpty ? 1 : 2,
-                  style: GoogleFonts.lato(
-                      fontSize: 24.0,
-                      color: textColor,
-                      fontWeight: FontWeight.w800)),
-            ),
-            SizedBox(
-              height: 7,
-            ),
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(2.0, 0, 2.0, 0.0),
-                  child: Text(
-                    widget.element.message!,
-                    textAlign: TextAlign.justify,
-                    maxLines: (widget.element.imageUrls?.isNotEmpty ?? false) ||
-                            (widget.element.videoUrls?.isNotEmpty ?? false)
-                        ? 2
-                        : 7,
-                    style: GoogleFonts.lato(
-                        fontSize: 18.0,
-                        color: textColor,
-                        fontWeight: FontWeight.w600),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GestureDetector(
+                              onTap: () async {
+                                // --- 1. SHOW THE LOADER ---
+                                setState(() {
+                                  _isAvatarLoading = true;
+                                });
+                                try {
+                                  // --- 1. SETUP TRANSACTION DETAILS ---
+                                  final visitingUser =
+                                      await firebaseServices.getUserInfo();
+                                  final String visitedUserId =
+                                      widget.element.userId!;
+                                  final String visitedEgoName =
+                                      widget.element.userNickname!;
+                                  const int visitCost = 1;
 
-                SizedBox(
-                  height: 7,
-                ),
+                                  // --- 2. HANDLE SELF-VISIT ---
+                                  if (visitingUser.userId == visitedUserId) {
+                                    // If visiting self, just navigate without a transaction.
+                                    PageRouter.gotoWidget(
+                                        VisitedUserEgoProfilePage(
+                                            visitedUsersID: visitedUserId,
+                                            visitedEgoName: visitedEgoName),
+                                        context);
+                                    return;
+                                  }
 
-                // +++++++++++++ UNIFIED MEDIA VIEWER +++++++++++++
+                                  // --- 3. CHECK PERMISSIONS & SUFFICIENT LOVES ---
+                                  // Note: The permission message was slightly different, so I've used the more descriptive one from the avatar's logic.
+                                  if (visitingUser.userType == "REGULAR" &&
+                                      visitingUser.currentLoveCount < 100) {
+                                    showToast(
+                                        message:
+                                            "Need to have 100 Loves or Alter Ego Access to view Ego Profiles.");
+                                    return;
+                                  }
 
-                if ((widget.element.imageUrls?.isNotEmpty ?? false) ||
-                    (widget.element.videoUrls?.isNotEmpty ?? false))
-                  Builder(builder: (context) {
-                    // Create a unified list of all media items.
-                    final List<MediaItem> allMedia = [];
+                                  if (currentUser?.uid == null) {
+                                    showToast(
+                                        message:
+                                            "You need to log in to visit an ego profile.");
+                                    return;
+                                  }
 
-                    // Add images to the list.
-                    if (widget.element.imageUrls != null) {
-                      for (var imageUrl in widget.element.imageUrls!) {
-                        allMedia.add(MediaItem(
-                            networkUrl: imageUrl, type: MediaType.image));
-                      }
-                    }
+                                  // --- 4. PERFORM THE LOVE TRANSACTION ---
+                                  final bool success = await firebaseServices
+                                      .transferLoveBetweenUsers(
+                                    senderId: visitingUser.userId!,
+                                    receiverId: visitedUserId,
+                                    amountToSend: visitCost,
+                                    taxAmount: 0,
+                                    totalDebitAmount: visitCost,
+                                    senderTransactionDesc:
+                                        "1❤️ for visiting ${visitedEgoName}'s Ego.",
+                                    receiverTransactionDesc:
+                                        "1❤️ from ${visitingUser.nickname} visiting your Ego.",
+                                    claireTransactionDesc:
+                                        "Tax from a profile visit.",
+                                    // Will be 0, but required
+                                    forProfileVisits: 1,
+                                    // Stat for the sender
+                                    fromProfileVisits: 1,
+                                    // Stat for the receiver
+                                    metadata: {
+                                      'reason': 'profile_visit',
+                                      'visitedUserId': visitedUserId
+                                    },
+                                  );
 
-                    // Add videos to the list.
-                    if (widget.element.videoUrls != null) {
-                      for (int i = 0;
-                          i < widget.element.videoUrls!.length;
-                          i++) {
-                        final videoUrl = widget.element.videoUrls![i];
-                        final thumbnailUrl =
-                            (widget.element.videoThumbnailUrls != null &&
-                                    widget.element.videoThumbnailUrls!.length >
-                                        i)
-                                ? widget.element.videoThumbnailUrls![i]
-                                : '';
-                        allMedia.add(MediaItem(
-                            networkUrl: videoUrl,
-                            thumbnailUrl: thumbnailUrl,
-                            type: MediaType.video));
-                      }
-                    }
+                                  // --- 5. NAVIGATE ON SUCCESS ---
+                                  if (success) {
+                                    showToast(
+                                        message:
+                                            "You are visiting ${visitedEgoName} with a kola of 1❤️.");
 
-                    return GestureDetector(
-                      onTap: () {},
-                      child: UnifiedMediaViewer(
-                        key: _mediaViewerKey,
-                        mediaItems: allMedia,
-                        aspectRatio: 0.8, // A taller, more immersive ratio
-                      ),
-                    );
-                  }),
+                                    // --- START TARGETED NOTIFICATION LOGIC ---
+                                    try {
+                                      // We already have the visiting user's info, now get the visited user's token.
+                                      final receiverDoc =
+                                          await FirebaseFirestore.instance
+                                              .collection('users')
+                                              .doc(visitedUserId)
+                                              .get();
+                                      if (receiverDoc.exists) {
+                                        final receiverToken = receiverDoc
+                                            .data()?['fcmId'] as String?;
+                                        final senderName =
+                                            visitingUser.nickname ?? 'A user';
 
-                // End of Unified Media Viewer
+                                        if (receiverToken != null &&
+                                            receiverToken.isNotEmpty) {
+                                          await notificationService
+                                              .sendNotification({
+                                            "token": receiverToken,
+                                            "notification": {
+                                              "title":
+                                                  "Your Ego profile has a visitor!",
+                                              "body":
+                                                  "$senderName just visited your profile with a kola of 1❤️."
+                                            },
+                                            "data": {
+                                              // Navigate the user to their own profile page to see the updated stats.
+                                              "route": "egoPage"
+                                            }
+                                          });
+                                        }
+                                      }
+                                    } catch (e) {
+                                      print(
+                                          "Error sending profile visit notification: $e");
+                                      // Don't block the user flow if notifications fail.
+                                    }
+                                    // --- END TARGETED NOTIFICATION LOGIC ---
 
-                // Audio is here
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Container(
-                    child: widget.element.audioUrl!.isNotEmpty
-                        ? CustomPlaySoundWidget(
-                            filePath: widget.element.audioUrl)
-                        : SizedBox.shrink(),
-                  ),
-                ),
-              ],
-            ),
-
-            // End of Audio Player
-
-            // MeToo Button is here
-            Row(
-              children: [
-                MetooButton(
-                  cheers: widget.element.meToos!.length,
-                  thanks: widget.element.meLove!.length,
-                  sorry: widget.element.meHiFive!.length,
-                  me2: widget.element.meFlower!.length,
-                  color: textColor,
-                  session: widget.element,
-                  onReactionChanged: (reaction, index) async {
-                    if (await firebaseServices.isUserSignIn(context) == false) {
-                      return;
-                    }
-
-                    // --- 1. SETUP TRANSACTION DETAILS ---
-                    final reactingUser = await firebaseServices.getUserInfo();
-                    final String reactingUserId = reactingUser.userId!;
-                    final String sessionOwnerId = widget.element.userId!;
-                    const int reactionCost = 1;
-
-                    // --- 2. PREVENT SELF-REACTION & INSUFFICIENT LOVES ---
-                    if (reactingUserId == sessionOwnerId) {
-                      // User is reacting to their own post, just update the reaction locally.
-                      // The original logic handles this well.
-                      firebaseServices.addUsersReactionToASessionByIndex(
-                        context,
-                        index,
-                        session: widget.element,
-                        sender: reactingUser.nickname ?? '',
-                      );
-                      showToast(message: "You reacted to your own session.");
-                      return;
-                    }
-
-                    if (reactingUser.currentLoveCount < reactionCost) {
-                      showToast(message: "You need at least 1❤️ to react.");
-                      return;
-                    }
-
-                    if (currentUser == null) {
-                      showToast(message: "You must be logged in to react to a session.");
-                      return;
-                    }
-
-                    // --- 3. PERFORM THE LOVE TRANSACTION ---
-                    final bool success =
-                        await firebaseServices.transferLoveBetweenUsers(
-                      senderId: reactingUserId,
-                      receiverId: sessionOwnerId,
-                      amountToSend: reactionCost,
-                      taxAmount: 0, // No tax on a 1-love transaction
-                      totalDebitAmount: reactionCost,
-                      senderTransactionDesc:
-                          "1❤️ for reacting to session ${widget.element.title}.",
-                      receiverTransactionDesc:
-                          "1❤️ from reaction to your session ${widget.element.title} by ${reactingUser.nickname}.",
-                      claireTransactionDesc: "Tax from a session reaction.",
-                      // Pass the specific stat increments
-                      forReactions: reactionCost,
-                      fromReactions: reactionCost,
-                      metadata: {
-                        'reason': 'session_reaction',
-                        'sessionId': widget.element.sessionId,
-                        'reactionIndex': index
-                      },
-                    );
-
-                    // --- 4. UPDATE REACTION COUNT ON SUCCESS ---
-                    if (success) {
-                      // Only after a successful transaction, update the reaction on the session.
-                      firebaseServices.addUsersReactionToASessionByIndex(
-                        context,
-                        index,
-                        session: widget.element,
-                        sender: reactingUser.nickname ?? '',
-                      );
-                      saveUserMe2Activity(); // Your existing activity tracking
-                      // --- C. START: NEW TARGETED NOTIFICATION LOGIC ---
-                      try {
-                        final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(sessionOwnerId).get();
-                        if (receiverDoc.exists) {
-                          final receiverToken = receiverDoc.data()?['fcmId'] as String?;
-                          final senderName = reactingUser.nickname ?? 'Someone';
-                          final sessionTitle = widget.element.title ?? 'your session';
-                          final truncatedTitle = sessionTitle.length > 30 ? sessionTitle.substring(0, 30) + '...' : sessionTitle;
-
-                          // Note: 'reaction' is the Reaction object passed by the MetooButton
-                          final reactionValue = reaction.value;
-
-                          if (receiverToken != null && receiverToken.isNotEmpty) {
-                            await notificationService.sendNotification({
-                              "token": receiverToken,
-                              "notification": {
-                                "title": "Someone reacted to your session!",
-                                "body": "$senderName reacted with '$reactionValue' to your session: \"$truncatedTitle\""
+                                    // --- NAVIGATE ---
+                                    // Only navigate to the profile if the transaction was successful.
+                                    PageRouter.gotoWidget(
+                                        VisitedUserEgoProfilePage(
+                                            visitedUsersID: visitedUserId,
+                                            visitedEgoName: visitedEgoName),
+                                        context);
+                                  }
+                                  // If !success, the service method already shows a toast.
+                                } finally {
+                                  // --- 3. HIDE THE LOADER (GUARANTEED) ---
+                                  // This runs no matter how the try block exits.
+                                  if (mounted) {
+                                    setState(() {
+                                      _isAvatarLoading = false;
+                                    });
+                                  }
+                                }
                               },
-                              "data": {
-                                "route": widget.element.sessionId
-                              }
-                            });
-                            logger.d("Successfully sent 'new reaction' notification.");
-                          }
-                        }
-                      } catch (e) {
-                        print("Error sending 'new reaction' notification: $e");
-                      }
-                      // --- END: NEW TARGETED NOTIFICATION LOGIC ---
-                      showToast(message: "1❤️ sent to the session owner!");
-                    }
-                    // If !success, the service method already shows a toast.
-                  },
-                ),
-                new Spacer(),
-                Visibility(
-                  visible: widget.element.userId == currentUser?.uid,
-                  child: GestureDetector(
-                    onTap: () {
-                      if (widget.element.featured == false)
-                        featureAlertDialog(context);
-                      else
-                        unfeatureAlertDialog(context);
-                    },
-                    child: Container(
-                      child: Visibility(
-                        visible: widget.element.repliesEnabled == true,
-                        child: Icon(
-                          widget.element.featured == true
-                              ? Icons.lightbulb
-                              : Icons.lightbulb_outline,
-                          color: textColor,
-                          size: 28,
+                              child: Text(widget.element.userNickname!,
+                                  textAlign: TextAlign.start,
+                                  maxLines: 1,
+                                  style: GoogleFonts.lato(
+                                      fontSize: 18.0,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w800)),
+                            ),
+                            SizedBox(
+                              height: 4,
+                            ),
+                            Text(timeConverter(widget.element.timeCreated!),
+                                textAlign: TextAlign.start,
+                                maxLines: 1,
+                                style: GoogleFonts.lato(
+                                    fontSize: 12.0,
+                                    color: secondaryTextColor,
+                                    fontWeight: FontWeight.w700)),
+                          ],
                         ),
                       ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 10,
-                ),
-                Visibility(
-                  visible: widget.element.userId == currentUser?.uid,
-                  child: GestureDetector(
-                    onTap: () {
-                      if (widget.element.archived == false)
-                        showCustomDialog(context,
-                            message: widget.element.archived == true
-                                ? AppString.unarchive_alert_note
-                                : AppString.archive_alert_note, onPressed: () {
-                          sendToArchive();
-                          Navigator.pushReplacementNamed(
-                              context, AppRoutes.diarySessions);
-                        });
-                      else
-                        showCustomDialog(context,
-                            message: widget.element.archived == false
-                                ? AppString.archive_alert_note
-                                : AppString.unarchive_alert_note,
-                            onPressed: () {
-                          Navigator.pushReplacementNamed(
-                              context, AppRoutes.diarySessions);
-                          removeFromArchive();
-                        });
-                    },
-                    child: Container(
-                      child: Visibility(
-                        visible: widget.element.userId == currentUser?.uid,
-                        child: Icon(
-                          widget.element.archived == true
-                              ? Icons.archive_rounded
-                              : Icons.archive_outlined,
-                          color: textColor,
-                          size: 26,
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                                Mood.getMood(widget.element.moodId) ??
+                                    "${Mood.getMood(1)}",
+                                textAlign: TextAlign.end,
+                                maxLines: 1,
+                                style: GoogleFonts.lato(
+                                    fontSize: 12.0,
+                                    color: textColor,
+                                    fontWeight: FontWeight.w700)),
+                            SizedBox(
+                              height: 3,
+                            ),
+                            Text(
+                              widget.element.location ?? "",
+                              textAlign: TextAlign.end,
+                              maxLines: 1,
+                              style: GoogleFonts.lato(
+                                  fontSize: 12.0,
+                                  color: secondaryTextColor,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ],
                         ),
+                      )
+                    ],
+                  ),
+                  SizedBox(
+                    height: 8,
+                  ),
+                  Center(
+                    child: Text(
+                      widget.element.title!,
+                      textAlign: TextAlign.center,
+                      maxLines: widget.element.imageUrls!.isNotEmpty ? 1 : 2,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 23.0, // Slightly smaller than 24 for a more refined look
+                        color: textColor,
+                        fontWeight: FontWeight.w800, // Extra Bold
+                        letterSpacing: -0.5, // Tighter tracking for that premium "editorial" feel
+                        height: 1.1, // Tighter line height for multi-line titles
                       ),
                     ),
+
                   ),
-                ),
-                new Spacer(),
-                StreamBuilder(
-                    stream: firebaseServices
-                        .getFeaturedSessionsComments(widget.element.sessionId!),
-                    builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
-                      if (snapShot.hasError) {
-                        return Container();
-                      }
-                      if (snapShot.hasData) {
-                        return CommentsButton(
-                          count: snapShot.data!.docs.length,
-                          onPressed: () => PageRouter.gotoWidget(
-                              EgoModeSessionDetail(
-                                  featuredSessionModel: widget.element),
-                              context),
-                        );
-                      }
-                      return Container();
-                    }),
-              ],
-            ),
-            Divider(
-              thickness: 1,
-              indent: 0,
-              endIndent: 0,
-              color: secondaryTextColor,
-              height: 3,
-            ),
-            StreamBuilder(
-                stream: firebaseServices
-                    .getFeaturedSessionsComments(widget.element.sessionId!),
-                builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
-                  if (snapShot.hasError) {
-                    return Container();
-                  }
-
-                  List<CommentSessionModel> _commentSessionList = [];
-
-                  if (snapShot.hasData) {
-                    _commentSessionList.clear();
-
-                    /// clear list
-                    snapShot.data!.docs
-                        .map((e) => _commentSessionList
-                            .add(CommentSessionModel.fromJson(e.data())))
-                        .toList();
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _returnComment(_commentSessionList).message ?? '',
-                          textAlign: TextAlign.start,
-                          maxLines: 2,
-                          style: GoogleFonts.lato(
-                            fontSize: 13.0,
+                  SizedBox(
+                    height: 7,
+                  ),
+                  Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(2.0, 0, 2.0, 0.0),
+                        child: Text(
+                          widget.element.message!,
+                          textAlign: TextAlign.justify,
+                          maxLines: (widget.element.imageUrls?.isNotEmpty ?? false) ||
+                              (widget.element.videoUrls?.isNotEmpty ?? false)
+                              ? 2
+                              : 7,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 17.0, // Slightly smaller is often more "Elite" and cleaner
                             color: textColor,
                             fontWeight: FontWeight.w600,
+                            height: 1.4, // Increased line height for that premium "editorial" feel
+                            letterSpacing: -0.2, // Subtle negative tracking makes the text look tighter/higher-end
                           ),
                           overflow: TextOverflow.ellipsis,
+                        )
+
+                      ),
+
+                      SizedBox(
+                        height: 7,
+                      ),
+
+                      // +++++++++++++ UNIFIED MEDIA VIEWER +++++++++++++
+
+                      if ((widget.element.imageUrls?.isNotEmpty ?? false) ||
+                          (widget.element.videoUrls?.isNotEmpty ?? false))
+                        Builder(builder: (context) {
+                          // Create a unified list of all media items.
+                          final List<MediaItem> allMedia = [];
+
+                          // Add images to the list.
+                          if (widget.element.imageUrls != null) {
+                            for (var imageUrl in widget.element.imageUrls!) {
+                              allMedia.add(MediaItem(
+                                  networkUrl: imageUrl, type: MediaType.image));
+                            }
+                          }
+
+                          // Add videos to the list.
+                          if (widget.element.videoUrls != null) {
+                            for (int i = 0;
+                                i < widget.element.videoUrls!.length;
+                                i++) {
+                              final videoUrl = widget.element.videoUrls![i];
+                              final thumbnailUrl =
+                                  (widget.element.videoThumbnailUrls != null &&
+                                          widget.element.videoThumbnailUrls!
+                                                  .length >
+                                              i)
+                                      ? widget.element.videoThumbnailUrls![i]
+                                      : '';
+                              allMedia.add(MediaItem(
+                                  networkUrl: videoUrl,
+                                  thumbnailUrl: thumbnailUrl,
+                                  type: MediaType.video));
+                            }
+                          }
+
+                          return GestureDetector(
+                            onTap: () {},
+                            child: UnifiedMediaViewer(
+                              key: _mediaViewerKey,
+                              mediaItems: allMedia,
+                              aspectRatio:
+                                  0.8, // A taller, more immersive ratio
+                            ),
+                          );
+                        }),
+
+                      // End of Unified Media Viewer
+
+                      // Audio is here
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Container(
+                          child: widget.element.audioUrl!.isNotEmpty
+                              ? CustomPlaySoundWidget(
+                                  filePath: widget.element.audioUrl)
+                              : SizedBox.shrink(),
                         ),
-                      ],
-                    );
-                  }
-                  return Container();
-                }),
-          ],
+                      ),
+                    ],
+                  ),
+
+                  // End of Audio Player
+
+                  // MeToo Button is here
+                  Row(
+                    children: [
+                      MetooButton(
+                        cheers: widget.element.meToos!.length,
+                        thanks: widget.element.meLove!.length,
+                        sorry: widget.element.meHiFive!.length,
+                        me2: widget.element.meFlower!.length,
+                        color: textColor,
+                        session: widget.element,
+                        onReactionChanged: (reaction, index) async {
+                          if (await firebaseServices.isUserSignIn(context) ==
+                              false) {
+                            return;
+                          }
+
+                          // --- 1. SETUP TRANSACTION DETAILS ---
+                          final reactingUser =
+                              await firebaseServices.getUserInfo();
+                          final String reactingUserId = reactingUser.userId!;
+                          final String sessionOwnerId = widget.element.userId!;
+                          const int reactionCost = 1;
+
+                          // --- 2. PREVENT SELF-REACTION & INSUFFICIENT LOVES ---
+                          if (reactingUserId == sessionOwnerId) {
+                            // User is reacting to their own post, just update the reaction locally.
+                            // The original logic handles this well.
+                            firebaseServices.addUsersReactionToASessionByIndex(
+                              context,
+                              index,
+                              session: widget.element,
+                              sender: reactingUser.nickname ?? '',
+                            );
+                            showToast(
+                                message: "You reacted to your own session.");
+                            return;
+                          }
+
+                          if (reactingUser.currentLoveCount < reactionCost) {
+                            showToast(
+                                message: "You need at least 1❤️ to react.");
+                            return;
+                          }
+
+                          if (currentUser == null) {
+                            showToast(
+                                message:
+                                    "You must be logged in to react to a session.");
+                            return;
+                          }
+
+                          // --- 3. PERFORM THE LOVE TRANSACTION ---
+                          final bool success =
+                              await firebaseServices.transferLoveBetweenUsers(
+                            senderId: reactingUserId,
+                            receiverId: sessionOwnerId,
+                            amountToSend: reactionCost,
+                            taxAmount: 0, // No tax on a 1-love transaction
+                            totalDebitAmount: reactionCost,
+                            senderTransactionDesc:
+                                "1❤️ for reacting to session ${widget.element.title}.",
+                            receiverTransactionDesc:
+                                "1❤️ from reaction to your session ${widget.element.title} by ${reactingUser.nickname}.",
+                            claireTransactionDesc:
+                                "Tax from a session reaction.",
+                            // Pass the specific stat increments
+                            forReactions: reactionCost,
+                            fromReactions: reactionCost,
+                            metadata: {
+                              'reason': 'session_reaction',
+                              'sessionId': widget.element.sessionId,
+                              'reactionIndex': index
+                            },
+                          );
+
+                          // --- 4. UPDATE REACTION COUNT ON SUCCESS ---
+                          if (success) {
+                            // Only after a successful transaction, update the reaction on the session.
+                            firebaseServices.addUsersReactionToASessionByIndex(
+                              context,
+                              index,
+                              session: widget.element,
+                              sender: reactingUser.nickname ?? '',
+                            );
+                            saveUserMe2Activity(); // Your existing activity tracking
+                            // --- C. START: NEW TARGETED NOTIFICATION LOGIC ---
+                            try {
+                              final receiverDoc = await FirebaseFirestore
+                                  .instance
+                                  .collection('users')
+                                  .doc(sessionOwnerId)
+                                  .get();
+                              if (receiverDoc.exists) {
+                                final receiverToken =
+                                    receiverDoc.data()?['fcmId'] as String?;
+                                final senderName =
+                                    reactingUser.nickname ?? 'Someone';
+                                final sessionTitle =
+                                    widget.element.title ?? 'your session';
+                                final truncatedTitle = sessionTitle.length > 30
+                                    ? sessionTitle.substring(0, 30) + '...'
+                                    : sessionTitle;
+
+                                // Note: 'reaction' is the Reaction object passed by the MetooButton
+                                final reactionValue = reaction.value;
+
+                                if (receiverToken != null &&
+                                    receiverToken.isNotEmpty) {
+                                  await notificationService.sendNotification({
+                                    "token": receiverToken,
+                                    "notification": {
+                                      "title":
+                                          "Someone reacted to your session!",
+                                      "body":
+                                          "$senderName reacted with '$reactionValue' to your session: \"$truncatedTitle\""
+                                    },
+                                    "data": {"route": widget.element.sessionId}
+                                  });
+                                  logger.d(
+                                      "Successfully sent 'new reaction' notification.");
+                                }
+                              }
+                            } catch (e) {
+                              print(
+                                  "Error sending 'new reaction' notification: $e");
+                            }
+                            // --- END: NEW TARGETED NOTIFICATION LOGIC ---
+                            showToast(
+                                message: "1❤️ sent to the session owner!");
+                          }
+                          // If !success, the service method already shows a toast.
+                        },
+                      ),
+                      new Spacer(),
+                      Visibility(
+                        visible: widget.element.userId == currentUser?.uid,
+                        child: GestureDetector(
+                          onTap: () {
+                            if (widget.element.featured == false)
+                              featureAlertDialog(context);
+                            else
+                              unfeatureAlertDialog(context);
+                          },
+                          child: Container(
+                            child: Visibility(
+                              visible: widget.element.repliesEnabled == true,
+                              child: Icon(
+                                widget.element.featured == true
+                                    ? Icons.lightbulb
+                                    : Icons.lightbulb_outline,
+                                color: textColor,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Visibility(
+                        visible: widget.element.userId == currentUser?.uid,
+                        child: GestureDetector(
+                          onTap: () {
+                            if (widget.element.archived == false)
+                              showCustomDialog(context,
+                                  message: widget.element.archived == true
+                                      ? AppString.unarchive_alert_note
+                                      : AppString.archive_alert_note,
+                                  onPressed: () {
+                                sendToArchive();
+                                Navigator.pushReplacementNamed(
+                                    context, AppRoutes.diarySessions);
+                              });
+                            else
+                              showCustomDialog(context,
+                                  message: widget.element.archived == false
+                                      ? AppString.archive_alert_note
+                                      : AppString.unarchive_alert_note,
+                                  onPressed: () {
+                                Navigator.pushReplacementNamed(
+                                    context, AppRoutes.diarySessions);
+                                removeFromArchive();
+                              });
+                          },
+                          child: Container(
+                            child: Visibility(
+                              visible:
+                                  widget.element.userId == currentUser?.uid,
+                              child: Icon(
+                                widget.element.archived == true
+                                    ? Icons.archive_rounded
+                                    : Icons.archive_outlined,
+                                color: textColor,
+                                size: 26,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      new Spacer(),
+                      StreamBuilder(
+                          stream: firebaseServices.getFeaturedSessionsComments(
+                              widget.element.sessionId!),
+                          builder:
+                              (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                            if (snapShot.hasError) {
+                              return Container();
+                            }
+                            if (snapShot.hasData) {
+                              return CommentsButton(
+                                count: snapShot.data!.docs.length,
+                                onPressed: () => PageRouter.gotoWidget(
+                                    EgoModeSessionDetail(
+                                        featuredSessionModel: widget.element),
+                                    context),
+                              );
+                            }
+                            return Container();
+                          }),
+                    ],
+                  ),
+                  StreamBuilder(
+                    stream: firebaseServices.getFeaturedSessionsComments(widget.element.sessionId!),
+                    builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                      if (snapShot.hasError || !snapShot.hasData || snapShot.data!.docs.isEmpty) {
+                        return const SizedBox.shrink(); // Hide completely if error or no data
+                      }
+
+                      // Parse the comments
+                      List<CommentSessionModel> _commentSessionList = snapShot.data!.docs
+                          .map((e) => CommentSessionModel.fromJson(e.data() as Map<String, dynamic>))
+                          .toList();
+
+                      // Find the specific comment to display (Adviser/Admin)
+                      final displayComment = _returnComment(_commentSessionList);
+
+                      if (displayComment.message == null || displayComment.message!.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: textColor.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: textColor.withOpacity(0.1),
+                                width: 0.5,
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Opacity(
+                                  opacity: 0.9,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: textColor.withValues(alpha: 0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Image.asset(
+                                      "assets/images/claire_icon.png",
+                                      height: 14,
+                                      width: 14,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    displayComment.message!,
+                                    textAlign: TextAlign.start,
+                                    maxLines: 2,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 12.0,
+                                      color: textColor.withValues(alpha: 0.9),
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.3,
+                                      letterSpacing: -0.1,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      );
+                    },
+                  ),
+
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

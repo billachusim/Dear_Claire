@@ -821,14 +821,25 @@ class _CommentWidgetState extends State<CommentWidget> {
                 throw 'Could not launch $link';
               }
             },
-            linkStyle: TextStyle(color: Colors.blue),
+            // Elite UI: Styled link to match a premium iOS feel
+            linkStyle: GoogleFonts.plusJakartaSans(
+              color: Colors.blueAccent,
+              fontWeight: FontWeight.w700,
+              decoration: TextDecoration.underline,
+            ),
             text: widget.commentSessionModel!.message!,
             textAlign: TextAlign.justify,
-            style: GoogleFonts.lato(
-                fontSize: 16.0,
-                color: Pallet.colorBlack,
-                fontWeight: FontWeight.normal),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 16.0,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white.withValues(alpha: 0.9)
+                  : Colors.black.withValues(alpha: 0.8),
+              fontWeight: FontWeight.w500,
+              height: 1.4,
+              letterSpacing: -0.1,
+            ),
           ),
+
 
           SizedBox(
             height: 8,

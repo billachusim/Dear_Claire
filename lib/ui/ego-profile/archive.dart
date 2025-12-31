@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:ui';
 import 'package:clairediary/ui/Categories/archive_mood_stream.dart';
 import 'package:clairediary/ui/ego-profile/archived_sessions.dart';
 import 'package:clairediary/ui/ego-profile/utils.dart';
@@ -145,38 +146,105 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
   }
 
   Widget calendarWidget() {
-    return Container(
-      decoration: BoxDecoration(color: Pallet.colorPrimary),
-      child: TableCalendar(
-        daysOfWeekStyle: DaysOfWeekStyle(
-            weekdayStyle: TextStyle(color: Colors.white),
-            weekendStyle: TextStyle(color: Colors.white)),
-        calendarStyle: CalendarStyle(
-            defaultTextStyle: TextStyle(color: Colors.white),
-            selectedDecoration: BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          decoration: BoxDecoration(
+            // Glassmorphism Gradient
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Pallet.colorPrimary.withValues(alpha: 0.9),
+                Pallet.colorSecondary.withValues(alpha: 0.9),
+              ],
             ),
-            weekendTextStyle: TextStyle(color: Colors.white)),
-        firstDay: kFirstDay,
-        lastDay: kLastDay,
-        focusedDay: _focusedDay!,
-        calendarFormat: _calendarFormat,
-        selectedDayPredicate: (day) {
-          // Use values from Set to mark multiple days as selected
-          return _selectedDays.contains(day);
-        },
-        onDaySelected: _onDateTapped,
-        eventLoader: _getSessionForDay,
-        onFormatChanged: (format) {
-          if (_calendarFormat != format) {
-            setState(() {
-              _calendarFormat = format;
-            });
-          }
-        },
-        onPageChanged: (focusedDay) {},
+            borderRadius: BorderRadius.circular(24),
+            // The signature "iOS Glass Border"
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+          ),
+          child: TableCalendar(
+            daysOfWeekStyle: DaysOfWeekStyle(
+              weekdayStyle: GoogleFonts.plusJakartaSans(
+                color: Colors.white70,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+              weekendStyle: GoogleFonts.plusJakartaSans(
+                color: Colors.white38,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+            headerStyle: HeaderStyle(
+              formatButtonVisible: false,
+              titleCentered: true,
+              titleTextStyle: GoogleFonts.plusJakartaSans(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+              ),
+              leftChevronIcon: const Icon(Icons.chevron_left, color: Colors.white),
+              rightChevronIcon: const Icon(Icons.chevron_right, color: Colors.white),
+            ),
+            calendarStyle: CalendarStyle(
+              defaultTextStyle: GoogleFonts.plusJakartaSans(color: Colors.white),
+              weekendTextStyle: GoogleFonts.plusJakartaSans(color: Colors.white70),
+              outsideTextStyle: GoogleFonts.plusJakartaSans(color: Colors.white24),
+
+              // Today's Date style
+              todayDecoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white30),
+              ),
+
+              // Selected Session Dates (The dots/markers)
+              selectedDecoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.greenAccent, Colors.green.shade700],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ],
+              ),
+
+              // Marker for events (tiny dots below date)
+              markerDecoration: const BoxDecoration(
+                color: Colors.white70,
+                shape: BoxShape.circle,
+              ),
+            ),
+            firstDay: kFirstDay,
+            lastDay: kLastDay,
+            focusedDay: _focusedDay!,
+            calendarFormat: _calendarFormat,
+            selectedDayPredicate: (day) {
+              return _selectedDays.contains(day);
+            },
+            onDaySelected: _onDateTapped,
+            eventLoader: _getSessionForDay,
+            onFormatChanged: (format) {
+              if (_calendarFormat != format) {
+                setState(() {
+                  _calendarFormat = format;
+                });
+              }
+            },
+          ),
+        ),
       ),
     );
   }
+
 }

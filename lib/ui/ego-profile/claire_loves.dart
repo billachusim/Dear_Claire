@@ -1,5 +1,6 @@
 import 'dart:core';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:clairediary/ui/ego-profile/top_up_loves_page.dart';
 import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
@@ -12,6 +13,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
@@ -658,9 +660,9 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 10),
           SizedBox(
-              height: 100,
+              height: 120,
               child: LoveHistoryChart(spots: _generateDummySpots())),
         ],
       ),
@@ -766,7 +768,22 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
     );
   }
 
-  // New detailed stat card for loves calculation
+  // Reusable Glass Decoration to maintain consistency
+  BoxDecoration _glassDecoration() => BoxDecoration(gradient: LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Pallet.colorPrimary.withValues(alpha: 0.2),
+      Pallet.colorSecondary.withValues(alpha: 0.1),
+    ],
+  ),
+    borderRadius: BorderRadius.circular(20),
+    border: Border.all(
+      color: Colors.white.withValues(alpha: 0.2),
+      width: 1.5,
+    ),
+  );
+
   Widget _buildLoveStatCard({
     required String title,
     required int count,
@@ -774,63 +791,133 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
     required Color color,
   }) {
     final totalLove = count * lovePerUnit;
-    return Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Pallet.colorSecondary.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-          Text(
-          title,
-          style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
-        ),
-            Text(
-              '$count x $lovePerUnit =',
-              style: GoogleFonts.lato(fontSize: 12, color: Colors.white54),
-            ),
-        const SizedBox(height: 5),
-        Text(
-          '$totalLove ❤️',
-          style: GoogleFonts.lato(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: _glassDecoration(),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white70
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '$count x $lovePerUnit',
+                style: GoogleFonts.plusJakartaSans(fontSize: 11, color: Colors.white38),
+              ),
+              const Spacer(),
+              // Gradient Text for the total
+              ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: [Colors.white, color.withValues(alpha: 0.7)],
+                ).createShader(bounds),
+                child: Text(
+                  '$totalLove ❤️',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-          ],
-        ),
+      ),
+    );
+  }
+  void _triggerMoodConfetti() {
+    final emoji = '❤️'; // Fallback if no emoji found
+
+    if (emoji.isEmpty) return;
+
+    // Configuration for "Flooding" from the bottom edges
+    final options = ConfettiOptions(
+      particleCount: 25,
+      spread: 70,
+      startVelocity: 40,
+      gravity: 0.8, // Slightly heavy so they "settle" or fall back down
+      ticks: 300,   // How long they stay on screen
+      colors: [const Color(0xffffffff)], // Base color
+    );
+
+    // Launch from Bottom Left
+    Confetti.launch(
+      context,
+      options: options.copyWith(x: 0.1, y: 1.0, angle: 60),
+      // Use 'Emoji' class from the flutter_confetti package
+      particleBuilder: (index) => Emoji(
+        emoji: emoji,
+        textStyle: const TextStyle(fontSize: 30),
+      ),
+    );
+
+    // Launch from Bottom Right
+    Confetti.launch(
+      context,
+      options: options.copyWith(x: 0.9, y: 1.0, angle: 120),
+      // Use 'Emoji' class from the flutter_confetti package
+      particleBuilder: (index) => Emoji(
+        emoji: emoji,
+        textStyle: const TextStyle(fontSize: 30),
+      ),
     );
   }
 
   Widget _buildStatCard(String title, String value, Color color) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Pallet.colorSecondary.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.lato(fontSize: 14, color: Colors.white70),
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        _triggerMoodConfetti();
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: _glassDecoration(),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title.toUpperCase(),
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white70
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  value,
+                  style: GoogleFonts.plusJakartaSans(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white
+                  ),
+                ),
+              ],
+            ),
           ),
-          SizedBox(height: 5),
-          Text(
-            value,
-            style: GoogleFonts.lato(
-                fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-        ],
+        ),
       ),
     );
   }
+
 
 
   void _showTransactionDetailsDialog(TransactionModel transaction) {

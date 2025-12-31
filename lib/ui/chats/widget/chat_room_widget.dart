@@ -1,3 +1,4 @@
+import 'dart:ui'; // Required for ImageFilter
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/chats/data/chatroompodo.dart';
 import 'package:clairediary/ui/chats/widget/diaryroom_online_users_stream.dart';
@@ -6,6 +7,7 @@ import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Required for Haptics
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../data/models/transaction_model.dart' as t_model;
@@ -16,7 +18,7 @@ import '../../ego-profile/top_up_loves_page.dart';
 import '../inside_chatroom.dart';
 
 class ChatRoomWidget extends StatefulWidget {
-  ChatRoomPodo element;
+  final ChatRoomPodo element; // Added final for best practice
 
   ChatRoomWidget({Key? key, required this.element}) : super(key: key);
 
@@ -26,25 +28,22 @@ class ChatRoomWidget extends StatefulWidget {
 
 class _ChatRoomWidgetState extends State<ChatRoomWidget> {
   bool isLoading = false;
+
   @override
   Widget build(BuildContext context) {
+    final Color roomBaseColor = HexColor.fromHex(widget.element.hex!);
+
     return CupertinoButton(
       onPressed: () async {
-        // --- 1. PREVENT DOUBLE TAPS & SHOW LOADER ---
         if (isLoading) return;
-        setState(() {
-          isLoading = true;
-        });
+        HapticFeedback.mediumImpact();
+        setState(() => isLoading = true);
 
         try {
-          // --- 2. FETCH USER DATA ---
           UserModel user = await firebaseServices.getUserInfo();
-
-          // --- 3. DEFINE COSTS & CHECK REQUIREMENTS ---
           const int roomEntryCost = 1;
           const int specialRoomLoveRequirement = 2000;
 
-          // Check for room-specific love requirement
           final isSpecialRoom = widget.element.title == "One On One Room" ||
               widget.element.title == "Five Aside Room" ||
               widget.element.title == "One On One Eavedrop With ClAIre";
@@ -56,206 +55,183 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
             return;
           }
 
-          if (isSpecialRoom && user.currentLoveCount <= specialRoomLoveRequirement) {
-            showToast("You need more than $specialRoomLoveRequirement Loves for this room.");
-            return; // Exit early, finally block will handle the loader
-          }
-
-          // Check if the user can afford the basic entry cost
           if (user.currentLoveCount < roomEntryCost) {
-            showToast("You need at least $roomEntryCost❤️ to enter a room.");
-            return; // Exit early, finally block will handle the loader
+            showToast("You need at least $roomEntryCost❤️ to enter.");
+            return;
           }
 
-          // --- 4. PERFORM TRANSACTION ---
           final bool transactionSuccess = await firebaseServices.updateTreasuryAndUser(
             userId: user.userId!,
             amount: roomEntryCost,
-            type: t_model.TransactionType.debit, // User is spending
+            type: t_model.TransactionType.debit,
             userTransactionDescription: "$roomEntryCost❤️ to enter ${widget.element.title}.",
-            forRoomVisits: roomEntryCost, // Increment the 'forRoomVisits' stat
-            metadata: {
-              'room_id': widget.element.id,
-              'room_title': widget.element.title
-            },
+            forRoomVisits: roomEntryCost,
+            metadata: {'room_id': widget.element.id, 'room_title': widget.element.title},
           );
 
-          // --- 5. PROCEED ONLY IF TRANSACTION IS SUCCESSFUL ---
           if (transactionSuccess) {
-            // Show success toast
             showToast("Welcome to ${widget.element.title}! Positive vibes only");
-
-            // Save the join room activity
             await firebaseServices.saveUserActivity(
               activityType: 'room_join',
               activityMessage: "You entered Claire's room: ${widget.element.title}.",
               sessionId: widget.element.id.toString(),
             );
-
-            // Navigate to the chat screen
-            if (!mounted) return; // Safety check before navigating
-            PageRouter.gotoWidget(
-                ChatScreen(chatRoomPodo: widget.element), context);
-          } else {
-            // Optional: Notify user if the transaction specifically failed
-            showToast("Could not process entry. Please try again.");
+            if (!mounted) return;
+            PageRouter.gotoWidget(ChatScreen(chatRoomPodo: widget.element), context);
           }
         } finally {
-          // --- 6. HIDE THE LOADER (GUARANTEED) ---
-          if (mounted) {
-            setState(() {
-              isLoading = false;
-            });
-          }
+          if (mounted) setState(() => isLoading = false);
         }
       },
-
       padding: EdgeInsets.zero,
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 5),
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: HexColor.fromHex(widget.element.hex!)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Image.asset(
-                  "assets/images/claire_icon.png",
-                  height: 50,
-                  width: 50,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    roomBaseColor,
+                    Pallet.colorSecondaryDark,
+                  ],
                 ),
-                SizedBox(
-                  width: 10,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  width: 1.5,
                 ),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Text('Anonymous  Diaryroom',
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 17.0,
-                              color: Pallet.colorWhite,
-                              fontWeight: FontWeight.w700)),
-                      SizedBox(
-                        height: 3,
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
+                        child: Image.asset("assets/images/claire_icon.png", height: 45, width: 45),
                       ),
-                      Text('By Claire 🌺',
-                          textAlign: TextAlign.start,
-                          maxLines: 1,
-                          style: GoogleFonts.lato(
-                              fontSize: 15.0,
-                              color: Pallet.colorWhite,
-                              fontWeight: FontWeight.normal)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(
-                height: 7,
-            ),
-            Center(
-              child: Text(widget.element.title!,
-                  textAlign: TextAlign.start,
-                  maxLines: 1,
-                  style: GoogleFonts.lato(
-                      fontSize: 23.0,
-                      color: Pallet.colorWhite,
-                      fontWeight: FontWeight.w800)),
-            ),
-            SizedBox(
-              height: 9,
-            ),
-            Text(
-              widget.element.text!,
-              textAlign: TextAlign.justify,
-              style: GoogleFonts.lato(
-                  fontSize: 20.0,
-                  color: Pallet.colorWhite,
-                  fontWeight: FontWeight.w600),
-            ),
-
-            SizedBox(height: 8,),
-
-
-            Row(
-              children: [
-                SizedBox(
-                  width: 220,
-                    child:
-                    OnlineRoomOwnersStream(roomData: widget.element,)
-                ),
-
-                Spacer(flex: 1,),
-
-                Column(
-                  children: [
-                    StreamBuilder(
-                        stream: firebaseServices
-                            .getChats(widget.element),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
-                          if (snapShot.hasError) {
-                            return Container();
-                          }
-                          if (snapShot.hasData) {
-                            return Text(
-                              snapShot.data!.docs.length.toString() + " Live Rooms 🔥",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ANONYMOUS DIARYROOM',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10,
+                                color: Colors.white70,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.2,
                               ),
-                            );
-                          }
-                          return Container();
-                        }),
-
-                    SizedBox(height: 4,),
-
-                    isLoading != true?
-                    Container(
-                      margin: EdgeInsets.only(bottom: 6),
-                      padding: EdgeInsets.all(5),
-                      width: 115,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20.0),
-                        gradient: LinearGradient(
-                          begin: Alignment(-0.37857140550652835, -1.9473685559777252),
-                          end: Alignment(1.2428571464417884, 2.526316110739735),
-                          stops: [0.0, 0.856177031993866, 1.0],
-                          colors: [
-                            Colors.white70,
-                            Pallet.colorPrimary,
-                            Pallet.colorSecondaryDark,
+                            ),
+                            Text(
+                              'By Claire 🌺',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      child: Center(
-                        child: Text('O P E N',
-                          style: GoogleFonts.lato(
-                              fontSize: 15.0,
-                              color: Pallet.colorSecondaryDark,
-                              fontWeight: FontWeight.w700),
-                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    widget.element.title!,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 24,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      height: 1.1,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.element.text!,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.7),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      // Participants Stream
+                      SizedBox(
+                        width: 180,
+                        child: OnlineRoomOwnersStream(roomData: widget.element),
                       ),
-                    ):
-                        CircularProgressIndicator()
-                  ],
-                ),
-              ],
+                      const Spacer(),
+                      // Action/Live Indicator Area
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          StreamBuilder(
+                            stream: firebaseServices.getChats(widget.element),
+                            builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                              if (!snapShot.hasData) return const SizedBox();
+                              return Row(
+                                children: [
+                                  Container(
+                                    width: 6, height: 6,
+                                    decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    "${snapShot.data!.docs.length} LIVE",
+                                    style: GoogleFonts.plusJakartaSans(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          isLoading
+                              ? const CupertinoActivityIndicator(color: Colors.white)
+                              : Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              color: Colors.white.withValues(alpha: 0.2),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                            ),
+                            child: Text(
+                              'ENTER',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.1,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
