@@ -831,9 +831,7 @@ class _CommentWidgetState extends State<CommentWidget> {
             textAlign: TextAlign.justify,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 16.0,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white.withValues(alpha: 0.9)
-                  : Colors.black.withValues(alpha: 0.8),
+              color: Colors.black,
               fontWeight: FontWeight.w500,
               height: 1.4,
               letterSpacing: -0.1,

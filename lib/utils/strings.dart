@@ -281,8 +281,7 @@ class AppString{
   static const String switchHeaderTwo = "Please Answer The Following Questions By Switching Yes Or No";
   static const String switchBottomHeader = "Thank you so much for coming this far ♥ 🌺\n\nPlease select a button below to send this form to Super Ego and cue in for your final Verification and Clairentation on Whatsapp where you will receive your Alter-Ego login details.";
   static const String WHATSAPP_URL = "https://api.whatsapp.com/send?phone=2348188578955&text=";
-  static const String donate_url = "https://flutterwave.com/pay/top_up_love";
-
+  static const String product_donate_id = "loves_donate";
   static const String autoDiaryHeader = " \n\n 🌺 Record Your Diary And Receive Advises Without Touching Your Phone.";
 
 

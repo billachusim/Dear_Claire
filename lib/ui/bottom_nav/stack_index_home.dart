@@ -188,14 +188,7 @@ class _HomeDashboardPageState extends State<HomePage>
     launchUrl(emailLaunchUri);
   }
 
-  String getDonateUrl() {
-    return AppString.donate_url;
-  }
 
-  onDonateClicked() {
-    Uri donateUrl = Uri.parse(getDonateUrl());
-    launchUrl(donateUrl);
-  }
 
   _loadHtmlFromAssets() async {
     String fileHtmlContents = await rootBundle.loadString(filePath);
@@ -620,7 +613,6 @@ class _HomeDashboardPageState extends State<HomePage>
         },
 
 
-        onDonateClicked: onDonateClicked,
         sendClaireToSomeone: sendClaireToSomeone,
         launchEmailApp: launchEmailApp,
         isUserSignedIn: () => firebaseServices.isUserSignIn(context),
@@ -692,7 +684,6 @@ class _AppDrawer extends StatefulWidget {
   final String avatarUrl;
   final VoidCallback lockAlertDialog;
   final VoidCallback onAlterEgoTapped;
-  final VoidCallback onDonateClicked;
   final VoidCallback sendClaireToSomeone;
   final VoidCallback launchEmailApp;
   final Future<bool> Function() isUserSignedIn;
@@ -707,7 +698,6 @@ class _AppDrawer extends StatefulWidget {
         required this.avatarUrl,
         required this.lockAlertDialog,
         required this.onAlterEgoTapped,
-        required this.onDonateClicked,
         required this.sendClaireToSomeone,
         required this.launchEmailApp,
         required this.isUserSignedIn,

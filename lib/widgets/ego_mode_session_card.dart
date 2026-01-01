@@ -18,15 +18,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../data/models/transaction_model.dart' as t_model;
-import '../services/data/notification_model.dart' as push_notification;
 import '../services/firebase_services.dart';
 import '../services/notification_service.dart';
 import '../services/transaction_service.dart';
 import '../services/user_model.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
+import '../ui/ego-profile/top_up_loves_page.dart';
 import '../utils/strings.dart';
 import '../ui/routes/routes.dart';
 import 'unified_media_widget.dart';
@@ -1068,19 +1067,18 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
     }
   }
 
-  onDonateClicked() {
-    var donateUrl = Uri.parse(AppString.donate_url);
-    launchUrl(donateUrl);
-  }
+
 
   featureAlertDialog(BuildContext context) {
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text("TopUp Love"),
       onPressed: () {
-        onDonateClicked();
+        Navigator.pop(context); // Close the dialog
+        PageRouter.gotoWidget(const TopUpLovesPage(), context);
       },
     );
+
 
     Widget continueButton = TextButton(
       child: Text("Request Feature\n"

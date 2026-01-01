@@ -63,7 +63,7 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text("Top Up Love",
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Colors.white)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -124,20 +124,27 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
 
                   const SizedBox(height: 30),
 
-                  // Donate Button (Green Glass Card)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: _buildGlassCard(
-                      icon: Icons.volunteer_activism_rounded,
-                      title: "Donate To Support Claire",
-                      subtitle: "Support the Dear Claire Project and get your donations back as Loves in your wallet.",
-                      color: Pallet.deepGreen,
-                      onTap: () {
-                        final Uri donateUrl = Uri.parse(AppString.donate_url);
-                        launchUrl(donateUrl);
-                      },
-                    ),
-                  ),
+                  // Donate Button (Dynamic Store Card)
+                  Obx(() {
+                    final donationProduct = iapController.products.firstWhereOrNull(
+                            (p) => p.id == AppString.product_donate_id
+                    );
+
+                    // Only show if the product was successfully fetched from the store
+                    if (donationProduct == null) return const SizedBox.shrink();
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: _buildGlassCard(
+                        icon: Icons.volunteer_activism_rounded,
+                        title: "Donate ${donationProduct.price}",
+                        subtitle: "Support the Dear Claire Project and get ${donationProduct.price} worth of Loves back to your wallet.",
+                        color: Pallet.deepGreen,
+                        onTap: () => iapController.buyProduct(donationProduct),
+                      ),
+                    );
+                  }),
+
 
                   const SizedBox(height: 40),
 

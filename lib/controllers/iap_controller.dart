@@ -20,6 +20,7 @@ class IAPController extends GetxController {
     'loves_1000',
     'loves_5000',
     'loves_10000',
+    'loves_donate',
   };
 
   @override
@@ -97,13 +98,14 @@ class IAPController extends GetxController {
     }
 
     int amount = 0;
-    // Use .contains or .endsWith to be safe against prefixed IDs
     if (purchase.productID.contains('loves_10000')) {
       amount = 10000;
     } else if (purchase.productID.contains('loves_5000')) {
       amount = 5000;
     } else if (purchase.productID.contains('loves_1000')) {
       amount = 1000;
+    } else if (purchase.productID == 'loves_donate') {
+      amount = 50000;
     }
 
     if (amount == 0) {

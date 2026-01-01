@@ -302,8 +302,4 @@ class _HowAlterEgoWorksState extends State<HowAlterEgoWorks> {
     AppString.about_alter_ego_slide4,
   ];
 
-  void onDonateClicked() {
-    final Uri donateUrl = Uri.parse(AppString.donate_url);
-    launchUrl(donateUrl);
-  }
 }
