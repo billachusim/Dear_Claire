@@ -181,10 +181,9 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKee
       onPopInvokedWithResult: (bool didPop, dynamic result) {
         if (didPop) return;
         Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.alterEgoHomepage,
+          AppRoutes.home,
               (Route<dynamic> route) => false,
         );
-        showToast("Shake device or use menu to switch back to Ego Mode.");
       },
 
       child: Scaffold(

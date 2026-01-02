@@ -49,6 +49,7 @@ class _SubChatScreenState extends State<SubChatScreen> {
   List<Temp> _chatList = [];
   bool _isSending = false;
   User? currentUser = FirebaseAuth.instance.currentUser;
+  bool _isUserAdmin = false;
 
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
@@ -61,8 +62,23 @@ class _SubChatScreenState extends State<SubChatScreen> {
   void initState() {
     super.initState();
     _createSubChatInterstitialAd();
+    _checkAdminStatus();
   }
 
+  Future<void> _checkAdminStatus() async {
+    if (currentUser == null) return;
+
+    try {
+      final user = await firebaseServices.getUserWithId(id: currentUser!.uid);
+      if (mounted) {
+        setState(() {
+          _isUserAdmin = user.userType == "ADMIN" || user.userType == "SUPER_ADMIN";
+        });
+      }
+    } catch (e) {
+      debugPrint("Error checking admin status: $e");
+    }
+  }
 
 
   @override
@@ -155,8 +171,10 @@ class _SubChatScreenState extends State<SubChatScreen> {
     // 2. Check if the current user is the owner of this corner.
     final bool isCornerOwner = currentUser?.uid == widget.chatModel?.userId;
 
-    // 3. The user can send messages if it's NOT an eavesdrop room, OR if they ARE the corner owner.
-    final bool canSendMessage = !isEavesdropRoom || isCornerOwner;
+    // The user can send messages if it's NOT an eavesdrop room,
+    // OR if they ARE the corner owner,
+    // OR if they ARE an admin/super admin.
+    final bool canSendMessage = !isEavesdropRoom || isCornerOwner || _isUserAdmin;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,

@@ -159,11 +159,9 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false, // Prevents the back button from popping this page
+      canPop: false,
       onPopInvokedWithResult: (bool didPop, dynamic result) {
         if (didPop) return;
-        // Notify the user how to actually exit this mode
-        showToast(message: "Shake device to exit Alter Ego Mode.");
       },
       child: Scaffold(
         resizeToAvoidBottomInset: true,

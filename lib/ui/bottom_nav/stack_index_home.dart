@@ -96,7 +96,6 @@ class _HomeDashboardPageState extends State<HomePage>
     EgoProfilePage(title: 'Dear Claire'),
   ];
 
-
   /// Get the Ego User info
   Future<UserModel?> getEgoInfo() async {
     // Null check at the beginning
@@ -115,7 +114,7 @@ class _HomeDashboardPageState extends State<HomePage>
       // Check if document exists before processing
       if (response.exists && response.data() != null) {
         var egoInfo =
-        UserModel.fromFirestore(response.data() as Map<String, dynamic>);
+            UserModel.fromFirestore(response.data() as Map<String, dynamic>);
         // Use setState only if you need to update UI properties directly
         if (mounted) {
           setState(() {
@@ -126,7 +125,8 @@ class _HomeDashboardPageState extends State<HomePage>
         }
         final _userId = egoInfo.userId.toString();
         await firebaseServices.updateUserLastTimeUnlocked(_userId);
-        logger.d('Successfully got an Ego user model and updated time last unlocked.');
+        logger.d(
+            'Successfully got an Ego user model and updated time last unlocked.');
         return egoInfo;
       } else {
         logger.w("User document not found for userId: $userId");
@@ -137,7 +137,6 @@ class _HomeDashboardPageState extends State<HomePage>
       return null; // Return null on error
     }
   }
-
 
   // Add these methods inside _HomeDashboardPageState
 
@@ -155,7 +154,8 @@ class _HomeDashboardPageState extends State<HomePage>
   }
 
   OverlayEntry _createFabMenuOverlay() {
-    final RenderBox renderBox = _fabKey.currentContext!.findRenderObject() as RenderBox;
+    final RenderBox renderBox =
+        _fabKey.currentContext!.findRenderObject() as RenderBox;
     final size = renderBox.size;
     final offset = renderBox.localToGlobal(Offset.zero);
 
@@ -168,7 +168,6 @@ class _HomeDashboardPageState extends State<HomePage>
       ),
     );
   }
-
 
   launchEmailApp() {
     String? encodeQueryParameters(Map<String, String> params) {
@@ -188,8 +187,6 @@ class _HomeDashboardPageState extends State<HomePage>
     launchUrl(emailLaunchUri);
   }
 
-
-
   _loadHtmlFromAssets() async {
     String fileHtmlContents = await rootBundle.loadString(filePath);
 
@@ -206,15 +203,12 @@ class _HomeDashboardPageState extends State<HomePage>
 
   Future<void> setTabIndex(index) async {
     if (await firebaseServices.isUserSignIn(context))
-    _pageController.animateToPage(index,
-        duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
+      _pageController.animateToPage(index,
+          duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
     setState(() {
       _currentIndex = index;
     });
   }
-
-
-
 
   void _listenForCallsFromClaire() {
     _userCallListener?.cancel();
@@ -239,9 +233,9 @@ class _HomeDashboardPageState extends State<HomePage>
     _userCallListener = Rx.combineLatest2(
       audioCallsStream,
       videoCallsStream,
-          (QuerySnapshot audio, QuerySnapshot video) => [...audio.docs, ...video.docs],
+      (QuerySnapshot audio, QuerySnapshot video) =>
+          [...audio.docs, ...video.docs],
     ).listen((callDocs) {
-
       // If there are no incoming calls, reset our active call tracker and do nothing.
       if (callDocs.isEmpty) {
         _activeCallId = null;
@@ -287,7 +281,6 @@ class _HomeDashboardPageState extends State<HomePage>
     });
   }
 
-
   void _initializeServices() {
     // Now we initialize everything that depends on user or context
     setState(() {
@@ -312,7 +305,7 @@ class _HomeDashboardPageState extends State<HomePage>
     // Initialize WebViewController for TicTacToe
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-    // --- CHANNEL 1: VIBRATION ---
+      // --- CHANNEL 1: VIBRATION ---
       ..addJavaScriptChannel(
         'Vibration',
         onMessageReceived: (JavaScriptMessage message) async {
@@ -321,7 +314,7 @@ class _HomeDashboardPageState extends State<HomePage>
           }
         },
       )
-    // --- CHANNEL 2: SOUND ---
+      // --- CHANNEL 2: SOUND ---
       ..addJavaScriptChannel(
         'Sound',
         onMessageReceived: (JavaScriptMessage message) async {
@@ -336,7 +329,7 @@ class _HomeDashboardPageState extends State<HomePage>
           }
         },
       )
-    // --- CHANNEL 3: SCORE & GAME LOGIC ---
+      // --- CHANNEL 3: SCORE & GAME LOGIC ---
       ..addJavaScriptChannel(
         'Score',
         onMessageReceived: (JavaScriptMessage message) {
@@ -370,10 +363,7 @@ class _HomeDashboardPageState extends State<HomePage>
     _loadHtmlFromAssets();
   }
 
-
-
   final AudioPlayer _audioPlayer = AudioPlayer();
-
 
   Future<void> _handleDrawReward() async {
     if (currentUser == null) return;
@@ -384,7 +374,8 @@ class _HomeDashboardPageState extends State<HomePage>
       userId: currentUser!.uid,
       amount: rewardAmount,
       type: t_model.TransactionType.credit,
-      userTransactionDescription: "$rewardAmount❤️ won from a Tic-Tac-Toe draw.",
+      userTransactionDescription:
+          "$rewardAmount❤️ won from a Tic-Tac-Toe draw.",
       metadata: {'game': 'tic-tac-toe', 'reason': 'player_draw'},
       fromGameWins: rewardAmount,
     );
@@ -398,7 +389,8 @@ class _HomeDashboardPageState extends State<HomePage>
     try {
       await firebaseServices.saveUserActivity(
         activityType: 'game_draw', // A specific type for draws
-        activityMessage: 'You had a draw with Claire in Tic-Tac-Toe and earned 2❤️.',
+        activityMessage:
+            'You had a draw with Claire in Tic-Tac-Toe and earned 2❤️.',
         // No recipientId needed as it's a system transaction
       );
       logger.d("User activity for 'game_draw' saved successfully.");
@@ -408,7 +400,10 @@ class _HomeDashboardPageState extends State<HomePage>
 
     // 3. Send the targeted notification for the draw
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).get();
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser!.uid)
+          .get();
       if (userDoc.exists) {
         final userToken = userDoc.data()?['fcmId'] as String?;
         if (userToken != null && userToken.isNotEmpty) {
@@ -430,9 +425,6 @@ class _HomeDashboardPageState extends State<HomePage>
     showToast(message: "It's a draw! You earned 2❤️.");
   }
 
-
-
-
   void shakeDevice() {
     detector = ShakeDetector.autoStart(
       shakeThresholdGravity: 5.5,
@@ -441,55 +433,57 @@ class _HomeDashboardPageState extends State<HomePage>
           if (!mounted) return;
 
           if (await Vibration.hasVibrator()) {
-        Vibration.vibrate();
-        }
+            Vibration.vibrate();
+          }
 
-        String id = await sharedPreference.getAlterEgoId();
-        String accessCode = await sharedPreference.getAlterEgoAccessCode();
+          String id = await sharedPreference.getAlterEgoId();
+          String accessCode = await sharedPreference.getAlterEgoAccessCode();
 
-        if (!mounted) return;
+          if (!mounted) return;
 
-        // --- FIX: Only gatekeep if they DON'T have credentials yet ---
-        if (id.isEmpty || accessCode.isEmpty) {
-        UserModel user = await firebaseServices.getUserInfo();
-        // If they are "broke" and haven't set up an Alter Ego, send to Top Up
-        if ((user.currentLoveCount ?? 0) < 5000) {
-        Navigator.push(context, MaterialPageRoute(
-        builder: (context) => const TopUpLovesPage(feature: 'alterego'),
-        ));
-        return;
-        }
+          // --- FIX: Only gatekeep if they DON'T have credentials yet ---
+          if (id.isEmpty || accessCode.isEmpty) {
+            UserModel user = await firebaseServices.getUserInfo();
+            // If they are "broke" and haven't set up an Alter Ego, send to Top Up
+            if ((user.currentLoveCount ?? 0) < 2000) {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const TopUpLovesPage(feature: 'alterego'),
+                  ));
+              return;
+            }
 
-        // If they have loves but no credentials, send to Login/Setup
-        Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.alterEgoLogin,
-        (Route<dynamic> route) => false,
-        );
-        return;
-        }
+            // If they have loves but no credentials, send to Login/Setup
+            Navigator.of(context).pushNamed(
+              AppRoutes.alterEgoLogin,
+            );
+            return;
+          }
 
-        // --- If credentials exist, proceed directly ---
-        Fluttertoast.showToast(
-        toastLength: Toast.LENGTH_LONG,
-        msg: "Switching Ego",
-        textColor: Colors.white,
-        backgroundColor: Pallet.colorSplashScreen,
-        );
+          // --- If credentials exist, proceed directly ---
+          Fluttertoast.showToast(
+            toastLength: Toast.LENGTH_LONG,
+            msg: "Switching Ego",
+            textColor: Colors.white,
+            backgroundColor: Pallet.colorSplashScreen,
+          );
 
-        await firebaseServices.getUserAlterEgo(context, id, accessCode);
-      }();
+          await firebaseServices.getUserAlterEgo(context, id, accessCode);
+        }();
       },
       minimumShakeCount: 1,
     );
   }
 
-
-
   @override
   void dispose() {
     _controller.dispose();
     detector.stopListening();
-    if (_isFabMenuOpen) {_overlayEntry?.remove();}
+    if (_isFabMenuOpen) {
+      _overlayEntry?.remove();
+    }
     _userCallListener?.cancel();
     _pageController.dispose();
     super.dispose();
@@ -498,78 +492,79 @@ class _HomeDashboardPageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        resizeToAvoidBottomInset: true,
-        key: _scaffoldKey,
-        appBar: AppBar(
-          backgroundColor: Pallet.colorPrimary,
-          centerTitle: false,
-          title: Text(_title,
-              textAlign: TextAlign.start,
-              maxLines: 1,
-              style: GoogleFonts.lato(
-                  fontSize: 25.0,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600)),
-          actions: [
-            CupertinoButton(
-                child: RotationTransition(
-                  turns: _animation,
-                  child: Icon(
-                    Icons.travel_explore,
-                    color: Pallet.colorWhite,
-                    size: 35,
-                  ),
+      resizeToAvoidBottomInset: true,
+      key: _scaffoldKey,
+      appBar: AppBar(
+        backgroundColor: Pallet.colorPrimary,
+        centerTitle: false,
+        title: Text(_title,
+            textAlign: TextAlign.start,
+            maxLines: 1,
+            style: GoogleFonts.lato(
+                fontSize: 25.0,
+                color: Colors.white,
+                fontWeight: FontWeight.w600)),
+        actions: [
+          CupertinoButton(
+              child: RotationTransition(
+                turns: _animation,
+                child: Icon(
+                  Icons.travel_explore,
+                  color: Pallet.colorWhite,
+                  size: 35,
                 ),
-                onPressed: () {
-                  Navigator.of(context).pushNamed(AppRoutes.searchPage);
-                })
-          ],
-          leading: IconButton(
-              icon: Icon(Icons.menu, color: Pallet.colorWhite, size: 25),
+              ),
               onPressed: () {
-                getEgoInfo();
-                _openEndDrawer();
-              }),
-        ),
-        body: Stack(children: [
-          PageView(
-              physics: NeverScrollableScrollPhysics(),
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              children: _body),
-        ]),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Pallet.colorBottomNav,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          elevation: 0,
-          iconSize: 22,
-          selectedFontSize: 0,
-          unselectedFontSize: 0,
-          onTap: (int index) => setTabIndex(index),
-          items: allDestinations.map((Destination destination) {
-            return BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  destination.icon,
-                ),
-                activeIcon: SvgPicture.asset(
-                  destination.activeIcon,
-                ),
-                backgroundColor: destination.color,
-                label: destination.title);
-          }).toList(),
-        ),
+                Navigator.of(context).pushNamed(AppRoutes.searchPage);
+              })
+        ],
+        leading: IconButton(
+            icon: Icon(Icons.menu, color: Pallet.colorWhite, size: 25),
+            onPressed: () {
+              getEgoInfo();
+              _openEndDrawer();
+            }),
+      ),
+      body: Stack(children: [
+        PageView(
+            physics: NeverScrollableScrollPhysics(),
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            children: _body),
+      ]),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Pallet.colorBottomNav,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        elevation: 0,
+        iconSize: 22,
+        selectedFontSize: 0,
+        unselectedFontSize: 0,
+        onTap: (int index) => setTabIndex(index),
+        items: allDestinations.map((Destination destination) {
+          return BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                destination.icon,
+              ),
+              activeIcon: SvgPicture.asset(
+                destination.activeIcon,
+              ),
+              backgroundColor: destination.color,
+              label: destination.title);
+        }).toList(),
+      ),
       // Replace the existing floatingActionButton property in the Scaffold
       floatingActionButton: FloatingActionButton(
         key: _fabKey, // Key to find the FAB's position
         heroTag: "fab",
-        backgroundColor: Pallet.colorSplashScreen,  onPressed: _toggleFabMenu, // Triggers our custom menu
+        backgroundColor: Pallet.colorSplashScreen,
+        onPressed: _toggleFabMenu, // Triggers our custom menu
         tooltip: 'Start a new session',
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
@@ -580,9 +575,7 @@ class _HomeDashboardPageState extends State<HomePage>
               ? Icon(Icons.close, key: ValueKey('close_icon'), size: 30)
               : RotateImage(45, 45),
         ),
-
       ),
-
 
       drawer: _AppDrawer(
         userName: userName,
@@ -599,20 +592,21 @@ class _HomeDashboardPageState extends State<HomePage>
           } else {
             // User needs to unlock/login
             UserModel user = await firebaseServices.getUserInfo();
-            if ((user.currentLoveCount ?? 0) < 5000) {
-              Navigator.push(context, MaterialPageRoute(
-                builder: (context) => const TopUpLovesPage(feature: 'alterego'),
-              ));
+            if ((user.currentLoveCount ?? 0) < 2000) {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const TopUpLovesPage(feature: 'alterego'),
+                  ));
             } else {
               Navigator.of(context).pushNamedAndRemoveUntil(
                 AppRoutes.alterEgoLogin,
-                    (Route<dynamic> route) => false,
+                (Route<dynamic> route) => false,
               );
             }
           }
         },
-
-
         sendClaireToSomeone: sendClaireToSomeone,
         launchEmailApp: launchEmailApp,
         isUserSignedIn: () => firebaseServices.isUserSignIn(context),
@@ -672,8 +666,6 @@ class _HomeDashboardPageState extends State<HomePage>
   }
 }
 
-
-
 // lib/ui/bottom_nav/stack_index_home.dart
 
 // (Paste this entire block at the end of the file, replacing the old _AppDrawer)
@@ -692,20 +684,21 @@ class _AppDrawer extends StatefulWidget {
   final int claireScore;
   final int drawCount;
 
-  const _AppDrawer({Key? key,
-        required this.userName,
-        required this.userType,
-        required this.avatarUrl,
-        required this.lockAlertDialog,
-        required this.onAlterEgoTapped,
-        required this.sendClaireToSomeone,
-        required this.launchEmailApp,
-        required this.isUserSignedIn,
-        required this.ticTacToeController,
-        required this.playerScore,
-        required this.claireScore,
-        required this.drawCount,
-      }) : super(key: key);
+  const _AppDrawer({
+    Key? key,
+    required this.userName,
+    required this.userType,
+    required this.avatarUrl,
+    required this.lockAlertDialog,
+    required this.onAlterEgoTapped,
+    required this.sendClaireToSomeone,
+    required this.launchEmailApp,
+    required this.isUserSignedIn,
+    required this.ticTacToeController,
+    required this.playerScore,
+    required this.claireScore,
+    required this.drawCount,
+  }) : super(key: key);
 
   @override
   State<_AppDrawer> createState() => _AppDrawerState();
@@ -829,10 +822,10 @@ class _AppDrawerState extends State<_AppDrawer> {
             imageBuilder: (context, imageProvider) =>
                 CircleAvatar(backgroundImage: imageProvider),
             placeholder: (context, url) =>
-            const CircularProgressIndicator(color: Colors.white),
+                const CircularProgressIndicator(color: Colors.white),
             errorWidget: (context, url, error) => const CircleAvatar(
                 backgroundImage:
-                AssetImage("assets/images/Speak_No_Evil_Monkey_Emoji.png")),
+                    AssetImage("assets/images/Speak_No_Evil_Monkey_Emoji.png")),
           ),
         ),
       ),
@@ -842,7 +835,8 @@ class _AppDrawerState extends State<_AppDrawer> {
           child: Column(
             //mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset("assets/images/claire_icon.png", height: 25, width: 25),
+              Image.asset("assets/images/claire_icon.png",
+                  height: 25, width: 25),
               Text(
                 "Switch",
                 style: TextStyle(
@@ -872,8 +866,10 @@ class _AppDrawerState extends State<_AppDrawer> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text("Quick Tac Toe",
-              style:
-              TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16)),
           const SizedBox(height: 8),
           _buildScoreboard(context),
           const SizedBox(height: 12),
@@ -922,7 +918,10 @@ class _AppDrawerState extends State<_AppDrawer> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _milestoneWidget("10 Wins = ", "50 ❤️"),
-          _milestoneWidget("20 Wins = ", "100 ❤️",),
+          _milestoneWidget(
+            "20 Wins = ",
+            "100 ❤️",
+          ),
         ],
       ),
     );
@@ -965,7 +964,9 @@ class _AppDrawerState extends State<_AppDrawer> {
           _scorePillar('You', widget.playerScore, Colors.white),
           Text('vs',
               style: GoogleFonts.lato(
-                  color: Colors.white54, fontSize: 14, fontWeight: FontWeight.w600)),
+                  color: Colors.white54,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600)),
           _scorePillar('Claire', widget.claireScore, Colors.white),
         ],
       ),
@@ -981,7 +982,9 @@ class _AppDrawerState extends State<_AppDrawer> {
         const SizedBox(height: 4),
         Text('$score',
             style: GoogleFonts.lato(
-                color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900)),
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w900)),
       ],
     );
   }
@@ -994,36 +997,37 @@ class _AppDrawerState extends State<_AppDrawer> {
           _MenuTile(
               title: "How Claire Works",
               icon: Icons.info_rounded,
-              onTap: () => Navigator.of(context).pushNamed(AppRoutes.howClaireWorks)),
+              onTap: () =>
+                  Navigator.of(context).pushNamed(AppRoutes.howClaireWorks)),
           _MenuTile(
               title: "Alter Ego Mode",
               icon: Icons.star_rounded,
               onTap: () =>
                   Navigator.of(context).pushNamed(AppRoutes.howAlterEgoWorks)),
           _MenuTile(
-            title: "Auto Diary Mode",
-            icon: Icons.auto_awesome_motion_rounded,
-            onTap: () {
+              title: "Auto Diary Mode",
+              icon: Icons.auto_awesome_motion_rounded,
+              onTap: () {
                 Navigator.of(context).pushNamed(AppRoutes.setupAutoDiary);
-              }
-          ),
+              }),
           ListTile(
             leading: Icon(Icons.storefront, color: Pallet.colorWhite),
-            title: Text('Buy Things With Love', style: TextStyle(color: Pallet.colorWhite)),
+            title: Text('Buy Things With Love',
+                style: TextStyle(color: Pallet.colorWhite)),
             onTap: () {
               Navigator.pop(context);
               PageRouter.gotoWidget(LoveStorePage(), context);
             },
           ),
           _MenuTile(
-              title: "Top-Up Love Wallet",
-              icon: Icons.card_giftcard,
+            title: "Top-Up Love Wallet",
+            icon: Icons.card_giftcard,
             onTap: () {
               Navigator.pop(context);
               PageRouter.gotoWidget(TopUpLovesPage(), context);
             },
           ),
-            _MenuTile(
+          _MenuTile(
             title: "More Games With Claire",
             icon: Icons.gamepad_rounded,
             onTap: () {
@@ -1033,13 +1037,14 @@ class _AppDrawerState extends State<_AppDrawer> {
           ),
           ListTile(
             leading: Icon(Icons.share_rounded, color: Pallet.colorWhite),
-            title: Text('Anonymous Referral Program', style: TextStyle(color: Pallet.colorWhite)),
+            title: Text('Anonymous Referral Program',
+                style: TextStyle(color: Pallet.colorWhite)),
             onTap: () {
               Navigator.pop(context);
               Navigator.pushNamed(context, AppRoutes.referralProgram);
             },
           ),
-            ],
+        ],
       ),
     );
   }
@@ -1073,14 +1078,11 @@ class _AppDrawerState extends State<_AppDrawer> {
               ],
             ),
           ),
-          Expanded(
-              child: DrawerRecentTransactionsList()),
+          Expanded(child: DrawerRecentTransactionsList()),
         ],
       ),
     );
   }
-
-
 
   Future<void> _handleDrawReward() async {
     if (_currentUser == null) return;
@@ -1091,7 +1093,8 @@ class _AppDrawerState extends State<_AppDrawer> {
       userId: _currentUser!.uid,
       amount: rewardAmount,
       type: t_model.TransactionType.credit,
-      userTransactionDescription: "$rewardAmount ❤️ won from a Tic-Tac-Toe draw.",
+      userTransactionDescription:
+          "$rewardAmount ❤️ won from a Tic-Tac-Toe draw.",
       metadata: {'game': 'tic-tac-toe', 'reason': 'player_draw'},
       fromGameWins: rewardAmount,
     );
@@ -1103,7 +1106,10 @@ class _AppDrawerState extends State<_AppDrawer> {
 
     // 2. Send the targeted notification for the draw
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(_currentUser!.uid).get();
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .get();
       if (userDoc.exists) {
         final userToken = userDoc.data()?['fcmId'] as String?;
         if (userToken != null && userToken.isNotEmpty) {
@@ -1125,7 +1131,6 @@ class _AppDrawerState extends State<_AppDrawer> {
     showToast(message: "It's a draw! You earned 2❤️.");
   }
 
-
   Future<void> _handleGameResult() async {
     // Stop if a reward has already been processed for this milestone or if the user is not logged in
     if (_isGameRewardProcessed || currentUser == null) return;
@@ -1145,7 +1150,8 @@ class _AppDrawerState extends State<_AppDrawer> {
       winMessage = "CONGRATS! You beat Claire with 20 wins and won 100 ❤️!";
       isGameOver = true;
     } else if (widget.claireScore == 10) {
-      lossMessage = "Claire reached 10 wins! You lose 50 ❤️. But the game isn't over!";
+      lossMessage =
+          "Claire reached 10 wins! You lose 50 ❤️. But the game isn't over!";
     } else if (widget.claireScore >= 20) {
       lossMessage = "Claire beat you with 20 wins! You lose another 50 ❤️.";
       isGameOver = true;
@@ -1165,7 +1171,9 @@ class _AppDrawerState extends State<_AppDrawer> {
       );
 
       if (!wasApproved) {
-        showToast(message: "You won! Your $rewardAmount Love reward is pending admin approval.");
+        showToast(
+            message:
+                "You won! Your $rewardAmount Love reward is pending admin approval.");
         return;
       }
 
@@ -1173,7 +1181,8 @@ class _AppDrawerState extends State<_AppDrawer> {
       try {
         await firebaseServices.saveUserActivity(
           activityType: 'game_win',
-          activityMessage: 'You won $rewardAmount❤️ from a Tic-Tac-Toe milestone!',
+          activityMessage:
+              'You won $rewardAmount❤️ from a Tic-Tac-Toe milestone!',
         );
         logger.d("User activity for 'game_win' saved successfully.");
       } catch (e) {
@@ -1182,7 +1191,10 @@ class _AppDrawerState extends State<_AppDrawer> {
 
       // --- START: NEW TARGETED NOTIFICATION LOGIC FOR WIN ---
       try {
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).get();
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .get();
         final userToken = userDoc.data()?['fcmId'] as String?;
         if (userToken != null && userToken.isNotEmpty) {
           await notificationService.sendNotification({
@@ -1227,7 +1239,10 @@ class _AppDrawerState extends State<_AppDrawer> {
 
       // --- START: NEW TARGETED NOTIFICATION LOGIC FOR LOSS ---
       try {
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).get();
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .get();
         final userToken = userDoc.data()?['fcmId'] as String?;
         if (userToken != null && userToken.isNotEmpty) {
           await notificationService.sendNotification({
@@ -1255,9 +1270,6 @@ class _AppDrawerState extends State<_AppDrawer> {
       // widget.onGameReset?.call();
     }
   }
-
-
-
 }
 
 class _MenuTile extends StatelessWidget {
@@ -1273,7 +1285,8 @@ class _MenuTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: Colors.white.withValues(alpha: 0.8)),
-      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 15)),
+      title: Text(title,
+          style: const TextStyle(color: Colors.white, fontSize: 15)),
       onTap: onTap,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       splashColor: Pallet.colorSecondary.withValues(alpha: 0.3),
@@ -1286,7 +1299,8 @@ class _MenuTile extends StatelessWidget {
 class _FabMenuOverlay extends StatefulWidget {
   final BuildContext parentContext;
   final Size fabSize;
-  final Offset fabOffset;final VoidCallback onClose;
+  final Offset fabOffset;
+  final VoidCallback onClose;
 
   const _FabMenuOverlay({
     Key? key,
@@ -1300,7 +1314,8 @@ class _FabMenuOverlay extends StatefulWidget {
   _FabMenuOverlayState createState() => _FabMenuOverlayState();
 }
 
-class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProviderStateMixin {
+class _FabMenuOverlayState extends State<_FabMenuOverlay>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _blurAnimation;
   late Animation<double> _scaleAnimation;
@@ -1348,12 +1363,15 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
         children: [
           // Blurred background
           GestureDetector(
-            onTap: () => _animationController.reverse().then((_) => widget.onClose()),
+            onTap: () =>
+                _animationController.reverse().then((_) => widget.onClose()),
             child: AnimatedBuilder(
               animation: _blurAnimation,
               builder: (context, child) {
                 return BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: _blurAnimation.value, sigmaY: _blurAnimation.value),
+                  filter: ImageFilter.blur(
+                      sigmaX: _blurAnimation.value,
+                      sigmaY: _blurAnimation.value),
                   child: Container(
                     color: Colors.black.withValues(alpha: 0.4),
                   ),
@@ -1363,8 +1381,12 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
           ),
           // Menu Items
           Positioned(
-            right: MediaQuery.of(context).size.width - widget.fabOffset.dx - widget.fabSize.width,
-            bottom: MediaQuery.of(context).size.height - widget.fabOffset.dy - widget.fabSize.height,
+            right: MediaQuery.of(context).size.width -
+                widget.fabOffset.dx -
+                widget.fabSize.width,
+            bottom: MediaQuery.of(context).size.height -
+                widget.fabOffset.dy -
+                widget.fabSize.height,
             width: 300,
             height: 400,
             child: Stack(
@@ -1377,14 +1399,14 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                   onPressed: () => _closeAndNavigate(() {
                     final currentUser = FirebaseAuth.instance.currentUser;
                     if (currentUser == null) {
-                      Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
+                      Navigator.of(widget.parentContext)
+                          .pushReplacementNamed(AppRoutes.authSelection);
                     } else {
-                      Navigator.of(widget.parentContext).pushNamed(AppRoutes.createSessionPage);
+                      Navigator.of(widget.parentContext)
+                          .pushNamed(AppRoutes.createSessionPage);
                     }
                   }),
                 ),
-
-
                 _buildMenuItem(
                   position: _itemPositions[1],
                   icon: Icons.phone_in_talk_outlined,
@@ -1399,17 +1421,19 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                         return;
                       }
 
-                      final callDetails =
-                      await showPreCallDialog(widget.parentContext, isVideoCall: false);
+                      final callDetails = await showPreCallDialog(
+                          widget.parentContext,
+                          isVideoCall: false);
 
                       if (callDetails != null) {
-                        await firebaseServices.updateUserMoods(callDetails.moodId);
+                        await firebaseServices
+                            .updateUserMoods(callDetails.moodId);
                         Navigator.of(widget.parentContext).push(
                           MaterialPageRoute(
                             builder: (context) => CompanionCallPage(
                               user: currentUser,
                               callDetails: callDetails, // Correct parameter
-                              incomingCall: null,      // Correctly passing null
+                              incomingCall: null, // Correctly passing null
                             ),
                           ),
                         );
@@ -1431,17 +1455,19 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                         return;
                       }
 
-                      final callDetails =
-                      await showPreCallDialog(widget.parentContext, isVideoCall: true);
+                      final callDetails = await showPreCallDialog(
+                          widget.parentContext,
+                          isVideoCall: true);
 
                       if (callDetails != null) {
-                        await firebaseServices.updateUserMoods(callDetails.moodId);
+                        await firebaseServices
+                            .updateUserMoods(callDetails.moodId);
                         Navigator.of(widget.parentContext).push(
                           MaterialPageRoute(
                             builder: (context) => LiveCallPage(
                               user: currentUser,
                               callDetails: callDetails, // Correct parameter
-                              incomingCall: null,      // Correctly passing null
+                              incomingCall: null, // Correctly passing null
                             ),
                           ),
                         );
@@ -1450,8 +1476,6 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                     });
                   },
                 ),
-
-
                 _buildMenuItem(
                   position: _itemPositions[3],
                   icon: Icons.psychology_alt_rounded,
@@ -1459,9 +1483,11 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                   onPressed: () => _closeAndNavigate(() {
                     final currentUser = FirebaseAuth.instance.currentUser;
                     if (currentUser == null) {
-                      Navigator.of(widget.parentContext).pushReplacementNamed(AppRoutes.authSelection);
+                      Navigator.of(widget.parentContext)
+                          .pushReplacementNamed(AppRoutes.authSelection);
                     } else {
-                      Navigator.of(widget.parentContext).push(MaterialPageRoute(builder: (context) => const SetupAutoDiary()));
+                      Navigator.of(widget.parentContext).push(MaterialPageRoute(
+                          builder: (context) => const SetupAutoDiary()));
                     }
                   }),
                 ),
@@ -1491,7 +1517,8 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
@@ -1501,11 +1528,11 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
                           blurRadius: 5,
                           offset: const Offset(0, 2),
                         )
-                      ]
-                  ),
+                      ]),
                   child: Text(
                     label,
-                    style: GoogleFonts.lato(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.lato(
+                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -1524,6 +1551,3 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay> with SingleTickerProvi
     );
   }
 }
-
-
-
