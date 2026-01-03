@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import '../../utils/mood.dart';
+
 class ArchiveWidget extends StatefulWidget {
   const ArchiveWidget({Key? key}) : super(key: key);
 
@@ -43,44 +45,87 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
   );
 
   List<Session> _getSessionForDay(DateTime day) {
-    // Implementation mobymagic
-    return kEvents[day] ?? [];
+    // TableCalendar passes dates with various times; we normalize to midnight
+    final normalizedDay = DateTime(day.year, day.month, day.day);
+    return kEvents[normalizedDay] ?? [];
+  }
+
+
+  // Helper to extract emoji from mood string
+  String _getEmoji(int? moodId) {
+    String? moodStr = Mood.getMood(moodId);
+    if (moodStr == null || moodStr.isEmpty) return "📝";
+    // Regex to find the first emoji in the string
+    final emojiRegex = RegExp(r'(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])');
+    final match = emojiRegex.firstMatch(moodStr);
+    return match?.group(0) ?? "📝";
   }
 
   void extractDatesFromSession(AsyncSnapshot<List<Session>> userSessions) {
+    // Clear existing data to prevent duplicates on rebuild
+    sessions.clear();
+    _dateLists.clear();
+    _selectedDays.clear();kEvents.clear();
+
     sessions.addAll(userSessions.data!);
-    userSessions.data!;
-    userSessions.data!.forEach((element) {
-      _dateLists.add(element.timeCreated!.toDate());
-      _selectedDays.add(element.dateTime!);
-    });
 
-    debugPrint(_dateLists.toString());
+    for (var element in userSessions.data!) {
+      if (element.dateTime != null) {
+        _dateLists.add(element.dateTime!);
+        _selectedDays.add(element.dateTime!);
 
-    ///After getting sessions, create events based on the sessions in each datetime Object
-    // createEvents();
+        // Normalize the date (remove time) to use as a Map key
+        DateTime dateKey = DateTime(element.dateTime!.year, element.dateTime!.month, element.dateTime!.day);
+
+        if (kEvents[dateKey] == null) {
+          kEvents[dateKey] = [];
+        }
+        kEvents[dateKey]!.add(element);
+      }
+    }
   }
 
-  _onDateTapped(DateTime selectedDay, DateTime focusedDay) {
-    debugPrint("tapped date is ${selectedDay.toIso8601String()}");
-    debugPrint("tapped date is ${selectedDay.toString()}");
-    List<Session> selectedSessions = [];
-    sessions.forEach((element) {
-      if (DateTime(element.dateTime!.year, element.dateTime!.month,
-              element.dateTime!.day)
-          .isAtSameMomentAs(
-              DateTime(selectedDay.year, selectedDay.month, selectedDay.day))) {
-        selectedSessions.add(element);
-      }
-    });
 
-    debugPrint("length is ${selectedSessions.length}");
+  _onDateTapped(DateTime selectedDay, DateTime focusedDay) {
+    List<Session> selectedSessions = sessions.where((element) =>
+        isSameDay(element.dateTime, selectedDay)).toList();
+
+    String? suggestion;
+    if (selectedSessions.isEmpty && _dateLists.isNotEmpty) {
+      // Find the closest date with a session
+      _dateLists.sort();
+      DateTime closest = _dateLists.first;
+      int minDiff = (selectedDay
+          .difference(closest)
+          .abs()
+          .inDays);
+
+      for (var date in _dateLists) {
+        int diff = (selectedDay
+            .difference(date)
+            .abs()
+            .inDays);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = date;
+        }
+      }
+      suggestion =
+      "No sessions on this day. The closest date with a session is ${closest
+          .day}/${closest.month}/${closest.year}.";
+    }
+
     Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (_) => ArchivedSessions(
-                  sessions: selectedSessions,
-                )));
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            ArchivedSessions(
+              sessions: selectedSessions,
+              selectedDate: selectedDay,
+              suggestion: suggestion,
+            ),
+      ),
+    );
   }
 
   @override
@@ -232,6 +277,26 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
             selectedDayPredicate: (day) {
               return _selectedDays.contains(day);
             },
+            calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, date, events) {
+                if (events.isNotEmpty) {
+                  // Cast events to Session list
+                  final daySessions = events as List<Session>;
+                  final session = daySessions.first;
+
+                  return Container(
+                    margin: const EdgeInsets.only(top: 22), // Push emoji below the date number
+                    alignment: Alignment.center,
+                    child: Text(
+                      _getEmoji(session.moodId),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
             onDaySelected: _onDateTapped,
             eventLoader: _getSessionForDay,
             onFormatChanged: (format) {

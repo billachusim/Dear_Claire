@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:clairediary/services/user_activity_model.dart';
@@ -42,7 +43,8 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
   bool _isLoadingMore = false;
   bool _hasMore = true;
   DocumentSnapshot? _lastDocument;
-  final int _limit = 20; // Fetch 20 activities at a time
+  final int _limit = 20;
+  Timer? _vibeDebounce;
 
   // --- STATE FOR ANALYSIS ---
   String _currentMood = 'Not Available';
@@ -66,6 +68,7 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
   @override
   void dispose() {
     _moodPulseController.dispose();
+    _vibeDebounce?.cancel();
     super.dispose();
   }
 
@@ -456,19 +459,25 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
             Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
+                  child: _statCard(
+                    title: "Vibe Check",
+                    value: _currentMood,
+                    subtitle: "Current Mood",
+                    icon: Icons.auto_awesome_outlined,
+                    color: Colors.green,
+                    pulseAnimation: _moodPulseController,
                     onTap: () {
                       HapticFeedback.lightImpact();
                       _triggerMoodConfetti();
+                      // Cancel any existing timer to "reset" the 3-second window
+                      if (_vibeDebounce?.isActive ?? false) _vibeDebounce!.cancel();
+                      // Start a new timer
+                      _vibeDebounce = Timer(const Duration(seconds: 3), () {
+                        if (mounted) {
+                          _showMoodUpdateModal();
+                        }
+                      });
                     },
-                    child: _statCard(
-                      title: "Vibe Check", // Modern terminology
-                      value: _currentMood,
-                      subtitle: "Current Mood",
-                      icon: Icons.auto_awesome_outlined,
-                      color: Colors.green,
-                      pulseAnimation: _moodPulseController,
-                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -480,10 +489,16 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
                     icon: Icons.psychology_outlined,
                     color: Colors.green,
                     pulseAnimation: _moodPulseController,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _showMoodSwingInfo(); // New Popup
+                    },
                   ),
                 ),
               ],
             ),
+            // ... the rest of the rows (Latest Action, etc.) remain the same
+
             const SizedBox(height: 12),
             Row(
               children: [
@@ -520,110 +535,211 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
     required String subtitle,
     required IconData icon,
     required Color color,
-    Animation<double>? pulseAnimation, // New optional parameter
+    Animation<double>? pulseAnimation,
+    VoidCallback? onTap,
   }) {
     final moodParts = _splitMood(value);
     final bool hasEmoji = moodParts['emoji']!.isNotEmpty;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.12),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title.toUpperCase(),
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.5,
-                  color: Colors.white54,
-                ),
-              ),
-              Icon(icon, color: color, size: 18),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: ShaderMask(
-                  shaderCallback: (bounds) => LinearGradient(
-                    colors: [Colors.white, color.withValues(alpha: 0.5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ).createShader(bounds),
-                  child: Text(
-                    hasEmoji ? moodParts['text']! : value,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 18, // Slightly larger
-                      fontWeight: FontWeight.w800, // Extra bold for that premium look
-                      color: Colors.white, // Required for ShaderMask
-                    ),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.12),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title.toUpperCase(),
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.5,
+                    color: Colors.white54,
                   ),
                 ),
-
-              ),
-              if (hasEmoji && pulseAnimation != null)
-                AnimatedBuilder(
-                  animation: pulseAnimation,
-                  builder: (context, child) {
-                    // Map 0.0-1.0 to 0.9-1.2 for scale
-                    double scale = 0.9 + (pulseAnimation.value * 0.3);
-                    return Transform.scale(
-                      scale: scale,
-                      child: Container(
-                        margin: const EdgeInsets.only(left: 4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: color.withOpacity(0.4 * pulseAnimation.value),
-                              blurRadius: 15 * scale,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          moodParts['emoji']!,
-                          style: const TextStyle(fontSize: 28), // Bigger emoji
-                        ),
-                      ),
-                    );
-                  },
-                ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              color: color.withOpacity(0.9),
-              fontWeight: FontWeight.w500,
+                Icon(icon, color: color, size: 18),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: [Colors.white, color.withValues(alpha: 0.5)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(bounds),
+                    child: Text(
+                      hasEmoji ? moodParts['text']! : value,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 18, // Slightly larger
+                        fontWeight: FontWeight.w800, // Extra bold for that premium look
+                        color: Colors.white, // Required for ShaderMask
+                      ),
+                    ),
+                  ),
+
+                ),
+                if (hasEmoji && pulseAnimation != null)
+                  AnimatedBuilder(
+                    animation: pulseAnimation,
+                    builder: (context, child) {
+                      // Map 0.0-1.0 to 0.9-1.2 for scale
+                      double scale = 0.9 + (pulseAnimation.value * 0.3);
+                      return Transform.scale(
+                        scale: scale,
+                        child: Container(
+                          margin: const EdgeInsets.only(left: 4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: color.withOpacity(0.4 * pulseAnimation.value),
+                                blurRadius: 15 * scale,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            moodParts['emoji']!,
+                            style: const TextStyle(fontSize: 28), // Bigger emoji
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                color: color.withOpacity(0.9),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
 
+  void _showMoodUpdateModal() {
+    String localSelectedMood = Constant.USER_SESSION_MOODS.first;
+    String currentMoodText = _splitMood(_currentMood)['text'] ?? 'Available';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Pallet.colorSecondary.withOpacity(0.95),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 20),
+              Text("Update your Vibe", style: GoogleFonts.lato(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 8),
+              Text(
+                "Your last vibe check $currentMoodText. Would you like to update your mood?",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.lato(color: Colors.white70),
+              ),
+              const SizedBox(height: 25),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.white38)),
+                child: DropdownButton<String>(
+                  value: localSelectedMood,
+                  isExpanded: true,
+                  dropdownColor: Pallet.colorSecondary,
+                  underline: const SizedBox.shrink(),
+                  icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                  style: GoogleFonts.lato(fontSize: 16, color: Colors.white),
+                  items: Constant.USER_SESSION_MOODS.map((String v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                  onChanged: (v) => setModalState(() => localSelectedMood = v!),
+                ),
+              ),
+              const SizedBox(height: 30),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text("Still $currentMoodText", style: GoogleFonts.lato(color: Colors.white60)),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Pallet.colorPrimary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                      onPressed: () async {
+                        int moodId = Constant.USER_SESSION_MOODS.indexOf(localSelectedMood);
+                        await firebaseServices.updateUserMoods(moodId);
+                        Navigator.pop(context);
+                        _fetchInitialData();
+                        showToast("Mood updated!");
+                      },
+                      child: Text("Update", style: GoogleFonts.lato(fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showMoodSwingInfo() {
+    showDialog(
+      context: context,
+      builder: (context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: AlertDialog(
+          backgroundColor: Pallet.colorSecondary.withOpacity(0.9),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text("Mood Swing Analysis", style: GoogleFonts.lato(color: Colors.white, fontWeight: FontWeight.bold)),
+          content: Text(
+            "Your mood swing is a result of observed patterns in the moods recorded during your sessions with Claire.",
+            style: GoogleFonts.lato(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Got it", style: GoogleFonts.lato(color: Pallet.colorPrimary)),
+            )
+          ],
+        ),
+      ),
+    );
+  }
 
 
 

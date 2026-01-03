@@ -14,68 +14,59 @@ import '../featured/model/session.dart';
 import '../../widgets/ego_mode_session_card.dart';
 
 
-/// First class is the paid featured sessions
+/// First class is the featured sessions
 
 class TheFeaturedSessions extends StatelessWidget {
+  final ScrollController? scrollController; // Add this line
 
-  TheFeaturedSessions({Key? key}) : super(key: key);
+  TheFeaturedSessions({Key? key, this.scrollController}) : super(key: key); // Update constructor
 
   User? currentUser = FirebaseAuth.instance.currentUser;
-
-
   final List<Session>? _sessionList = [];
-
 
   @override
   Widget build(BuildContext context) {
-    return
-      Expanded(
-        child: StreamBuilder(
-          stream: firebaseServices.getFeaturedSession(),
-          builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-            if (session.connectionState == ConnectionState.waiting) {
-              return RotateImage(70, 70);
-            }
-            if (!session.hasData) {
-              return Center(
-                child: Text("No Session data",
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.lato(
-                        fontSize: 15.0,
-                        color: Pallet.colorBlack,
-                        //fontStyle: FontStyle.normal,
-                        fontWeight: FontWeight.w600)),
-              );
-            }
-            if (session.hasData) {
-              // clear list
-              _sessionList!.clear();
+    return Expanded( // Keep Expanded so it fills the remaining screen
+      child: StreamBuilder(
+        stream: firebaseServices.getFeaturedSession(),
+        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
+          if (session.connectionState == ConnectionState.waiting) {
+            return RotateImage(70, 70);
+          }
+          if (!session.hasData) {
+            return Center(
+              child: Text("No Session data",
+                  style: GoogleFonts.lato(
+                      fontSize: 15.0,
+                      color: Pallet.colorBlack,
+                      fontWeight: FontWeight.w600)),
+            );
+          }
 
-              session.data!.docs.map((e) {
-                _sessionList!.add(Session.fromJson(e.data()));
-              }).toList();
+          _sessionList!.clear();
+          session.data!.docs.forEach((e) {
+            _sessionList!.add(Session.fromJson(e.data() as Map<String, dynamic>));
+          });
 
-              return Scrollbar(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    ..._sessionList!
-                        .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                        .toList(),
-                  ],
-                ),
-              );
-            }
-            return Container();
-          },
-        ),
-      );
+          return Scrollbar(
+            child: ListView.builder( // Switched to .builder for better performance
+              controller: scrollController, // Hook into the parent's controller
+              itemCount: _sessionList!.length,
+              itemBuilder: (context, index) {
+                return EgoModeSessionCard(
+                  element: _sessionList![index],
+                  visitedUsersID: '',
+                  visitedEgoName: '',
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
   }
-
-
 }
+
 
 /// This shows a notice header about featured sessions.
 class FeaturedSessionNotice extends StatelessWidget {
