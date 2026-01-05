@@ -11,23 +11,27 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:clairediary/ui/routes/page_router_animation.dart'; // For PageRouter
 
 class ChatMessageBubble extends StatelessWidget {
-  // We now accept the entire ChatModel to access all its data
   final ChatModel chatModel;
   final String senderName;
   final String senderAvatarUrl;
   final String timeAgo;
-  final bool isMe; // Determines if the message is from the current user
-  final VoidCallback onAvatarTap; // Callback for when the avatar is tapped
+  final bool isMe;
+  final VoidCallback onAvatarTap;
+  final bool showAdminSecret;
+  final VoidCallback? onDelete; // Added optional delete callback
 
   const ChatMessageBubble({
     Key? key,
-    required this.chatModel, // Changed from 'text'
+    required this.chatModel,
     required this.senderName,
     required this.senderAvatarUrl,
     required this.timeAgo,
     required this.isMe,
     required this.onAvatarTap,
+    this.showAdminSecret = false,
+    this.onDelete, // Initialize here
   }) : super(key: key);
+
 
   @override
   Widget build(BuildContext context) {
@@ -56,10 +60,25 @@ class ChatMessageBubble extends StatelessWidget {
             child: Column(
               crossAxisAlignment: alignment,
               children: [
-                // ... (Sender's name logic remains the same)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
-                  child: Text(senderName, style: GoogleFonts.lato(fontSize: 13.0, color: Colors.white, fontWeight: FontWeight.w800)),
+                  child: Wrap( // Using wrap in case the ID makes the name too long
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        senderName,
+                        style: GoogleFonts.lato(fontSize: 13.0, color: Colors.white, fontWeight: FontWeight.w800),
+                      ),
+                      if (showAdminSecret)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Text(
+                            "${chatModel.alterEgoId ?? ''}",
+                            style: GoogleFonts.lato(fontSize: 10.0, color: Colors.white70, fontWeight: FontWeight.w400),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 // The main message bubble
                 Container(
@@ -101,11 +120,37 @@ class ChatMessageBubble extends StatelessWidget {
                     ],
                   ),
                 ),
-                // ... (Time ago logic remains the same)
+                // Time ago and Delete button (Mod mode)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                  child: Text(timeAgo, style: GoogleFonts.lato(fontSize: 11.0, color: Colors.white70)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(timeAgo,
+                          style: GoogleFonts.lato(fontSize: 11.0, color: Colors.white70)),
+                      if (onDelete != null) ...[
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: onDelete,
+                          child: const Icon(
+                            Icons.delete_forever_rounded,
+                            color: Colors.yellowAccent, // Distinct color for Mod
+                            size: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Mod',
+                          style: GoogleFonts.lato(
+                              fontSize: 12.0,
+                              color: Colors.yellowAccent,
+                              fontWeight: FontWeight.w800),
+                        ),
+                      ]
+                    ],
+                  ),
                 ),
+
               ],
             ),
           ),

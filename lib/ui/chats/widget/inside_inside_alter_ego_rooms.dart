@@ -196,7 +196,10 @@ class _InsideInsideAlterEgoChatWidgetState
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_user.alterEgoId ?? '',
+                          Text(
+                              widget.chatRoomPodo?.id == 5
+                                  ? (_user.nickname ?? 'An Ego')
+                                  : (_user.alterEgoId ?? 'An Alter Ego'),
                               textAlign: TextAlign.start,
                               maxLines: 1,
                               style: GoogleFonts.lato(

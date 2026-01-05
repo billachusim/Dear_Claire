@@ -88,12 +88,14 @@ class SubDiaryRoomWidget extends StatelessWidget {
           ),
           Center(
             child: Text(element.title!,
-                textAlign: TextAlign.start,
-                maxLines: 1,
-                style: GoogleFonts.lato(
-                    fontSize: 24.0,
-                    color: Pallet.colorWhite,
-                    fontWeight: FontWeight.w800)),
+                textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 25,
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                height: 1.1,
+              ),
+            ),
           ),
           SizedBox(
             height: 9,

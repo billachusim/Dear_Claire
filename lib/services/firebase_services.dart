@@ -1917,14 +1917,20 @@ $motivation
   /// get alter ego chats
   Stream<QuerySnapshot<Map<String, dynamic>>> getAlterEgoChats(
       ChatRoomPodo? chatRoomPodo) {
+    // If this is the Admin Portal, pull from Public Chats instead
+    String collectionPath = chatRoomPodo!.id == 5 ? AppString.appChats : "alterEgoChats";
+    // If ID is 5, we specifically want the public Claire DM title
+    String roomTitle = chatRoomPodo.id == 5 ? "Chat Or Eavesdrop Inside Claire's DM" : chatRoomPodo.title!;
+
     return _firebaseFirestore
-        .collection("alterEgoChats")
-        .doc(chatRoomPodo!.id.toString())
-        .collection(chatRoomPodo.title!)
+        .collection(collectionPath)
+        .doc(chatRoomPodo.id == 5 ? "-1" : chatRoomPodo.id.toString())
+        .collection(roomTitle)
         .orderBy('timeCreated', descending: true)
         .limit(AppString.allSessionLength)
         .snapshots();
   }
+
 
 
   /// send alter ego message
@@ -1958,16 +1964,20 @@ $motivation
   /// get alter ego chats
   Stream<QuerySnapshot<Map<String, dynamic>>> getAlterEgoSubMessages(
       String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) {
+    String collectionPath = chatRoomPodo!.id == 5 ? AppString.appChats : "alterEgoChats";
+    String roomTitle = chatRoomPodo.id == 5 ? "Chat Or Eavesdrop Inside Claire's DM" : chatRoomPodo.title!;
+
     return _firebaseFirestore
-        .collection("alterEgoChats")
-        .doc(chatRoomPodo!.id.toString())
-        .collection(chatRoomPodo.title!)
+        .collection(collectionPath)
+        .doc(chatRoomPodo.id == 5 ? "-1" : chatRoomPodo.id.toString())
+        .collection(roomTitle)
         .doc(key.toString())
         .collection(chatModel.userId!)
         .orderBy('timeCreated', descending: true)
         .limit(AppString.appSessionLength)
         .snapshots();
   }
+
 
   /// send alter ego sub-message
   void addAlterEgoSubMessage(

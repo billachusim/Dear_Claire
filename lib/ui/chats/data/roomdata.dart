@@ -8,11 +8,11 @@ class RoomData {
     chatRoomPojo = ChatRoomPodo(
         image: "assets/images/loveGif.gif",
         id: -1,
-        title: "One On One Eavedrop With ClAIre",
+        title: "Chat Or Eavesdrop Inside Claire's DM",
         font: "Default",
         hex: "#68034D",
-        text: "Hello, Darlings,\n" +
-            "Take A front row seat and watch Claire and different people discuss secrets and personal topics while you watch, read and listen to everything in silence. You can't respond or participate and they don't even know you are there!");
+        text: "Hush Hush 🤫,\n" +
+            "Tiptoe into Claire's DM, She is chatting with different anonymous people from around the world discussing secrets and deeply personal topics while you watch, read and listen to everything in silence. You can't respond or participate and they don't even know you are there!");
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
@@ -104,7 +104,7 @@ class RoomData {
         font: "Default",
         hex: "#4A148C",
         text: "Shhhhhhhhh,\n" +
-            "Here, you can start or enter a heart to heart room with just one unknown and anonymous darling to chat about a topic of mutual interest, offload some burdens or exchange secrets. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
+            "Here, you can start or enter a heart to heart corner with just one unknown and anonymous darling to chat about a topic of mutual interest, offload some burdens or exchange secrets. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
@@ -116,7 +116,7 @@ class RoomData {
         font: "Default",
         hex: "#0D47A1",
         text: "Hi, Group,\n" +
-            "Here, you can start a small room of closed chat between you and just four other anonymous users online. Positive vibes only. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
+            "Here, you can start a small corner of closed chat between you and just four other anonymous users online. Positive vibes only. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
@@ -128,7 +128,7 @@ class RoomData {
         font: "Default",
         hex: "#1B5E20",
         text: "Hello, Room,\n" +
-            "Here, you can start a small room of closed chat between you and ten other anonymous users online. Positive vibes only. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
+            "Here, you can start a small corner of closed chat between you and ten other anonymous users online. Positive vibes only. DO NOT REQUEST OR SHARE PERSONAL INFORMATION. YOU WILL BE BANNED.");
     chatRoomPojoList.add(chatRoomPojo);
 
     return chatRoomPojoList;

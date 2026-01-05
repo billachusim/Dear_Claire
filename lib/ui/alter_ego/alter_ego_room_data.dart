@@ -6,6 +6,16 @@ class AlterEgoRoomData {
 
     var
     chatRoomPojo = ChatRoomPodo(
+        image: "assets/images/standgirls.png",
+        id: 5,
+        title: "Claire's One On One Dm",
+        font: "Default",
+        hex: "#263238",
+        text: "Reply Messages Inside Claire's DM,\n" +
+            "This is the command center for Claire's Inbox. Here, you can see all public corners from the 'Chat Or Eavesdrop' room. Your replies here will always appear as 'Claire', so live up to Claire.");
+    chatRoomPojoList.add(chatRoomPojo);
+
+    chatRoomPojo = ChatRoomPodo(
         image: "assets/images/colorGirls.png",
         id: 6,
         title: "Hive Of Alter Egos",
@@ -13,7 +23,7 @@ class AlterEgoRoomData {
         hex: "#880E4F",
         text: "Alter Egos, gather here!,\n" +
             "We are the Claires of the world! The elite secret fairies contributing to a happier world in these sadder times. Welcome to the Alter-Ego Chat Room where we can discuss issues for the good of Claire, our Darlings and our beloveth sisterhood.");
-        chatRoomPojoList.add(chatRoomPojo);
+    chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
         image: "assets/images/herpower.png",
@@ -34,7 +44,7 @@ class AlterEgoRoomData {
         font: "Default",
         hex: "#4A148C",
         text: "Ego To Ego,\n" +
-            "Here, you can start or enter a heart to heart room with just one alter or super ego to chat about a topic of mutual interest, offload some burdens or exchange secrets. Feel free to share personal information and get to know each other, however, report a claire with clairedId immediately to a super ego if you feel offended.");
+            "Here, you can start or enter a heart to heart corner with just one alter or super ego to chat about a topic of mutual interest, offload some burdens or exchange secrets. Feel free to share personal information and get to know each other, however, report a claire with clairedId immediately to a super ego if you feel offended.");
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
@@ -46,7 +56,7 @@ class AlterEgoRoomData {
         font: "Default",
         hex: "#0D47A1",
         text: "Hi, Group,\n" +
-            "Here, you can start a small room of closed chat between you and just four other alter or super egos. Positive vibes only. Share information and get to work and play together but you will be banned if your claireId is reported and investigated for bad conducts.");
+            "Here, you can start a small corner of closed chat between you and just four other alter or super egos. Positive vibes only. Share information and get to work and play together but you will be banned if your claireId is reported and investigated for bad conducts.");
     chatRoomPojoList.add(chatRoomPojo);
 
     chatRoomPojo = ChatRoomPodo(
@@ -58,7 +68,7 @@ class AlterEgoRoomData {
         font: "Default",
         hex: "#1B5E20",
         text: "Hello, Room,\n" +
-            "Here, you can start a small room of closed chat between you and ten other alter or super egos. Positive vibes only. Share information and get to work and play together but you will be banned if your claireId is reported and investigated for bad conducts.");
+            "Here, you can start a small corner of closed chat between you and ten other alter or super egos. Positive vibes only. Share information and get to work and play together but you will be banned if your claireId is reported and investigated for bad conducts.");
     chatRoomPojoList.add(chatRoomPojo);
 
     return chatRoomPojoList;

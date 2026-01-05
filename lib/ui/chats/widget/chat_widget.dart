@@ -58,7 +58,12 @@ class _ChatWidgetState extends State<ChatWidget> {
   int maxFailedLoadAttempts = 3;
 
   getUser() async {
-    userModel = await firebaseServices.getUserInfo();
+    var info = await firebaseServices.getUserInfo();
+    if (mounted) {
+      setState(() {
+        userModel = info;
+      });
+    }
   }
 
   late String visitedUsersID;
@@ -78,7 +83,7 @@ class _ChatWidgetState extends State<ChatWidget> {
   @override
   void initState() {
     super.initState();
-    // Pre-load ads when the widget is created
+    getUser();
     _createJoinChatInterstitialAd();
     _createLeaveChatInterstitialAd();
     _createContChatInterstitialAd();
@@ -506,7 +511,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_user.nickname ?? '',
+                            Text(_user.nickname.toString() ?? '',
                                 textAlign: TextAlign.start,
                                 maxLines: 1,
                                 style: GoogleFonts.lato(
@@ -871,11 +876,14 @@ class _ChatWidgetState extends State<ChatWidget> {
 
 
 
-              if (!widget.chatModel!.members!.contains(currentUser!.uid))
-                Visibility(
-                  visible: !_isCompleted(widget.chatModel, widget.chatRoomPodo),
-                  child: Align(
-                  alignment: Alignment.bottomRight,
+              Visibility(
+                // Visible if:
+                // 1. Not a member AND
+                // 2. (Room is NOT full OR it is the Claire DM Room -1)
+                visible: !widget.chatModel!.members!.contains(currentUser!.uid) &&
+                    (!_isCompleted(widget.chatModel, widget.chatRoomPodo) || widget.chatRoomPodo?.id == -1),
+                child: Align(
+                alignment: Alignment.bottomRight,
                   child: InkWell(
                     onTap: () async {
                       if (_isProcessing) return;
@@ -991,14 +999,17 @@ class _ChatWidgetState extends State<ChatWidget> {
                         child: Center(
                           child: _isProcessing
                               ? CupertinoActivityIndicator(color: Pallet.colorSplashScreen)
-                              :  Text(
+                              : Text(
                             '${widget.chatModel!.members!.length} JOIN',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
-                                color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
-                                    ? Pallet.blueGreyBgColor
-                                    : Pallet.colorSplashScreen,
+                              // If it's Room -1, always show as active (colorSplashScreen)
+                              color: (widget.chatRoomPodo?.id == -1)
+                                  ? Pallet.colorSplashScreen
+                                  : (_isCompleted(widget.chatModel, widget.chatRoomPodo)
+                                  ? Pallet.blueGreyBgColor
+                                  : Pallet.colorSplashScreen),
                             ),
                           ),
                         )),
@@ -1006,52 +1017,81 @@ class _ChatWidgetState extends State<ChatWidget> {
               ),
                 ),
 
+              // --- SUPER ADMIN MODERATION GATEWAY ---
+              if (userModel.userType == "SUPER_ADMIN")
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: InkWell(
+                    onTap: () {
+                      // Navigate quietly without updating members
+                      PageRouter.gotoWidget(
+                          SubChatScreen(
+                            documentID: widget.chatModel!.userId!,
+                            chatModel: widget.chatModel,
+                            chatRoomPodo: widget.chatRoomPodo,
+                          ),
+                          context);
+                      showToast("Entering as Super Admin (Quiet Mode)");
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      width: 60,
+                      height: 25,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.0),
+                        color: Pallet.colorSecondaryDark,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${widget.chatModel!.members!.length} MOD',
+                          style: GoogleFonts.lato(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
 
-              if (!widget.chatModel!.members!.contains(currentUser!.uid))
+              // --- REGULAR CORNER FULL INDICATOR ---
+              if (!widget.chatModel!.members!.contains(currentUser!.uid) &&
+                  userModel.userType != "SUPER_ADMIN")
                 Visibility(
-                  visible: _isCompleted(widget.chatModel, widget.chatRoomPodo),
+                  visible: widget.chatRoomPodo?.id != -1 &&
+                      _isCompleted(widget.chatModel, widget.chatRoomPodo),
                   child: Align(
                     alignment: Alignment.bottomRight,
                     child: InkWell(
                       onTap: () {
                         _createLeaveChatInterstitialAd();
-
-                        showToast('Sorry, this room is full.\n'
-                            'Start your own room after this ad.');
-
+                        showToast('Sorry, this corner is full.');
                         _showLeaveChatInterstitialAd();
                       },
                       child: Container(
-                          padding: EdgeInsets.all(5),
-                          width: 100,
-                          height: 25,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20.0),
-                            gradient: LinearGradient(
-                              begin: Alignment(
-                                  -0.37857140550652835, -1.9473685559777252),
-                              end: Alignment(1.2428571464417884, 2.526316110739735),
-                              stops: [0.0, 0.856177031993866, 1.0],
-                              colors: [
-                                Colors.black45,
-                                Pallet.grey,
-                                Pallet.deepGreen,
-                              ],
-                            ),
+                        padding: const EdgeInsets.all(5),
+                        width: 100,
+                        height: 25,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.0),
+                          gradient: LinearGradient(
+                            colors: [Colors.black45, Pallet.grey, Pallet.deepGreen],
                           ),
-                          child: Center(
-                            child: Text(
-                              '${widget.chatModel!.members!.length} Room Full',
-                              style: TextStyle(
-                                  color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
-                                      ? Pallet.blueGreyBgColor
-                                      : Pallet.colorSplashScreen,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          )),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${widget.chatModel!.members!.length} Corner Full',
+                            style: TextStyle(
+                                color: Pallet.blueGreyBgColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
+
             ],
           )
         ],
@@ -1060,6 +1100,11 @@ class _ChatWidgetState extends State<ChatWidget> {
   }
 
   bool _isCompleted(ChatModel? chatModel, ChatRoomPodo? chatRoomPodo) {
+    // If the room is ID -1 (Claire DM), it's never full.
+    if (chatRoomPodo?.id == -1) return false;
+    // If user is Admin/Super Admin, they bypass the "Full" logic.
+    if (userModel.userType == "SUPER_ADMIN") return false;
+
     return chatModel!.members!.length == chatRoomPodo?.numberOfParticipants;
   }
 

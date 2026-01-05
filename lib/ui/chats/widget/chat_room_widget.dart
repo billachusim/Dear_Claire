@@ -45,8 +45,8 @@ class _ChatRoomWidgetState extends State<ChatRoomWidget> {
           const int specialRoomLoveRequirement = 2000;
 
           final isSpecialRoom = widget.element.title == "One On One Room" ||
-              widget.element.title == "Five Aside Room" ||
-              widget.element.title == "One On One Eavedrop With ClAIre";
+              widget.element.title == "Five Aside Room" || widget.element.title == "Eleven Aside Room" ||
+              widget.element.title == "Chat Or Eavesdrop Inside Claire's DM";
 
           if (isSpecialRoom && user.currentLoveCount <= specialRoomLoveRequirement) {
             Navigator.push(context, MaterialPageRoute(

@@ -266,7 +266,10 @@ class _AlterEgoChatWidgetState extends State<AlterEgoChatWidget> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(_user.alterEgoId ?? '',
+                          Text(
+                              widget.chatRoomPodo?.id == 5
+                                  ? (_user.nickname ?? 'An Ego')
+                                  : (_user.alterEgoId ?? 'An Alter Ego'),
                               textAlign: TextAlign.start,
                               maxLines: 1,
                               style: GoogleFonts.lato(
@@ -738,8 +741,8 @@ class _AlterEgoChatWidgetState extends State<AlterEgoChatWidget> {
                       onTap: () {
                         _createLeaveChatInterstitialAd();
 
-                        showToast('Sorry, this room is full.\n'
-                            'Start your own room after this ad.');
+                        showToast('Sorry, this corner is full.\n'
+                            'Start your own corner after this ad.');
 
                         Future.delayed(Duration(seconds: 5), () {
                           _showLeaveChatInterstitialAd();
@@ -765,7 +768,7 @@ class _AlterEgoChatWidgetState extends State<AlterEgoChatWidget> {
                           ),
                           child: Center(
                             child: Text(
-                              '${widget.chatModel!.members!.length} Room Full',
+                              '${widget.chatModel!.members!.length} Corner Full',
                               style: TextStyle(
                                   color: _isCompleted(widget.chatModel, widget.chatRoomPodo)
                                       ? Pallet.blueGreyBgColor

@@ -3,7 +3,7 @@ description: A secret diary chat.
 
 publish_to: 'none'
 
-version: 13.4.0+134
+version: 13.5.0+135
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

@@ -39,43 +39,66 @@ class _InsideInsideInsideChatWidgetState
 
   @override
   Widget build(BuildContext context) {
-    // Get the current user to determine if the message is "isMe"
     final currentUser = FirebaseAuth.instance.currentUser;
     final bool isMe = currentUser?.uid == widget.chatModel?.userId;
 
-    // Use a FutureBuilder to get the sender's user info just once.
+    // Get current viewer info to check if they are Super Admin
     return FutureBuilder<UserModel?>(
-      future: firebaseServices.getUserWithId(id: widget.chatModel!.userId),
-      builder: (_, AsyncSnapshot<UserModel?> snapshot) {
-        // While waiting for user data, show a simple placeholder
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20.0),
-            child: CupertinoActivityIndicator(),
-          );
-        }
-        // If there's an error or no data, show an empty container.
-        if (!snapshot.hasData || snapshot.data == null) {
-          return Container();
-        }
+      future: firebaseServices.getUserWithId(id: currentUser!.uid),
+      builder: (context, viewerSnapshot) {
+        final bool isViewerSuperAdmin = viewerSnapshot.data?.userType == "SUPER_ADMIN";
 
-        final sender = snapshot.data!;
-        final timeAgo = widget.chatModel?.timeCreated?.toDate() != null
-            ? timeago.format(widget.chatModel!.timeCreated!.toDate())
-            : 'just now';
+        // Get sender info
+        return FutureBuilder<UserModel?>(
+          future: firebaseServices.getUserWithId(id: widget.chatModel!.userId),
+          builder: (_, AsyncSnapshot<UserModel?> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) return const CupertinoActivityIndicator();
+            if (!snapshot.hasData) return Container();
 
-        // --- THE UI TRANSFORMATION ---
-        return ChatMessageBubble(
-          chatModel: widget.chatModel!, // <<< THE FIX: Pass the entire model
-          senderName: sender.nickname ?? 'An Ego',
-          senderAvatarUrl: sender.avatarUrl ?? '',
-          timeAgo: timeAgo,
-          isMe: isMe,
-          onAvatarTap: () {
-            _handleAvatarTap(context, sender);
+            final sender = snapshot.data!;
+
+            // Time format
+            final timeAgo = widget.chatModel?.timeCreated?.toDate() != null
+                ? timeago.format(widget.chatModel!.timeCreated!.toDate())
+                : 'just now';
+
+            return ChatMessageBubble(
+              chatModel: widget.chatModel!,
+              senderName: sender.nickname ?? 'An Ego',
+              senderAvatarUrl: sender.avatarUrl ?? '',
+              timeAgo: timeAgo,
+              isMe: isMe,
+              showAdminSecret: isViewerSuperAdmin,
+              onAvatarTap: () => _handleAvatarTap(context, sender),
+              // --- MODERATION LOGIC ---
+              onDelete: isViewerSuperAdmin
+                  ? () => showCupertinoDialog(
+                context: context,
+                builder: (context) => CupertinoAlertDialog(
+                  title: const Text("Confirm Delete"),
+                  content: const Text("Are you sure you want to delete this message as a Mod?"),
+                  actions: [
+                    CupertinoDialogAction(
+                      child: const Text("Cancel"),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    CupertinoDialogAction(
+                      isDestructiveAction: true,
+                      onPressed: () {
+                        Navigator.pop(context);
+                        deleteSubChat();
+                      },
+                      child: const Text("Delete"),
+                    ),
+                  ],
+                ),
+              )
+                  : null,
+            );
+
+
           },
         );
-
       },
     );
   }
@@ -140,4 +163,29 @@ class _InsideInsideInsideChatWidgetState
       showToast(message: "An error occurred.");
     }
   }
+
+
+  // --- DELETE CHAT LOGIC FOR REGULAR SIDE ---
+  Future<void> deleteSubChat() async {
+    try {
+      // Path based on addSubMessage logic:
+      // appChats -> RoomID -> RoomTitle -> ParentDocID -> SubCollectionName (ParentDocID) -> MessageDocID
+      await FirebaseFirestore.instance
+          .collection("chats")
+          .doc(widget.chatRoomPodo!.id.toString())
+          .collection(widget.chatRoomPodo!.title!)
+          .doc(widget.chatRoomPodo!.id == -1 ? widget.documentID : widget.documentID) // The parent key
+          .collection(widget.documentID!) // The sub-collection name
+          .doc(widget.chatModel!.userId) // The message doc ID (Sender ID)
+          .delete();
+
+      showToast(message: 'Message deleted by Mod.');
+    } catch (e) {
+      debugPrint('Error deleting sub-chat: $e');
+      showToast(message: 'Failed to delete message.');
+    }
+  }
+
+
+
 }

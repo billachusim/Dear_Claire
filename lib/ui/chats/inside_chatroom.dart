@@ -7,6 +7,7 @@ import 'package:clairediary/ui/chats/widget/sub_diaryroom_widget.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/widgets/chat_edit_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -39,6 +40,7 @@ const int maxFailedLoadAttempts = 3;
 
 class _ChatScreenState extends State<ChatScreen> {
   ChatRoomPodo? chatRoomPodo;
+  User? currentUser = FirebaseAuth.instance.currentUser;
 
   _ChatScreenState(this.chatRoomPodo);
   bool _isSending = false;
@@ -287,19 +289,25 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     try {
-      final _user = await firebaseServices.getUserInfo();
+      final _user = await firebaseServices.getUserWithId(id: currentUser!.uid);
 
       firebaseServices.addMessage(
           widget.chatRoomPodo,
           ChatModel(
-              message: v,
-              colorHex: widget.chatRoomPodo.hex,
-              userId: _user.userId,
-              timeCreated: Timestamp.now(),
-              audioUrl: voiceNote,
-              image1: image1,
-              image2: image2,
-              members: [_user.userId]));
+            message: v,
+            colorHex: widget.chatRoomPodo.hex,
+            userId: _user.userId,
+            userNickname: _user.nickname,
+            userAvatarUrl: _user.avatarUrl,
+            timeCreated: Timestamp.now(),
+            audioUrl: voiceNote,
+            image1: image1,
+            image2: image2,
+            members: [_user.userId],
+            userType: _user.userType,
+            alterEgoId: _user.alterEgoId,
+          )
+      );
 
       await firebaseServices.saveUserActivity(
         activityType: 'room_join',

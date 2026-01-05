@@ -145,16 +145,10 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // --- LOGIC FOR HIDING CHAT FIELD (REPLICATED FOR ALTER EGO) ---
-    // 1. Check if this is the special "Eavesdrop" room.
-    final bool isEavesdropRoom =
-        widget.chatRoomPodo?.title == "One On One Eavedrop With ClAIre";
-
-    // 2. Check if the current user is the owner of this Alter Ego corner.
+    final bool isEavesdropRoom = widget.chatRoomPodo?.title == "Chat Or Eavesdrop Inside Claire's DM";
     final bool isCornerOwner = currentUser?.uid == widget.chatModel?.userId;
-
-    // 3. The user can send messages if it's NOT an eavesdrop room, OR if they ARE the corner owner.
-    final bool canSendMessage = !isEavesdropRoom || isCornerOwner;
+    // Admins in the Admin Portal (ID 5) should always have the field visible
+    final bool canSendMessage = (widget.chatRoomPodo?.id == 5) || !isEavesdropRoom || isCornerOwner;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -162,126 +156,94 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),
-        title: Text(widget.chatModel!.message ?? 'Diary Room'),
+        title: Text(widget.chatModel!.userNickname ?? 'Diary Room'),
         elevation: 0,
       ),
       body: SafeArea(
         child: Stack(
           children: [
-            ListView(
-              children: [
-                AnimationLimiter(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics:
-                    BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
-                    itemCount: 1,
-                    itemBuilder: (BuildContext c, int i) {
-                      return AnimationConfiguration.staggeredList(
-                        position: i,
-                        delay: Duration(milliseconds: 500),
-                        child: SlideAnimation(
-                          duration: Duration(milliseconds: 2500),
-                          curve: Curves.fastLinearToSlowEaseIn,
-                          horizontalOffset: 30,
-                          verticalOffset: 300.0,
-                          child: FlipAnimation(
-                            duration: Duration(milliseconds: 3000),
-                            curve: Curves.fastLinearToSlowEaseIn,
-                            flipAxis: FlipAxis.y,
-                            child: StreamBuilder(
-                                stream: firebaseServices.getAlterEgoSubMessages(
-                                    widget.documentID!, widget.chatRoomPodo,
-                                    widget.chatModel!),
-                                builder: (context,
-                                    AsyncSnapshot<
-                                        QuerySnapshot<Map<String, dynamic>>>
-                                    snapShot) {
-                                  if (snapShot.hasData) {
-                                    _chatList
-                                        .clear(); // Clear list before populating
-                                    snapShot.data!.docs
-                                        .map((e) =>
-                                        _chatList
-                                            .add(Temp(e.id, ChatModel.fromJson(
-                                            e.data() as Map<String, dynamic>))))
-                                        .toList();
-                                    return Column(
-                                      children: [
-                                        InsideInsideAlterEgoChatWidget(
-                                            documentID: widget.documentID,
-                                            chatModel: widget.chatModel,
-                                            chatRoomPodo: widget.chatRoomPodo),
-                                        ..._chatList
-                                            .map((element) =>
-                                            InsideInsideInsideAlterEgoChatWidget(
-                                              isSubChat: true,
-                                              documentID: element.id,
-                                              chatModel: element.chatModel,
-                                              chatRoomPodo: widget.chatRoomPodo,
-                                            ))
-                                            .toList(),
-                                      ],
-                                    );
-                                  }
-                                  return Container();
-                                }),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                // Adjust space for the input field AND the banner ad
-                SizedBox(height: 120),
-              ],
+            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: firebaseServices.getAlterEgoSubMessages(
+                  widget.documentID!,
+                  widget.chatRoomPodo,
+                  widget.chatModel!),
+              builder: (context, snapShot) {
+                if (!snapShot.hasData) {
+                  return const Center(child: CupertinoActivityIndicator());
+                }
+
+                // Reverse the docs if your stream isn't already handling the UI order
+                final docs = snapShot.data!.docs;
+
+                return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 160, top: 10),
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: docs.length + 1, // +1 for the header (InsideInsideAlterEgoChatWidget)
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      // Header: The original corner message
+                      return InsideInsideAlterEgoChatWidget(
+                          documentID: widget.documentID,
+                          chatModel: widget.chatModel,
+                          chatRoomPodo: widget.chatRoomPodo);
+                    }
+
+                    // Replies
+                    final doc = docs[index - 1];
+                    final chatData = ChatModel.fromJson(doc.data());
+
+                    return InsideInsideInsideAlterEgoChatWidget(
+                      documentID: doc.id,
+                      chatModel: chatData,
+                      chatRoomPodo: widget.chatRoomPodo,
+                    );
+                  },
+                );
+              },
             ),
 
-            // --- BANNER AD PLACEMENT ---
+            // Banner Ad
             if (_bottomBannerAd != null && _isBannerAdInitialized)
               Positioned(
-                bottom: 60, // Position above the ChatEditField
+                bottom: 65,
                 left: 0,
                 right: 0,
-                child: Container(
-                  height: _bottomBannerAd!.size.height.toDouble(),
-                  width: _bottomBannerAd!.size.width.toDouble(),
-                  child: AdWidget(ad: _bottomBannerAd!),
-                  alignment: Alignment.center,
+                child: Center(
+                  child: SizedBox(
+                    height: _bottomBannerAd!.size.height.toDouble(),
+                    width: _bottomBannerAd!.size.width.toDouble(),
+                    child: AdWidget(ad: _bottomBannerAd!),
+                  ),
                 ),
               ),
 
-            // --- MODIFICATION: Conditionally display the chat field ---
-            if (canSendMessage)
-              Stack(
-                children: [
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: ChatEditField(
-                      onTap: (v, voiceNote, image1, image2) =>
-                          _sendMessage(v, voiceNote, image1, image2),
-                    ),
+            // Input Field
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: canSendMessage
+                  ? ChatEditField(
+                onTap: (v, voiceNote, image1, image2) =>
+                    _sendMessage(v, voiceNote, image1, image2),
+              )
+                  : const SizedBox.shrink(),
+            ),
+
+            // Sending Overlay
+            if (_isSending)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withOpacity(0.5),
+                  child: const Center(
+                    child: CupertinoActivityIndicator(color: Colors.white, radius: 15),
                   ),
-                  // The overlay that shows only when sending
-                  if (_isSending)
-                    Positioned.fill(
-                      child: Container(
-                        color:Colors.black.withValues(alpha: 0.5), // Semi-transparent overlay
-                        child: Center(
-                          child: CupertinoActivityIndicator(
-                            color: Colors.white,
-                            radius: 15,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+                ),
               ),
           ],
         ),
       ),
     );
   }
+
 
 
   void _sendMessage(String v, String voiceNote, String image1, String image2) async {
@@ -298,45 +260,73 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
     }
 
     try {
-      final _user = await firebaseServices.getUserInfo();
-      firebaseServices.addAlterEgoSubMessage(
-          widget.documentID!,
-          widget.chatRoomPodo!,
-          ChatModel(
-              message: v,
-              userId: _user.userId,
-              timeCreated: Timestamp.now(),
-              audioUrl: voiceNote,
-              image1: image1,
-              image2: image2,
-              members: [_user.userId]));
-      updateDiaryroomTimeLastActivity(widget.documentID!, widget.chatRoomPodo!);
+      final _user = await firebaseServices.getUserWithId(id: currentUser!.uid);
 
-      await firebaseServices.saveUserActivity(
-        activityType: 'room_join',
-        activityMessage: "You messaged a corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}'.",
-        sessionId: widget.chatRoomPodo?.id.toString(),
+      // Determine if we are in the Admin Portal room
+      final bool isAdminPortal = widget.chatRoomPodo?.id == 5;
+
+      final messageData = ChatModel(
+        message: v,
+        userId: _user.userId,
+        timeCreated: Timestamp.now(),
+        audioUrl: voiceNote,
+        image1: image1,
+        image2: image2,
+        members: [_user.userId],
+        userAvatarUrl: isAdminPortal ? "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691"
+            : (_user.avatarUrl),
+        userNickname: isAdminPortal ? "Claire" : (_user.alterEgoId ?? 'An Alter Ego'),
+        userType: _user.userType,
+        alterEgoId: _user.alterEgoId,
       );
 
-      // --- NOTIFY ALL MEMBERS IN THE ALTER EGO CORNER ---
-      final visitorNickname = _user.alterEgoId;
-      final title = "New Message in ${widget.chatModel?.message ?? 'an Alter Ego Corner'}!";
-      final body = "${visitorNickname ?? 'An Alter Ego'} dropped a message in a corner you're in.";
+      if (isAdminPortal) {
+        // 1. Redirect to public sub-message method using the public room path (ID -1)
+        firebaseServices.addSubMessage(
+            widget.documentID!,
+            ChatRoomPodo(id: -1, title: "Chat Or Eavesdrop Inside Claire's DM", image: ""),
+            messageData
+        );
+
+        // 2. Update activity specifically for Admin action
+        await firebaseServices.saveUserActivity(
+          activityType: 'dm_reply',
+          activityMessage: "You replied as Claire inside Claire's DM.",
+          sessionId: "-1",
+        );
+      } else {
+        // Standard Alter Ego behavior
+        firebaseServices.addAlterEgoSubMessage(
+            widget.documentID!,
+            widget.chatRoomPodo!,
+            messageData);
+
+        await firebaseServices.saveUserActivity(
+          activityType: 'room_join',
+          activityMessage: "You messaged a corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
+          sessionId: widget.chatRoomPodo?.id.toString(),
+        );
+      }
+
+      updateDiaryroomTimeLastActivity(widget.documentID!, widget.chatRoomPodo!);
+
+      // --- NOTIFICATION LOGIC ---
+      final visitorNickname = isAdminPortal ? "Claire" : _user.alterEgoId;
+      final title = "Message from ${isAdminPortal ? 'Claire' : 'an Alter Ego'}!";
+      final body = "${visitorNickname ?? 'An Ego'} dropped a message in a corner you're in.";
+
       final routeData = {
-        'route': 'alterEgoDiaryRooms',
-        'roomId': widget.chatRoomPodo!.id.toString(),
+        'route': isAdminPortal ? 'diaryRooms' : 'alterEgoDiaryRooms',
+        'roomId': isAdminPortal ? '-1' : widget.chatRoomPodo!.id.toString(),
         'cornerId': widget.documentID,
       };
 
-      // Use a Set to gather unique member IDs
       final memberIds = widget.chatModel?.members?.toSet() ?? {};
-      // Also include the corner owner if they are not already in members list
       if (widget.chatModel?.userId != null) {
         memberIds.add(widget.chatModel!.userId!);
       }
 
       for (String memberId in memberIds) {
-        // Don't send a notification to the user who sent the message
         if (memberId == _user.userId) continue;
 
         try {
@@ -350,17 +340,16 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
             });
           }
         } catch (e) {
-          print("Error sending notification to member $memberId: $e");
+          debugPrint("Error sending notification: $e");
         }
       }
-      showToast(message: 'Message Sent. Remember, positive vibes only.');
+
+      showToast(message: isAdminPortal ? 'Replied as Claire.' : 'Message Sent.');
 
     } catch (e) {
-      // Handle any potential errors
-      print("Error sending message in Alter Ego corner: $e");
-      showToast(message: "Failed to send message. Please try again.");
+      debugPrint("Error in _sendMessage: $e");
+      showToast(message: "Failed to send message.");
     } finally {
-      // --- HIDE LOADER (GUARANTEED) ---
       if (mounted) {
         setState(() {
           _isSending = false;

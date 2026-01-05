@@ -18,7 +18,8 @@ class AlterEgoChatMessageBubble extends StatelessWidget {
   final String timeAgo;
   final bool isMe;
   final VoidCallback onAvatarTap;
-  final VoidCallback? onDelete; // Make onDelete optional
+  final VoidCallback? onDelete;
+  final bool showId; // ADDED
 
   const AlterEgoChatMessageBubble({
     Key? key,
@@ -28,7 +29,8 @@ class AlterEgoChatMessageBubble extends StatelessWidget {
     required this.timeAgo,
     required this.isMe,
     required this.onAvatarTap,
-    this.onDelete, // It's nullable, will be provided only if the user can delete.
+    this.onDelete,
+    this.showId = false, // ADDED
   }) : super(key: key);
 
   @override
@@ -63,9 +65,23 @@ class AlterEgoChatMessageBubble extends StatelessWidget {
                 // Sender's Alter Ego name
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
-                  child: Text(
-                    senderName,
-                    style: GoogleFonts.lato(fontSize: 13.0, color: Colors.white, fontWeight: FontWeight.w800),
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        senderName,
+                        style: GoogleFonts.lato(fontSize: 13.0, color: Colors.white, fontWeight: FontWeight.w800),
+                      ),
+                      // Only show ID if showId is true
+                      if (showId)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4.0),
+                          child: Text(
+                            "(${chatModel.alterEgoId ?? 'empty'})",
+                            style: GoogleFonts.lato(fontSize: 10.0, color: Colors.white70, fontWeight: FontWeight.w400),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 // The main message bubble

@@ -47,9 +47,8 @@ class _InsideInsideInsideAlterEgoChatWidgetState
   }
 
   Future<Map<String, UserModel?>> _fetchUsers() async {
-    final sender =
-    await firebaseServices.getUserWithId(id: widget.chatModel!.userId);
-    final me = await firebaseServices.getUserInfo();
+    final sender = await firebaseServices.getUserWithId(id: widget.chatModel!.userId);
+    final me = await firebaseServices.getUserWithId(id: currentUser!.uid);
     return {'sender': sender, 'me': me};
   }
 
@@ -85,14 +84,44 @@ class _InsideInsideInsideAlterEgoChatWidgetState
         // Check if the current user can delete the message
         final bool canDelete = me.userType == "SUPER_ADMIN";
 
-        // --- THE UI TRANSFORMATION ---
-        // Delegate all UI rendering to the new bubble widget
+        // --- IDENTITY LOGIC ---
+        final bool isAdminPortal = widget.chatRoomPodo?.id == 5;
+
+        // Check if the sender of THIS SPECIFIC MESSAGE is an admin
+        final bool isMessageFromAdmin = widget.chatModel?.userType == "ADMIN" ||
+            widget.chatModel?.userType == "SUPER_ADMIN";
+
+        const String claireAvatar = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691";
+
+        // 1. Determine Display Name
+        String displayName;
+        if (isAdminPortal && isMessageFromAdmin) {
+          displayName = 'Claire';
+        } else {
+          // Priority: 1. Stored Nickname (from Public side) -> 2. AlterEgoId -> 3. Fallback
+          displayName = widget.chatModel?.userNickname ??
+              sender.alterEgoId ??
+              sender.nickname ??
+              'An Ego';
+        }
+
+        // 2. Determine Display Avatar
+        String displayAvatar;
+        if (isAdminPortal && isMessageFromAdmin) {
+          displayAvatar = claireAvatar;
+        } else {
+          // Use stored avatar if available, otherwise fallback to live profile
+          displayAvatar = widget.chatModel?.userAvatarUrl ??
+              sender.avatarUrl ??
+              '';
+        }
         return AlterEgoChatMessageBubble(
           chatModel: widget.chatModel!,
-          senderName: sender.alterEgoId ?? 'An Alter Ego',
-          senderAvatarUrl: sender.avatarUrl ?? '',
+          senderName: displayName,
+          senderAvatarUrl: displayAvatar,
           timeAgo: timeAgo,
           isMe: isMe,
+          showId: isAdminPortal,
           onAvatarTap: () => _handleAvatarTap(context, sender, me),
           onDelete: canDelete
               ? () => showCustomDialog(context,
@@ -101,8 +130,10 @@ class _InsideInsideInsideAlterEgoChatWidgetState
                 PageRouter.goBack(context);
                 deleteAlterEgoSubChat();
               })
-              : null, // Pass null if user can't delete
+              : null,
         );
+
+
       },
     );
   }
@@ -181,7 +212,7 @@ class _InsideInsideInsideAlterEgoChatWidgetState
   Future<void> deleteAlterEgoSubChat() async {
     try {
       final collection = FirebaseFirestore.instance
-          .collection("alterEgoSubChats")
+          .collection("alterEgoChats")
           .doc(widget.chatRoomPodo!.id.toString())
           .collection(widget.chatModel!.sessionId!);
       await collection.doc(widget.documentID).delete();

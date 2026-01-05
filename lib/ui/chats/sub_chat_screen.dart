@@ -49,7 +49,6 @@ class _SubChatScreenState extends State<SubChatScreen> {
   List<Temp> _chatList = [];
   bool _isSending = false;
   User? currentUser = FirebaseAuth.instance.currentUser;
-  bool _isUserAdmin = false;
 
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
@@ -72,7 +71,6 @@ class _SubChatScreenState extends State<SubChatScreen> {
       final user = await firebaseServices.getUserWithId(id: currentUser!.uid);
       if (mounted) {
         setState(() {
-          _isUserAdmin = user.userType == "ADMIN" || user.userType == "SUPER_ADMIN";
         });
       }
     } catch (e) {
@@ -166,15 +164,14 @@ class _SubChatScreenState extends State<SubChatScreen> {
     // --- LOGIC FOR HIDING CHAT FIELD ---
     // 1. Check if this is the special "Eavesdrop" room.
     final bool isEavesdropRoom =
-        widget.chatRoomPodo?.title == "One On One Eavedrop With ClAIre";
+        widget.chatRoomPodo?.title == "Chat Or Eavesdrop Inside Claire's DM";
 
     // 2. Check if the current user is the owner of this corner.
     final bool isCornerOwner = currentUser?.uid == widget.chatModel?.userId;
 
     // The user can send messages if it's NOT an eavesdrop room,
     // OR if they ARE the corner owner,
-    // OR if they ARE an admin/super admin.
-    final bool canSendMessage = !isEavesdropRoom || isCornerOwner || _isUserAdmin;
+    final bool canSendMessage = !isEavesdropRoom || isCornerOwner;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -182,118 +179,84 @@ class _SubChatScreenState extends State<SubChatScreen> {
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: HexColor.fromHex(widget.chatModel!.colorHex!),
-        title: Text(widget.chatModel!.message ?? 'Diary Room'),
+        title: Text(widget.chatModel!.userNickname ?? 'Room Corner'),
         elevation: 0,
       ),
       body: SafeArea(
         child: Stack(
           children: [
-            ListView(
-              children: [
-                AnimationLimiter(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: BouncingScrollPhysics(
-                        parent: NeverScrollableScrollPhysics()),
-                    itemCount: 1,
-                    itemBuilder: (BuildContext c, int i) {
-                      return AnimationConfiguration.staggeredList(
-                        position: i,
-                        delay: Duration(milliseconds: 500),
-                        child: SlideAnimation(
-                          duration: Duration(milliseconds: 2500),
-                          curve: Curves.fastLinearToSlowEaseIn,
-                          horizontalOffset: 30,
-                          verticalOffset: 300.0,
-                          child: FlipAnimation(
-                            duration: Duration(milliseconds: 3000),
-                            curve: Curves.fastLinearToSlowEaseIn,
-                            flipAxis: FlipAxis.y,
-                            child: StreamBuilder(
-                              stream: firebaseServices.getSubMessages(
-                                  widget.documentID!,
-                                  widget.chatRoomPodo,
-                                  widget.chatModel!),
-                              builder: (context,
-                                  AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
-                                  snapShot) {
-                                if (snapShot.hasData) {
-                                  _chatList.clear();
-                                  snapShot.data!.docs
-                                      .map((e) => _chatList.add(Temp(
-                                      e.id, ChatModel.fromJson(e.data()))))
-                                      .toList();
-                                  return Column(
-                                    children: [
-                                      InsideInsideChatWidget(
-                                          documentID: widget.documentID,
-                                          chatModel: widget.chatModel,
-                                          chatRoomPodo: widget.chatRoomPodo),
-                                      ..._chatList
-                                          .map((element) =>
-                                          InsideInsideInsideChatWidget(
-                                            documentID: element.id,
-                                            chatModel: element.chatModel,
-                                            chatRoomPodo: widget.chatRoomPodo,
-                                          ))
-                                          .toList(),
-                                    ],
-                                  );
-                                }
-                                return Container();
-                              },
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                SizedBox(height: 120),
-              ],
+            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: firebaseServices.getSubMessages(
+                  widget.documentID!,
+                  widget.chatRoomPodo,
+                  widget.chatModel!),
+              builder: (context, snapShot) {
+                if (!snapShot.hasData) {
+                  return const Center(child: CupertinoActivityIndicator());
+                }
+
+                final docs = snapShot.data!.docs;
+
+                return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 150), // Space for ads/input
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: docs.length + 1, // +1 for the header corner
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      // The original corner message
+                      return InsideInsideChatWidget(
+                          documentID: widget.documentID,
+                          chatModel: widget.chatModel,
+                          chatRoomPodo: widget.chatRoomPodo);
+                    }
+
+                    // The replies
+                    final doc = docs[index - 1];
+                    final chatData = ChatModel.fromJson(doc.data());
+
+                    return InsideInsideInsideChatWidget(
+                      documentID: doc.id,
+                      chatModel: chatData,
+                      chatRoomPodo: widget.chatRoomPodo,
+                    );
+                  },
+                );
+              },
             ),
+
+            // --- Banner Ads and Input Field remain in the Stack ---
             if (_bottomBannerAd != null && _isBannerAdInitialized)
               Positioned(
                 bottom: 60,
                 left: 0,
                 right: 0,
-                child: Container(
+                child: SizedBox(
                   height: _bottomBannerAd!.size.height.toDouble(),
-                  width: _bottomBannerAd!.size.width.toDouble(),
                   child: AdWidget(ad: _bottomBannerAd!),
-                  alignment: Alignment.center,
                 ),
               ),
 
-            // --- MODIFICATION: Conditionally display the chat field ---
-            if (canSendMessage)
-              Stack(
-                children: [
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: ChatEditField(
-                      onTap: (v, voiceNote, image1, image2) =>
-                          _sendMessage(v, voiceNote, image1, image2),
-                    ),
-                  ),
-                  // The overlay that shows only when sending
-                  if (_isSending)
-                    Positioned.fill(
-                      child: Container(
-                        color:Colors.black.withValues(alpha: 0.5), // Semi-transparent overlay
-                        child:  Center(
-                          child: CupertinoActivityIndicator(
-                            color: Colors.white,
-                            radius: 15,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: canSendMessage
+                  ? ChatEditField(
+                onTap: (v, voiceNote, image1, image2) =>
+                    _sendMessage(v, voiceNote, image1, image2),
+              )
+                  : const SizedBox.shrink(),
+            ),
+
+            if (_isSending)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withOpacity(0.5),
+                  child: const Center(child: CupertinoActivityIndicator(color: Colors.white)),
+                ),
               ),
           ],
         ),
       ),
+
     );
   }
 
@@ -301,31 +264,28 @@ class _SubChatScreenState extends State<SubChatScreen> {
 
 
   void _sendMessage(String v, String voiceNote, String image1, String image2) async {
-    // --- Prevent sending if already processing or if content is empty ---
-    if (_isSending || (v.isEmpty && voiceNote.isEmpty && image1.isEmpty && image2.isEmpty)) {
-      return;
-    }
+    if (_isSending || (v.isEmpty && voiceNote.isEmpty && image1.isEmpty && image2.isEmpty)) return;
 
-    // --- Show loader ---
-    if (mounted) {
-      setState(() {
-        _isSending = true;
-      });
-    }
+    if (mounted) setState(() => _isSending = true);
+
     try {
-      final _user = await firebaseServices.getUserInfo();
+      final _user = await firebaseServices.getUserWithId(id: currentUser!.uid);
 
-      // Create the chat model to be sent
       final newChatMessage = ChatModel(
-          message: v,
-          userId: _user.userId,
-          timeCreated: Timestamp.now(),
-          audioUrl: voiceNote,
-          image1: image1,
-          image2: image2,
-          members: [_user.userId]);
+        message: v,
+        userId: _user.userId,
+        userNickname: _user.nickname,
+        userAvatarUrl: _user.avatarUrl,
+        timeCreated: Timestamp.now(),
+        audioUrl: voiceNote,
+        image1: image1,
+        image2: image2,
+        members: [_user.userId],
+        userType: _user.userType,
+        alterEgoId: _user.alterEgoId,
+      );
 
-      // Send the message to Firestore
+
       firebaseServices.addSubMessage(
           widget.documentID!,
           widget.chatRoomPodo!,

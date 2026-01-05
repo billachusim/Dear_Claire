@@ -23,6 +23,8 @@ class ChatModel {
   String? image1;
   String? image2;
   String? location;
+  String? userType;
+  String? alterEgoId;
   List<dynamic>? members;
   Map<String, dynamic>? subMessage;
 
@@ -51,12 +53,17 @@ class ChatModel {
       this.image1,
       this.image2,
       this.location,
+      this.userType,
+      this.alterEgoId,
       });
 
   ChatModel.fromJson(Map<String, dynamic> json) {
     if (json['imageUrls'] != null) {
       imageUrls = json['imageUrls'].cast<String>();
     }
+
+    userType = json['userType'];
+    alterEgoId = json['alterEgoId'];
 
     repliesEnabled = json['repliesEnabled'];
     if (json['respondentUserId'] != null) {
@@ -113,6 +120,9 @@ class ChatModel {
     if (moodId != null) {
       data['moodId'] = moodId;
     }
+
+    data['userType'] = userType;
+    data['alterEgoId'] = alterEgoId;
 
     if (location != null) {
       data['location'] = location;

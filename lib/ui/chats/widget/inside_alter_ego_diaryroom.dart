@@ -6,6 +6,7 @@ import 'package:clairediary/ui/chats/data/chats.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/widgets/chat_edit_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -40,6 +41,7 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
   _AlterEgoChatScreenState(this.chatRoomPodo);
   bool _isSending = false;
   List<Temp> _chatList = [];
+  User? currentUser = FirebaseAuth.instance.currentUser;
 
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
@@ -272,20 +274,26 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
     });
 
     try {
-      final _user = await firebaseServices.getUserInfo();
+      final _user = await firebaseServices.getUserWithId(id: currentUser!.uid);
 
       // --- 1. ADD THE ALTER EGO CORNER (MESSAGE) ---
       firebaseServices.addAlterEgoMessage(
           chatRoomPodo!,
           ChatModel(
-              message: v,
-              colorHex: chatRoomPodo!.hex,
-              userId: _user.userId,
-              timeCreated: Timestamp.now(),
-              audioUrl: voiceNote,
-              image1: image1,
-              image2: image2,
-              members: [_user.userId]));
+            message: v,
+            colorHex: widget.chatRoomPodo.hex,
+            userId: _user.userId,
+            userNickname: _user.nickname,
+            userAvatarUrl: _user.avatarUrl,
+            timeCreated: Timestamp.now(),
+            audioUrl: voiceNote,
+            image1: image1,
+            image2: image2,
+            members: [_user.userId],
+            userType: _user.userType,
+            alterEgoId: _user.alterEgoId,
+          )
+      );
 
       // --- 2. SAVE USER ACTIVITY ---
       await firebaseServices.saveUserActivity(
