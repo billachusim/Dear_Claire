@@ -96,6 +96,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.4
 
 flutter_launcher_icons:
   android: "launcher_icon"
@@ -104,6 +105,11 @@ flutter_launcher_icons:
   image_path: "assets/images/iconWhitePetal.png"
   adaptive_icon_background: "#000000"
   adaptive_icon_foreground: "assets/images/iconWhitePetal.png"
+
+flutter_native_splash:
+  image: "assets/images/iconWhitePetal.png"
+  ios: true
+  android: true
 
 flutter:
   uses-material-design: true
