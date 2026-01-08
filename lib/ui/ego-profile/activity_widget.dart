@@ -205,6 +205,8 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
       case 'cash_out': return 'Cashing Out';
       case 'mantra': return 'Whispering Mantra';
       case 'monitor': return 'Monitoring Spirit';
+      case 'dm_reply': return 'Replying DMs';
+
 
     // Add cases for the new raw reaction values
       case 'Cheers👍':

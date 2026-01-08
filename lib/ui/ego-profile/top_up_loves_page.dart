@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../controllers/iap_controller.dart';
 import '../../utils/color.dart';
-import '../../utils/strings.dart';
 import '../visited_user_ego_page/visited_user_claireloves.dart';
 
 class TopUpLovesPage extends StatefulWidget {
@@ -122,31 +121,7 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 30),
-
-                  // Donate Button (Dynamic Store Card)
-                  Obx(() {
-                    final donationProduct = iapController.products.firstWhereOrNull(
-                            (p) => p.id == AppString.product_donate_id
-                    );
-
-                    // Only show if the product was successfully fetched from the store
-                    if (donationProduct == null) return const SizedBox.shrink();
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: _buildGlassCard(
-                        icon: Icons.volunteer_activism_rounded,
-                        title: "Donate ${donationProduct.price}",
-                        subtitle: "Support the Dear Claire Project and get ${donationProduct.price} worth of Loves back to your wallet.",
-                        color: Pallet.deepGreen,
-                        onTap: () => iapController.buyProduct(donationProduct),
-                      ),
-                    );
-                  }),
-
-
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 60),
 
                   // Legal Footer
                   _buildFooter(),
@@ -255,41 +230,6 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
     );
   }
 
-  Widget _buildGlassCard({required IconData icon, required String title, required String subtitle, required Color color, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: color, size: 40),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text(subtitle, style: GoogleFonts.lato(color: Colors.white70, fontSize: 12)),
-                    ],
-                  ),
-                ),
-                Icon(Icons.arrow_forward_ios, color: Colors.white24, size: 16),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildFooter() {
     return Padding(
@@ -331,7 +271,7 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
       case 'autodiary':
         ad = {
           'title': 'Activate Monitoring Spirit',
-          'desc': 'Auto Diary, AKA Monitoring Spirit requires 1,000 Loves each time you use it, so top up loves to your wallet and unlock the magical feature of recording your diary and getting advises without touching your phone.',
+          'desc': 'Auto Diary, AKA Monitoring Spirit requires Loves each time you use it, so top up loves to your wallet and unlock the magical feature of recording your diary and getting advises without touching your phone.',
           'icon': Icons.auto_awesome,
           'color': Colors.purpleAccent
         };
