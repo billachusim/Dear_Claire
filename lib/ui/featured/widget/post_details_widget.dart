@@ -22,6 +22,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../services/data/notification_model.dart' as push_notification;
 import '../../../services/firebase_services.dart';
+import '../../../services/hidden_posts_service.dart';
 import '../../../services/native_gallery_saver.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/user_model.dart';
@@ -1251,14 +1252,20 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     }
   }
 
-  Future saveAndShare(Uint8List bytes) async {
+  Future<void> saveAndShare(Uint8List bytes) async {
     final directory = await getApplicationDocumentsDirectory();
     final image = File('${directory.path}/diary_session.png');
     image.writeAsBytesSync(bytes);
     final xFile = XFile(image.path);
     final text = '${AppString.shareHeader}\n\n${AppString.shareLink}';
-    await Share.shareXFiles([xFile], text: text);
+    await SharePlus.instance.share(
+      ShareParams(
+        text: text,
+        files: [xFile],
+      ),
+    );
   }
+
 
   /// Archive a session
 
@@ -1294,25 +1301,52 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     return value;
   }
 
-  /// Flag a session
 
-  Future<bool?> sendToFlagged() async {
-    final value = true;
-    FirebaseFirestore.instance
+/// Flag a session and hide it locally
+Future<bool?> sendToFlagged() async {
+  final sessionId = theSession?.sessionId;
+  if (sessionId == null) {
+    logger.e('Session ID is null, cannot flag post.');
+    return false;
+  }
+  final value = true;
+  try {
+    // Perform the Firestore update
+    await FirebaseFirestore.instance
         .collection('sessions')
-        .doc(theSession?.sessionId)
+        .doc(sessionId)
         .update(
       {
         "flagged": value,
       },
     );
-    logger.d('Successfully flagged a session');
-    print('Is Flagged?: $value');
-    isFlagged = value;
-    return value;
-  }
 
-  Future<bool?> removeFromFlagged() async {
+    // --- NEW: Immediately hide the post for the current user ---
+    await HiddenPostsService().hidePost(sessionId);
+    // ---------------------------------------------------------
+
+    logger.d('Successfully flagged session and hid it locally.');
+
+    if (mounted) {
+      showToast('This session has been reported and removed from your feed.');
+      // Pop the page AFTER the operations are complete
+      Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRoutes.home, (Route<dynamic> route) => false);
+    }
+    return true;
+  } catch (e) {
+    logger.e('Error flagging post: $e');
+    if (mounted) {
+      showToast('Failed to report this post. Please try again.');
+      Navigator.of(context).pop(false);
+    }
+    return false;
+  }
+}
+
+
+
+Future<bool?> removeFromFlagged() async {
     final value = false;
     FirebaseFirestore.instance
         .collection('sessions')
@@ -1322,8 +1356,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
         "flagged": value,
       },
     );
-    logger.d('Successfully changed archive');
-    print('Is Flagged?: $value');
+    logger.d('Successfully changed flag');
     isFlagged = value;
     return value;
   }

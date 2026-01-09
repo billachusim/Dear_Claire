@@ -21,6 +21,8 @@ class SignUpPage extends StatefulWidget {
 
 const int maxFailedLoadAttempts = 3;
 bool isSigningIn = false;
+bool _termsAccepted = false;
+
 
 class _SignUpPage extends State<SignUpPage> {
   TextEditingController _emailController = TextEditingController();
@@ -239,15 +241,16 @@ class _SignUpPage extends State<SignUpPage> {
   }
 
   Widget _buildCreateEgoButton() {
-    // Re-using your original logic but applying the new button style
     return GestureDetector(
       onTap: () async {
-        if (isSigningIn) return;
+        // Disable tap if terms are not accepted or if already signing in
+        if (isSigningIn || !_termsAccepted) return;
+
         if (_formKey.currentState!.validate()) {
           setState(() {
             isSigningIn = true;
           });
-          // Your existing firebase call
+
           await _firebaseServices.register(
             context,
             _emailController.text,
@@ -255,10 +258,11 @@ class _SignUpPage extends State<SignUpPage> {
             _egoNameController.text,
             referredBy: _referralController.text.trim(),
           );
-          // Ad logic as per your original file
+
           Future.delayed(Duration(seconds: 4), () {
             _showInterstitialAd();
           });
+
           if (mounted) {
             setState(() {
               isSigningIn = false;
@@ -272,7 +276,7 @@ class _SignUpPage extends State<SignUpPage> {
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          color: Pallet.colorWhite,
+          color: _termsAccepted ? Pallet.colorWhite : Pallet.colorWhite.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(30),
         ),
         child: Center(
@@ -301,31 +305,69 @@ class _SignUpPage extends State<SignUpPage> {
   Widget _buildTermsAndPolicyText() {
     return Column(
       children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Theme(
+              data: ThemeData(
+                unselectedWidgetColor: Pallet.colorWhite.withValues(alpha: 0.7),
+              ),
+              child: Checkbox(
+                value: _termsAccepted,
+                onChanged: (bool? value) {
+                  setState(() {
+                    _termsAccepted = value ?? false;
+                  });
+                },
+                checkColor: Pallet.colorPrimary,
+                activeColor: Pallet.colorWhite,
+              ),
+            ),
+            Flexible(
+              child: Text.rich(
+                TextSpan(
+                  text: "I agree to Dear Claire's ",
+                  style: GoogleFonts.lato(
+                    fontSize: 13.0,
+                    color: Pallet.colorWhite.withValues(alpha: 0.7),
+                  ),
+                  children: [
+                    WidgetSpan(
+                      child: GestureDetector(
+                        onTap: _launchClairePolicySite,
+                        child: Text(
+                          "Terms & Policy",
+                          style: GoogleFonts.lato(
+                            fontSize: 13.0,
+                            color: Pallet.colorWhite,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Pallet.colorWhite,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 4),
         Text(
-          "By tapping Create Ego, you are accepting Dear Claire's Terms Of Use and Privacy Policy",
+          "By creating an account, you agree to our Terms of Use. You confirm that you will not post objectionable content, such as nudity, hate speech, or spam, and you understand that abusive users will be banned.",
           textAlign: TextAlign.center,
           style: GoogleFonts.lato(
             fontSize: 12.0,
             color: Pallet.colorWhite.withValues(alpha: 0.7),
+            height: 1.4,
           ),
         ),
-        SizedBox(height: 8),
-        GestureDetector(
-          onTap: _launchClairePolicySite,
-          child: Text(
-            "Tap to view Terms & Policy",
-            style: GoogleFonts.lato(
-              fontSize: 12.0,
-              color: Pallet.colorWhite,
-              fontWeight: FontWeight.bold,
-              decoration: TextDecoration.underline,
-              decorationColor: Pallet.colorWhite,
-            ),
-          ),
-        ),
+
       ],
     );
   }
+
 }
 
 

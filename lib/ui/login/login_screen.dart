@@ -96,48 +96,92 @@ class _LoginPage extends State<LoginPage> {
 
   Future<void> _showForgotEgoCodeDialog() async {
     final TextEditingController _dialogEmailController = TextEditingController();
+    if (_emailController.text.isNotEmpty) {
+      _dialogEmailController.text = _emailController.text;
+    }
+
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Pallet.colorSecondaryDark.withValues(alpha: 0.95),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-          title: Text(
-            AppString.retrieve_ego_code_header,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.lato(color: Pallet.colorWhite, fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "Enter your email to request your code.",
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            bool isSending = false;
+
+            return AlertDialog(
+              backgroundColor: Pallet.colorSecondaryDark.withOpacity(0.95),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+              title: Text(
+                AppString.retrieve_ego_code_header,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.8), fontSize: 14),
+                style: GoogleFonts.lato(color: Pallet.colorWhite, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 20),
-              _buildDialogTextField(_dialogEmailController),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel', style: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.7))),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: Text('Request Code', style: GoogleFonts.lato(color: Pallet.colorWhite, fontWeight: FontWeight.bold)),
-              onPressed: () {
-                if (_dialogEmailController.text.isNotEmpty && _dialogEmailController.text.contains('@')) {
-                  _theEmail = _dialogEmailController.text;
-                  launchEmailApp();
-                  Navigator.of(context).pop();
-                } else {
-                  showToast("Please enter a valid email");
-                }
-              },
-            ),
-          ],
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "How would you like to retrieve your Ego Code?",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.8), fontSize: 14),
+                  ),
+                  SizedBox(height: 20),
+                  _buildDialogTextField(_dialogEmailController),
+                  SizedBox(height: 10),
+                  Text(
+                    "Enter the email you used for your Ego.",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.6), fontSize: 12),
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Ask Claire', style: GoogleFonts.lato(color: Pallet.colorWhite.withOpacity(0.7))),
+                  onPressed: () {
+                    if (_dialogEmailController.text.isNotEmpty && _dialogEmailController.text.contains('@')) {
+                      _theEmail = _dialogEmailController.text;
+                      launchEmailApp();
+                      Navigator.of(context).pop();
+                    } else {
+                      showToast("Please enter your email first");
+                    }
+                  },
+                ),
+                TextButton(
+                  child: isSending
+                      ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Pallet.colorWhite),
+                    ),
+                  )
+                      : Text('Request Reset Link', style: GoogleFonts.lato(color: Pallet.colorWhite, fontWeight: FontWeight.bold)),
+                  onPressed: () async {
+                    if (isSending) return;
+
+                    final email = _dialogEmailController.text.trim();
+                    if (email.isNotEmpty && email.contains('@')) {
+                      setDialogState(() {
+                        isSending = true;
+                      });
+
+                      await _firebaseServices.sendPasswordResetEmail(email);
+
+                      showToast("Check your email Inbox or Spam folder for the password reset link.");
+
+                      if (mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    } else {
+                      showToast("Please enter a valid email");
+                    }
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -195,14 +239,14 @@ class _LoginPage extends State<LoginPage> {
                   ),
                   SizedBox(height: 15),
                   Text(
-                    "Welcome back to your secret space.",
+                    "You'll never be not truly loved.",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.lato(fontSize: 15.0, color: Pallet.colorWhite.withValues(alpha: 0.85), fontStyle: FontStyle.italic),
                   ),
                   SizedBox(height: 40),
                   _buildTextField(
                     controller: _emailController,
-                    labelText: "Your secret email",
+                    labelText: "Your email address",
                     hintText: "Enter your registered email",
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
@@ -380,8 +424,8 @@ class _BuildSecretCodeFieldState extends State<BuildSecretCodeField> {
       },
       style: GoogleFonts.lato(color: Pallet.colorWhite),
       decoration: InputDecoration(
-        labelText: "Your secret code",
-        hintText: "At least 6 characters",
+        labelText: "Your ego code",
+        hintText: "AKA password, min of 6 characters",
         labelStyle: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.7)),
         hintStyle: GoogleFonts.lato(color: Pallet.colorWhite.withValues(alpha: 0.5)),
         suffixIcon: IconButton(

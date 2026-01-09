@@ -1072,7 +1072,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
   featureAlertDialog(BuildContext context) {
     // set up the buttons
     Widget cancelButton = TextButton(
-      child: Text("TopUp Love"),
+      child: Text("Top Up Love"),
       onPressed: () {
         Navigator.pop(context); // Close the dialog
         PageRouter.gotoWidget(const TopUpLovesPage(), context);

@@ -26,6 +26,7 @@ import 'package:clairediary/widgets/toast.dart';
 import 'package:hive/hive.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 import '../../data/models/transaction_model.dart' as t_model;
 import '../../services/notification_service.dart';
@@ -835,15 +836,34 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         color: Pallet.colorWhite,
                       ),
                       onPressed: () async {
-                        var data = await Navigator.push(
+                        var status = await Permission.microphone.request();
+
+                        // 2. Check the permission status
+                        if (status.isGranted) {
+                          // Permission is granted, proceed to the recorder
+                          if (!mounted) return;
+                          var data = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => SoundRecorderWidget(
-                                      onRecordComplete: (recordFile) {},
-                                    )));
-                        if (data != null) {
-                          recordFile = data;
-                          setState(() {});
+                              builder: (_) => SoundRecorderWidget(
+                                onRecordComplete: (recordFile) {},
+                              ),
+                            ),
+                          );
+                          if (data != null) {
+                            setState(() {
+                              recordFile = data;
+                            });
+                          }
+                        } else if (status.isPermanentlyDenied) {
+                          // Permission is permanently denied, show a dialog to open settings
+                          showToast(
+                              'Microphone permission is required to record audio. Please enable it in your phone settings.');
+                          await openAppSettings();
+                        } else {
+                          // Permission was denied, but not permanently.
+                          showToast(
+                              'Microphone permission is required to record audio.');
                         }
                       },
                     )),

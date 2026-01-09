@@ -8,6 +8,7 @@ import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../services/hidden_posts_service.dart';
 import '../../utils/strings.dart';
 import '../Search/custom_search_card.dart';
 import '../featured/model/session.dart';
@@ -15,25 +16,46 @@ import '../../widgets/ego_mode_session_card.dart';
 
 
 /// First class is the featured sessions
+class TheFeaturedSessions extends StatefulWidget {
+  final ScrollController? scrollController;
 
-class TheFeaturedSessions extends StatelessWidget {
-  final ScrollController? scrollController; // Add this line
+  const TheFeaturedSessions({Key? key, this.scrollController}) : super(key: key);
 
-  TheFeaturedSessions({Key? key, this.scrollController}) : super(key: key); // Update constructor
+  @override
+  State<TheFeaturedSessions> createState() => _TheFeaturedSessionsState();
+}
 
-  User? currentUser = FirebaseAuth.instance.currentUser;
-  final List<Session>? _sessionList = [];
+class _TheFeaturedSessionsState extends State<TheFeaturedSessions> {
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+  final HiddenPostsService _hiddenPostsService = HiddenPostsService();
+  List<String> _hiddenPostIds = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHiddenPosts();
+  }
+
+  // Fetches the list of hidden IDs from local storage
+  Future<void> _loadHiddenPosts() async {
+    final ids = await _hiddenPostsService.getHiddenPostIds();
+    if (mounted) {
+      setState(() {
+        _hiddenPostIds = ids;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Expanded( // Keep Expanded so it fills the remaining screen
+    return Expanded(
       child: StreamBuilder(
         stream: firebaseServices.getFeaturedSession(),
         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
           if (session.connectionState == ConnectionState.waiting) {
             return RotateImage(70, 70);
           }
-          if (!session.hasData) {
+          if (!session.hasData || session.data!.docs.isEmpty) {
             return Center(
               child: Text("No Session data",
                   style: GoogleFonts.lato(
@@ -43,18 +65,35 @@ class TheFeaturedSessions extends StatelessWidget {
             );
           }
 
-          _sessionList!.clear();
-          session.data!.docs.forEach((e) {
-            _sessionList!.add(Session.fromJson(e.data() as Map<String, dynamic>));
-          });
+          // --- FILTERING LOGIC ---
+          // 1. Convert docs to Session objects
+          final allSessions = session.data!.docs.map((e) {
+            return Session.fromJson(e.data() as Map<String, dynamic>);
+          }).toList();
+
+          // 2. Filter out the hidden sessions
+          final filteredSessions = allSessions.where((s) {
+            return !_hiddenPostIds.contains(s.sessionId);
+          }).toList();
+          // --- END FILTERING LOGIC ---
+
+          if (filteredSessions.isEmpty) {
+            return Center(
+              child: Text("No new sessions to show.",
+                  style: GoogleFonts.lato(
+                      fontSize: 15.0,
+                      color: Pallet.colorBlack,
+                      fontWeight: FontWeight.w600)),
+            );
+          }
 
           return Scrollbar(
-            child: ListView.builder( // Switched to .builder for better performance
-              controller: scrollController, // Hook into the parent's controller
-              itemCount: _sessionList!.length,
+            child: ListView.builder(
+              controller: widget.scrollController,
+              itemCount: filteredSessions.length,
               itemBuilder: (context, index) {
                 return EgoModeSessionCard(
-                  element: _sessionList![index],
+                  element: filteredSessions[index],
                   visitedUsersID: '',
                   visitedEgoName: '',
                 );
@@ -66,6 +105,7 @@ class TheFeaturedSessions extends StatelessWidget {
     );
   }
 }
+
 
 
 /// This shows a notice header about featured sessions.
