@@ -224,6 +224,7 @@ class FirebaseServices extends ChangeNotifier {
         'loveSentForThanks': FieldValue.increment(forThanks),
         'loveSentForReactions': FieldValue.increment(forReactions),
         'loveSentForVisits': FieldValue.increment(forProfileVisits),
+        'forLoveStore': FieldValue.increment(forLoveStore),
       });
 
       // 2. Credit the receiver (current and total loves)
@@ -235,15 +236,17 @@ class FirebaseServices extends ChangeNotifier {
         'loveFromThanks': FieldValue.increment(fromThanks),
         'loveFromReactions': FieldValue.increment(fromReactions),
         'profileVisitLove': FieldValue.increment(fromProfileVisits),
+        'fromLoveStore': FieldValue.increment(fromLoveStore),
       });
 
       // 3. Immediately credit Claire's treasury with the tax (current and total loves)
       await claireDoc.update({
         'currentLoveCount': FieldValue.increment(taxAmount),
         'totalLoveCount': FieldValue.increment(taxAmount),
-        'loveFromThanks': FieldValue.increment(fromThanks),
-        'fromRoomVisits': FieldValue.increment(fromRoomVisits),
+        'loveFromThanks': FieldValue.increment(taxAmount),
+        'fromRoomVisits': FieldValue.increment(taxAmount),
         'fromLoveTransfer': FieldValue.increment(taxAmount),
+        'fromLoveStore': FieldValue.increment(taxAmount),
       });
 
       // If the transaction is successful, record the individual transaction logs.

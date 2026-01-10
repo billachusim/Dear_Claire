@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 import 'dart:async';
 import 'package:clairediary/ui/ego-profile/top_up_loves_page.dart';
+import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:clairediary/ui/alter_ego/alter_ego_calls_page.dart'; // For IncomingCall model
@@ -75,6 +76,32 @@ class _HomeDashboardPageState extends State<HomePage>
   StreamSubscription? _userCallListener;
   String? _activeCallId;
   late Future<UserModel?> _egoInfoFuture;
+  Timer? _flowerTimer;
+
+  void _showFallingFlowers() {
+    // A single claire flower emoji
+    const flowerEmoji = '🌺';
+
+    final options = ConfettiOptions(
+      particleCount: 1, // Only one flower at a time
+      spread: 20,         // A bit of horizontal spread
+      startVelocity: 10,  // How fast it starts
+      gravity: 0.1,       // Makes it fall slowly
+      ticks: 6000,         // How long it stays on screen to reach the bottom
+      colors: [const Color(0xffffffff)], // Base color, not used by emoji
+    );
+
+    // Launch from Top Center
+    Confetti.launch(
+      context,
+      options: options.copyWith(x: 0.5, y: -0.1, angle: 270), // Start above the screen, angle down
+      particleBuilder: (index) => Emoji(
+        emoji: flowerEmoji,
+        textStyle: const TextStyle(fontSize: 28), // Adjust size as needed
+      ),
+    );
+  }
+
 
   late final AnimationController _controller = AnimationController(
     duration: const Duration(seconds: 15),
@@ -297,6 +324,13 @@ class _HomeDashboardPageState extends State<HomePage>
     getEgoInfo();
     _title = "Dear Claire";
     _pageController = PageController(keepPage: true);
+
+    _flowerTimer = Timer.periodic(const Duration(seconds: 45), (timer) {
+      if (mounted) {
+        _showFallingFlowers();
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _initializeServices();
@@ -480,11 +514,13 @@ class _HomeDashboardPageState extends State<HomePage>
   @override
   void dispose() {
     _controller.dispose();
+    _flowerTimer?.cancel();
     detector.stopListening();
     if (_isFabMenuOpen) {
       _overlayEntry?.remove();
     }
     _userCallListener?.cancel();
+    _audioPlayer.dispose();
     _pageController.dispose();
     super.dispose();
   }
