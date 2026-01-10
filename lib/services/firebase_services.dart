@@ -201,6 +201,8 @@ class FirebaseServices extends ChangeNotifier {
     int fromProfileVisits = 0,
     int forLoveTransfer = 0,
     int fromLoveTransfer = 0,
+    int forLoveStore = 0,
+    int fromLoveStore = 0,
   }) async {
     const String claireId = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
     final DocumentReference senderDoc = _firebaseFirestore.collection('users').doc(senderId);
@@ -1545,8 +1547,8 @@ $motivation
       receiverTransactionDesc: "Sale of ${cartItems.length} item(s) to ${currentUserInfo.nickname}.",
       claireTransactionDesc: "Love Store Sale.",
       metadata: {'reason': 'love_store_purchase'},
-      forLoveTransfer: totalLove, // Stat for sender
-      fromLoveTransfer: totalLove, // Stat for receiver
+      forLoveStore: totalLove,
+      fromLoveStore: totalLove,
     );
 
     if (!transactionSuccess) {

@@ -448,7 +448,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 13.7.0;
+				MARKETING_VERSION = 13.8.0;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.socialfaculty.claire;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -603,7 +603,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 13.7.0;
+				MARKETING_VERSION = 13.8.0;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.socialfaculty.claire;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -639,7 +639,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 13.7.0;
+				MARKETING_VERSION = 13.8.0;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.socialfaculty.claire;
 				PRODUCT_NAME = "$(TARGET_NAME)";

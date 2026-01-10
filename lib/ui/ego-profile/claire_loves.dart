@@ -58,6 +58,8 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
   int _loveSentForReactions = 0;
   int _forLoveTransfer = 0;
   int _fromLoveTransfer = 0;
+  int _forLoveStore = 0;
+  int _fromLoveStore = 0;
   bool _showMoreStats = false;
   bool _showAllTransactions = false;
   late String _userName;
@@ -117,6 +119,8 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
           _loveSentForReactions = data["loveSentForReactions"] ?? 0;
           _forLoveTransfer = data["forLoveTransfer"] ?? 0;
           _fromLoveTransfer = data["fromLoveTransfer"] ?? 0;
+          _forLoveStore = data["forLoveStore"] ?? 0;
+          _fromLoveStore = data["fromLoveStore"] ?? 0;
 
           _userId = data["userId"] ?? "";
           _rate = userType == 'SUPER_ADMIN'
@@ -687,14 +691,14 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
         lovePerUnit: 10,
         color: Colors.purple,
       ),
-      _buildStatCard("From Ego Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
-      _buildStatCard("For Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
       _buildStatCard("From Love Transfer", "+$_fromLoveTransfer ❤️", Colors.teal),
       _buildStatCard("For Love Transfer", "-$_forLoveTransfer ❤️", Colors.blueGrey),
     ];
 
     // A list for the stats that will be hidden initially
     final List<Widget> secondaryStats = [
+      _buildStatCard("From Ego Visits", "+$_profileVisitLove ❤️", Colors.pinkAccent),
+      _buildStatCard("For Ego Visits", "-$_loveSentForVisits ❤️", Colors.grey),
       _buildStatCard("From Game Wins", "+$fromGameWins ❤️", Colors.green),
       _buildStatCard("For Game Loses", "-$forGameLoses ❤️", Colors.red),
       _buildStatCard("From Thanks", "+$_loveFromThanks ❤️", Colors.teal),
@@ -703,6 +707,8 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
       _buildStatCard("For Room Visits", "-$_forRoomVisits ❤️", Colors.indigo),
       _buildStatCard("From Reactions", "+$_loveFromReactions ❤️", Colors.amber),
       _buildStatCard("For Reactions", "-$_loveSentForReactions ❤️", Colors.brown),
+      _buildStatCard("From Love Store", "+$_fromLoveStore ❤️", Colors.cyan),
+      _buildStatCard("For Love Store", "-$_forLoveStore ❤️", Colors.indigo),
     ];
 
     return SliverPadding(
@@ -886,7 +892,7 @@ class _ClaireLovesState extends State<ClaireLoves> with AutomaticKeepAliveClient
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             decoration: _glassDecoration(),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

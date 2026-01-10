@@ -823,7 +823,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       final int currentLoves = user.currentLoveCount ?? 0;
 
       // 2. Check for requirement
-      if (currentLoves < 2000 || currentLoves < 1000) {
+      if (currentLoves < 300) {
         showToast("Insufficient Loves to activate Monitoring Spirit.");
         Navigator.push(
           context,
@@ -832,24 +832,17 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
         return false;
       }
 
-
-      // 3. Check if they can afford the 1,000 cost
-      if (currentLoves < 1000) {
-        showToast("Insufficient Loves. Each activation costs 1,000.");
-        return false;
-      }
-
-      // 4. Deduct 1,000 Loves
+      // 3. Deduct 300 Loves
       bool success = await firebaseServices.updateTreasuryAndUser(
         userId: userId,
-        amount: 1000,
+        amount: 300,
         type: t_model.TransactionType.debit,
         userTransactionDescription: "Monitoring Spirit Service Fee",
       );
 
       if (success) {
 
-        // 5. Save User Activity as 'monitor'
+        // 4. Save User Activity as 'monitor'
         await firebaseServices.saveUserActivity(
           activityType: 'monitor',
           activityMessage: "You activated the Monitoring Spirit service.",

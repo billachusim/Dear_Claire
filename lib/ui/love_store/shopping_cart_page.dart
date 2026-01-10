@@ -5,6 +5,7 @@ import 'package:clairediary/widgets/empty_state_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'cart_item_card.dart';
 import 'cart_item_model.dart';
 
@@ -19,7 +20,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
   final FirebaseServices _firebaseServices = FirebaseServices();
   late Future<List<CartItem>> _cartItemsFuture;
   User? currentUser = FirebaseAuth.instance.currentUser;
-  bool _isCheckingOut = false; // To manage loading state
+  bool _isCheckingOut = false;
 
   @override
   void initState() {
@@ -46,6 +47,8 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
       _isCheckingOut = true;
     });
 
+    final cartItems = await _cartItemsFuture;
+
     final result = await _firebaseServices.processCheckout(currentUser!.uid);
 
     if (mounted) {
@@ -54,13 +57,45 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
       });
     }
 
-    // Show the result from the backend
     showToast(message: result);
 
-    // If checkout was successful, refresh the cart page to show it's empty
     if (result.contains("successful")) {
+      _sendCheckoutEmail(cartItems);
       _onCartUpdated();
     }
+  }
+
+  Future<void> _sendCheckoutEmail(List<CartItem> cartItems) async {
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'dearclaireapp@gmail.com',
+      query:
+          'subject=New Order&body=${_generateEmailBody(cartItems, currentUser)}',
+    );
+
+    if (await canLaunchUrl(emailLaunchUri)) {
+      await launchUrl(emailLaunchUri);
+    } else {
+      showToast(message: 'Could not launch email app');
+    }
+  }
+
+  String _generateEmailBody(List<CartItem> cartItems, User? user) {
+    if (user == null) return "No user logged in.";
+
+    final buffer = StringBuffer();
+    buffer.writeln("New order from: ${user.email}");
+    buffer.writeln("------");
+    for (var item in cartItems) {
+      buffer.writeln(
+          "${item.product.title} - Quantity: ${item.quantity} - Love: ${item.product.loveAmount}");
+    }
+    buffer.writeln("------");
+    final totalLove = cartItems.fold<int>(
+        0, (sum, item) => sum + (item.product.loveAmount ?? 0) * item.quantity);
+    buffer.writeln("Total Love: $totalLove");
+
+    return Uri.encodeComponent(buffer.toString());
   }
 
   @override
@@ -75,59 +110,59 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
       ),
       body: currentUser == null
           ? EmptyStateWidget(
-        message: "Please log in to see your cart.",
-        icon: Icons.person_off,
-        title: '',
-        buttonText: '',
-        onButtonPressed: () {},
-      )
-          : FutureBuilder<List<CartItem>>(
-        future: _cartItemsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error loading your cart.'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return EmptyStateWidget(
-              message: "Your cart is empty.",
-              icon: Icons.shopping_cart_outlined,
+              message: "Please log in to see your cart.",
+              icon: Icons.person_off,
               title: '',
               buttonText: '',
               onButtonPressed: () {},
-            );
-          }
+            )
+          : FutureBuilder<List<CartItem>>(
+              future: _cartItemsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error loading your cart.'));
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return EmptyStateWidget(
+                    message: "Your cart is empty.",
+                    icon: Icons.shopping_cart_outlined,
+                    title: '',
+                    buttonText: '',
+                    onButtonPressed: () {},
+                  );
+                }
 
-          final cartItems = snapshot.data!;
-          final totalLove = cartItems.fold<int>(
-              0,
-                  (sum, item) =>
-              sum + (item.product.loveAmount ?? 0) * item.quantity);
+                final cartItems = snapshot.data!;
+                final totalLove = cartItems.fold<int>(
+                    0,
+                    (sum, item) =>
+                        sum + (item.product.loveAmount ?? 0) * item.quantity);
 
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(8.0),
-                  itemCount: cartItems.length,
-                  itemBuilder: (context, index) {
-                    final product = cartItems[index].product;
-                    final quantity = cartItems[index].quantity;
-                    return CartItemCard(
-                      product: product,
-                      quantity: quantity,
-                      onCartUpdated: _onCartUpdated,
-                    );
-                  },
-                ),
-              ),
-              _buildCheckoutSummary(totalLove),
-            ],
-          );
-        },
-      ),
+                return Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(8.0),
+                        itemCount: cartItems.length,
+                        itemBuilder: (context, index) {
+                          final product = cartItems[index].product;
+                          final quantity = cartItems[index].quantity;
+                          return CartItemCard(
+                            product: product,
+                            quantity: quantity,
+                            onCartUpdated: _onCartUpdated,
+                          );
+                        },
+                      ),
+                    ),
+                    _buildCheckoutSummary(totalLove),
+                  ],
+                );
+              },
+            ),
     );
   }
 
@@ -137,7 +172,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
       decoration: BoxDecoration(
         color: Pallet.colorPrimary.withValues(alpha: 0.1),
         border:
-        Border(top: BorderSide(color: Pallet.colorSecondary, width: 0.5)),
+            Border(top: BorderSide(color: Pallet.colorSecondary, width: 0.5)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -147,7 +182,8 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
             children: [
               Text(
                 'Total:',
-                style: GoogleFonts.outfit(fontSize: 18, color: Colors.white70),
+                style:
+                    GoogleFonts.outfit(fontSize: 18, color: Colors.white70),
               ),
               Row(
                 children: [
@@ -169,16 +205,18 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: (_isCheckingOut || totalLove == 0) ? null : _checkout,
+              onPressed:
+                  (_isCheckingOut || totalLove == 0) ? null : _checkout,
               icon: _isCheckingOut
                   ? SizedBox(
-                width: 20,
-                height: 20,
-                child:
-                CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-              )
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
                   : Icon(Icons.lock_outline),
-              label: Text(_isCheckingOut ? 'Processing...' : 'Proceed to Checkout'),
+              label: Text(
+                  _isCheckingOut ? 'Processing...' : 'Proceed to Checkout'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Pallet.colorBlue,
                 foregroundColor: Colors.white,
