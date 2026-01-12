@@ -1,4 +1,6 @@
 import 'dart:collection';
+import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 import 'package:clairediary/ui/Categories/archive_mood_stream.dart';
 import 'package:clairediary/ui/ego-profile/archived_sessions.dart';
@@ -8,11 +10,18 @@ import 'package:clairediary/ui/featured/public_sessions.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../helpers/toast_helper.dart';
+import '../../services/firebase_services.dart';
 import '../../utils/mood.dart';
+import '../create_session/session_model.dart';
 
 class ArchiveWidget extends StatefulWidget {
   const ArchiveWidget({Key? key}) : super(key: key);
@@ -23,11 +32,26 @@ class ArchiveWidget extends StatefulWidget {
 
 class _ArchiveWidgetState extends State<ArchiveWidget> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
-
+  final FirebaseServices _firebaseServices = FirebaseServices();
+  var currentUser = FirebaseAuth.instance.currentUser;
+  var uuid = Uuid();
   final List<Session> sessions = [];
   final List<DateTime> _dateLists = [];
+  int maxFailedLoadAttempts = 3;
 
   DateTime? _focusedDay = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _createQuickInterstitialAd();
+  }
+
+  @override
+  void dispose() {
+    _quickInterstitialAd?.dispose();
+    super.dispose();
+  }
 
 
   // Using a `LinkedHashSet` is recommended due to equality comparison override
@@ -85,48 +109,279 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
     }
   }
 
+  InterstitialAd? _quickInterstitialAd;
+  int _quickInterstitialLoadAttempts = 0;
 
-  _onDateTapped(DateTime selectedDay, DateTime focusedDay) {
-    List<Session> selectedSessions = sessions.where((element) =>
-        isSameDay(element.dateTime, selectedDay)).toList();
+  // Create quick session interstitial ad.
 
-    String? suggestion;
-    if (selectedSessions.isEmpty && _dateLists.isNotEmpty) {
-      // Find the closest date with a session
-      _dateLists.sort();
-      DateTime closest = _dateLists.first;
-      int minDiff = (selectedDay
-          .difference(closest)
-          .abs()
-          .inDays);
-
-      for (var date in _dateLists) {
-        int diff = (selectedDay
-            .difference(date)
-            .abs()
-            .inDays);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closest = date;
-        }
-      }
-      suggestion =
-      "No sessions on this day. The closest date with a session is ${closest
-          .day}/${closest.month}/${closest.year}.";
-    }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            ArchivedSessions(
-              sessions: selectedSessions,
-              selectedDate: selectedDay,
-              suggestion: suggestion,
-            ),
+  void _createQuickInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/8800174899"
+          : Platform.isIOS
+          ? "ca-app-pub-2404156870680632/1147263196"
+          : '',
+      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _quickInterstitialAd = ad;
+          _quickInterstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _quickInterstitialLoadAttempts += 1;
+          _quickInterstitialAd = null;
+          if (_quickInterstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createQuickInterstitialAd();
+          }
+        },
       ),
     );
   }
+
+  void _showQuickInterstitialAd() {
+    if (_quickInterstitialAd != null) {
+      _quickInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createQuickInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createQuickInterstitialAd();
+        },
+      );
+      _quickInterstitialAd!.show();
+    }
+  }
+
+
+  _onDateTapped(DateTime selectedDay, DateTime focusedDay) {
+    List<Session> selectedSessions = _getSessionForDay(selectedDay);
+
+    if (selectedSessions.isEmpty) {
+      // If no sessions exist on this day, show the quick entry popup.
+      _showQuickEntryPopup(selectedDay);
+    } else {
+      // If sessions exist, navigate to the archived sessions page as before.
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              ArchivedSessions(
+                sessions: selectedSessions,
+                selectedDate: selectedDay,
+                suggestion: null, // No suggestion needed as sessions exist
+              ),
+        ),
+      );
+    }
+  }
+
+  // Method to create the session, adapted from create_session_page.dart
+  void _createQuickCalendarSession({
+    required String title,
+    required String message,
+    required DateTime selectedDate,
+    required int moodId, // Now required
+  }) async {
+    if (currentUser == null) return;
+
+    // Show a loading indicator or toast
+    showToast(message: "Creating quick session...");
+
+    try {
+      userModel = await _firebaseServices.getUserInfo();
+      String sessionId = uuid.v4();
+      final randomColor = Constant.DIARY_COLORS_HEXCODE[Random().nextInt(Constant.DIARY_COLORS_HEXCODE.length)];
+
+      final sessionData = CreateSessionModel(
+        sessionId: sessionId,
+        userId: userModel.userId,
+        userAvatarUrl: userModel.avatarUrl,
+        userNickname: userModel.nickname,
+        title: title,
+        message: message,
+        location: '#QuickSession',
+        featured: false,
+        private: false,
+        repliesEnabled: false,
+        timeCreated: Timestamp.now(),
+        timeLastActivity: Timestamp.now(),
+        moodId: moodId,
+        colorHex: randomColor,
+      );
+
+      await _firebaseServices.createSession(session: sessionData);
+
+      // --- ADDING THE REQUESTED METHODS ---
+
+      // 1. Update user moods
+      await _firebaseServices.updateUserMoods(moodId);
+
+      // 2. Save user activity
+      await _firebaseServices.saveUserActivity(
+        activityType: 'session',
+        activityMessage: "You started a quick diary session: '$title'.",
+        sessionId: sessionId,
+      );
+
+      // 3. Handle notifications for Claire and the user
+      if (currentUser!.displayName != null) {
+        _firebaseServices.subscribeToYourSession(currentUser!.displayName!, sessionData);
+        _firebaseServices.notifyClaireForSession(currentUser!.displayName!, sessionData);
+      }
+
+      // --- END OF ADDED METHODS ---
+
+      // Refresh the calendar data after creating the session
+      setState(() {
+        _focusedDay = selectedDate; // Focus the day where the session was added
+      });
+
+      // Pop the dialog (will pop twice: once for mood, once for main dialog)
+      Navigator.of(context).pop();
+      Navigator.of(context).pop();
+
+      showToast(message: "Quick session saved!");
+
+      // Show ad after a delay
+      Future.delayed(Duration(seconds: 2), () {
+        _showQuickInterstitialAd();
+      });
+
+    } catch (e) {
+      showToast(message: "Error: Could not save session.");
+      print("Error creating quick session: $e");
+    }
+  }
+
+
+
+  // Method to show the popup with quick entry options
+  void _showQuickEntryPopup(DateTime selectedDate) {
+    // Pre-defined templates for the popup
+    final templates = {
+      'Period Start': 'Dear Claire, my period just started today.',
+      'Period Stop': 'Dear Claire, my period ended today.',
+      'Ovulation Start': 'Dear Claire, I think I\'m ovulating today.',
+      'Ovulation Stop': 'Dear Claire, my ovulation should be over now.',
+      'Feeling Happy': 'Dear Claire, I\'m feeling genuinely happy today. 😊',
+      'Feeling Stressed': 'Dear Claire, I\'m feeling very stressed and overwhelmed today.',
+    };
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Pallet.colorSecondary.withOpacity(0.9),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: Colors.white.withOpacity(0.3)),
+          ),
+          title: Text(
+            'Add a Quick Entry',
+            style: GoogleFonts.plusJakartaSans(
+                color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: templates.entries.map((entry) {
+                return ListTile(
+                  title: Text(entry.key, style: TextStyle(color: Colors.white70)),
+                  onTap: () {
+                    // Show mood selection dialog
+                    _showMoodSelectionDialog(selectedDate, entry.key, entry.value);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // New method to show the mood selection dialog
+  void _showMoodSelectionDialog(DateTime selectedDate, String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Pallet.colorSecondary.withOpacity(0.95),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: Colors.white.withOpacity(0.3)),
+          ),
+          title: Text(
+            'How are you feeling?',
+            style: GoogleFonts.plusJakartaSans(
+                color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Container(
+            width: double.maxFinite,
+            child: GridView.builder(
+              shrinkWrap: true,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: Mood.MOODS.length,
+              itemBuilder: (context, index) {
+                Mood.MOODS.elementAt(index);
+                final moodString = Mood.getMood(index) ?? '';
+                final emoji = _getEmoji(index);
+                return GestureDetector(
+                  onTap: () {
+                    _createQuickCalendarSession(
+                      title: title,
+                      message: message,
+                      selectedDate: selectedDate,
+                      moodId: index,
+                    );
+                  },
+                  child: Tooltip(
+                    message: moodString.replaceAll(emoji, '').trim(),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          emoji,
+                          style: TextStyle(fontSize: 24),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Back', style: TextStyle(color: Colors.white)),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -257,7 +512,7 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.green.withOpacity(0.4),
+                    color: Colors.green.withValues(alpha: 0.4),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   )

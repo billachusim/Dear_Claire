@@ -252,7 +252,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   @override
   void dispose() {
-    // Clean up the focus node when the Form is disposed.
+    _interstitialAd?.dispose();
+    _quickInterstitialAd?.dispose();
     sessionTextFocusNode.dispose();
     sessionTextEditingController.dispose();
     sessionTitleController.dispose();

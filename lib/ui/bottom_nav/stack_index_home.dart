@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'dart:async';
 import 'package:clairediary/ui/ego-profile/top_up_loves_page.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:clairediary/ui/alter_ego/alter_ego_calls_page.dart'; // For IncomingCall model
 import 'package:clairediary/ui/call/incoming_call_page.dart';
@@ -53,10 +52,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomeDashboardPageState extends State<HomePage>
-    with TickerProviderStateMixin<HomePage> {
+    with TickerProviderStateMixin<HomePage>, WidgetsBindingObserver {
   var currentUser = FirebaseAuth.instance.currentUser;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late final WebViewController _webViewController; // Updated initialization
+  late final WebViewController _webViewController;
+  final AudioPlayer _audioPlayer = AudioPlayer();
   OverlayEntry? _overlayEntry;
   bool _isFabMenuOpen = false;
   final GlobalKey _fabKey = GlobalKey();
@@ -97,10 +97,39 @@ class _HomeDashboardPageState extends State<HomePage>
       options: options.copyWith(x: 0.5, y: -0.1, angle: 270), // Start above the screen, angle down
       particleBuilder: (index) => Emoji(
         emoji: flowerEmoji,
-        textStyle: const TextStyle(fontSize: 28), // Adjust size as needed
+        textStyle: const TextStyle(
+            fontSize: 28,
+          color: Color.fromRGBO(255, 255, 255, 0.2),
+        ),
       ),
     );
   }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    switch (state) {
+      case AppLifecycleState.resumed:
+      // App is visible and running: Start a new timer if one isn't active.
+        if (_flowerTimer == null || !_flowerTimer!.isActive) {
+          _flowerTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+            if (mounted) {
+              _showFallingFlowers();
+            }
+          });
+        }
+        break;
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+      // App is not visible: Cancel the timer to stop flowers from piling up.
+        _flowerTimer?.cancel();
+        break;
+      case AppLifecycleState.hidden:
+        _flowerTimer?.cancel();
+    }
+  }
+
 
 
   late final AnimationController _controller = AnimationController(
@@ -325,7 +354,7 @@ class _HomeDashboardPageState extends State<HomePage>
     _title = "Dear Claire";
     _pageController = PageController(keepPage: true);
 
-    _flowerTimer = Timer.periodic(const Duration(seconds: 45), (timer) {
+    _flowerTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       if (mounted) {
         _showFallingFlowers();
       }
@@ -397,7 +426,6 @@ class _HomeDashboardPageState extends State<HomePage>
     _loadHtmlFromAssets();
   }
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
   Future<void> _handleDrawReward() async {
     if (currentUser == null) return;
@@ -742,7 +770,6 @@ class _AppDrawer extends StatefulWidget {
 
 class _AppDrawerState extends State<_AppDrawer> {
   late final AudioPlayer _audioPlayer;
-  final User? _currentUser = FirebaseAuth.instance.currentUser;
   bool _isGameRewardProcessed = false;
 
   @override
@@ -1120,52 +1147,6 @@ class _AppDrawerState extends State<_AppDrawer> {
     );
   }
 
-  Future<void> _handleDrawReward() async {
-    if (_currentUser == null) return;
-    const int rewardAmount = 2;
-
-    // 1. Credit the user with 2 Loves
-    final bool wasApproved = await firebaseServices.updateTreasuryAndUser(
-      userId: _currentUser!.uid,
-      amount: rewardAmount,
-      type: t_model.TransactionType.credit,
-      userTransactionDescription:
-          "$rewardAmount ❤️ won from a Tic-Tac-Toe draw.",
-      metadata: {'game': 'tic-tac-toe', 'reason': 'player_draw'},
-      fromGameWins: rewardAmount,
-    );
-
-    if (!wasApproved) {
-      showToast(message: "Draw! Your 2❤️ reward is pending admin approval.");
-      return;
-    }
-
-    // 2. Send the targeted notification for the draw
-    try {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(_currentUser!.uid)
-          .get();
-      if (userDoc.exists) {
-        final userToken = userDoc.data()?['fcmId'] as String?;
-        if (userToken != null && userToken.isNotEmpty) {
-          await notificationService.sendNotification({
-            "token": userToken,
-            "notification": {
-              "title": 'It\'s a Draw!',
-              "body": "Well played! You earned 2❤️ from your draw with Claire."
-            },
-            "data": {"route": "wallet"} // Navigate user to wallet
-          });
-        }
-      }
-    } catch (e) {
-      print("Failed to send 'Game Draw' push notification: $e");
-    }
-
-    // 3. Give immediate feedback to the user
-    showToast(message: "It's a draw! You earned 2❤️.");
-  }
 
   Future<void> _handleGameResult() async {
     // Stop if a reward has already been processed for this milestone or if the user is not logged in
@@ -1330,7 +1311,6 @@ class _MenuTile extends StatelessWidget {
   }
 }
 
-// Paste this entire class at the end of the file
 
 class _FabMenuOverlay extends StatefulWidget {
   final BuildContext parentContext;
