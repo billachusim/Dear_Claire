@@ -56,7 +56,6 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
   final TransactionService _transactionService = TransactionService();
   User? currentUser = FirebaseAuth.instance.currentUser;
   final PageController _pageController = PageController();
-  int _currentPage = 0;
   final GlobalKey<UnifiedMediaViewerState> _mediaViewerKey =
       GlobalKey<UnifiedMediaViewerState>();
   bool _isAvatarLoading = false;
@@ -889,7 +888,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                       new Spacer(),
                       // --- START: NEW MODERATION POPUP BUTTON ---
                       PopupMenuButton<String>(
-                        icon: Icon(Icons.more_horiz, color: textColor),
+                        icon: Icon(Icons.more_horiz, color: textColor.withValues(alpha: 0.5)),
                         onSelected: (String value) {
                           final sessionId = widget.element.sessionId;
                           final sessionOwnerId = widget.element.userId;
@@ -936,8 +935,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                           ),
                         ],
                       ),
-                      // --- END: NEW MODERATION POPUP BUTTON ---
-                      new Spacer(),
+
                       Visibility(
                         visible: widget.element.userId == currentUser?.uid,
                         child: GestureDetector(
@@ -954,8 +952,8 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                                 widget.element.featured == true
                                     ? Icons.lightbulb
                                     : Icons.lightbulb_outline,
-                                color: textColor,
-                                size: 28,
+                                color: textColor.withValues(alpha: 0.5),
+                                size: 26,
                               ),
                             ),
                           ),
@@ -997,8 +995,8 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                                 widget.element.archived == true
                                     ? Icons.archive_rounded
                                     : Icons.archive_outlined,
-                                color: textColor,
-                                size: 26,
+                                color: textColor.withValues(alpha: 0.5),
+                                size: 25,
                               ),
                             ),
                           ),
@@ -1065,7 +1063,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                               color: textColor.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: textColor.withOpacity(0.1),
+                                color: textColor.withValues(alpha: 0.1),
                                 width: 0.5,
                               ),
                             ),

@@ -220,7 +220,7 @@ class ClairNotification {
       "If you don't tell me, I won't know.",
     ];
     final message = messages[Random().nextInt(messages.length)];
-    await Future.delayed(Duration(minutes: 10), () {
+    await Future.delayed(Duration(minutes: 15), () {
       flutterLocalNotificationsPlugin.show(0, 'Claireminder',
           message.toString(), _notificationDetails(),
           payload: message.contains("game") ? "game" : "claireminder");
