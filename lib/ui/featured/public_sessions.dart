@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/Categories/archive_category_stream.dart';
 import 'package:clairediary/ui/Categories/category_streams2.dart';
@@ -9,6 +11,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/hidden_posts_service.dart';
+import '../../services/user_model.dart';
+import '../../utils/global_app_state.dart';
 import '../../utils/strings.dart';
 import '../Search/custom_search_card.dart';
 import '../featured/model/session.dart';
@@ -28,20 +32,42 @@ class TheFeaturedSessions extends StatefulWidget {
 class _TheFeaturedSessionsState extends State<TheFeaturedSessions> {
   final User? currentUser = FirebaseAuth.instance.currentUser;
   final HiddenPostsService _hiddenPostsService = HiddenPostsService();
+  StreamSubscription<bool>? _refreshSubscription;
+  UserModel? _currentUserModel;
   List<String> _hiddenPostIds = [];
 
   @override
   void initState() {
     super.initState();
-    _loadHiddenPosts();
+    _loadInitialData();
+
+    // --- START: LISTEN FOR REFRESH EVENTS ---
+    // Listen to the global refresh stream.
+    _refreshSubscription = App.refreshFeed.stream.listen((_) {
+      // When an event is received, reload all data and trigger a rebuild.
+      _loadInitialData();
+    });
+    // --- END: LISTEN FOR REFRESH EVENTS ---
   }
 
-  // Fetches the list of hidden IDs from local storage
-  Future<void> _loadHiddenPosts() async {
-    final ids = await _hiddenPostsService.getHiddenPostIds();
+  @override
+  void dispose() {
+    // --- START: CANCEL THE SUBSCRIPTION ---
+    // Clean up the stream subscription to prevent memory leaks.
+    _refreshSubscription?.cancel();
+    // --- END: CANCEL THE SUBSCRIPTION ---
+    super.dispose();
+  }
+
+  // A single method to load hidden posts and blocked users.
+  Future<void> _loadInitialData() async {
+    final hiddenIds = await _hiddenPostsService.getHiddenPostIds();
+    final userModel = await firebaseServices.getUserInfo();
+
     if (mounted) {
       setState(() {
-        _hiddenPostIds = ids;
+        _hiddenPostIds = hiddenIds;
+        _currentUserModel = userModel;
       });
     }
   }
@@ -52,8 +78,8 @@ class _TheFeaturedSessionsState extends State<TheFeaturedSessions> {
       child: StreamBuilder(
         stream: firebaseServices.getFeaturedSession(),
         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-          if (session.connectionState == ConnectionState.waiting) {
-            return RotateImage(70, 70);
+          if (session.connectionState == ConnectionState.waiting || _currentUserModel == null) {
+            return RotateImage(70, 70); // Show loader while waiting for data
           }
           if (!session.hasData || session.data!.docs.isEmpty) {
             return Center(
@@ -65,17 +91,22 @@ class _TheFeaturedSessionsState extends State<TheFeaturedSessions> {
             );
           }
 
-          // --- FILTERING LOGIC ---
-          // 1. Convert docs to Session objects
+          // --- UPDATED FILTERING LOGIC ---
           final allSessions = session.data!.docs.map((e) {
             return Session.fromJson(e.data() as Map<String, dynamic>);
           }).toList();
 
-          // 2. Filter out the hidden sessions
+          // Get the list of blocked user IDs from the current user model.
+          final blockedUserIds = _currentUserModel?.blockedUsers ?? [];
+
           final filteredSessions = allSessions.where((s) {
-            return !_hiddenPostIds.contains(s.sessionId);
+            // Check if the post is hidden OR the author is blocked.
+            final isHidden = _hiddenPostIds.contains(s.sessionId);
+            final isBlocked = blockedUserIds.contains(s.userId);
+            // Return true only if the post is NOT hidden AND the user is NOT blocked.
+            return !isHidden && !isBlocked;
           }).toList();
-          // --- END FILTERING LOGIC ---
+          // --- END UPDATED FILTERING LOGIC ---
 
           if (filteredSessions.isEmpty) {
             return Center(
@@ -105,6 +136,7 @@ class _TheFeaturedSessionsState extends State<TheFeaturedSessions> {
     );
   }
 }
+
 
 
 

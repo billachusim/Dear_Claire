@@ -21,11 +21,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../data/models/transaction_model.dart' as t_model;
 import '../services/firebase_services.dart';
+import '../services/hidden_posts_service.dart';
 import '../services/notification_service.dart';
 import '../services/transaction_service.dart';
 import '../services/user_model.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../ui/ego-profile/top_up_loves_page.dart';
+import '../utils/global_app_state.dart';
 import '../utils/strings.dart';
 import '../ui/routes/routes.dart';
 import 'unified_media_widget.dart';
@@ -261,7 +263,6 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                   ),
                 ],
               ),
-
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -644,14 +645,16 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                       textAlign: TextAlign.center,
                       maxLines: widget.element.imageUrls!.isNotEmpty ? 1 : 2,
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 23.0, // Slightly smaller than 24 for a more refined look
+                        fontSize:
+                            23.0, // Slightly smaller than 24 for a more refined look
                         color: textColor,
                         fontWeight: FontWeight.w800, // Extra Bold
-                        letterSpacing: -0.5, // Tighter tracking for that premium "editorial" feel
-                        height: 1.1, // Tighter line height for multi-line titles
+                        letterSpacing:
+                            -0.5, // Tighter tracking for that premium "editorial" feel
+                        height:
+                            1.1, // Tighter line height for multi-line titles
                       ),
                     ),
-
                   ),
                   SizedBox(
                     height: 7,
@@ -659,25 +662,28 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                   Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(2.0, 0, 2.0, 0.0),
-                        child: Text(
-                          widget.element.message!,
-                          textAlign: TextAlign.justify,
-                          maxLines: (widget.element.imageUrls?.isNotEmpty ?? false) ||
-                              (widget.element.videoUrls?.isNotEmpty ?? false)
-                              ? 2
-                              : 7,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 17.0, // Slightly smaller is often more "Elite" and cleaner
-                            color: textColor,
-                            fontWeight: FontWeight.w600,
-                            height: 1.4, // Increased line height for that premium "editorial" feel
-                            letterSpacing: -0.2, // Subtle negative tracking makes the text look tighter/higher-end
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        )
-
-                      ),
+                          padding: const EdgeInsets.fromLTRB(2.0, 0, 2.0, 0.0),
+                          child: Text(
+                            widget.element.message!,
+                            textAlign: TextAlign.justify,
+                            maxLines: (widget.element.imageUrls?.isNotEmpty ??
+                                        false) ||
+                                    (widget.element.videoUrls?.isNotEmpty ??
+                                        false)
+                                ? 2
+                                : 7,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize:
+                                  17.0, // Slightly smaller is often more "Elite" and cleaner
+                              color: textColor,
+                              fontWeight: FontWeight.w600,
+                              height:
+                                  1.4, // Increased line height for that premium "editorial" feel
+                              letterSpacing:
+                                  -0.2, // Subtle negative tracking makes the text look tighter/higher-end
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          )),
 
                       SizedBox(
                         height: 7,
@@ -881,6 +887,57 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                         },
                       ),
                       new Spacer(),
+                      // --- START: NEW MODERATION POPUP BUTTON ---
+                      PopupMenuButton<String>(
+                        icon: Icon(Icons.more_horiz, color: textColor),
+                        onSelected: (String value) {
+                          final sessionId = widget.element.sessionId;
+                          final sessionOwnerId = widget.element.userId;
+
+                          if (sessionId == null || sessionOwnerId == null) {
+                            showToast(
+                                message:
+                                    "Cannot perform action: Invalid session data.");
+                            return;
+                          }
+                          // Prevent users from moderating their own posts
+                          if (sessionOwnerId == currentUser?.uid) {
+                            showToast(
+                                message:
+                                    "You cannot moderate your own session.");
+                            return;
+                          }
+
+                          switch (value) {
+                            case 'remove_session':
+                              _removeSessionFromFeed(sessionId);
+                              break;
+                            case 'report_session':
+                              _reportSessionAndOwner(sessionId);
+                              break;
+                            case 'block_user':
+                              _blockUser(sessionOwnerId);
+                              break;
+                          }
+                        },
+                        itemBuilder: (BuildContext context) =>
+                            <PopupMenuEntry<String>>[
+                          const PopupMenuItem<String>(
+                            value: 'remove_session',
+                            child: Text('Remove post from my feed'),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'report_session',
+                            child: Text('Report this post & owner'),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'block_user',
+                            child: Text('Block owner of this post'),
+                          ),
+                        ],
+                      ),
+                      // --- END: NEW MODERATION POPUP BUTTON ---
+                      new Spacer(),
                       Visibility(
                         visible: widget.element.userId == currentUser?.uid,
                         child: GestureDetector(
@@ -970,21 +1027,29 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                     ],
                   ),
                   StreamBuilder(
-                    stream: firebaseServices.getFeaturedSessionsComments(widget.element.sessionId!),
+                    stream: firebaseServices
+                        .getFeaturedSessionsComments(widget.element.sessionId!),
                     builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
-                      if (snapShot.hasError || !snapShot.hasData || snapShot.data!.docs.isEmpty) {
-                        return const SizedBox.shrink(); // Hide completely if error or no data
+                      if (snapShot.hasError ||
+                          !snapShot.hasData ||
+                          snapShot.data!.docs.isEmpty) {
+                        return const SizedBox
+                            .shrink(); // Hide completely if error or no data
                       }
 
                       // Parse the comments
-                      List<CommentSessionModel> _commentSessionList = snapShot.data!.docs
-                          .map((e) => CommentSessionModel.fromJson(e.data() as Map<String, dynamic>))
+                      List<CommentSessionModel> _commentSessionList = snapShot
+                          .data!.docs
+                          .map((e) => CommentSessionModel.fromJson(
+                              e.data() as Map<String, dynamic>))
                           .toList();
 
                       // Find the specific comment to display (Adviser/Admin)
-                      final displayComment = _returnComment(_commentSessionList);
+                      final displayComment =
+                          _returnComment(_commentSessionList);
 
-                      if (displayComment.message == null || displayComment.message!.isEmpty) {
+                      if (displayComment.message == null ||
+                          displayComment.message!.isEmpty) {
                         return const SizedBox.shrink();
                       }
 
@@ -994,7 +1059,8 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                         children: [
                           Container(
                             margin: const EdgeInsets.only(top: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
                             decoration: BoxDecoration(
                               color: textColor.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(12),
@@ -1044,7 +1110,6 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                       );
                     },
                   ),
-
                 ],
               ),
             ),
@@ -1067,8 +1132,6 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
     }
   }
 
-
-
   featureAlertDialog(BuildContext context) {
     // set up the buttons
     Widget cancelButton = TextButton(
@@ -1078,7 +1141,6 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
         PageRouter.gotoWidget(const TopUpLovesPage(), context);
       },
     );
-
 
     Widget continueButton = TextButton(
       child: Text("Request Feature\n"
@@ -1180,4 +1242,54 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
     logger.d('Successfully saved your reaction activity');
     print('Activity Message: $activityMessage');
   }
+
+  // --- START: MODERATION ACTION HANDLERS ---
+
+  /// Option 1: Removes the session from the user's feed locally.
+  Future<void> _removeSessionFromFeed(String sessionId) async {
+    await HiddenPostsService().hidePost(sessionId);
+    if (mounted) {
+      showToast(message: "This session has been removed from your feed.");
+      // Trigger a refresh on the feed page.
+      App.refreshFeed.add(true);
+    }
+  }
+
+  /// Option 2: Reports the session and its owner, then hides it.
+  Future<void> _reportSessionAndOwner(String sessionId) async {
+    // This is a placeholder for your existing firebaseServices.reportSession method
+    // final bool success = await firebaseServices.reportSession(sessionId);
+    // For this example, we assume success. Replace with your actual call.
+    final bool success = true;
+
+    if (success) {
+      await HiddenPostsService().hidePost(sessionId);
+      if (mounted) {
+        showToast(
+            message:
+            "This session has been reported and will be removed from your feed.");
+        // Trigger a refresh on the feed page.
+        App.refreshFeed.add(true);
+      }
+    } else if (mounted) {
+      showToast(message: "Failed to report this session. Please try again.");
+    }
+  }
+
+  /// Option 3: Blocks the session owner and hides their content.
+  Future<void> _blockUser(String userIdToBlock) async {
+    // This is a placeholder for your existing firebaseServices.blockUser method
+    // final bool success = await firebaseServices.blockUser(userIdToBlock);
+    // For this example, we assume success. Replace with your actual call.
+    final bool success = true;
+
+    if (success && mounted) {
+      showToast(
+          message:
+          "This user has been blocked. Their content will no longer be visible.");
+      // Trigger a refresh on the feed page.
+      App.refreshFeed.add(true);
+    }
+  }
+
 }

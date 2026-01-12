@@ -13,6 +13,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../services/firebase_services.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../ui/create_session/sound/sound_widget.dart';
@@ -197,14 +198,46 @@ class _ChatEditFieldState extends State<ChatEditField> {
                 ),
                 FloatingActionButton(
                   heroTag: "Record",
-                  onPressed: isProcessing ? null : () async {
+                  onPressed: isProcessing
+                      ? null
+                      : () async {
                     if (!await _firebaseServices.isUserSignIn(context)) return;
-                    var data = await Navigator.push(
-                        context, MaterialPageRoute(builder: (_) => SoundRecorderWidget(onRecordComplete: (file) {})));
-                    if (data != null) {
-                      setState(() => _recordFile = data);
+
+                    // 1. Request microphone permission
+                    var status = await Permission.microphone.request();
+
+                    // 2. Check the permission status
+                    if (status.isGranted) {
+                      // Permission is granted, proceed to the recorder
+                      if (!mounted) return;
+                      var data = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => SoundRecorderWidget(
+                            onRecordComplete: (recordFile) {},
+                          ),
+                        ),
+                      );
+                      if (data != null) {
+                        setState(() {
+                          _recordFile = data;
+                        });
+                      }
+                    } else if (status.isPermanentlyDenied) {
+                      // Permission is permanently denied, show a dialog to open settings
+                      // You might want to implement a 'showToast' function or use a SnackBar.
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text(
+                              'Microphone permission is required. Please enable it in settings.')));
+                      await openAppSettings();
+                    } else {
+                      // Permission was denied, but not permanently.
+                      // You might want to implement a 'showToast' function or use a SnackBar.
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Microphone permission is required to record audio.')));
                     }
                   },
+
                   mini: true,
                   backgroundColor: Pallet.colorPrimary,
                   child: Icon(Icons.mic_rounded, size: 35),

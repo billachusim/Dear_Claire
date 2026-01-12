@@ -863,6 +863,44 @@ class FirebaseServices extends ChangeNotifier {
     }
   }
 
+  /// Reports a session by setting its 'flagged' status to true.
+  Future<bool> reportSession(String sessionId) async {
+    try {
+      await _firebaseFirestore
+          .collection('sessions')
+          .doc(sessionId)
+          .update({"flagged": true});
+      logger.d('Successfully reported session: $sessionId');
+      return true;
+    } catch (e) {
+      logger.e('Error reporting session $sessionId: $e');
+      return false;
+    }
+  }
+
+  /// Blocks a user by adding their ID to the current user's 'blockedUsers' list.
+  Future<bool> blockUser(String userIdToBlock) async {
+    if (currentUser == null) return false;
+    final String currentUserId = currentUser!.uid;
+
+    // Prevent a user from blocking themselves
+    if (currentUserId == userIdToBlock) {
+      showToast(message: "You cannot block yourself.");
+      return false;
+    }
+
+    try {
+      await _firebaseFirestore.collection('users').doc(currentUserId).update({
+        'blockedUsers': FieldValue.arrayUnion([userIdToBlock])
+      });
+      logger.d('User $currentUserId blocked user $userIdToBlock.');
+      return true;
+    } catch (e) {
+      logger.e('Error blocking user $userIdToBlock: $e');
+      return false;
+    }
+  }
+
 
 
 

@@ -107,12 +107,8 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   // Admob Ad Units.
   BannerAd? visitedUserTopOfSessionsBanner;
   BannerAd? visitedUserBottomOfSessionsBanner;
-  BannerAd? visitedUserTopOfActivitiesBanner;
-  BannerAd? visitedUserBottomOfActivitiesBanner;
   bool _isTopOfSessionsBannerLoaded = false;
   bool _isBottomOfSessionsBannerLoaded = false;
-  bool _isTopOfActivitiesBannerLoaded = false;
-  bool _isBottomOfActivitiesBannerLoaded = false;
 
   @override
   void didChangeDependencies() {
@@ -152,44 +148,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                 print('Ad loaded: ${ad.adUnitId}');
                 setState(() {
                   _isBottomOfSessionsBannerLoaded = true;
-                });
-              },
-              onAdFailedToLoad: (ad, error) {
-                print('Ad failed to load: ${ad.adUnitId}, error: $error');
-                ad.dispose();
-              },
-            ))
-          ..load();
-
-        // --- Load Top of Activities Banner ---
-        visitedUserTopOfActivitiesBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.visitedUserTopOfActivitiesBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdLoaded: (ad) {
-                print('Ad loaded: ${ad.adUnitId}');
-                setState(() {
-                  _isTopOfActivitiesBannerLoaded = true;
-                });
-              },
-              onAdFailedToLoad: (ad, error) {
-                print('Ad failed to load: ${ad.adUnitId}, error: $error');
-                ad.dispose();
-              },
-            ))
-          ..load();
-
-        // --- Load Bottom of Activities Banner ---
-        visitedUserBottomOfActivitiesBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.visitedUserBottomOfActivitiesBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdLoaded: (ad) {
-                print('Ad loaded: ${ad.adUnitId}');
-                setState(() {
-                  _isBottomOfActivitiesBannerLoaded = true;
                 });
               },
               onAdFailedToLoad: (ad, error) {
@@ -390,7 +348,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   Future<void> pushMantraNotification() async {
     final egoMessage = _visitorMantraController.text;
     final egoName = _visitingUser?.nickname ?? 'An Ego';
-    final senderId = currentUser?.uid;
 
     // A mantra is only pushed if there is a message to send.
     if (egoMessage.isEmpty) {
@@ -564,53 +521,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     }
   }
 
-  /// Block a user only by Super Ego
-
-  Future<void> blockUser() async {
-    final userId = visitedUser?.userId;
-    final userToBlock =
-        FirebaseFirestore.instance.collection('users').doc(userId);
-    await userToBlock.delete();
-    logger.d('Successfully blocked a user');
-    print("The Blocked User Is: $userId");
-  }
-
-  flagEgoAlertDialog(BuildContext context) {
-    // set up the buttons
-    Widget cancelButton = TextButton(
-      child: Text("Cancel"),
-      onPressed: () {
-        Navigator.of(context).pop();
-      },
-    );
-
-    Widget continueButton = TextButton(
-      child: Text("Flag"),
-      onPressed: () {
-        sendToFlagged();
-        showToast("Thank You!\n Claire will check this Ego for violations.");
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Flag And Report This User?"),
-      content: Text(AppString.flag_ego_alert_note),
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
 
   /// Flag a user
 

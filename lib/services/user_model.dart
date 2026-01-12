@@ -29,6 +29,7 @@ class UserModel {
   String? claireminderTitle;
   String? claireminderMessage;
   int? claireminderDelay;
+  List<String> blockedUsers;
 
   UserModel({
     this.alterEgoAccessCode,
@@ -59,6 +60,7 @@ class UserModel {
     this.claireminderTitle,
     this.claireminderMessage,
     this.claireminderDelay,
+    this.blockedUsers = const [],
   });
 
   factory UserModel.fromJson(json) {
@@ -87,10 +89,11 @@ class UserModel {
       totalLoveCount: json['totalLoveCount'] ?? 0,
       currentLoveCount: json['currentLoveCount'] ?? 0,
       withdrawnLoveCount: json['withdrawnLoveCount'] ?? 0,
-      flagged: json['flagged'],
+      flagged: json['flagged'] ?? false,
       claireminderTitle: json['claireminderTitle'] ?? '',
       claireminderMessage: json['claireminderMessage'] ?? '',
       claireminderDelay: json['claireminderDelay'] ?? 0,
+      blockedUsers: List<String>.from(json['blockedUsers'] ?? []),
     );
   }
 
@@ -124,33 +127,35 @@ class UserModel {
       claireminderTitle: json['claireminderTitle'] ?? '',
       claireminderMessage: json['claireminderMessage'] ?? '',
       claireminderDelay: json['claireminderDelay'] ?? 0,
+      blockedUsers: List<String>.from(json['blockedUsers'] ?? []),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'alterEgoAccessCode': alterEgoAccessCode,
-        'alterEgoId': alterEgoId,
-        'avatarUrl': avatarUrl,
-        'email': email,
-        'fcmId': fcmId,
-        'gender': gender,
-        'nickname': nickname,
-        'secretCode': secretCode,
-        'timeLastUnlocked': timeLastUnlocked,
-        'timeRegistered': timeRegistered,
-        'userId': userId,
-        'userType': userType,
-        'moods': moods,
-        'referredBy': referredBy,
-        'influencerStatus': influencerStatus,
-        'sessionCount': sessionCount,
-        'adviseCount': adviseCount,
-        'totalLoveCount': totalLoveCount,
-        'currentLoveCount': currentLoveCount,
-        'withdrawnLoveCount': withdrawnLoveCount,
-        'flagged': flagged,
-        'claireminderTitle': claireminderTitle,
-        'claireminderMessage': claireminderMessage,
-        'claireminderDelay': claireminderDelay,
+    'alterEgoAccessCode': alterEgoAccessCode,
+    'alterEgoId': alterEgoId,
+    'avatarUrl': avatarUrl,
+    'email': email,
+    'fcmId': fcmId,
+    'gender': gender,
+    'nickname': nickname,
+    'secretCode': secretCode,
+    'timeLastUnlocked': timeLastUnlocked,
+    'timeRegistered': timeRegistered,
+    'userId': userId,
+    'userType': userType,
+    'moods': moods,
+    'referredBy': referredBy,
+    'influencerStatus': influencerStatus,
+    'sessionCount': sessionCount,
+    'adviseCount': adviseCount,
+    'totalLoveCount': totalLoveCount,
+    'currentLoveCount': currentLoveCount,
+    'withdrawnLoveCount': withdrawnLoveCount,
+    'flagged': flagged,
+    'claireminderTitle': claireminderTitle,
+    'claireminderMessage': claireminderMessage,
+    'claireminderDelay': claireminderDelay,
+    'blockedUsers': blockedUsers,
   };
 }
