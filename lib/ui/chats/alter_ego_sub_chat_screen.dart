@@ -18,6 +18,7 @@ import '../../Admob/ad_state.dart';
 import '../../helpers/toast_helper.dart';
 import '../../services/firebase_services.dart';
 import '../../services/notification_service.dart';
+import '../../services/user_model.dart';
 import '../../utils/strings.dart';
 
 class Temp {
@@ -220,12 +221,22 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
             // Input Field
             Align(
               alignment: Alignment.bottomCenter,
-              child: canSendMessage
-                  ? ChatEditField(
-                onTap: (v, voiceNote, image1, image2) =>
-                    _sendMessage(v, voiceNote, image1, image2),
-              )
-                  : const SizedBox.shrink(),
+              child: Builder(
+                builder: (context) {
+                  // This is a chat room or room corner, so commenting should always be open for everyone
+                  // who is not explicitly blocked (e.g., in an eavesdrop room and not the owner).
+                  // The `canSendMessage` variable already correctly handles this logic.
+                  // We pass its value directly to `canComment`.
+                  return ChatEditField(
+                    canComment: canSendMessage,
+                    onTap: (v, voiceNote, image1, image2) {
+                      if (canSendMessage) {
+                        _sendMessage(v, voiceNote, image1, image2);
+                      }
+                    },
+                  );
+                },
+              ),
             ),
 
             // Sending Overlay

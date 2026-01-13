@@ -249,8 +249,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: ChatEditField(
-                    onTap: (v, voiceNote, image1, image2) =>
-                        _sendMessage(v, voiceNote, image1, image2),
+                    // This is a chat room, so commenting is always open for everyone.
+                    canComment: true,onTap: (v, voiceNote, image1, image2) =>
+                      _sendMessage(v, voiceNote, image1, image2),
                   ),
                 ),
                 // The overlay that shows only when sending

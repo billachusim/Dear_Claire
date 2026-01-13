@@ -1159,19 +1159,50 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
 
           Align(
             alignment: Alignment.bottomCenter,
-            child: ChatEditField(
-                onTap: (String comment, voiceNote, image1, image2) {
-                  if (theSession?.repliesEnabled == true) {
-                    _sendComment(comment, voiceNote, theSession!, image1, image2);
-                  } else if (theSession!.respondentUserId == currentUser!.uid) {
-                    _sendComment(comment, voiceNote, theSession!, image1, image2);
-                  }else if (theSession?.userId == currentUser.uid) {
-                    _sendComment(comment, voiceNote, theSession!, image1, image2);
-                  }
-                  else showToast("Switch to Alter Ego first.");
+            child: FutureBuilder<UserModel>(
+              future: firebaseServices.getUserInfo(), // Fetches the current user's data
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox.shrink(); // Or a loading indicator
                 }
+
+                bool hasPermission = false;
+
+                // First, check if the current user is the owner of the session.
+                final isSessionOwner = theSession?.userId == currentUser?.uid;
+
+                if (isSessionOwner) {
+                  // If the user is the owner, they always have permission.
+                  hasPermission = true;
+                } else if (snapshot.hasData) {
+                  // If not the owner, check the user's role.
+                  final user = snapshot.data!;
+                  final userType = user.userType ?? '';
+                  final hasRequiredRole = ['ADMIN', 'SUPER_ADMIN'].contains(userType);
+                  hasPermission = hasRequiredRole;
+                }
+                // If the user is not the owner and user data fails to load, hasPermission remains false.
+
+                // Also allow commenting if replies are explicitly enabled for everyone
+                // or if the user is the designated respondent.
+                final canCommentBySessionRules = (theSession?.repliesEnabled == true) ||
+                    (theSession?.respondentUserId == currentUser?.uid);
+
+                final bool finalCanComment = hasPermission || canCommentBySessionRules;
+
+                return ChatEditField(
+                  canComment: finalCanComment,
+                  onTap: (String comment, String voiceNote, String image1, String image2) {
+                    if (finalCanComment) {
+                      _sendComment(comment, voiceNote, theSession!, image1, image2);
+                    }
+                  },
+                );
+              },
             ),
           )
+
+
         ]
       ),
     );

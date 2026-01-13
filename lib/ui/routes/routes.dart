@@ -30,7 +30,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/updates/announcements_widget.dart';
 import '../Search/search_page.dart';
-import '../featured/widget/custom_post_details_screen.dart';
 import '../featured/widget/post_details_widget.dart';
 import '../menu_items/referral_program_page.dart';
 import '../menu_items/rules_of_love_page.dart';
@@ -54,7 +53,6 @@ class AppRoutes {
   static const createSessionPage = '/create_session';
   static const egoModeSessionDetail = '/egoModeSessionDetail';
   static const postDetailsWidget = '/postDetailsWidget';
-  static const customPostDetailsWidget = '/postDetailsWidget';
   static const donate = '/donate';
   static const howClaireWorks = '/how_claire_works';
   static const howAlterEgoWorks = '/how_alter_ego_works';
@@ -162,12 +160,6 @@ class AppRouter {
           fullscreenDialog: false,
         );
 
-      case AppRoutes.customPostDetailsWidget:
-        return MaterialPageRoute<dynamic>(
-          builder: (_) => CustomPostDetailsWidget(sessionId: ""),
-          settings: settings,
-          fullscreenDialog: true,
-        );
 
       case AppRoutes.howClaireWorks:
         return MaterialPageRoute(

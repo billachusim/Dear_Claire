@@ -283,15 +283,48 @@ class _EgoModeSessionDetailState
           // Your chat input field at the very bottom
           Align(
             alignment: Alignment.bottomCenter,
-            child: ChatEditField(
-              onTap: (String comment, voiceNote, image1, image2) =>
-                  _sendComment(comment, voiceNote, widget.featuredSessionModel!, image1, image2),
+            child: FutureBuilder<UserModel>(
+              future: firebaseServices.getUserInfo(), // Fetches the current user's data
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox.shrink(); // Or a loading indicator
+                }
+
+                bool hasPermission = false;
+
+                // First, check if the current user is the owner of the session.
+                // Note: `featuredSessionModel` from the state is used here as `widget.featuredSessionModel` is not available in `_EgoModeSessionDetailState`.
+                final isSessionOwner = featuredSessionModel?.userId == currentUser?.uid;
+
+                if (isSessionOwner) {
+                  // If the user is the owner, they always have permission.
+                  hasPermission = true;
+                } else if (snapshot.hasData) {
+                  // If not the owner, check the user's role.
+                  final user = snapshot.data!;
+                  final userType = user.userType ?? '';
+                  final hasRequiredRole = ['ADMIN', 'SUPER_ADMIN'].contains(userType);
+                  hasPermission = hasRequiredRole;
+                }
+                // If the user is not the owner and user data fails to load, hasPermission remains false.
+
+                return ChatEditField(
+                  canComment: hasPermission,
+                  onTap: (String comment, String voiceNote, String image1, String image2) {
+                    if (hasPermission) {
+                      _sendComment(comment, voiceNote, widget.featuredSessionModel!, image1, image2);
+                    }
+                  },
+                );
+              },
             ),
           )
+
         ],
       ),
     );
   }
+
 
   void _sendComment(String comment, String voiceNote, Session session, String image1, String image2) async {
     if (!await firebaseServices.isUserSignIn(context)) return;

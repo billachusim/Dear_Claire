@@ -268,13 +268,40 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
 
           Align(
             alignment: Alignment.bottomCenter,
-            child: ChatEditField(
-              onTap: (String comment, voiceNote, image1, image2) =>
-                  _sendComment(
-                      comment, voiceNote, widget.featuredSessionModel!, image1,
-                      image2),
+            child: FutureBuilder<UserModel>(
+              future: firebaseServices.getUserInfo(), // Fetches the current user's data
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox.shrink(); // Or a loading indicator
+                }
+
+                bool hasPermission = false;
+
+                // Check if the current user is the owner of the session.
+                final isSessionOwner = widget.featuredSessionModel?.userId == currentUser?.uid;
+
+                if (isSessionOwner) {
+                  hasPermission = true;
+                } else if (snapshot.hasData) {
+                  // If not the owner, check user role.
+                  final user = snapshot.data!;
+                  final userType = user.userType ?? '';
+                  final hasAlterEgoRole = ['ADMIN', 'SUPER_ADMIN'].contains(userType);
+                  hasPermission = hasAlterEgoRole;
+                }
+
+                return ChatEditField(
+                  canComment: hasPermission,
+                  onTap: (String comment, voiceNote, image1, image2) {
+                    if (hasPermission) {
+                      _sendComment(comment, voiceNote, widget.featuredSessionModel!, image1, image2);
+                    }
+                  },
+                );
+              },
             ),
           )
+
         ],
       ),
     );

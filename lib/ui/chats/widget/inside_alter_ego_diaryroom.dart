@@ -236,6 +236,10 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: ChatEditField(
+                    // This is an Alter Ego chat room, so commenting is always open for everyone with an Alter Ego role.
+                    // We pass `canComment: true` to ensure the text field is always visible
+                    // and does not show the "Request Alter Ego Access" button.
+                    canComment: true,
                     onTap: (v, voiceNote, image1, image2) =>
                         _sendMessage(v, voiceNote, image1, image2),
                   ),

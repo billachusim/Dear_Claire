@@ -236,14 +236,27 @@ class _SubChatScreenState extends State<SubChatScreen> {
                 ),
               ),
 
+            // Input Field
             Align(
               alignment: Alignment.bottomCenter,
-              child: canSendMessage
-                  ? ChatEditField(
-                onTap: (v, voiceNote, image1, image2) =>
-                    _sendMessage(v, voiceNote, image1, image2),
-              )
-                  : const SizedBox.shrink(),
+              child: Builder(
+                builder: (context) {
+                  // This is a chat room or room corner.
+                  // The`canSendMessage` variable already correctly determines if the user
+                  // should be able to type (e.g., not in an eavesdrop room unless they are the owner).
+                  // We pass its value directly to `canComment` to either show the text field or
+                  // a disabled state (like SizedBox.shrink from your original code).
+                  // Since this is a chat room, we don't need to check for 'alter' roles here.
+                  return ChatEditField(
+                    canComment: canSendMessage,
+                    onTap: (v, voiceNote, image1, image2) {
+                      if (canSendMessage) {
+                        _sendMessage(v, voiceNote, image1, image2);
+                      }
+                    },
+                  );
+                },
+              ),
             ),
 
             if (_isSending)

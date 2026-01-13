@@ -1,9 +1,7 @@
 import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/utils/color.dart';
-import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/utils/strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -17,16 +15,13 @@ import 'package:permission_handler/permission_handler.dart';
 import '../services/firebase_services.dart';
 import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../ui/create_session/sound/sound_widget.dart';
-import '../ui/featured/model/session.dart';
-import '../ui/routes/page_router_animation.dart';
-import '../utils/constant.dart';
-import 'custom_image_widget.dart';
 
 class ChatEditField extends StatefulWidget {
   // IMPORTANT: Consider changing the parent widget to accept List<String> instead of two separate strings.
   final Function(String value, String voiceNote, String image1, String image2) onTap;
+  final bool canComment;
 
-  ChatEditField({Key? key, required this.onTap}) : super(key: key);
+  ChatEditField({Key? key, required this.onTap, this.canComment = false}) : super(key: key);
 
   @override
   _ChatEditFieldState createState() => _ChatEditFieldState();
@@ -36,6 +31,8 @@ class _ChatEditFieldState extends State<ChatEditField> {
   final TextEditingController _controller = TextEditingController();
   final FirebaseServices _firebaseServices = FirebaseServices();
   final User? currentUser = FirebaseAuth.instance.currentUser;
+  final NavigationService _navService = NavigationService();
+
 
   // --- State Variables ---
   bool isTyping = false;
@@ -99,6 +96,37 @@ class _ChatEditFieldState extends State<ChatEditField> {
 
   @override
   Widget build(BuildContext context) {
+    // If user does not have access, show the request access button.
+    if (!widget.canComment) {
+      return Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          color: Colors.black,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: GestureDetector(
+            onTap: () => _navService.pushNamed(AppRoutes.howAlterEgoWorks),
+            child: Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: Pallet.colorPrimary,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: const Center(
+                child: Text(
+                  "Request Alter Ego Access to start Advising",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Otherwise, build the standard chat edit field.
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
@@ -157,7 +185,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                                 child: Container(
                                   padding: const EdgeInsets.all(2),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.6),
+                                    color: Colors.black.withOpacity(0.6),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(Icons.close, color: Colors.white, size: 16),
@@ -225,14 +253,12 @@ class _ChatEditFieldState extends State<ChatEditField> {
                       }
                     } else if (status.isPermanentlyDenied) {
                       // Permission is permanently denied, show a dialog to open settings
-                      // You might want to implement a 'showToast' function or use a SnackBar.
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                           content: Text(
                               'Microphone permission is required. Please enable it in settings.')));
                       await openAppSettings();
                     } else {
                       // Permission was denied, but not permanently.
-                      // You might want to implement a 'showToast' function or use a SnackBar.
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                           content: Text('Microphone permission is required to record audio.')));
                     }
@@ -353,4 +379,3 @@ class _ChatEditFieldState extends State<ChatEditField> {
     );
   }
 }
-
