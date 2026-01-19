@@ -85,9 +85,7 @@ class _MetooButtonState extends State<MetooButton>
     );
   }
 
-  // In lib/widgets/metoo_button.dart
 
-// ... (other parts of the class)
 
   // This method sets up the button's initial state from the data it receives.
   void _initializeState() {

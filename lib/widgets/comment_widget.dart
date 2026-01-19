@@ -260,7 +260,7 @@ class _CommentWidgetState extends State<CommentWidget> {
       );
 
       if (success) {
-        showToast("$totalDebit❤️ sent to ${thankedAdvise.userNickname} as thanks!");
+        showToast("$totalDebit❤️ sent to ${thankedAdvise.alterEgoId ?? thankedAdvise.userNickname} and Claire for thanks!");
 
         // --- POST-TRANSACTION LOGIC (NOTIFICATION & ACTIVITY) ---
         _performPostThanksActions(
@@ -812,7 +812,7 @@ class _CommentWidgetState extends State<CommentWidget> {
           SizedBox(
             height: 1,
           ),
-          SelectableLinkify(
+          Linkify(
             onOpen: (link) async {
               final Uri url = Uri.parse("${link.url}");
               if (await canLaunchUrl(url)) {

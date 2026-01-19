@@ -580,7 +580,7 @@ class _ChatWidgetState extends State<ChatWidget> {
           SizedBox(
             height: 6,
           ),
-          SelectableLinkify(
+          Linkify(
             onOpen: (link) async {
               final Uri url = Uri.parse("${link.url}");
               if (await canLaunchUrl(url)) {

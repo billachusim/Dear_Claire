@@ -494,22 +494,29 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                 Row(
                                   children: [
                                     Expanded(
-                                      child: SelectableLinkify(
-                                        onOpen: (link) async {
-                                          final Uri url = Uri.parse("${link.url}");
-                                          if (await canLaunchUrl(url)) {
-                                            await launchUrl(url);
-                                          } else {
-                                            throw 'Could not launch $link';
-                                          }
-                                        },
-                                        linkStyle: TextStyle(color: Colors.blue),
-                                        text: _session.message!,
+                                      child: SelectableText.rich(
+                                        TextSpan(
+                                          text: _session.message!,
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 20.0,
+                                            color: textColor.withValues(alpha: 0.9),
+                                            fontWeight: FontWeight.w500,
+                                            height: 1.5,
+                                            letterSpacing: -0.1,
+                                          ),
+                                        ),
                                         textAlign: TextAlign.justify,
-                                        style: GoogleFonts.lato(
-                                            fontSize: 22.0,
-                                            color: textColor,
-                                            fontWeight: FontWeight.w600),
+                                        onTap: () {
+                                          // You can add a tap handler here if needed, but SelectableLinkify handles links.
+                                          // For simplicity, we will let the Linkify part handle taps.
+                                        },
+                                        // This explicitly enables the copy and select all buttons.
+                                        contextMenuBuilder: (context, editableTextState) {
+                                          return AdaptiveTextSelectionToolbar.buttonItems(
+                                            anchors: editableTextState.contextMenuAnchors,
+                                            buttonItems: editableTextState.contextMenuButtonItems,
+                                          );
+                                        },
                                       ),
                                     ),
                                   ],

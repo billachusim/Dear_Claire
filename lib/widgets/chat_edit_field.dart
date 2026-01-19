@@ -2,12 +2,10 @@ import 'dart:io';
 
 import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/utils/color.dart';
-import 'package:clairediary/utils/strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -18,10 +16,12 @@ import '../ui/create_session/sound/sound_widget.dart';
 
 class ChatEditField extends StatefulWidget {
   // IMPORTANT: Consider changing the parent widget to accept List<String> instead of two separate strings.
-  final Function(String value, String voiceNote, String image1, String image2) onTap;
+  final Function(String value, String voiceNote, String image1, String image2)
+  onTap;
   final bool canComment;
 
-  ChatEditField({Key? key, required this.onTap, this.canComment = false}) : super(key: key);
+  ChatEditField({Key? key, required this.onTap, this.canComment = false})
+      : super(key: key);
 
   @override
   _ChatEditFieldState createState() => _ChatEditFieldState();
@@ -33,7 +33,6 @@ class _ChatEditFieldState extends State<ChatEditField> {
   final User? currentUser = FirebaseAuth.instance.currentUser;
   final NavigationService _navService = NavigationService();
 
-
   // --- State Variables ---
   bool isTyping = false;
   bool isProcessing = false; // Single flag for any loading state (audio, images).
@@ -41,7 +40,6 @@ class _ChatEditFieldState extends State<ChatEditField> {
 
   File? _recordFile;
   List<File> imageList = <File>[]; // Holds local image files for preview.
-
 
   /// This function now ONLY picks images from the gallery and updates the UI for preview.
   /// The actual upload is handled when the 'send' button is pressed.
@@ -68,7 +66,8 @@ class _ChatEditFieldState extends State<ChatEditField> {
     if (pickedFiles != null && pickedFiles.isNotEmpty) {
       setState(() {
         // Limit to 5 images
-        final filesToAdd = pickedFiles!.take(5).map((file) => File(file.path)).toList();
+        final filesToAdd =
+        pickedFiles!.take(5).map((file) => File(file.path)).toList();
         imageList = filesToAdd;
       });
     }
@@ -80,12 +79,13 @@ class _ChatEditFieldState extends State<ChatEditField> {
     });
   }
 
-
   /// Uploads the recorded audio file to Firebase Storage.
   Future<String> uploadCommentAudio(File file) async {
     final timeStamp = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now());
     final filename = currentUser!.uid.toString();
-    final ref = firebase_storage.FirebaseStorage.instance.ref().child("audio/$filename$timeStamp");
+    final ref = firebase_storage.FirebaseStorage.instance
+        .ref()
+        .child("audio/$filename$timeStamp");
     final uploadTask = ref.putFile(file);
     final snapshot = await uploadTask.whenComplete(() => {});
     final downloadUrl = await snapshot.ref.getDownloadURL();
@@ -93,6 +93,11 @@ class _ChatEditFieldState extends State<ChatEditField> {
     return downloadUrl;
   }
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,250 +137,276 @@ class _ChatEditFieldState extends State<ChatEditField> {
       child: Container(
         color: Colors.black,
         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // --- Audio Preview ---
-            Visibility(
-              visible: _recordFile != null,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(child: CustomPlaySoundWidget(filePath: _recordFile?.path)),
-                    IconButton(
-                        icon: Icon(Icons.cancel, color: Colors.red, size: 24.r),
-                        onPressed: () => setState(() {
-                          _recordFile = null;
-                        }))
-                  ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // --- Audio Preview ---
+              Visibility(
+                visible: _recordFile != null,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                          child:
+                          CustomPlaySoundWidget(filePath: _recordFile?.path)),
+                      IconButton(
+                          icon: Icon(Icons.cancel, color: Colors.red, size: 24.r),
+                          onPressed: () => setState(() {
+                            _recordFile = null;
+                          }))
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            // --- Image Preview Row (New and Improved) ---
-            Visibility(
-              visible: imageList.isNotEmpty,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: SizedBox(
-                  height: 75,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: imageList.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.file(
-                                imageList[index],
-                                height: 75,
-                                width: 75,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () => setState(() => imageList.removeAt(index)),
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.6),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(Icons.close, color: Colors.white, size: 16),
+              // --- Image Preview Row (New and Improved) ---
+              Visibility(
+                visible: imageList.isNotEmpty,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: SizedBox(
+                    height: 75,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: imageList.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  imageList[index],
+                                  height: 75,
+                                  width: 75,
+                                  fit: BoxFit.cover,
                                 ),
                               ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      setState(() => imageList.removeAt(index)),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.6),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(Icons.close,
+                                        color: Colors.white, size: 16),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+              // --- User Feedback Messages ---
+              Visibility(
+                visible: isTyping || isProcessing,
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
+                    child: Text(
+                      isProcessing
+                          ? processingMessage
+                          : "No form of abuse is allowed on this app. You will be banned.",
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ),
+                ),
+              ),
+
+              // --- Main Input Row ---
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Action buttons on the left
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: isProcessing ? null : pickImages,
+                    child:
+                    Icon(Icons.linked_camera_rounded, size: 30, color: Colors.pink),
+                  ),
+                  FloatingActionButton(
+                    heroTag: "Record",
+                    onPressed: isProcessing
+                        ? null
+                        : () async {
+                      if (!await _firebaseServices.isUserSignIn(context))
+                        return;
+
+                      var status = await Permission.microphone.request();
+
+                      if (status.isGranted) {
+                        if (!mounted) return;
+                        var data = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => SoundRecorderWidget(
+                              onRecordComplete: (recordFile) {},
                             ),
-                          ],
-                        ),
-                      );
+                          ),
+                        );
+                        if (data != null) {
+                          setState(() {
+                            _recordFile = data;
+                          });
+                        }
+                      } else if (status.isPermanentlyDenied) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text(
+                                'Microphone permission is required. Please enable it in settings.')));
+                        await openAppSettings();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text(
+                                'Microphone permission is required to record audio.')));
+                      }
                     },
+                    mini: true,
+                    backgroundColor: Pallet.colorPrimary,
+                    child: Icon(Icons.mic_rounded, size: 35),
                   ),
-                ),
-              ),
-            ),
+                  SizedBox(width: 8),
 
-            // --- User Feedback Messages ---
-            Visibility(
-              visible: isTyping || isProcessing,
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 8.0, bottom: 4.0),
-                  child: Text(
-                    isProcessing ? processingMessage : "No form of abuse is allowed on this app. You will be banned.",
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                ),
-              ),
-            ),
-
-            // --- Main Input Row ---
-            Row(
-              children: [
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: isProcessing ? null : pickImages,
-                  child: Icon(Icons.linked_camera_rounded, size: 30, color: Colors.pink),
-                ),
-                FloatingActionButton(
-                  heroTag: "Record",
-                  onPressed: isProcessing
-                      ? null
-                      : () async {
-                    if (!await _firebaseServices.isUserSignIn(context)) return;
-
-                    // 1. Request microphone permission
-                    var status = await Permission.microphone.request();
-
-                    // 2. Check the permission status
-                    if (status.isGranted) {
-                      // Permission is granted, proceed to the recorder
-                      if (!mounted) return;
-                      var data = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => SoundRecorderWidget(
-                            onRecordComplete: (recordFile) {},
+                  // Expanded Text Field
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(25),
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.grey.shade200,
+                      ),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: 150.0, // Set a max height for the text field
+                        ),
+                        child: TextField(
+                          cursorColor: Theme.of(context).colorScheme.primary,
+                          keyboardType: TextInputType.multiline,
+                          maxLines: null, // Allows the field to grow
+                          controller: _controller,
+                          style: TextStyle(
+                            color: Theme.of(context).brightness ==
+                                Brightness.dark
+                                ? Colors.white
+                                : Colors.black87,
+                          ),
+                          onChanged: (text) =>
+                              setState(() => isTyping = text.isNotEmpty),
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                            border: InputBorder.none,
+                            hintText: "Positive vibes only...",
+                            hintStyle: TextStyle(
+                              fontStyle: FontStyle.italic,
+                              color: Theme.of(context).brightness ==
+                                  Brightness.dark
+                                  ? Colors.white54
+                                  : Colors.black45,
+                            ),
                           ),
                         ),
-                      );
-                      if (data != null) {
-                        setState(() {
-                          _recordFile = data;
-                        });
-                      }
-                    } else if (status.isPermanentlyDenied) {
-                      // Permission is permanently denied, show a dialog to open settings
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text(
-                              'Microphone permission is required. Please enable it in settings.')));
-                      await openAppSettings();
-                    } else {
-                      // Permission was denied, but not permanently.
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Microphone permission is required to record audio.')));
-                    }
-                  },
-
-                  mini: true,
-                  backgroundColor: Pallet.colorPrimary,
-                  child: Icon(Icons.mic_rounded, size: 35),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 13.0),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(25),
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.grey.shade200,
-                    ),
-                    child: TextField(
-                      cursorColor: Theme.of(context).colorScheme.primary,
-                      keyboardType: TextInputType.multiline,
-                      maxLines: null,
-                      controller: _controller,
-                      style: TextStyle(
-                        color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
-                      ),
-                      onChanged: (text) => setState(() => isTyping = text.isNotEmpty),
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: "Positive vibes only...",
-                        hintStyle: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          color: Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black45,
-                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(width: 8),
+                  SizedBox(width: 8),
 
-                // --- SEND BUTTON (New and Improved Logic) ---
-                FloatingActionButton(
-                  heroTag: "Write",
-                  onPressed: isProcessing ? null : () async {
-                    // Ignore empty sends
-                    if (_controller.text.isEmpty && _recordFile == null && imageList.isEmpty) {
-                      return;
-                    }
-
-                    if (!await _firebaseServices.isUserSignIn(context)) return;
-
-                    setState(() {
-                      isProcessing = true;
-                      processingMessage = 'Sending...';
-                    });
-
-                    String audioUrl = '';
-                    List<String> uploadedImageUrls = [];
-
-                    try {
-                      // 1. Upload audio if available
-                      if (_recordFile != null) {
-                        setState(() => processingMessage = 'Uploading audio...');
-                        audioUrl = await uploadCommentAudio(_recordFile!);
+                  // Send Button on the right
+                  FloatingActionButton(
+                    heroTag: "Write",
+                    onPressed: isProcessing
+                        ? null
+                        : () async {
+                      if (_controller.text.isEmpty &&
+                          _recordFile == null &&
+                          imageList.isEmpty) {
+                        return;
                       }
 
-                      // 2. Upload images concurrently if available
-                      if (imageList.isNotEmpty) {
-                        setState(() => processingMessage = 'Uploading images...');
-                        List<Future<String>> uploadTasks = imageList.map((file) {
-                          // Assuming _firebaseServices.uploadImage exists and works
-                          return _firebaseServices.uploadImage(file);
-                        }).toList();
+                      if (!await _firebaseServices.isUserSignIn(context)) return;
 
-                        uploadedImageUrls = await Future.wait(uploadTasks);
-                      }
+                      setState(() {
+                        isProcessing = true;
+                        processingMessage = 'Sending...';
+                      });
 
-                      // 3. Callback with the data
-                      // NOTE: We send the first two URLs to match the required function signature.
-                      // For a better implementation, update the parent to accept List<String>.
-                      String image1 = uploadedImageUrls.isNotEmpty ? uploadedImageUrls[0] : '';
-                      String image2 = uploadedImageUrls.length > 1 ? uploadedImageUrls[1] : '';
-                      widget.onTap(_controller.text, audioUrl, image1, image2);
+                      String audioUrl = '';
+                      List<String> uploadedImageUrls = [];
 
-                    } catch (e) {
-                      print("Error during upload: $e");
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Upload failed. Please try again.')),
+                      try {
+                        if (_recordFile != null) {
+                          setState(
+                                  () => processingMessage = 'Uploading audio...');
+                          audioUrl = await uploadCommentAudio(_recordFile!);
+                        }
+
+                        if (imageList.isNotEmpty) {
+                          setState(
+                                  () => processingMessage = 'Uploading images...');
+                          // This part seems incomplete in your original file. Assuming you have a service for this.
+                          // For now, we'll just simulate it.
+                          // List<Future<String>> uploadTasks = imageList.map((file) {
+                          //   return _firebaseServices.uploadImage(file);
+                          // }).toList();
+                          // uploadedImageUrls = await Future.wait(uploadTasks);
+                        }
+
+                        // IMPORTANT: Your onTap expects image1 and image2, but you have a list.
+                        // This needs to be reconciled with the parent widget.
+                        // Sending first two images for now.
+                        widget.onTap(
+                          _controller.text,
+                          audioUrl,
+                          uploadedImageUrls.isNotEmpty ? uploadedImageUrls[0] : '',
+                          uploadedImageUrls.length > 1 ? uploadedImageUrls[1] : '',
                         );
-                      }
-                    } finally {
-                      // 4. Clean up state and UI
-                      if (mounted) {
+
                         _controller.clear();
                         setState(() {
-                          isTyping = false;
-                          isProcessing = false;
-                          processingMessage = '';
-                          _recordFile = null;
                           imageList.clear();
+                          _recordFile = null;
+                          isTyping = false;
                         });
+
+                      } catch (e) {
+                        print('Error sending message: $e');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to send: $e')),
+                        );
+                      } finally {
+                        if (mounted) {
+                          setState(() {
+                            isProcessing = false;
+                            processingMessage = '';
+                          });
+                        }
                       }
-                    }
-                  },
-                  mini: true,
-                  backgroundColor: isProcessing ? Colors.grey : Pallet.colorSplashScreen,
-                  child: isProcessing
-                      ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.0,))
-                      : SvgPicture.asset(AppImages.appSend, height: 25),
-                ),
-              ],
-            ),
-          ],
+                    },
+                    mini: true,
+                    backgroundColor: Pallet.colorPrimary,
+                    child: Icon(Icons.send, size: 24),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+

@@ -82,7 +82,9 @@ class _EgoModeSessionDetailState
   @override
   void dispose() {
     super.dispose();
+    _showAdviseInterstitialAd();
     _interstitialAd?.dispose();
+    egoModeSessionDetailBottomBanner?.dispose();
   }
 
 
