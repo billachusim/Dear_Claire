@@ -12,21 +12,18 @@ import 'package:clairediary/widgets/metoo_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../../../services/data/notification_model.dart' as push_notification;
 import '../../../services/firebase_services.dart';
 import '../../../services/hidden_posts_service.dart';
 import '../../../services/native_gallery_saver.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/user_model.dart';
 import '../../../utils/strings.dart';
+import '../../../widgets/translation_indicator_widget.dart';
 import '../../../widgets/unified_media_widget.dart';
 import '../../../widgets/toast.dart';
 import '../../create_session/sound/custom_play_sound_widget.dart';
@@ -45,6 +42,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   final screenshotController = ScreenshotController();
   TextEditingController editSessionController = TextEditingController();
   User? currentUser = FirebaseAuth.instance.currentUser;
+  UserModel? _currentUserModel;
   bool? isFeatured;
   bool? isArchived;
   late String visitedUsersID;
@@ -61,12 +59,44 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   @override
   void initState() {
     super.initState();
+    _fetchCurrentUser();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchCurrentUser() async {
+    if (currentUser != null) {
+      // 1. Fetch user data from Firestore
+      var userModel = await firebaseServices.getUserInfo();
+
+      // 2. Check if language preference is missing (for existing users)
+      if (userModel.languagePreference == null || userModel.languagePreference!.isEmpty) {
+        // Get device language
+        final deviceLanguageCode = Platform.localeName.split('_').first;
+
+        // Update the model in memory immediately for the UI
+        userModel.languagePreference = deviceLanguageCode;
+
+        // Asynchronously update Firestore in the background
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .update({'languagePreference': deviceLanguageCode});
+
+        logger.d("Updated language preference for existing user: $deviceLanguageCode");
+      }
+
+      // 3. Update the state to rebuild the widget with the correct language
+      if (mounted) {
+        setState(() {
+          _currentUserModel = userModel;
+        });
+      }
+    }
   }
 
   @override
@@ -421,7 +451,12 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                           ),
                           Center(
                             child: Text(
-                              _session.title!,
+                              // Check for and use the translated title if available
+                              (_currentUserModel?.languagePreference != null &&
+                                  _session.translatedTitle != null &&
+                                  _session.translatedTitle!.containsKey(_currentUserModel!.languagePreference))
+                                  ? _session.translatedTitle![_currentUserModel!.languagePreference]!
+                                  : _session.title!,
                               textAlign: TextAlign.center,
                               maxLines: 3,
                               style: GoogleFonts.plusJakartaSans(
@@ -432,8 +467,24 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                 letterSpacing: -0.7,
                               ),
                             ),
-
                           ),
+
+                          // TRANSLATION INDICATOR HERE ---
+                          if ((_currentUserModel?.languagePreference != null &&
+                              _session.translatedTitle != null &&
+                              _session.translatedTitle!
+                                  .containsKey(
+                                  _currentUserModel!.languagePreference)) ||
+                              (_currentUserModel?.languagePreference != null &&
+                                  _session.translatedSession != null &&
+                                  _session.translatedSession!
+                                      .containsKey(
+                                      _currentUserModel!.languagePreference)))
+                            Padding(
+                              padding: const EdgeInsets.only(top: 5.0),
+                              child: TranslationIndicator(textColor: textColor),
+                            ),
+
                           SizedBox(
                             height: 13,
                           ),
@@ -442,7 +493,13 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                               Expanded(
                                 child: SelectableText.rich(
                                   TextSpan(
-                                    text: _session.message!,
+                                    // This is the key change:
+                                    text: (_currentUserModel?.languagePreference != null &&
+                                        _session.translatedSession != null &&
+                                        _session.translatedSession!
+                                            .containsKey(_currentUserModel!.languagePreference))
+                                        ? _session.translatedSession![_currentUserModel!.languagePreference]!
+                                        : _session.message!,
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 20.0,
                                       color: textColor.withValues(alpha: 0.9),
@@ -453,10 +510,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                   ),
                                   textAlign: TextAlign.justify,
                                   onTap: () {
-                                    // You can add a tap handler here if needed, but SelectableLinkify handles links.
-                                    // For simplicity, we will let the Linkify part handle taps.
+                                    // This area remains unchanged.
                                   },
-                                  // This explicitly enables the copy and select all buttons.
                                   contextMenuBuilder: (context, editableTextState) {
                                     return AdaptiveTextSelectionToolbar.buttonItems(
                                       anchors: editableTextState.contextMenuAnchors,

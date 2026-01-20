@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/widgets/translation_indicator_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/ui/featured/model/comment_session_model.dart';
@@ -51,6 +53,7 @@ class EgoModeSessionCard extends StatefulWidget {
 }
 
 class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
+  UserModel? _currentUserModel;
   bool? isFeatured;
   bool? isArchived;
   final TransactionService _transactionService = TransactionService();
@@ -63,6 +66,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
   @override
   void initState() {
     super.initState();
+    _fetchCurrentUser();
     widget.isFeatured = widget.element.featured;
     widget.isArchived = widget.element.archived;
   }
@@ -73,8 +77,41 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
     super.dispose();
   }
 
-  /// Edit feature
+  /// Get user detail for language/translation sake.
+  Future<void> _fetchCurrentUser() async {
+    if (currentUser != null) {
+      // 1. Fetch user data from Firestore
+      var userModel = await firebaseServices.getUserInfo();
 
+      // 2. Check if language preference is missing (for existing users)
+      if (userModel.languagePreference == null || userModel.languagePreference!.isEmpty) {
+        // Get device language
+        final deviceLanguageCode = Platform.localeName.split('_').first;
+
+        // Update the model in memory immediately for the UI
+        userModel.languagePreference = deviceLanguageCode;
+
+        // Asynchronously update Firestore in the background
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .update({'languagePreference': deviceLanguageCode});
+
+        logger.d("Updated language preference for existing user: $deviceLanguageCode");
+      }
+
+      // 3. Update the state to rebuild the widget with the correct language
+      if (mounted) {
+        setState(() {
+          _currentUserModel = userModel;
+        });
+      }
+    }
+  }
+
+
+
+  /// Edit feature
   Future<bool?> setToFeatured() async {
     final value = true;
     FirebaseFirestore.instance
@@ -640,21 +677,39 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                   ),
                   Center(
                     child: Text(
-                      widget.element.title!,
-                      textAlign: TextAlign.center,
-                      maxLines: widget.element.imageUrls!.isNotEmpty ? 1 : 2,
+                      (_currentUserModel?.languagePreference != null &&
+                          widget.element.translatedTitle != null &&
+                          widget.element.translatedTitle!.containsKey(_currentUserModel!.languagePreference))
+                          ? widget.element.translatedTitle![_currentUserModel!.languagePreference]!
+                          : widget.element.title!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize:
-                            23.0, // Slightly smaller than 24 for a more refined look
+                        fontSize: 22.0,
                         color: textColor,
-                        fontWeight: FontWeight.w800, // Extra Bold
-                        letterSpacing:
-                            -0.5, // Tighter tracking for that premium "editorial" feel
-                        height:
-                            1.1, // Tighter line height for multi-line titles
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ),
+
+                  // TRANSLATION INDICATOR HERE ---
+                  if ((_currentUserModel?.languagePreference != null &&
+                      widget.element.translatedTitle != null &&
+                      widget.element.translatedTitle!
+                          .containsKey(
+                          _currentUserModel!.languagePreference)) ||
+                      (_currentUserModel?.languagePreference != null &&
+                          widget.element.translatedSession != null &&
+                          widget.element.translatedSession!
+                              .containsKey(
+                              _currentUserModel!.languagePreference)))
+                    TranslationIndicator(textColor: textColor)
+                  else
+                  // If no translation, maintain the original spacing
+                    SizedBox(height: 1),
+
                   SizedBox(
                     height: 7,
                   ),
@@ -663,26 +718,33 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                       Padding(
                           padding: const EdgeInsets.fromLTRB(2.0, 0, 2.0, 0.0),
                           child: Text(
-                            widget.element.message!,
+                            // Choose translated message if available, otherwise default to original
+                            (_currentUserModel?.languagePreference != null &&
+                                widget.element.translatedSession != null &&
+                                widget.element.translatedSession!
+                                    .containsKey(_currentUserModel!.languagePreference))
+                                ? widget.element.translatedSession![_currentUserModel!.languagePreference]!
+                                : widget.element.message!,
                             textAlign: TextAlign.justify,
                             maxLines: (widget.element.imageUrls?.isNotEmpty ??
-                                        false) ||
-                                    (widget.element.videoUrls?.isNotEmpty ??
-                                        false)
+                                false) ||
+                                (widget.element.videoUrls?.isNotEmpty ??
+                                    false)
                                 ? 2
                                 : 7,
                             style: GoogleFonts.plusJakartaSans(
                               fontSize:
-                                  17.0, // Slightly smaller is often more "Elite" and cleaner
+                              17.0,
                               color: textColor,
                               fontWeight: FontWeight.w600,
                               height:
-                                  1.4, // Increased line height for that premium "editorial" feel
+                              1.4,
                               letterSpacing:
-                                  -0.2, // Subtle negative tracking makes the text look tighter/higher-end
+                              -0.2,
                             ),
                             overflow: TextOverflow.ellipsis,
                           )),
+
 
                       SizedBox(
                         height: 7,

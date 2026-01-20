@@ -1,17 +1,14 @@
 import 'dart:io';
 import 'package:clairediary/services/firebase_services.dart';
-import 'package:clairediary/ui/routes/routes.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/strings.dart';
 import 'package:clairediary/widgets/toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import '../../utils/helper.dart';
-import '../splash_screen/rotate_logo.dart';
 
 // Preserving your existing state management and ad logic
 class SignUpPage extends StatefulWidget {
@@ -251,11 +248,15 @@ class _SignUpPage extends State<SignUpPage> {
             isSigningIn = true;
           });
 
+          // Get device language
+          final languageCode = Platform.localeName.split('_')[0];
+
           await _firebaseServices.register(
             context,
             _emailController.text,
             _secretCodeController.text,
             _egoNameController.text,
+            languageCode, // Pass the language code
             referredBy: _referralController.text.trim(),
           );
 
@@ -434,4 +435,3 @@ class _BuildPasswordFieldState extends State<BuildPasswordField> {
     );
   }
 }
-

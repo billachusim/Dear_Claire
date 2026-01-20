@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clairediary/ui/create_session/sound/custom_play_sound_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -49,6 +51,7 @@ class CommentWidget extends StatefulWidget {
 class _CommentWidgetState extends State<CommentWidget> {
   TextEditingController editAdviseController = TextEditingController();
   User? currentUser = FirebaseAuth.instance.currentUser;
+  UserModel? _currentUserModel;
   bool? isFlagged;
   String? _commentTime;
   bool _isThanked = false;
@@ -57,9 +60,40 @@ class _CommentWidgetState extends State<CommentWidget> {
   @override
   void initState() {
     super.initState();
-    // Initialize the button's state based on Firestore data
+    _fetchCurrentUser();
     if (currentUser != null) {
       _isThanked = widget.commentSessionModel?.thanks?.contains(currentUser!.uid) ?? false;
+    }
+  }
+
+  Future<void> _fetchCurrentUser() async {
+    if (currentUser != null) {
+      // 1. Fetch user data from Firestore
+      var userModel = await firebaseServices.getUserInfo();
+
+      // 2. Check if language preference is missing (for existing users)
+      if (userModel.languagePreference == null || userModel.languagePreference!.isEmpty) {
+        // Get device language
+        final deviceLanguageCode = Platform.localeName.split('_').first;
+
+        // Update the model in memory immediately for the UI
+        userModel.languagePreference = deviceLanguageCode;
+
+        // Asynchronously update Firestore in the background
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .update({'languagePreference': deviceLanguageCode});
+
+        logger.d("Updated language preference for existing user: $deviceLanguageCode");
+      }
+
+      // 3. Update the state to rebuild the widget with the correct language
+      if (mounted) {
+        setState(() {
+          _currentUserModel = userModel;
+        });
+      }
     }
   }
 
@@ -821,13 +855,18 @@ class _CommentWidgetState extends State<CommentWidget> {
                 throw 'Could not launch $link';
               }
             },
-            // Elite UI: Styled link to match a premium iOS feel
             linkStyle: GoogleFonts.plusJakartaSans(
               color: Colors.blueAccent,
               fontWeight: FontWeight.w700,
               decoration: TextDecoration.underline,
             ),
-            text: widget.commentSessionModel!.message!,
+            // This is the key change:
+            text: (_currentUserModel?.languagePreference != null &&
+                widget.commentSessionModel?.translatedComment != null &&
+                widget.commentSessionModel!.translatedComment!
+                    .containsKey(_currentUserModel!.languagePreference))
+                ? widget.commentSessionModel!.translatedComment![_currentUserModel!.languagePreference]!
+                : widget.commentSessionModel!.message!,
             textAlign: TextAlign.justify,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 16.0,
@@ -837,6 +876,7 @@ class _CommentWidgetState extends State<CommentWidget> {
               letterSpacing: -0.1,
             ),
           ),
+
 
 
           SizedBox(

@@ -27,6 +27,7 @@ class ChatModel {
   String? alterEgoId;
   List<dynamic>? members;
   Map<String, dynamic>? subMessage;
+  Map<String, dynamic>? translatedMessage;
 
   ChatModel(
       {this.archived = false,
@@ -55,6 +56,7 @@ class ChatModel {
       this.location,
       this.userType,
       this.alterEgoId,
+      this.translatedMessage,
       });
 
   ChatModel.fromJson(Map<String, dynamic> json) {
@@ -110,6 +112,12 @@ class ChatModel {
     if (json['members'] != null) {
       members = json['members'] ?? [];
     }
+
+    if (json['translatedMessage'] != null && json['translatedMessage'] is Map) {
+      translatedMessage = Map<String, dynamic>.from(json['translatedMessage']);
+    } else {
+      translatedMessage = {};
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -158,6 +166,10 @@ class ChatModel {
     data['message'] = message;
     data['private'] = private;
     data['repliesEnabled'] = repliesEnabled;
+
+    if (this.translatedMessage != null) {
+      data['translatedMessage'] = this.translatedMessage;
+    }
 
     return data;
   }

@@ -13,10 +13,11 @@ class CommentSessionModel {
   String? userNickname;
   String? image1;
   String? image2;
-  List<dynamic>? imageUrls = []; // Kept as List<dynamic> for compatibility
+  List<dynamic>? imageUrls = [];
   int? numberOfThanks;
-  List<dynamic>? thanks = []; // Kept as List<dynamic> for compatibility
+  List<dynamic>? thanks = [];
   String? originalAdviseCategory;
+  Map<String, dynamic>? translatedComment; // Add this line
 
   CommentSessionModel(
       {this.alterEgoId = '',
@@ -24,8 +25,8 @@ class CommentSessionModel {
         this.audioUrl = '',
         this.commentId = '',
         this.userNickname = '',
-        this.image1 = '', // Kept for compatibility
-        this.image2 = '', // Kept for compatibility
+        this.image1 = '',
+        this.image2 = '',
         this.timeCreated,
         this.userAvatarUrl = '',
         this.flagged = false,
@@ -34,18 +35,20 @@ class CommentSessionModel {
         this.imageUrls,
         this.numberOfThanks = 0,
         this.thanks,
-        this.originalAdviseCategory});
+        this.originalAdviseCategory,
+        this.translatedComment // Add this line
+      });
 
-  /// Converts the model instance to a Map, suitable for uploading to Firestore.
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
+    // ... (keep existing toJson assignments)
     data["alterEgoId"] = this.alterEgoId;
     data["message"] = this.message;
     data["audioUrl"] = this.audioUrl;
     data["commentId"] = this.commentId;
     data["userNickname"] = this.userNickname;
-    data["image1"] = this.image1; // Kept for compatibility
-    data["image2"] = this.image2; // Kept for compatibility
+    data["image1"] = this.image1;
+    data["image2"] = this.image2;
     data["timeCreated"] = this.timeCreated;
     data["userAvatarUrl"] = this.userAvatarUrl;
     data["flagged"] = this.flagged;
@@ -53,29 +56,18 @@ class CommentSessionModel {
     data["isUserAdmin"] = this.isUserAdmin;
     data["numberOfThanks"] = this.numberOfThanks;
     data["originalAdviseCategory"] = this.originalAdviseCategory;
-
-    // --- START OF THE MINIMAL FIX ---
-
-    // 1. For image URLs:
-    // If the list is not null, assign it directly. Firestore can handle List<String>.
     if (this.imageUrls != null) {
-      data["imageUrls"] = this.imageUrls; // CORRECTED: Removed the failing .map() call
+      data["imageUrls"] = this.imageUrls;
     }
-
-    // 2. For thanks:
-    // Apply the same logic. If 'thanks' is a list of simple types (like Strings),
-    // it should also be assigned directly.
     if (this.thanks != null) {
-      // Assuming 'thanks' contains Firestore-compatible types (String, Number, etc.)
-      data["thanks"] = this.thanks; // CORRECTED: Removed the failing .map() call
+      data["thanks"] = this.thanks;
     }
-
-    // --- END OF THE MINIMAL FIX ---
-
+    if (this.translatedComment != null) { // Add this block
+      data["translatedComment"] = this.translatedComment;
+    }
     return data;
   }
 
-  /// Creates a CommentSessionModel instance from a Firestore document snapshot.
   factory CommentSessionModel.fromJson(json) {
     return CommentSessionModel(
         alterEgoId: json['alterEgoId'] ?? '',
@@ -83,8 +75,8 @@ class CommentSessionModel {
         message: json['message'] ?? '',
         commentId: json['commentId'] ?? '',
         userNickname: json['userNickname'] ?? '',
-        image1: json['image1'] ?? '', // Kept for compatibility
-        image2: json['image2'] ?? '', // Kept for compatibility
+        image1: json['image1'] ?? '',
+        image2: json['image2'] ?? '',
         timeCreated: json['timeCreated'],
         userAvatarUrl: json['userAvatarUrl'] ?? '',
         imageUrls: json['imageUrls'] ?? [],
@@ -93,6 +85,10 @@ class CommentSessionModel {
         numberOfThanks: json['numberOfThanks'] ?? 0,
         thanks: json['thanks'] ?? [],
         userId: json['userId'] ?? '',
-        originalAdviseCategory: json['originalAdviseCategory'] ?? '');
+        originalAdviseCategory: json['originalAdviseCategory'] ?? '',
+        // Add this line to parse the map from json
+        translatedComment: json['translatedComment'] != null
+            ? Map<String, dynamic>.from(json['translatedComment'])
+            : {});
   }
 }

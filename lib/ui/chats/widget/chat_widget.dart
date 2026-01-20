@@ -52,19 +52,10 @@ class ChatWidget extends StatefulWidget {
 
 class _ChatWidgetState extends State<ChatWidget> {
   UserModel userModel = UserModel();
-
+  UserModel? _currentUserModel;
   User? currentUser = FirebaseAuth.instance.currentUser;
 
   int maxFailedLoadAttempts = 3;
-
-  getUser() async {
-    var info = await firebaseServices.getUserInfo();
-    if (mounted) {
-      setState(() {
-        userModel = info;
-      });
-    }
-  }
 
   late String visitedUsersID;
 
@@ -83,11 +74,45 @@ class _ChatWidgetState extends State<ChatWidget> {
   @override
   void initState() {
     super.initState();
-    getUser();
+    _fetchCurrentUser();
     _createJoinChatInterstitialAd();
     _createLeaveChatInterstitialAd();
     _createContChatInterstitialAd();
   }
+
+  Future<void> _fetchCurrentUser() async {
+    if (currentUser != null) {
+      // 1. Fetch user data from Firestore
+      var userModel = await firebaseServices.getUserInfo();
+
+      // 2. Check if language preference is missing (for existing users)
+      if (userModel.languagePreference == null || userModel.languagePreference!.isEmpty) {
+        // Get device language
+        final deviceLanguageCode = Platform.localeName.split('_').first;
+
+        // Update the model in memory immediately for the UI
+        userModel.languagePreference = deviceLanguageCode;
+
+        // Asynchronously update Firestore in the background
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .update({'languagePreference': deviceLanguageCode});
+
+        logger.d("Updated language preference for existing user: $deviceLanguageCode");
+      }
+
+      // 3. Update the state to rebuild the widget with the correct language
+      if (mounted) {
+        setState(() {
+          _currentUserModel = userModel;
+          // Also update the existing userModel variable to ensure compatibility elsewhere in the widget
+          this.userModel = userModel;
+        });
+      }
+    }
+  }
+
 
   @override
   void dispose() {
@@ -590,7 +615,12 @@ class _ChatWidgetState extends State<ChatWidget> {
               }
             },
             linkStyle: TextStyle(color: Colors.blue),
-            text: widget.chatModel!.message!,
+            text: (_currentUserModel?.languagePreference != null &&
+                widget.chatModel?.translatedMessage != null &&
+                widget.chatModel!.translatedMessage!
+                    .containsKey(_currentUserModel!.languagePreference))
+                ? widget.chatModel!.translatedMessage![_currentUserModel!.languagePreference]!
+                : widget.chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
                 fontSize: 18.0,

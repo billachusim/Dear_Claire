@@ -914,7 +914,7 @@ class FirebaseServices extends ChangeNotifier {
 
   /// SignUp user
   Future<bool> register(
-      BuildContext context, String email, String secretCode, String nickname, {String? referredBy}) async {
+      BuildContext context, String email, String secretCode, String nickname, String languageCode, {String? referredBy}) async {
     try {
       // 1. Create the user with Firebase Auth
       final _user = await FirebaseAuth.instance
@@ -950,6 +950,7 @@ class FirebaseServices extends ChangeNotifier {
         "nickname": nickname,
         "avatarUrl": randomAvatarUrl,
         "userId": _user.user?.uid,
+        "languagePreference": languageCode, // Add language preference
         "alterEgoAccessCode": "",
         "alterEgoId": "",
         "email": email,

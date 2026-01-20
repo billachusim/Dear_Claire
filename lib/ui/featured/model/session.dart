@@ -31,6 +31,8 @@ class Session {
   List<dynamic>? meFlower;
   String? location;
   String? category1;
+  Map<String, dynamic>? translatedSession;
+  Map<String, dynamic>? translatedTitle;
 
   Session({
     this.audioUrl,
@@ -63,6 +65,8 @@ class Session {
     this.meFlower,
     this.followers,
     this.category1,
+    this.translatedSession,
+    this.translatedTitle,
   });
 
   factory Session.fromJson(json) {
@@ -96,6 +100,9 @@ class Session {
       meFlower: json['meFlower'] ?? [],
       location: json['location'] ?? '',
       category1: json['category1'] ?? '',
+      // Add this line to parse the map from json
+      translatedSession: json['translatedSession'] != null ? Map<String, dynamic>.from(json['translatedSession']) : {},
+      translatedTitle: json['translatedTitle'] != null ? Map<String, dynamic>.from(json['translatedTitle']) : {},
     );
   }
 

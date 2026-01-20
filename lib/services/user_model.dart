@@ -30,6 +30,7 @@ class UserModel {
   String? claireminderMessage;
   int? claireminderDelay;
   List<String> blockedUsers;
+  String? languagePreference;
 
   UserModel({
     this.alterEgoAccessCode,
@@ -61,6 +62,7 @@ class UserModel {
     this.claireminderMessage,
     this.claireminderDelay,
     this.blockedUsers = const [],
+    this.languagePreference,
   });
 
   factory UserModel.fromJson(json) {
@@ -94,6 +96,7 @@ class UserModel {
       claireminderMessage: json['claireminderMessage'] ?? '',
       claireminderDelay: json['claireminderDelay'] ?? 0,
       blockedUsers: List<String>.from(json['blockedUsers'] ?? []),
+      languagePreference: json['languagePreference'] ?? 'en',
     );
   }
 
@@ -128,6 +131,7 @@ class UserModel {
       claireminderMessage: json['claireminderMessage'] ?? '',
       claireminderDelay: json['claireminderDelay'] ?? 0,
       blockedUsers: List<String>.from(json['blockedUsers'] ?? []),
+      languagePreference: json['languagePreference'] ?? 'en',
     );
   }
 
@@ -157,5 +161,6 @@ class UserModel {
     'claireminderMessage': claireminderMessage,
     'claireminderDelay': claireminderDelay,
     'blockedUsers': blockedUsers,
+    'languagePreference': languagePreference,
   };
 }

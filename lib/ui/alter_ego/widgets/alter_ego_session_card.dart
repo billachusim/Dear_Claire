@@ -1,8 +1,9 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/alter_ego/widgets/alter_ego_mode_session_detail.dart';
 import 'package:clairediary/ui/featured/model/comment_session_model.dart';
-import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/mood.dart';
 import 'package:clairediary/utils/strings.dart';
@@ -21,26 +22,75 @@ import '../../../services/firebase_services.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/user_model.dart';
 import '../../../widgets/custom_image_widget.dart';
+import '../../../widgets/translation_indicator_widget.dart';
 import '../../create_session/sound/custom_play_sound_widget.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 
-class AlterEgoModeSessionCard extends StatelessWidget {
+class AlterEgoModeSessionCard extends StatefulWidget {
   Session element;
   bool? isFeatured;
+  bool? isArchived;
 
   AlterEgoModeSessionCard({Key? key, required this.element, required this.visitedUsersID, required this.visitedEgoName}) : super(key: key);
   late String visitedUsersID;
   late String visitedEgoName;
+
+  @override
+  State<AlterEgoModeSessionCard> createState() => _AlterEgoModeSessionCardState();
+}
+
+class _AlterEgoModeSessionCardState extends State<AlterEgoModeSessionCard> {
+  bool? isFeatured;
+  UserModel? _currentUserModel;
   UserModel userModel = UserModel();
   User? currentUser = FirebaseAuth.instance.currentUser;
 
-  /// Edit feature
+  @override
+  void initState() {
+    super.initState();
+    _fetchCurrentUser();
+    widget.isFeatured = widget.element.featured;
+    widget.isArchived = widget.element.archived;
+  }
 
+  /// Get user detail for language/translation sake.
+  Future<void> _fetchCurrentUser() async {
+    if (currentUser != null) {
+      // 1. Fetch user data from Firestore
+      var userModel = await firebaseServices.getUserInfo();
+
+      // 2. Check if language preference is missing (for existing users)
+      if (userModel.languagePreference == null || userModel.languagePreference!.isEmpty) {
+        // Get device language
+        final deviceLanguageCode = Platform.localeName.split('_').first;
+
+        // Update the model in memory immediately for the UI
+        userModel.languagePreference = deviceLanguageCode;
+
+        // Asynchronously update Firestore in the background
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .update({'languagePreference': deviceLanguageCode});
+
+        logger.d("Updated language preference for existing user: $deviceLanguageCode");
+      }
+
+      // 3. Update the state to rebuild the widget with the correct language
+      if (mounted) {
+        setState(() {
+          _currentUserModel = userModel;
+        });
+      }
+    }
+  }
+
+  /// Edit feature
   Future<bool?> setToFeatured() async {
     final value = true;
     FirebaseFirestore.instance
         .collection('sessions')
-        .doc(element.sessionId)
+        .doc(widget.element.sessionId)
         .update({
       "featured": value,
     },
@@ -51,12 +101,11 @@ class AlterEgoModeSessionCard extends StatelessWidget {
     return value;
   }
 
-
   Future<bool?> removeFromFeatured() async {
     final value = false;
     FirebaseFirestore.instance
         .collection('sessions')
-        .doc(element.sessionId)
+        .doc(widget.element.sessionId)
         .update({
       "featured": value,
     },
@@ -69,13 +118,13 @@ class AlterEgoModeSessionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color backgroundColor = HexColor.fromHex(element.colorHex!);
+    final Color backgroundColor = HexColor.fromHex(widget.element.colorHex!);
     final Color textColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
     final Color secondaryTextColor = backgroundColor.computeLuminance() > 0.5 ? Colors.black54 : Colors.white70;
 
     return CupertinoButton(
       onPressed: () => PageRouter.gotoWidget(
-          AlterEgoModeSessionDetail(featuredSessionModel: element),
+          AlterEgoModeSessionDetail(featuredSessionModel: widget.element),
           context),
       padding: EdgeInsets.zero,
       child: Container(
@@ -94,19 +143,17 @@ class AlterEgoModeSessionCard extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: (){
-                    visitedUsersID = element.userId!;
-                    visitedEgoName = element.userNickname!;
-                    String thisEgoName = visitedEgoName;
-                    String thisUser = visitedUsersID;
+                    String thisEgoName = widget.visitedEgoName;
+                    String thisUser = widget.visitedUsersID;
                     PageRouter.gotoWidget(
                         VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
                         context);
-                    print("Visited User ID::: $visitedUsersID");
+                    print("Visited User ID::: ${widget.visitedUsersID}");
                   },
                   child: CachedNetworkImage(
                       width: 50,
                       height: 50,
-                      imageUrl: element.userAvatarUrl!,
+                      imageUrl: widget.element.userAvatarUrl!,
                       imageBuilder: (context, imageProvider) => Container(
                         decoration: BoxDecoration(
                           image: DecorationImage(
@@ -133,16 +180,14 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                     children: [
                       GestureDetector(
                         onTap: (){
-                          visitedUsersID = element.userId!;
-                          visitedEgoName = element.userNickname!;
-                          String thisEgoName = visitedEgoName;
-                          String thisUser = visitedUsersID;
+                          String thisEgoName = widget.visitedEgoName;
+                          String thisUser = widget.visitedUsersID;
                           PageRouter.gotoWidget(
                               VisitedUserEgoProfilePage(visitedUsersID: thisUser, visitedEgoName: thisEgoName),
                               context);
-                          print("Visited User ID::: $visitedUsersID");
+                          print("Visited User ID::: ${widget.visitedUsersID}");
                         },
-                        child: Text(element.userNickname!,
+                        child: Text(widget.element.userNickname!,
                             textAlign: TextAlign.start,
                             maxLines: 1,
                             style: GoogleFonts.lato(
@@ -153,7 +198,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                       SizedBox(
                         height: 4,
                       ),
-                      Text(timeConverter(element.timeCreated!),
+                      Text(timeConverter(widget.element.timeCreated!),
                           textAlign: TextAlign.start,
                           maxLines: 1,
                           style: GoogleFonts.lato(
@@ -169,7 +214,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
 
-                      Text(Mood.getMood(element.moodId) ?? "${Mood.getMood(1)}",
+                      Text(Mood.getMood(widget.element.moodId) ?? "${Mood.getMood(1)}",
                           textAlign: TextAlign.end,
                           maxLines: 1,
                           style: GoogleFonts.lato(
@@ -179,7 +224,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                       SizedBox(
                         height: 3,
                       ),
-                      Text(element.location ?? "",
+                      Text(widget.element.location ?? "",
                           textAlign: TextAlign.end,
                           maxLines: 1,
                           style: GoogleFonts.lato(
@@ -195,27 +240,70 @@ class AlterEgoModeSessionCard extends StatelessWidget {
               height: 7,
             ),
             Center(
-              child: Text(element.title!,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  style: GoogleFonts.lato(
-                      fontSize: 28.0,
-                      color: textColor,
-                      fontWeight: FontWeight.w800)),
+              child: Text(
+                (_currentUserModel?.languagePreference != null &&
+                    widget.element.translatedTitle != null &&
+                    widget.element.translatedTitle!.containsKey(_currentUserModel!.languagePreference))
+                    ? widget.element.translatedTitle![_currentUserModel!.languagePreference]!
+                    : widget.element.title!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 22.0,
+                  color: textColor,
+                  fontWeight: FontWeight.w800,
+                  height: 1.2,
+                  letterSpacing: -0.5,
+                ),
+              ),
             ),
+
+            // TRANSLATION INDICATOR HERE ---
+            if ((_currentUserModel?.languagePreference != null &&
+                widget.element.translatedTitle != null &&
+                widget.element.translatedTitle!
+                    .containsKey(
+                    _currentUserModel!.languagePreference)) ||
+                (_currentUserModel?.languagePreference != null &&
+                    widget.element.translatedSession != null &&
+                    widget.element.translatedSession!
+                        .containsKey(
+                        _currentUserModel!.languagePreference)))
+              TranslationIndicator(textColor: textColor)
+            else
+            // If no translation, maintain the original spacing
+              SizedBox(height: 1),
+
             SizedBox(
               height: 6,
             ),
             Column(
               children: [
                 Text(
-                  element.message!,
-                  textAlign: TextAlign.start,
-                  maxLines: element.imageUrls!.isNotEmpty ? 4 : 6,
-                  style: GoogleFonts.lato(
-                      fontSize: 23.0,
-                      color: textColor,
-                      fontWeight: FontWeight.normal),
+                  // Choose translated message if available, otherwise default to original
+                  (_currentUserModel?.languagePreference != null &&
+                      widget.element.translatedSession != null &&
+                      widget.element.translatedSession!
+                          .containsKey(_currentUserModel!.languagePreference))
+                      ? widget.element.translatedSession![_currentUserModel!.languagePreference]!
+                      : widget.element.message!,
+                  textAlign: TextAlign.justify,
+                  maxLines: (widget.element.imageUrls?.isNotEmpty ??
+                      false) ||
+                      (widget.element.videoUrls?.isNotEmpty ??
+                          false)
+                      ? 2
+                      : 7,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize:
+                    17.0,
+                    color: textColor,
+                    fontWeight: FontWeight.w600,
+                    height:
+                    1.4,
+                    letterSpacing:
+                    -0.2,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(
@@ -223,19 +311,19 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                 ),
 
                 Container(
-                  child: element.audioUrl!.isNotEmpty
-                      ? CustomPlaySoundWidget(filePath: element.audioUrl)
+                  child: widget.element.audioUrl!.isNotEmpty
+                      ? CustomPlaySoundWidget(filePath: widget.element.audioUrl)
                       : SizedBox.shrink(),
                 ),
 
                 Visibility(
-                  visible: element.imageUrls!.isNotEmpty,
+                  visible: widget.element.imageUrls!.isNotEmpty,
                   child: GridView.count(
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
                     crossAxisCount: 5,
-                    children: List.generate(element.imageUrls!.length, (index) {
-                      String image = element.imageUrls![index].toString();
+                    children: List.generate(widget.element.imageUrls!.length, (index) {
+                      String image = widget.element.imageUrls![index].toString();
                       return Stack(
                         fit: StackFit.expand,
                         children: <Widget>[
@@ -277,12 +365,12 @@ class AlterEgoModeSessionCard extends StatelessWidget {
             Row(
               children: [
                 MetooButton(
-                  cheers: element.meToos!.length,
-                  thanks: element.meLove!.length,
-                  sorry: element.meHiFive!.length,
-                  me2: element.meFlower!.length,
+                  cheers: widget.element.meToos!.length,
+                  thanks: widget.element.meLove!.length,
+                  sorry: widget.element.meHiFive!.length,
+                  me2: widget.element.meFlower!.length,
                   color: textColor,
-                  session: element,
+                  session: widget.element,
                   onReactionChanged: (reaction, index) async {
                     if (await firebaseServices.isUserSignIn(context) == false) {
                       return;
@@ -291,7 +379,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                     // --- 1. SETUP TRANSACTION DETAILS ---
                     final reactingUser = await firebaseServices.getUserInfo();
                     final String reactingUserId = reactingUser.userId!;
-                    final String sessionOwnerId = element.userId!;
+                    final String sessionOwnerId = widget.element.userId!;
                     const int reactionCost = 1;
 
                     // --- 2. PREVENT SELF-REACTION & INSUFFICIENT LOVES ---
@@ -301,7 +389,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                       firebaseServices.addUsersReactionToASessionByIndex(
                         context,
                         index,
-                        session: element,
+                        session: widget.element,
                         sender: reactingUser.nickname ?? '',
                       );
                       showToast(message: "You reacted to your own session.");
@@ -327,16 +415,16 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                       taxAmount: 0, // No tax on a 1-love transaction
                       totalDebitAmount: reactionCost,
                       senderTransactionDesc:
-                      "1❤️ for reacting to session ${element.title}.",
+                      "1❤️ for reacting to session ${widget.element.title}.",
                       receiverTransactionDesc:
-                      "1❤️ from reaction to your session ${element.title} by ${reactingUser.nickname}.",
+                      "1❤️ from reaction to your session ${widget.element.title} by ${reactingUser.nickname}.",
                       claireTransactionDesc: "Tax from a session reaction.",
                       // Pass the specific stat increments
                       forReactions: reactionCost,
                       fromReactions: reactionCost,
                       metadata: {
                         'reason': 'session_reaction',
-                        'sessionId': element.sessionId,
+                        'sessionId': widget.element.sessionId,
                         'reactionIndex': index
                       },
                     );
@@ -347,7 +435,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                       firebaseServices.addUsersReactionToASessionByIndex(
                         context,
                         index,
-                        session: element,
+                        session: widget.element,
                         sender: reactingUser.nickname ?? '',
                       );
                       saveAlterEgoMe2Activity(); // Your existing activity tracking
@@ -357,7 +445,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                         if (receiverDoc.exists) {
                           final receiverToken = receiverDoc.data()?['fcmId'] as String?;
                           final senderName = reactingUser.nickname ?? 'Someone';
-                          final sessionTitle = element.title ?? 'your session';
+                          final sessionTitle = widget.element.title ?? 'your session';
                           final truncatedTitle = sessionTitle.length > 30 ? sessionTitle.substring(0, 30) + '...' : sessionTitle;
 
                           // Note: 'reaction' is the Reaction object passed by the MetooButton
@@ -371,7 +459,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                                 "body": "$senderName reacted with '$reactionValue' to your session: \"$truncatedTitle\""
                               },
                               "data": {
-                                "route": element.sessionId
+                                "route": widget.element.sessionId
                               }
                             });
                             logger.d("Successfully sent 'new reaction' notification.");
@@ -403,15 +491,15 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                           visible: userType == "SUPER_ADMIN",
                           child: GestureDetector(
                             onTap: () {
-                              if (element.featured == false)
+                              if (widget.element.featured == false)
                                 featureAlertDialog(context);
                               else unfeatureAlertDialog(context);
                             },
                             child: Container(
                               child: Visibility(
-                                visible: element.repliesEnabled == true,
+                                visible: widget.element.repliesEnabled == true,
                                 child: Icon(
-                                  element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
+                                  widget.element.featured == true ? Icons.lightbulb : Icons.lightbulb_outline,
                                   color: textColor,
                                   size: 26,
                                 ),
@@ -430,7 +518,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
 
                 StreamBuilder(
                     stream: firebaseServices
-                        .getFeaturedSessionsComments(element.sessionId!),
+                        .getFeaturedSessionsComments(widget.element.sessionId!),
                     builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
                       if (snapShot.hasError) {
                         return Container();
@@ -439,7 +527,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
                         return CommentsButton(
                           count: snapShot.data!.docs.length,
                           onPressed: () => PageRouter.gotoWidget(
-                              AlterEgoModeSessionDetail(featuredSessionModel: element),
+                              AlterEgoModeSessionDetail(featuredSessionModel: widget.element),
                               context),);
                       }
                       return Container();
@@ -455,7 +543,7 @@ class AlterEgoModeSessionCard extends StatelessWidget {
             ),
             StreamBuilder(
                 stream: firebaseServices
-                    .getFeaturedSessionsComments(element.sessionId!),
+                    .getFeaturedSessionsComments(widget.element.sessionId!),
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
                   if (snapShot.hasError) {
                     return Container();
@@ -513,7 +601,6 @@ class AlterEgoModeSessionCard extends StatelessWidget {
     }
   }
 
-
   featureAlertDialog(BuildContext context) {
 
     // set up the buttons
@@ -549,7 +636,6 @@ class AlterEgoModeSessionCard extends StatelessWidget {
       },
     );
   }
-
 
   unfeatureAlertDialog(BuildContext context) {
 
@@ -587,15 +673,14 @@ class AlterEgoModeSessionCard extends StatelessWidget {
     );
   }
 
-
   /// Save alter ego reaction activity
 
   Future<void> saveAlterEgoMe2Activity() async {
     final dateCreated = FieldValue.serverTimestamp();
-    final sessionId = element.sessionId;
-    final sessionOwnerId = element.userId;
-    final sessionOwnerAvatar = element.userAvatarUrl.toString();
-    final sessionOwnerNickname = element.userNickname.toString();
+    final sessionId = widget.element.sessionId;
+    final sessionOwnerId = widget.element.userId;
+    final sessionOwnerAvatar = widget.element.userAvatarUrl.toString();
+    final sessionOwnerNickname = widget.element.userNickname.toString();
     final sessionVisitorId = currentUser?.uid.toString();
     final sessionVisitorNickname = "Claire";
     final sessionVisitorAvatar = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691";
@@ -624,6 +709,4 @@ class AlterEgoModeSessionCard extends StatelessWidget {
     print('Activity Message: $activityMessage');
 
   }
-
-
 }

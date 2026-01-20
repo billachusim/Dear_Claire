@@ -31,6 +31,8 @@ class CreateSessionModel {
   String? category3;
   String? category4;
   List<dynamic>? followers;
+  Map<String, dynamic>? translatedSession;
+  Map<String, dynamic>? translatedTitle;
 
   CreateSessionModel(
       {this.archived = false,
@@ -63,6 +65,8 @@ class CreateSessionModel {
       this.category3,
       this.category4,
       this.followers,
+      this.translatedSession,
+      this.translatedTitle,
       }
       );
 
@@ -132,6 +136,19 @@ class CreateSessionModel {
     if (json['followers'] != null) {
       followers = json['followers'];
     }
+
+    if (json['translatedSession'] != null && json['translatedSession'] is Map) {
+      translatedSession = Map<String, dynamic>.from(json['translatedSession']);
+    } else {
+      translatedSession = {};
+    }
+
+    if (json['translatedTitle'] != null && json['translatedTitle'] is Map) {
+      translatedTitle = Map<String, dynamic>.from(json['translatedTitle']);
+    } else {
+      translatedTitle = {};
+    }
+
   }
 
 
@@ -191,7 +208,16 @@ class CreateSessionModel {
     data['message'] = message;
     data['private'] = private;
 
+    if (translatedSession != null) {
+      data['translatedSession'] = translatedSession;
+    }
+
+    if (translatedTitle != null) {
+      data['translatedTitle'] = translatedTitle;
+    }
+
     return data;
+
   }
 
 }
