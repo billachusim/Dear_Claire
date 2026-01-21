@@ -1,5 +1,6 @@
 gitignore
-# Miscellaneous*.class
+# Miscellaneous
+*.class
 *.log
 *.pyc
 *.swp
