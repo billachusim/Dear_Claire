@@ -23,7 +23,6 @@ import '../../../services/native_gallery_saver.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/user_model.dart';
 import '../../../utils/strings.dart';
-import '../../../widgets/translation_indicator_widget.dart';
 import '../../../widgets/unified_media_widget.dart';
 import '../../../widgets/toast.dart';
 import '../../create_session/sound/custom_play_sound_widget.dart';
@@ -449,6 +448,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                           SizedBox(
                             height: 13,
                           ),
+
                           Center(
                             child: Text(
                               // Check for and use the translated title if available
@@ -469,21 +469,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                             ),
                           ),
 
-                          // TRANSLATION INDICATOR HERE ---
-                          if ((_currentUserModel?.languagePreference != null &&
-                              _session.translatedTitle != null &&
-                              _session.translatedTitle!
-                                  .containsKey(
-                                  _currentUserModel!.languagePreference)) ||
-                              (_currentUserModel?.languagePreference != null &&
-                                  _session.translatedSession != null &&
-                                  _session.translatedSession!
-                                      .containsKey(
-                                      _currentUserModel!.languagePreference)))
-                            Padding(
-                              padding: const EdgeInsets.only(top: 5.0),
-                              child: TranslationIndicator(textColor: textColor),
-                            ),
 
                           SizedBox(
                             height: 13,

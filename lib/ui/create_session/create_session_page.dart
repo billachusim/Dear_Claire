@@ -664,8 +664,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         SizedBox(
                           height: 10,
                         ),
-                        Text("Please Wait your Diary Session is being created, "
-                            "If you have many videos and images, be patient.",
+                        Text("Please Wait, your Diary Session is being created, "
+                            "If you added videos and images, it may take a minute.",
                             style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -880,7 +880,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
             _showCardDialog();
           },
           tooltip: 'Send or Save',
-          child: RotateImage(45, 45),
+          child: const Icon(Icons.send, size: 28, color: Colors.white),
         ),
       ),
     );
@@ -1065,125 +1065,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
 
 
-
-  /*void startAiChat(CreateSessionModel session, String input) async {
-    final request = CompleteReq(
-        prompt: input, model: kTranslateModelV3, max_tokens: 800);
-
-    _subscription = chatGPT!
-        .onCompleteStream(request: request)
-        .distinct()
-        .first
-        .asStream()
-        .listen((response) async {
-      print("ADVISE IS : ${response!.choices.first.text}");
-      final theResponse = response.choices.first.text.trim();
-      final String latestContext = "You are a sweet, smart and friendly AI Assistance called Claire and my first message to you says: $input. And then you responded: $theResponse";
-      updateSessionForAI(session, latestContext);
-      await sendAiAdvise(session, theResponse);
-    });
-  }*/
-
-
-
-  Future <void> sendAiAdvise(CreateSessionModel session, String response) async {
-    final advise = response.toString();
-
-    CollectionReference ref =
-    FirebaseFirestore.instance
-        .collection("sessions")
-        .doc(session.sessionId!)
-        .collection("comments");
-
-    String docId = ref.doc().id;
-
-    final _commentModel = CommentSessionModel(
-        alterEgoId: 'CLaiRE',
-        audioUrl: '',
-        commentId: docId,
-        flagged: session.flagged!,
-        imageUrls: [],
-        image1: '',
-        image2: '',
-        thanks: [],
-        numberOfThanks: 0,
-        isUserAdmin: true,
-        message: advise,
-        timeCreated: Timestamp.now(),
-        userAvatarUrl: '',
-        userId: 'CLaiRE',
-        userNickname: 'CLaiRE',
-        originalAdviseCategory: session.category1);
-
-    await ref.doc(docId).set(_commentModel.toJson());
-
-
-    firebaseServices.addCommentNotification(
-      title: session.title ?? '',
-      docId: session.sessionId!,
-      sender: 'CLaiRE',
-    );
-
-    updateSessionTimeLastActivity(session);
-    saveAIAlterEgoCommentActivity();
-  }
-
-
-  /// Update a session's conversation context for AI when new comment is made.
-
-  Future<void> updateSessionForAI(CreateSessionModel session, String theContext) async {
-    FirebaseFirestore.instance
-        .collection("sessions")
-        .doc(session.sessionId)
-        .set({
-      'timeLastActivity': FieldValue.serverTimestamp(),
-      'theContext': theContext,
-    },
-      SetOptions(merge: true),
-    );
-    logger.d('Successfully updated conversation context for AI');
-  }
-
-
-  /// Save alter ego comment activity
-
-  Future<void> saveAIAlterEgoCommentActivity() async {
-    final Session? theSession = featuredSessionModel;
-    final dateCreated = FieldValue.serverTimestamp();
-    final sessionId = theSession?.sessionId;
-    final sessionOwnerId = theSession?.userId;
-    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
-    final sessionOwnerNickname = theSession?.userNickname.toString();
-    final sessionVisitorId = 'CLaiRE';
-    final sessionVisitorNickname = 'CLaiRE';
-    final sessionVisitorAvatar = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691";
-    final activityMessage = "$sessionVisitorNickname commented on $sessionOwnerNickname's session.";
-    final activityType = "comment";
-    final userActivityId = "";
-    FirebaseFirestore.instance
-        .collection('user_activity')
-        .add({
-      "activityMessage": activityMessage,
-      "activityType": activityType,
-      "clientAvatarUrl": sessionVisitorAvatar,
-      "clientId": sessionVisitorId,
-      "clientNickname": sessionVisitorNickname,
-      "dateCreated": dateCreated,
-      "sessionId": sessionId,
-      "userActivityId": userActivityId,
-      "userId": sessionOwnerId,
-      "userNickname": sessionOwnerNickname,
-      "userAvatarUrl": sessionOwnerAvatar,
-
-    },
-    );
-    logger.d('Successfully saved your comment activity');
-    print('Activity Message: $activityMessage');
-
-  }
-
-
-
   /// Update a session's timeLastActivity when new comment is made.
 
   Future<void> updateSessionTimeLastActivity(CreateSessionModel? session) async {
@@ -1202,8 +1083,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
 
   /// Create quick sessions.
-
-
 
   createQuickSession() async {
     userModel = await _firebaseServices.getUserInfo();

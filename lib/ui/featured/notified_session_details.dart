@@ -789,7 +789,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                               await notificationService.sendNotification(
                                                   push_notification.NotificationModel(
                                                       topic: sessionOwnerId,
-                                                      data: push_notification.Data(id: sessionOwnerId, route: 'wallet'),
+                                                      data: push_notification.Data(id: sessionOwnerId, route: _session.sessionId.toString()),
                                                       notification: push_notification.Notification(
                                                           title: "Someone reacted to your session!",
                                                           body: "Someone reacted to your session with 1❤️."

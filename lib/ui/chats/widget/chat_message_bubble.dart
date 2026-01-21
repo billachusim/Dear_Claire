@@ -1,16 +1,23 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clairediary/ui/chats/data/chats.dart'; // Import ChatModel
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/widgets/custom_image_widget.dart'; // Import for full-screen view
 import 'package:clairediary/widgets/play_advise_voice_note.dart'; // Import your voice player
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:clairediary/ui/routes/page_router_animation.dart'; // For PageRouter
+import 'package:clairediary/ui/routes/page_router_animation.dart';
 
-class ChatMessageBubble extends StatelessWidget {
+import '../../../services/firebase_services.dart';
+import '../../../services/user_model.dart';
+import '../../../utils/constant.dart'; // For PageRouter
+
+class ChatMessageBubble extends StatefulWidget {
   final ChatModel chatModel;
   final String senderName;
   final String senderAvatarUrl;
@@ -18,7 +25,7 @@ class ChatMessageBubble extends StatelessWidget {
   final bool isMe;
   final VoidCallback onAvatarTap;
   final bool showAdminSecret;
-  final VoidCallback? onDelete; // Added optional delete callback
+  final VoidCallback? onDelete;
 
   const ChatMessageBubble({
     Key? key,
@@ -32,30 +39,79 @@ class ChatMessageBubble extends StatelessWidget {
     this.onDelete, // Initialize here
   }) : super(key: key);
 
+  @override
+  State<ChatMessageBubble> createState() => _ChatMessageBubbleState();
+}
+
+class _ChatMessageBubbleState extends State<ChatMessageBubble> {
+  UserModel? _currentUserModel;
+  UserModel userModel = UserModel();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCurrentUser();
+  }
+
+
+  Future<void> _fetchCurrentUser() async {
+    if (currentUser != null) {
+      // 1. Fetch user data from Firestore
+      var userModel = await firebaseServices.getUserInfo();
+
+      // 2. Check if language preference is missing (for existing users)
+      if (userModel.languagePreference == null || userModel.languagePreference!.isEmpty) {
+        // Get device language
+        final deviceLanguageCode = Platform.localeName.split('_').first;
+
+        // Update the model in memory immediately for the UI
+        userModel.languagePreference = deviceLanguageCode;
+
+        // Asynchronously update Firestore in the background
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .update({'languagePreference': deviceLanguageCode});
+
+        logger.d("Updated language preference for existing user: $deviceLanguageCode");
+      }
+
+      // 3. Update the state to rebuild the widget with the correct language
+      if (mounted) {
+        setState(() {
+          _currentUserModel = userModel;
+          // Also update the existing userModel variable to ensure compatibility elsewhere in the widget
+          this.userModel = userModel;
+        });
+      }
+    }
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
     // ... (alignment and color logic remains the same)
-    final alignment = isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final bubbleColor = isMe ? Pallet.colorPrimary.withValues(alpha: 0.9) : Colors.white;
-    final textColor = isMe ? Colors.white : Colors.black87;
-    final linkColor = isMe ? Colors.yellow.shade200 : Pallet.colorPrimary;
+    final alignment = widget.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final bubbleColor = widget.isMe ? Pallet.colorPrimary.withValues(alpha: 0.9) : Colors.white;
+    final textColor = widget.isMe ? Colors.white : Colors.black87;
+    final linkColor = widget.isMe ? Colors.yellow.shade200 : Pallet.colorPrimary;
 
     // --- Check for media content ---
-    final bool hasAudio = chatModel.audioUrl != null && chatModel.audioUrl!.isNotEmpty;
-    final bool hasImage1 = chatModel.image1 != null && chatModel.image1!.isNotEmpty;
-    final bool hasImage2 = chatModel.image2 != null && chatModel.image2!.isNotEmpty;
-    final bool hasText = chatModel.message != null && chatModel.message!.isNotEmpty;
+    final bool hasAudio = widget.chatModel.audioUrl != null && widget.chatModel.audioUrl!.isNotEmpty;
+    final bool hasImage1 = widget.chatModel.image1 != null && widget.chatModel.image1!.isNotEmpty;
+    final bool hasImage2 = widget.chatModel.image2 != null && widget.chatModel.image2!.isNotEmpty;
+    final bool hasText = widget.chatModel.message != null && widget.chatModel.message!.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         // ... (Row logic with avatar remains the same)
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: widget.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (!isMe) GestureDetector(onTap: onAvatarTap, child: _buildAvatar()),
-          if (!isMe) const SizedBox(width: 10),
+          if (!widget.isMe) GestureDetector(onTap: widget.onAvatarTap, child: _buildAvatar()),
+          if (!widget.isMe) const SizedBox(width: 10),
           Flexible(
             child: Column(
               crossAxisAlignment: alignment,
@@ -66,14 +122,14 @@ class ChatMessageBubble extends StatelessWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
-                        senderName,
+                        widget.senderName,
                         style: GoogleFonts.lato(fontSize: 13.0, color: Colors.white, fontWeight: FontWeight.w800),
                       ),
-                      if (showAdminSecret)
+                      if (widget.showAdminSecret)
                         Padding(
                           padding: const EdgeInsets.only(left: 4.0),
                           child: Text(
-                            "${chatModel.alterEgoId ?? ''}",
+                            "${widget.chatModel.alterEgoId ?? ''}",
                             style: GoogleFonts.lato(fontSize: 10.0, color: Colors.white70, fontWeight: FontWeight.w400),
                           ),
                         ),
@@ -88,8 +144,8 @@ class ChatMessageBubble extends StatelessWidget {
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(20),
                       topRight: const Radius.circular(20),
-                      bottomLeft: isMe ? const Radius.circular(20) : const Radius.circular(0),
-                      bottomRight: isMe ? const Radius.circular(0) : const Radius.circular(20),
+                      bottomLeft: widget.isMe ? const Radius.circular(20) : const Radius.circular(0),
+                      bottomRight: widget.isMe ? const Radius.circular(0) : const Radius.circular(20),
                     ),
                   ),
                   child: Column(
@@ -105,9 +161,15 @@ class ChatMessageBubble extends StatelessWidget {
                                 await launchUrl(Uri.parse(link.url));
                               }
                             },
-                            text: chatModel.message!,
                             style: GoogleFonts.lato(fontSize: 15.0, color: textColor),
                             linkStyle: TextStyle(color: linkColor, fontWeight: FontWeight.bold),
+                            text: (_currentUserModel?.languagePreference != null &&
+                                widget.chatModel.translatedMessage != null &&
+                                widget.chatModel.translatedMessage!
+                                    .containsKey(_currentUserModel!.languagePreference))
+                                ? widget.chatModel.translatedMessage![_currentUserModel!.languagePreference]!
+                                : widget.chatModel.message!,
+                            textAlign: TextAlign.start,
                           ),
                         ),
                       // --- WIDGET 2: IMAGE DISPLAY ---
@@ -116,7 +178,7 @@ class ChatMessageBubble extends StatelessWidget {
 
                       // --- WIDGET 2: AUDIO PLAYER ---
                       if (hasAudio)
-                        PlayAdviseVoiceNote(filePath: chatModel.audioUrl!),
+                        PlayAdviseVoiceNote(filePath: widget.chatModel.audioUrl!),
                     ],
                   ),
                 ),
@@ -126,12 +188,12 @@ class ChatMessageBubble extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(timeAgo,
+                      Text(widget.timeAgo,
                           style: GoogleFonts.lato(fontSize: 11.0, color: Colors.white70)),
-                      if (onDelete != null) ...[
+                      if (widget.onDelete != null) ...[
                         const SizedBox(width: 8),
                         GestureDetector(
-                          onTap: onDelete,
+                          onTap: widget.onDelete,
                           child: const Icon(
                             Icons.delete_forever_rounded,
                             color: Colors.yellowAccent, // Distinct color for Mod
@@ -154,8 +216,8 @@ class ChatMessageBubble extends StatelessWidget {
               ],
             ),
           ),
-          if (isMe) const SizedBox(width: 10),
-          if (isMe) GestureDetector(onTap: onAvatarTap, child: _buildAvatar()),
+          if (widget.isMe) const SizedBox(width: 10),
+          if (widget.isMe) GestureDetector(onTap: widget.onAvatarTap, child: _buildAvatar()),
         ],
       ),
     );
@@ -169,11 +231,11 @@ class ChatMessageBubble extends StatelessWidget {
         mainAxisSize: MainAxisSize.min, // Make the row only as wide as its children
         children: [
           if (hasImage1)
-            Expanded(child: _buildClickableImage(context, chatModel.image1!)),
+            Expanded(child: _buildClickableImage(context, widget.chatModel.image1!)),
           if (hasImage1 && hasImage2)
             const SizedBox(width: 8),
           if (hasImage2)
-            Expanded(child: _buildClickableImage(context, chatModel.image2!)),
+            Expanded(child: _buildClickableImage(context, widget.chatModel.image2!)),
         ],
       ),
     );
@@ -206,7 +268,7 @@ class ChatMessageBubble extends StatelessWidget {
     return CachedNetworkImage(
       width: 40,
       height: 40,
-      imageUrl: senderAvatarUrl,
+      imageUrl: widget.senderAvatarUrl,
       imageBuilder: (context, imageProvider) => CircleAvatar(backgroundImage: imageProvider),
       placeholder: (context, url) => const CircleAvatar(child: CupertinoActivityIndicator()),
       errorWidget: (context, url, error) => const CircleAvatar(child: Icon(Icons.person)),

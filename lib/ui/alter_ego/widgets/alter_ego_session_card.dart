@@ -22,7 +22,6 @@ import '../../../services/firebase_services.dart';
 import '../../../services/notification_service.dart';
 import '../../../services/user_model.dart';
 import '../../../widgets/custom_image_widget.dart';
-import '../../../widgets/translation_indicator_widget.dart';
 import '../../create_session/sound/custom_play_sound_widget.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 
@@ -258,24 +257,8 @@ class _AlterEgoModeSessionCardState extends State<AlterEgoModeSessionCard> {
               ),
             ),
 
-            // TRANSLATION INDICATOR HERE ---
-            if ((_currentUserModel?.languagePreference != null &&
-                widget.element.translatedTitle != null &&
-                widget.element.translatedTitle!
-                    .containsKey(
-                    _currentUserModel!.languagePreference)) ||
-                (_currentUserModel?.languagePreference != null &&
-                    widget.element.translatedSession != null &&
-                    widget.element.translatedSession!
-                        .containsKey(
-                        _currentUserModel!.languagePreference)))
-              TranslationIndicator(textColor: textColor)
-            else
-            // If no translation, maintain the original spacing
-              SizedBox(height: 1),
-
             SizedBox(
-              height: 6,
+              height: 8,
             ),
             Column(
               children: [

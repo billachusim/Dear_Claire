@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clairediary/services/user_model.dart';
 import 'package:clairediary/ui/chats/data/chatroompodo.dart';
@@ -14,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../services/data/notification_model.dart' as push_notification;
+import '../../../services/firebase_services.dart';
 import '../../../services/notification_service.dart';
 import '../../../widgets/custom_image_widget.dart';
 import '../../../widgets/play_advise_voice_note.dart';
@@ -43,9 +46,51 @@ class InsideInsideChatWidget extends StatefulWidget {
 
 class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
   late String visitedUsersID;
-
+  UserModel userModel = UserModel();
+  UserModel? _currentUserModel;
   late String visitedEgoName;
   bool _isAvatarLoading = false;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCurrentUser();
+  }
+
+
+  Future<void> _fetchCurrentUser() async {
+    if (currentUser != null) {
+      // 1. Fetch user data from Firestore
+      var userModel = await firebaseServices.getUserInfo();
+
+      // 2. Check if language preference is missing (for existing users)
+      if (userModel.languagePreference == null || userModel.languagePreference!.isEmpty) {
+        // Get device language
+        final deviceLanguageCode = Platform.localeName.split('_').first;
+
+        // Update the model in memory immediately for the UI
+        userModel.languagePreference = deviceLanguageCode;
+
+        // Asynchronously update Firestore in the background
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .update({'languagePreference': deviceLanguageCode});
+
+        logger.d("Updated language preference for existing user: $deviceLanguageCode");
+      }
+
+      // 3. Update the state to rebuild the widget with the correct language
+      if (mounted) {
+        setState(() {
+          _currentUserModel = userModel;
+          // Also update the existing userModel variable to ensure compatibility elsewhere in the widget
+          this.userModel = userModel;
+        });
+      }
+    }
+  }
 
 
   @override
@@ -361,7 +406,12 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
             height: 6,
           ),
           Text(
-            widget.chatModel!.message!,
+            (_currentUserModel?.languagePreference != null &&
+                widget.chatModel?.translatedMessage != null &&
+                widget.chatModel!.translatedMessage!
+                    .containsKey(_currentUserModel!.languagePreference))
+                ? widget.chatModel!.translatedMessage![_currentUserModel!.languagePreference]!
+                : widget.chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
                 fontSize: 17.0,

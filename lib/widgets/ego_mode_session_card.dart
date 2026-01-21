@@ -3,7 +3,6 @@ import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clairediary/utils/color.dart';
-import 'package:clairediary/widgets/translation_indicator_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/ui/featured/model/comment_session_model.dart';
@@ -694,24 +693,8 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                     ),
                   ),
 
-                  // TRANSLATION INDICATOR HERE ---
-                  if ((_currentUserModel?.languagePreference != null &&
-                      widget.element.translatedTitle != null &&
-                      widget.element.translatedTitle!
-                          .containsKey(
-                          _currentUserModel!.languagePreference)) ||
-                      (_currentUserModel?.languagePreference != null &&
-                          widget.element.translatedSession != null &&
-                          widget.element.translatedSession!
-                              .containsKey(
-                              _currentUserModel!.languagePreference)))
-                    TranslationIndicator(textColor: textColor)
-                  else
-                  // If no translation, maintain the original spacing
-                    SizedBox(height: 1),
-
                   SizedBox(
-                    height: 7,
+                    height: 8,
                   ),
                   Column(
                     children: [
@@ -948,26 +931,28 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                         },
                       ),
                       new Spacer(),
-                      // --- START: NEW MODERATION POPUP BUTTON ---
-                      PopupMenuButton<String>(
-                        icon: Icon(Icons.more_horiz, color: textColor.withValues(alpha: 0.5)),
-                        onSelected: (String value) {
-                          final sessionId = widget.element.sessionId;
-                          final sessionOwnerId = widget.element.userId;
+                      // NEW MODERATION POPUP BUTTON (HIDDEN FROM OWNER) ---
+                      Visibility(
+                        visible: widget.element.userId != currentUser?.uid,
+                        child: PopupMenuButton<String>(
+                          icon: Icon(Icons.more_horiz, color: textColor.withValues(alpha: 0.5)),
+                          onSelected: (String value) {
+                            final sessionId = widget.element.sessionId;
+                            final sessionOwnerId = widget.element.userId;
 
-                          if (sessionId == null || sessionOwnerId == null) {
-                            showToast(
-                                message:
-                                    "Cannot perform action: Invalid session data.");
-                            return;
-                          }
-                          // Prevent users from moderating their own posts
-                          if (sessionOwnerId == currentUser?.uid) {
-                            showToast(
-                                message:
-                                    "You cannot moderate your own session.");
-                            return;
-                          }
+                            if (sessionId == null || sessionOwnerId == null) {
+                              showToast(
+                                  message:
+                                  "Cannot perform action: Invalid session data.");
+                              return;
+                            }
+                            // This check is now redundant due to Visibility, but kept for safety.
+                            if (sessionOwnerId == currentUser?.uid) {
+                              showToast(
+                                  message:
+                                  "You cannot moderate your own session.");
+                              return;
+                            }
 
                           switch (value) {
                             case 'remove_session':
@@ -996,6 +981,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                             child: Text('Block owner of this post'),
                           ),
                         ],
+                      ),
                       ),
 
                       Visibility(

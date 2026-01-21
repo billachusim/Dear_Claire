@@ -311,21 +311,53 @@ class FirebaseServices extends ChangeNotifier {
 
 
 
-  /// Notify Claire for every session
-  Future<void> notifyClaireForSession(String sender, CreateSessionModel session) async {
-    _usersID = "PbRuh3FmtESK57j3PM1Tc9RvPKh2";
+  /// Subscribes a user to admin-level notifications if they have the correct userType.
+  Future<void> subscribeToAdminNotifications() async {
+    if (currentUser == null) return;
 
-    await _firebaseMessaging.subscribeToTopic("PbRuh3FmtESK57j3PM1Tc9RvPKh2");
-    final pushNotification.NotificationModel _notificationModel =
-    pushNotification.NotificationModel(
-      topic: session.sessionId.toString(),
-      data: pushNotification.Data(id: _usersID, route: session.sessionId.toString()),
-      notification: pushNotification.Notification(
-          title: 'New Diary Session ${session.title}' ?? '', body: '$sender started a new session, please advice it'),
-    );
-    notificationService.sendNotification(_notificationModel.toJson());
-    logger.d('Notified for this session: ${session.title!}');
+    try {
+      final userDoc = await _firebaseFirestore.collection('users').doc(currentUser!.uid).get();
+      if (!userDoc.exists) return;
+
+      final userType = (userDoc.data())?['userType'] as String?;
+
+      // Subscribe if the user is an ADMIN or SUPER_ADMIN
+      if (userType == 'ADMIN' || userType == 'SUPER_ADMIN') {
+        await _firebaseMessaging.subscribeToTopic('new_session_alerts');
+        logger.i('User subscribed to admin notifications.');
+      }
+    } catch (e) {
+      logger.e("Error subscribing to admin notifications: $e");
+    }
   }
+
+  /// Notifies all subscribed admins about a new session by sending a message to a topic.
+  Future<void> notifyClaireForSession(String sender, CreateSessionModel session) async {
+    const String adminTopic = 'new_session_alerts';
+
+    // The notification payload
+    final pushNotification.NotificationModel notificationModel =
+    pushNotification.NotificationModel(
+      topic: adminTopic,
+      data: pushNotification.Data(
+          id: session.sessionId.toString(),
+          route: 'alterEgoHomepage'
+      ),
+      notification: pushNotification.Notification(
+          title: 'New Diary Session: ${session.title ?? ''}',
+          body: '$sender just started a new session. Please advise.'
+      ),
+    );
+
+    try {
+      // Send the notification to the topic
+      await notificationService.sendNotification(notificationModel.toJson());
+      logger.d('Notified admins for session: ${session.title}');
+    } catch (e) {
+      logger.e("Error sending admin notification for new session: $e");
+    }
+  }
+
 
 
   /// subscribe user to a topic

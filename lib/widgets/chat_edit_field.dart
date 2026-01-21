@@ -103,23 +103,38 @@ class _ChatEditFieldState extends State<ChatEditField> {
   Widget build(BuildContext context) {
     // If user does not have access, show the request access button.
     if (!widget.canComment) {
+      final bool isSignedIn = currentUser != null;
+      final String buttonText = isSignedIn
+          ? "Request Alter Ego Access to start Advising"
+          : "Sign in to start Advising";
+
       return Align(
         alignment: Alignment.bottomCenter,
         child: Container(
           color: Colors.black,
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: GestureDetector(
-            onTap: () => _navService.pushNamed(AppRoutes.howAlterEgoWorks),
+            // Conditionally navigate based on sign-in status.
+            onTap: () {
+              if (isSignedIn) {
+                // Signed-in users are sent to learn about Alter Ego access.
+                _navService.pushNamed(AppRoutes.howAlterEgoWorks);
+              } else {
+                // Guest users are sent to the sign-in/sign-up page.
+                _navService.pushNamed(AppRoutes.authSelection);
+              }
+            },
             child: Container(
               height: 50,
               decoration: BoxDecoration(
                 color: Pallet.colorPrimary,
                 borderRadius: BorderRadius.circular(25),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  "Request Alter Ego Access to start Advising",
-                  style: TextStyle(
+                  buttonText,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),

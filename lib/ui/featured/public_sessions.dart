@@ -61,14 +61,16 @@ class _TheFeaturedSessionsState extends State<TheFeaturedSessions> {
 
   // A single method to load hidden posts and blocked users.
   Future<void> _loadInitialData() async {
-    final hiddenIds = await _hiddenPostsService.getHiddenPostIds();
-    final userModel = await firebaseServices.getUserInfo();
+    if (currentUser != null) {
+      final hiddenIds = await _hiddenPostsService.getHiddenPostIds();
+      final userModel = await firebaseServices.getUserInfo();
 
-    if (mounted) {
-      setState(() {
-        _hiddenPostIds = hiddenIds;
-        _currentUserModel = userModel;
-      });
+      if (mounted) {
+        setState(() {
+          _hiddenPostIds = hiddenIds;
+          _currentUserModel = userModel;
+        });
+      }
     }
   }
 
@@ -78,8 +80,8 @@ class _TheFeaturedSessionsState extends State<TheFeaturedSessions> {
       child: StreamBuilder(
         stream: firebaseServices.getFeaturedSession(),
         builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-          if (session.connectionState == ConnectionState.waiting || _currentUserModel == null) {
-            return RotateImage(70, 70); // Show loader while waiting for data
+          if (session.connectionState == ConnectionState.waiting) {
+            return RotateImage(70, 70);
           }
           if (!session.hasData || session.data!.docs.isEmpty) {
             return Center(

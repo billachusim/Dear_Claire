@@ -413,7 +413,7 @@ class _CommentWidgetState extends State<CommentWidget> {
     try {
       final notificationModel = pushNotification.NotificationModel(
           topic: userId, // Send to the user's personal topic
-          data: pushNotification.Data(id: userId, route: 'wallet'),
+          data: pushNotification.Data(id: userId, route: widget.featuredSessionModel?.sessionId.toString()),
           notification: pushNotification.Notification(
               title: 'An Advise Was Deleted',
               body: "Your advise was deleted, and you lost 10❤️."));

@@ -305,7 +305,7 @@ class _EgoModeSessionDetailState
                   // If not the owner, check the user's role.
                   final user = snapshot.data!;
                   final userType = user.userType ?? '';
-                  final hasRequiredRole = ['ADMIN', 'SUPER_ADMIN'].contains(userType);
+                  final hasRequiredRole = ['REGULAR', 'ADMIN', 'SUPER_ADMIN'].contains(userType);
                   hasPermission = hasRequiredRole;
                 }
                 // If the user is not the owner and user data fails to load, hasPermission remains false.
@@ -431,7 +431,7 @@ class _EgoModeSessionDetailState
         try {
           final notificationModel = push_notification.NotificationModel(
               topic: currentUser!.uid, // Send to the user's personal topic
-              data: push_notification.Data(id: currentUser!.uid, route: 'wallet'),
+              data: push_notification.Data(id: currentUser!.uid, route: session.sessionId.toString()),
               notification: push_notification.Notification(
                   title: "You've Earned Love!",
                   body: "You received 10 ❤️ for posting an original advise."));
@@ -558,43 +558,6 @@ class _EgoModeSessionDetailState
 
   }
 
-  /// Save AI Comment
-
-  Future<void> saveAICommentActivity() async {
-    final Session? theSession = featuredSessionModel;
-    final dateCreated = FieldValue.serverTimestamp();
-    final sessionId = theSession?.sessionId;
-    final sessionOwnerId = theSession?.userId;
-    final sessionOwnerAvatar = theSession?.userAvatarUrl.toString();
-    final sessionOwnerNickname = theSession?.userNickname.toString();
-    final sessionVisitorId = "CLaiRE";
-    final sessionVisitorNickname = "CLaiRE";
-    final sessionVisitorAvatar = "https://firebasestorage.googleapis.com/v0/b/clair-52652/o/ClaireVartar%2Fclaire_icon.png?alt=media&token=5e14455d-0402-453d-80d0-63b55890f691";
-    final activityMessage = "$sessionVisitorNickname commented on $sessionOwnerNickname's session.";
-    final activityType = "comment";
-    final userActivityId = "";
-    FirebaseFirestore.instance
-        .collection('user_activity')
-        .add({
-      "activityMessage": activityMessage,
-      "activityType": activityType,
-      "clientAvatarUrl": sessionVisitorAvatar,
-      "clientId": sessionVisitorId,
-      "clientNickname": sessionVisitorNickname,
-      "dateCreated": dateCreated,
-      "sessionId": sessionId,
-      "userActivityId": userActivityId,
-      "userId": sessionOwnerId,
-      "userNickname": sessionOwnerNickname,
-      "userAvatarUrl": sessionOwnerAvatar,
-
-    },
-    );
-    logger.d('Successfully saved your comment activity');
-    print('Activity Message: $activityMessage');
-
-  }
-
 
 
   /// Save user thanks activity
@@ -656,21 +619,6 @@ class _EgoModeSessionDetailState
     logger.d('Successfully updated time of last activity');
   }
 
-
-  /// Update a session's conversation context for AI when new comment is made.
-
-  Future<void> updateSessionForAI(Session session, String theContext) async {
-    FirebaseFirestore.instance
-        .collection("sessions")
-        .doc(session.sessionId)
-        .set({
-      'timeLastActivity': FieldValue.serverTimestamp(),
-      'theContext': theContext,
-    },
-      SetOptions(merge: true),
-    );
-    logger.d('Successfully updated conversation context for AI');
-  }
 
 
 

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:ui';
 import 'dart:async';
 import 'package:clairediary/ui/ego-profile/top_up_loves_page.dart';
@@ -77,6 +78,7 @@ class _HomeDashboardPageState extends State<HomePage>
   String? _activeCallId;
   late Future<UserModel?> _egoInfoFuture;
   Timer? _flowerTimer;
+  static bool _hasRandomizedInitialPage = false;
 
   void _showFallingFlowers() {
     // A single claire flower emoji
@@ -338,21 +340,28 @@ class _HomeDashboardPageState extends State<HomePage>
   }
 
   void _initializeServices() {
-    // Now we initialize everything that depends on user or context
-    setState(() {
-      _egoInfoFuture = getEgoInfo();
-    });
-    shakeDevice();
+    if (currentUser != null) {
+      setState(() {
+        _egoInfoFuture = getEgoInfo();
+      });
+      shakeDevice();
+      _listenForCallsFromClaire();
+      firebaseServices.subscribeToAdminNotifications();
+    }
     AppTrackingTransparency.requestTrackingAuthorization();
-    _listenForCallsFromClaire();
   }
 
   @override
   void initState() {
     super.initState();
-    getEgoInfo();
     _title = "Dear Claire";
-    _pageController = PageController(keepPage: true);
+    int initialPage = 0;
+    if (currentUser != null && !_hasRandomizedInitialPage) {
+      initialPage = Random().nextInt(5);
+      _hasRandomizedInitialPage = true;
+    }
+    _currentIndex = initialPage;
+    _pageController = PageController(initialPage: initialPage, keepPage: true);
 
     _flowerTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       if (mounted) {
