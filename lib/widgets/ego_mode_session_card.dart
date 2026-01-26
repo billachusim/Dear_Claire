@@ -65,7 +65,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
   @override
   void initState() {
     super.initState();
-    _fetchCurrentUser();
+    _updateLanguagePreference();
     widget.isFeatured = widget.element.featured;
     widget.isArchived = widget.element.archived;
   }
@@ -77,7 +77,7 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
   }
 
   /// Get user detail for language/translation sake.
-  Future<void> _fetchCurrentUser() async {
+  Future<void> _updateLanguagePreference() async {
     if (currentUser != null) {
       // 1. Fetch user data from Firestore
       var userModel = await firebaseServices.getUserInfo();

@@ -55,11 +55,11 @@ class _InsideInsideChatWidgetState extends State<InsideInsideChatWidget> {
   @override
   void initState() {
     super.initState();
-    _fetchCurrentUser();
+    _updateLanguagePreference();
   }
 
 
-  Future<void> _fetchCurrentUser() async {
+  Future<void> _updateLanguagePreference() async {
     if (currentUser != null) {
       // 1. Fetch user data from Firestore
       var userModel = await firebaseServices.getUserInfo();

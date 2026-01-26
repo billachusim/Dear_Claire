@@ -279,7 +279,7 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
       final messageData = ChatModel(
         message: v,
         userId: _user.userId,
-        timeCreated: Timestamp.now(),
+        timeLastActivity: Timestamp.now(),
         audioUrl: voiceNote,
         image1: image1,
         image2: image2,

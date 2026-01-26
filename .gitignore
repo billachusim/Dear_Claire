@@ -39,6 +39,7 @@ secrets/
 local.properties
 *.jks
 *.keystore
+**/.cxx/
 
 # iOS related
 **/ios/Flutter/Generated.xcconfig

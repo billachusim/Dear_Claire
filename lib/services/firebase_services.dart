@@ -2117,17 +2117,24 @@ $motivation
       _subscribeToChatRoom(key);
       logger.d('SubMessage sent ${chatModel.toJson()}');
     });
-    await notificationService.sendNotification({
-      "token": _user.fcmId,
-      "notification": {
-        "title": "Message Dropped In Your Corner!",
-        "body": "${sender ?? 'An Ego'} sent something to your corner of the room inside ${roomTitle}.",
-      },
-      "data": {
-        'route': 'chatRoom',
-        'roomId': chatRoomPodo.id,
-      },
-    });
+    // Only send a notification if the person replying is NOT the owner of the corner.
+    final cornerOwner = await getUserWithId(id: key);
+    if (cornerOwner.userId != _user.userId) {
+      await notificationService.sendNotification({
+        // Send to the corner owner's FCM token, not the sender's.
+        "token": cornerOwner.fcmId,
+        "notification": {
+          "title": "Message Dropped In Your Alter Ego Corner!",
+          "body":
+          "${sender ?? 'An Alter Ego'} sent something to your corner of the room inside ${roomTitle}.",
+        },
+        "data": {
+          'route': 'alterEgoDiaryRooms',
+          'roomId': chatRoomPodo.id,
+          'cornerId': key,
+        },
+      });
+    }
   }
 
   void updateAlterEgoMembers(
@@ -2151,7 +2158,7 @@ $motivation
         .collection(AppString.appChats)
         .doc(chatRoomPodo!.id.toString())
         .collection(chatRoomPodo.title!)
-        .orderBy('timeCreated', descending: true)
+        .orderBy('timeLastActivity', descending: true)
         .limit(AppString.allSessionLength)
         .snapshots();
   }
@@ -2215,77 +2222,26 @@ $motivation
         .whenComplete(() {
       logger.d('SubMessage sent ${chatModel.toJson()}');
     });
-    await notificationService.sendNotification({
-      "token": _user.fcmId,
-      "notification": {
-        "title": "Message Dropped In Your Corner!",
-        "body": "${sender ?? 'An Ego'} sent something to your corner of the room inside ${roomTitle}.",
-      },
-      "data": {
-        'route': 'diaryRooms',
-        'roomId': chatRoomPodo.id,
-      },
-    });
-  }
-
-  void updateMembers(
-      String key, ChatRoomPodo? chatRoomPodo, ChatModel chatModel) async {
-    _firebaseFirestore
-        .collection(AppString.appChats)
-        .doc(chatRoomPodo!.id.toString())
-        .collection(chatRoomPodo.title!)
-        .doc(key)
-        .update(chatModel.toJson());
-  }
-
-
-  /// Fetches a single ChatRoomPodo document by its unique ID from the 'chatRooms' collection.
-  /// Returns the ChatRoomPodo if found, otherwise null.
-  Future<ChatRoomPodo?> getChatRoomPodoById(String chatRoomId) async {
-    try {
-      final docSnapshot = await _firebaseFirestore.collection('chatRooms').doc(chatRoomId).get();
-      if (docSnapshot.exists) {
-        return ChatRoomPodo.fromJson(docSnapshot.data() as Map<String, dynamic>);
-      }
-      print("ChatRoomPodo with ID $chatRoomId not found.");
-      return null;
-    } catch (e) {
-      print("Error fetching ChatRoomPodo by ID: $e");
-      return null;
+    // Only send a notification if the person replying is NOT the owner of the corner.
+    final cornerOwner = await getUserWithId(id: key);
+    if (cornerOwner.userId != _user.userId) {
+      await notificationService.sendNotification({
+        // Send to the corner owner's FCM token, not the sender's.
+        "token": cornerOwner.fcmId,
+        "notification": {
+          "title": "Message Dropped In Your Corner!",
+          "body":
+          "${sender ?? 'An Ego'} sent something to your corner of the room inside ${roomTitle}.",
+        },
+        "data": {
+          'route': 'diaryRooms',
+          'roomId': chatRoomPodo.id,
+          'cornerId': key,
+        },
+      });
     }
   }
 
-
-  /// Fetches a single ChatModel (a corner) by its ID from within its parent ChatRoom's subcollection.
-  /// Returns the ChatModel if found, otherwise null.
-  Future<ChatModel?> getChatModelById(ChatRoomPodo chatRoomPodo, String chatModelId) async {
-    try {
-      // --- THIS IS THE FIX ---
-      // Instead of a 'type' field, we decide the collection based on the room's title.
-      // List all known Alter Ego room titles here.
-      final alterEgoRoomTitles = ["Band Of Super Egos", "Another Alter Ego Room Title"]; // Add any other Alter Ego room titles
-
-      final bool isAlterEgo = alterEgoRoomTitles.contains(chatRoomPodo.title);
-      final String mainCollection = isAlterEgo ? 'alterEgoChats' : 'chats';
-      // --- END OF FIX ---
-
-      final docSnapshot = await _firebaseFirestore
-          .collection(mainCollection)
-          .doc(chatRoomPodo.id.toString())
-          .collection(chatRoomPodo.title!) // The subcollection is named after the room title
-          .doc(chatModelId)
-          .get();
-
-      if (docSnapshot.exists) {
-        return ChatModel.fromJson(docSnapshot.data() as Map<String, dynamic>);
-      }
-      print("ChatModel with ID $chatModelId not found in room ${chatRoomPodo.title}.");
-      return null;
-    } catch (e) {
-      print("Error fetching ChatModel by ID: $e");
-      return null;
-    }
-  }
 
 
 

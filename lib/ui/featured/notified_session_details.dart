@@ -23,7 +23,6 @@ import 'package:provider/provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:url_launcher/url_launcher.dart';
 import '../../../services/firebase_services.dart';
 import '../../../services/user_model.dart';
 import '../../../utils/strings.dart';
@@ -55,6 +54,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   final screenshotController = ScreenshotController();
   TextEditingController editSessionController = TextEditingController();
   User? currentUser = FirebaseAuth.instance.currentUser;
+  UserModel? _currentUserModel;
   bool? isFeatured;
   late String visitedUsersID;
   late String visitedEgoName;
@@ -80,6 +80,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   @override
   void initState() {
     super.initState();
+    _updateLanguagePreference();
     _createAdviseInterstitialAd();
   }
 
@@ -87,13 +88,42 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
 
   @override
   void dispose() {
-    // --- ADMOB COMPLIANCE FIX 2: Show interstitial on exit for compliant placement ---
     _showAdviseInterstitialAd();
-
-    // Dispose all ad resources
     _interstitialAd?.dispose();
     egoModeSessionDetailBottomBanner.dispose();
     super.dispose();
+  }
+
+  /// Get user detail for language/translation sake.
+  Future<void> _updateLanguagePreference() async {
+    if (currentUser != null) {
+      // 1. Fetch user data from Firestore
+      var userModel = await firebaseServices.getUserInfo();
+
+      // 2. Check if language preference is missing (for existing users)
+      if (userModel.languagePreference == null || userModel.languagePreference!.isEmpty) {
+        // Get device language
+        final deviceLanguageCode = Platform.localeName.split('_').first;
+
+        // Update the model in memory immediately for the UI
+        userModel.languagePreference = deviceLanguageCode;
+
+        // Asynchronously update Firestore in the background
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .update({'languagePreference': deviceLanguageCode});
+
+        logger.d("Updated language preference for existing user: $deviceLanguageCode");
+      }
+
+      // 3. Update the state to rebuild the widget with the correct language
+      if (mounted) {
+        setState(() {
+          _currentUserModel = userModel;
+        });
+      }
+    }
   }
 
 
@@ -480,13 +510,23 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                   height: 13,
                                 ),
                                 Center(
-                                  child: Text(_session.title!,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 3,
-                                      style: GoogleFonts.lato(
-                                          fontSize: 28.0,
-                                          color: textColor,
-                                          fontWeight: FontWeight.w800)),
+                                  child: Text(
+                                    // Check for and use the translated title if available
+                                    (_currentUserModel?.languagePreference != null &&
+                                        _session.translatedTitle != null &&
+                                        _session.translatedTitle!.containsKey(_currentUserModel!.languagePreference))
+                                        ? _session.translatedTitle![_currentUserModel!.languagePreference]!
+                                        : _session.title!,
+                                    textAlign: TextAlign.center,
+                                    maxLines: 3,
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 26.0,
+                                      color: textColor,
+                                      fontWeight: FontWeight.w800, // Extra Bold
+                                      height: 1.1,
+                                      letterSpacing: -0.7,
+                                    ),
+                                  ),
                                 ),
                                 SizedBox(
                                   height: 13,
@@ -496,7 +536,12 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                     Expanded(
                                       child: SelectableText.rich(
                                         TextSpan(
-                                          text: _session.message!,
+                                          text: (_currentUserModel?.languagePreference != null &&
+                                              _session.translatedSession != null &&
+                                              _session.translatedSession!
+                                                  .containsKey(_currentUserModel!.languagePreference))
+                                              ? _session.translatedSession![_currentUserModel!.languagePreference]!
+                                              : _session.message!,
                                           style: GoogleFonts.plusJakartaSans(
                                             fontSize: 20.0,
                                             color: textColor.withValues(alpha: 0.9),
@@ -507,10 +552,8 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                         ),
                                         textAlign: TextAlign.justify,
                                         onTap: () {
-                                          // You can add a tap handler here if needed, but SelectableLinkify handles links.
-                                          // For simplicity, we will let the Linkify part handle taps.
+                                          // This area remains unchanged.
                                         },
-                                        // This explicitly enables the copy and select all buttons.
                                         contextMenuBuilder: (context, editableTextState) {
                                           return AdaptiveTextSelectionToolbar.buttonItems(
                                             anchors: editableTextState.contextMenuAnchors,

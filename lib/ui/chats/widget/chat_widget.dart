@@ -74,13 +74,13 @@ class _ChatWidgetState extends State<ChatWidget> {
   @override
   void initState() {
     super.initState();
-    _fetchCurrentUser();
+    _updateLanguagePreference();
     _createJoinChatInterstitialAd();
     _createLeaveChatInterstitialAd();
     _createContChatInterstitialAd();
   }
 
-  Future<void> _fetchCurrentUser() async {
+  Future<void> _updateLanguagePreference() async {
     if (currentUser != null) {
       // 1. Fetch user data from Firestore
       var userModel = await firebaseServices.getUserInfo();
@@ -929,10 +929,6 @@ class _ChatWidgetState extends State<ChatWidget> {
                         final UserModel visitor = await firebaseServices.getUserWithId(id: visitorId);
                         final visitorNickname = visitor.nickname;
 
-                        // Await the database update to ensure it completes before proceeding.
-                        if (!_isCompleted(widget.chatModel, widget.chatRoomPodo)) {
-                          await updateMembers(joining: true);
-                        }
                         // PERFORM THE TRANSACTION FOR JOINING ---
                         const int entryCost = 3;
                         const int taxAmount = 2;
@@ -973,6 +969,11 @@ class _ChatWidgetState extends State<ChatWidget> {
                             );
                             _showJoinChatInterstitialAd();
 
+                            // Await the database update to ensure it completes before proceeding.
+                            if (!_isCompleted(widget.chatModel, widget.chatRoomPodo)) {
+                              await updateMembers(joining: true);
+                            }
+
                             if (!mounted) return;
                             PageRouter.gotoWidget(
                                 SubChatScreen(
@@ -982,22 +983,26 @@ class _ChatWidgetState extends State<ChatWidget> {
                                 ),
                                 context);
 
-                            await notificationService.sendNotification({
-                              "token": cornerOwner.fcmId,
-                              "notification": {
-                                "title": "Someone Entered Your Corner!",
-                                "body":
-                                "${visitorNickname ?? 'An Ego'} entered with 3❤️ to your corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
-                              },
-                              "data": {
-                                'route': 'diaryRooms',
-                                'roomId': widget.chatRoomPodo!.id.toString(),
-                                'cornerId': widget.chatModel!.userId.toString(),
-                              },
-                            });
+                            // Only send notification if the visitor is NOT the corner owner.
+                            if (visitorId != cornerOwnerId) {
+                              await notificationService.sendNotification({
+                                "token": cornerOwner.fcmId,
+                                "notification": {
+                                  "title": "Someone Entered Your Corner!",
+                                  "body":
+                                  "${visitorNickname ?? 'An Ego'} entered with 3❤️ to your corner inside ${widget.chatRoomPodo!.title ?? 'Chatrooms'}.",
+                                },
+                                "data": {
+                                  'route': 'diaryRooms',
+                                  'roomId': widget.chatRoomPodo!.id.toString(),
+                                  'cornerId': widget.chatModel!.userId.toString(),
+                                },
+                              });
+                            }
 
                             showToast('Welcome to this corner with 3❤️ and positive vibes only.');
                           }
+
                         }
                       } finally {
                         if (mounted) {
@@ -1153,7 +1158,9 @@ class _ChatWidgetState extends State<ChatWidget> {
         .doc(widget.chatRoomPodo!.id.toString())
         .collection(widget.chatRoomPodo!.title!)
         .doc(widget.chatModel!.userId.toString())
-        .update(widget.chatModel!.toJson());
+        .update({
+      'members': widget.chatModel!.members,
+    });
   }
 
 

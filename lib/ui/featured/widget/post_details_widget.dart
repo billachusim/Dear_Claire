@@ -58,7 +58,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   @override
   void initState() {
     super.initState();
-    _fetchCurrentUser();
+    _updateLanguagePreference();
   }
 
   @override
@@ -67,7 +67,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
     super.dispose();
   }
 
-  Future<void> _fetchCurrentUser() async {
+  /// Get user detail for language/translation sake.
+  Future<void> _updateLanguagePreference() async {
     if (currentUser != null) {
       // 1. Fetch user data from Firestore
       var userModel = await firebaseServices.getUserInfo();
@@ -478,7 +479,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                               Expanded(
                                 child: SelectableText.rich(
                                   TextSpan(
-                                    // This is the key change:
                                     text: (_currentUserModel?.languagePreference != null &&
                                         _session.translatedSession != null &&
                                         _session.translatedSession!

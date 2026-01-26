@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 import 'dart:async';
@@ -196,7 +197,27 @@ class _HomeDashboardPageState extends State<HomePage>
     }
   }
 
-  // Add these methods inside _HomeDashboardPageState
+  /// Get user detail for language/translation sake.
+  Future<void> _updateLanguagePreference() async {
+    if (currentUser != null) {
+      // 1. Fetch user data from Firestore
+      var userModel = await firebaseServices.getUserInfo();
+
+        // Get device language
+        final deviceLanguageCode = Platform.localeName.split('_').first;
+
+        // Update the model in memory immediately for the UI
+        userModel.languagePreference = deviceLanguageCode;
+
+        // Asynchronously update Firestore in the background
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .set({'languagePreference': deviceLanguageCode}, SetOptions(merge: true));
+
+        logger.d("Set language preference for existing user: $deviceLanguageCode");
+    }
+  }
 
   void _toggleFabMenu() {
     if (_isFabMenuOpen) {
@@ -343,6 +364,7 @@ class _HomeDashboardPageState extends State<HomePage>
     if (currentUser != null) {
       setState(() {
         _egoInfoFuture = getEgoInfo();
+        _updateLanguagePreference();
       });
       shakeDevice();
       _listenForCallsFromClaire();

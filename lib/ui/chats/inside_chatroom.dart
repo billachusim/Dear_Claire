@@ -300,7 +300,7 @@ class _ChatScreenState extends State<ChatScreen> {
             userId: _user.userId,
             userNickname: _user.nickname,
             userAvatarUrl: _user.avatarUrl,
-            timeCreated: Timestamp.now(),
+            timeLastActivity: Timestamp.now(),
             audioUrl: voiceNote,
             image1: image1,
             image2: image2,

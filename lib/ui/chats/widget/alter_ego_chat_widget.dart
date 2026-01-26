@@ -75,7 +75,7 @@ class _AlterEgoChatWidgetState extends State<AlterEgoChatWidget> {
   @override
   void initState() {
     super.initState();
-    _fetchCurrentUser();
+    _updateLanguagePreference();
     _createJoinChatInterstitialAd();
     _createLeaveChatInterstitialAd();
     _createContChatInterstitialAd();
@@ -89,7 +89,7 @@ class _AlterEgoChatWidgetState extends State<AlterEgoChatWidget> {
     super.dispose();
   }
 
-  Future<void> _fetchCurrentUser() async {
+  Future<void> _updateLanguagePreference() async {
     if (currentUser != null) {
       // 1. Fetch user data from Firestore
       var userModel = await firebaseServices.getUserInfo();

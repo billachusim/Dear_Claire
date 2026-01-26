@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clairediary/services/notification_service.dart';
 import 'package:clairediary/services/user_model.dart';
@@ -9,10 +11,12 @@ import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/enums.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/widgets/toast.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../services/firebase_services.dart';
 import '../../../widgets/custom_image_widget.dart';
 import '../../../widgets/play_advise_voice_note.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
@@ -37,10 +41,52 @@ class InsideInsideAlterEgoChatWidget extends StatefulWidget {
       _InsideInsideAlterEgoChatWidgetState();
 }
 
-class _InsideInsideAlterEgoChatWidgetState
-    extends State<InsideInsideAlterEgoChatWidget> {
-  // --- 2. ADDED STATE VARIABLE ---
+class _InsideInsideAlterEgoChatWidgetState extends State<InsideInsideAlterEgoChatWidget> {
   bool _isAvatarLoading = false;
+  UserModel userModel = UserModel();
+  UserModel? _currentUserModel;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _updateLanguagePreference();
+  }
+
+
+  Future<void> _updateLanguagePreference() async {
+    if (currentUser != null) {
+      // 1. Fetch user data from Firestore
+      var userModel = await firebaseServices.getUserInfo();
+
+      // 2. Check if language preference is missing (for existing users)
+      if (userModel.languagePreference == null || userModel.languagePreference!.isEmpty) {
+        // Get device language
+        final deviceLanguageCode = Platform.localeName.split('_').first;
+
+        // Update the model in memory immediately for the UI
+        userModel.languagePreference = deviceLanguageCode;
+
+        // Asynchronously update Firestore in the background
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser!.uid)
+            .update({'languagePreference': deviceLanguageCode});
+
+        logger.d("Updated language preference for existing user: $deviceLanguageCode");
+      }
+
+      // 3. Update the state to rebuild the widget with the correct language
+      if (mounted) {
+        setState(() {
+          _currentUserModel = userModel;
+          // Also update the existing userModel variable to ensure compatibility elsewhere in the widget
+          this.userModel = userModel;
+        });
+      }
+    }
+  }
+
 
   Future<void> _handleAvatarTap(
       BuildContext context, UserModel visitedUser) async {
@@ -225,80 +271,28 @@ class _InsideInsideAlterEgoChatWidgetState
           SizedBox(height: 6),
           // --- REST OF THE WIDGET (UNCHANGED) ---
           Text(
-            widget.chatModel!.message!,
+            (_currentUserModel?.languagePreference != null &&
+                widget.chatModel?.translatedMessage != null &&
+                widget.chatModel!.translatedMessage!
+                    .containsKey(_currentUserModel!.languagePreference))
+                ? widget.chatModel!.translatedMessage![_currentUserModel!.languagePreference]!
+                : widget.chatModel!.message!,
             textAlign: TextAlign.start,
             style: GoogleFonts.lato(
                 fontSize: 17.0,
                 color: Pallet.colorBlack,
                 fontWeight: FontWeight.bold),
           ),
+
+          _buildImageGrid(context),
+
           Visibility(
             visible: widget.chatModel?.audioUrl != '' && widget.chatModel?.audioUrl != null,
             child: Container(
               child: PlayAdviseVoiceNote(filePath: widget.chatModel!.audioUrl),
             ),
           ),
-          Container(
-            margin: EdgeInsets.only(bottom: 10, top: 10),
-            child: Align(
-              alignment: Alignment.bottomLeft,
-              child: Row(
-                children: [
-                  Visibility(
-                      visible: widget.chatModel!.image1 != '' && widget.chatModel!.image1 != null,
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(
-                              CustomImageWidget(
-                                  imageUrl: widget.chatModel!.image1.toString()),
-                              context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 120,
-                            width: 100,
-                            imageUrl: widget.chatModel!.image1.toString(),
-                            imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
-                              ),
-                            ),
-                            placeholder: (context, url) => Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                                "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                width: 48,
-                                height: 48)),
-                      )),
-                  SizedBox(width: 5),
-                  Visibility(
-                      visible: widget.chatModel!.image2 != '' && widget.chatModel!.image2 != null,
-                      child: GestureDetector(
-                        onTap: () {
-                          PageRouter.gotoWidget(
-                              CustomImageWidget(
-                                  imageUrl: widget.chatModel!.image2.toString()),
-                              context);
-                        },
-                        child: CachedNetworkImage(
-                            height: 120,
-                            width: 100,
-                            imageUrl: widget.chatModel!.image2.toString(),
-                            imageBuilder: (context, imageProvider) => Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(25),
-                                image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
-                              ),
-                            ),
-                            placeholder: (context, url) => Center(child: CircularProgressIndicator()),
-                            errorWidget: (context, url, error) => Image.asset(
-                                "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                                width: 48,
-                                height: 48)),
-                      )),
-                ],
-              ),
-            ),
-          ),
+
           SizedBox(height: 2),
           Row(
             children: [
@@ -353,4 +347,57 @@ class _InsideInsideAlterEgoChatWidgetState
   bool _isCompleted(ChatModel? chatModel, ChatRoomPodo? chatRoomPodo) {
     return chatModel!.members!.length == chatRoomPodo?.numberOfParticipants;
   }
+
+  // --- NEW: Helper widget to build the image display ---
+  Widget _buildImageGrid(BuildContext context) {
+    final bool hasImage1 = widget.chatModel!.image1 != null && widget.chatModel!.image1!.isNotEmpty;
+    final bool hasImage2 = widget.chatModel!.image2 != null && widget.chatModel!.image2!.isNotEmpty;
+
+    // Only build the grid if there is at least one image
+    if (!hasImage1 && !hasImage2) {
+      return const SizedBox.shrink(); // Return an empty widget if no images
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10, top: 8),
+      child: Row(
+        // The children are expanded, so they will fill the row.
+        // If there's only one image, it will take up the full width.
+        children: [
+          if (hasImage1)
+            Expanded(child: _buildClickableImage(context, widget.chatModel!.image1!)),
+          if (hasImage1 && hasImage2)
+            const SizedBox(width: 8), // Spacer between images
+          if (hasImage2)
+            Expanded(child: _buildClickableImage(context, widget.chatModel!.image2!)),
+        ],
+      ),
+    );
+  }
+
+  // --- NEW: Helper for a single clickable image with rounded corners ---
+  Widget _buildClickableImage(BuildContext context, String imageUrl) {
+    return GestureDetector(
+      onTap: () {
+        PageRouter.gotoWidget(CustomImageWidget(imageUrl: imageUrl), context);
+      },
+      // Constrain the height for a preview look
+      child: SizedBox(
+        height: 150,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15.0), // Consistent rounded corners
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => const Center(child: CupertinoActivityIndicator()),
+            errorWidget: (context, url, error) => Image.asset(
+              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
 }

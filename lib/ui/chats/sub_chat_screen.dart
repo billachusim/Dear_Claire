@@ -262,7 +262,7 @@ class _SubChatScreenState extends State<SubChatScreen> {
             if (_isSending)
               Positioned.fill(
                 child: Container(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   child: const Center(child: CupertinoActivityIndicator(color: Colors.white)),
                 ),
               ),
@@ -289,7 +289,7 @@ class _SubChatScreenState extends State<SubChatScreen> {
         userId: _user.userId,
         userNickname: _user.nickname,
         userAvatarUrl: _user.avatarUrl,
-        timeCreated: Timestamp.now(),
+        timeLastActivity: Timestamp.now(),
         audioUrl: voiceNote,
         image1: image1,
         image2: image2,

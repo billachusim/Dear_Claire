@@ -105,7 +105,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
     if (!widget.canComment) {
       final bool isSignedIn = currentUser != null;
       final String buttonText = isSignedIn
-          ? "Request Alter Ego Access to start Advising"
+          ? "You can watch but can't chat"
           : "Sign in to start Advising";
 
       return Align(
