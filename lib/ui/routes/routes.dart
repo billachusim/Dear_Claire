@@ -10,7 +10,6 @@ import 'package:clairediary/ui/bottom_nav/stack_index_home.dart';
 import 'package:clairediary/ui/chats/chatrooms.dart';
 import 'package:clairediary/ui/create_session/create_session_page.dart';
 import 'package:clairediary/ui/dairy/diary.dart';
-import 'package:clairediary/ui/ego-profile/clairevatar.dart';
 import 'package:clairediary/ui/ego-profile/profile.dart';
 import 'package:clairediary/ui/ego-profile/request_claire_love_form.dart';
 import 'package:clairediary/ui/featured/model/session.dart';
@@ -60,7 +59,6 @@ class AppRoutes {
   static const alterEgoRegistration = '/alterEgoRegistration';
   static const requestFeatureForm = '/requestFeatureForm';
   static const requestClaireLoveForm = '/requestClaireLoveForm';
-  static const editClairevatar = '/editClairevatar';
   static const searchPage = '/searchPage';
   static const egoPage = '/egoPage';
   static const diaryRooms = '/diaryRooms';
@@ -215,12 +213,6 @@ class AppRouter {
           fullscreenDialog: true,
         );
 
-      case AppRoutes.editClairevatar:
-        return MaterialPageRoute<dynamic>(
-          builder: (_) => EditClairevatar(),
-          settings: settings,
-          fullscreenDialog: true,
-        );
 
       case AppRoutes.searchPage:
         return MaterialPageRoute<dynamic>(

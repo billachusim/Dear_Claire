@@ -10,31 +10,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../widgets/toast.dart';
-import '../routes/routes.dart';
-
-
 
 class EditClairevatar extends StatefulWidget {
+  final Function(String) onAvatarChanged;
+
+  const EditClairevatar({Key? key, required this.onAvatarChanged}) : super(key: key);
+
   @override
   _EditClairevatarState createState() => _EditClairevatarState();
 }
 
 const int maxFailedLoadAttempts = 3;
 
-
 class _EditClairevatarState extends State<EditClairevatar> {
-
   User? currentUser = FirebaseAuth.instance.currentUser;
   late String avatarUrl;
-
 
   @override
   void initState() {
     super.initState();
     _createInterstitialAd();
   }
-
-
 
   @override
   void dispose() {
@@ -43,15 +39,10 @@ class _EditClairevatarState extends State<EditClairevatar> {
   }
 
   /// Query Clairevatars from Firestore
-
-  final Stream<QuerySnapshot> _clairevatarGrid = FirebaseFirestore.instance
-      .collection('claire_vartar')
-      .snapshots();
-
-
+  final Stream<QuerySnapshot> _clairevatarGrid =
+  FirebaseFirestore.instance.collection('claire_vartar').snapshots();
 
   /// Get user's Clairevatar
-
   Future<String?> getUserClairevatar() async {
     DocumentSnapshot response = await FirebaseFirestore.instance
         .collection(AppString.users)
@@ -66,32 +57,26 @@ class _EditClairevatarState extends State<EditClairevatar> {
     return null;
   }
 
-
   /// Change user's Clairevatar
-
   Future<void> changeClairevatar() async {
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser?.uid)
-        .update({
+    await FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).update({
       "avatarUrl": avatarUrl,
-    },
-    );
+    });
     logger.d('Successfully saved new clairevatar');
-
-    getUserClairevatar();
   }
 
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
 
   // Create interstitial ad.
-
   void _createInterstitialAd() {
     InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/4264541851" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/9032269917" :
-      '',      request: AdRequest(),
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/4264541851"
+          : Platform.isIOS
+          ? "ca-app-pub-2404156870680632/9032269917"
+          : '',
+      request: AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
           _interstitialAd = ad;
@@ -126,48 +111,56 @@ class _EditClairevatarState extends State<EditClairevatar> {
   }
 
   @override
-  Widget build (BuildContext context) {
+  Widget build(BuildContext context) {
     return Container(
       child: Padding(
-        padding: const EdgeInsets.only(left: 16.0, right: 16, bottom: 16, top: 20,),
+        padding: const EdgeInsets.only(
+          left: 16.0,
+          right: 16,
+          bottom: 16,
+          top: 20,
+        ),
         child: Column(
           children: [
             Align(
-              alignment:Alignment.topLeft,
+              alignment: Alignment.topLeft,
               child: Container(
-                padding:EdgeInsets.only(top:20, bottom: 10),
+                padding: EdgeInsets.only(top: 20, bottom: 10),
                 child: GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       print("Clicking on X");
                       Navigator.pop(context);
                     },
-                    child: SvgPicture.asset("assets/images/ic_close.svg",
+                    child: SvgPicture.asset(
+                      "assets/images/ic_close.svg",
                       width: 17.0,
-                      height: 17.0,)
-                ),
+                      height: 17.0,
+                    )),
               ),
             ),
             Container(
               margin: EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Text('Choose A New Clairevatar',
+              child: Column(
+                children: [
+                  Text(
+                    'Choose A New Clairevatar',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
                       color: Pallet.colorWhite,
                     ),
+                  ),
+                  Text(
+                    '(Express your ego)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Pallet.colorWhite,
+                      fontStyle: FontStyle.italic,
                     ),
-                    Text('(Express your ego)',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Pallet.colorWhite,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
             ),
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
@@ -187,7 +180,6 @@ class _EditClairevatarState extends State<EditClairevatar> {
                     shrinkWrap: true,
                     crossAxisSpacing: 8.0,
                     mainAxisSpacing: 8.0,
-
                     children: snapshot.data!.docs.map<Widget>((DocumentSnapshot document) {
                       final data = document.data() as Map<String, dynamic>?;
                       final imageUrl = data?['imageUrl'] as String?;
@@ -196,21 +188,21 @@ class _EditClairevatarState extends State<EditClairevatar> {
                         onTap: () {
                           if (imageUrl != null) {
                             avatarUrl = imageUrl;
-                            changeClairevatar();
+                            changeClairevatar().then((_) {
+                              widget.onAvatarChanged(avatarUrl);
+                              Navigator.pop(context);
+                            });
                             Future.delayed(Duration(seconds: 1), () {
                               _showInterstitialAd();
                             });
-                            Navigator.of(context)
-                                .pushReplacementNamed(AppRoutes.home);
                             showToast(AppString.nice_clairevatar);
                           }
                         },
-
                         child: ClipOval(
                           child: (imageUrl != null && imageUrl.isNotEmpty)
-                          ? CachedNetworkImage(
+                              ? CachedNetworkImage(
                             width: 20,
-                            height:20,
+                            height: 20,
                             imageUrl: imageUrl,
                             imageBuilder: (context, imageProvider) => Container(
                               height: 30,
@@ -230,14 +222,13 @@ class _EditClairevatarState extends State<EditClairevatar> {
                               height: 20,
                             ),
                           )
-                          : Image.asset(
-                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
-                              width: 20,
-                              height: 20,
-                            ),
+                              : Image.asset(
+                            "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                            width: 20,
+                            height: 20,
+                          ),
                         ),
                       );
-
                     }).toList(),
                   );
                 },
@@ -248,5 +239,4 @@ class _EditClairevatarState extends State<EditClairevatar> {
       ),
     );
   }
-
 }

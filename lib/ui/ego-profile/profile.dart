@@ -93,23 +93,65 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   }
 
   /// Edit nickname
-
   Future<void> editNickName() async {
-    final nickname = _nicknameController.text;
-    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).update(
-      {
-        "nickname": nickname,
-      },
+    final nickname = _nicknameController.text.trim();
+    if (nickname.isEmpty) {
+      showToast("Nickname cannot be empty.");
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser?.uid)
+          .update(
+        {
+          "nickname": nickname,
+        },
+      );
+
+      // Update the local user model and refresh the UI
+      setState(() {
+        userModel.nickname = nickname;
+      });
+
+      logger.d('Successfully saved new nickname');
+      print('Nickname: $nickname');
+      showToast("Ego name updated!");
+    } catch (e) {
+      logger.e('Error updating nickname: $e');
+      showToast("Failed to update ego name.");
+    }
+  }
+
+  // --- HELPER: SHOW CLAIREVATAR EDIT MODAL ---
+  void _showEditClairevatarModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        maxChildSize: 0.85,
+        minChildSize: 0.6,
+        builder: (_, controller) => Container(
+          decoration: BoxDecoration(
+            color: Pallet.colorBlack,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: EditClairevatar(
+            onAvatarChanged: (newAvatarUrl) {
+              // This callback updates the UI without navigating away
+              setState(() {
+                userModel.avatarUrl = newAvatarUrl;
+              });
+            },
+          ),
+        ),
+      ),
     );
-    logger.d('Successfully saved new nickname');
-    print('Nickname: $nickname');
-
-    getUserNickname();
   }
 
-  getUserNickname() async {
-    userModel = await firebaseServices.getUserInfo();
-  }
 
   /// Query Ego stream from Firestore
 
@@ -679,8 +721,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => Navigator.of(context)
-                      .pushNamed(AppRoutes.editClairevatar),
+                  onTap: _showEditClairevatarModal,
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
