@@ -178,150 +178,156 @@ class _EgoModeSessionDetailState
         elevation: 0,
         iconTheme: IconThemeData(color: textColor),
       ),
-      body: Stack(
-        children: [
-          ListView(
-            children: [
-              PostDetailsWidget(
-                sessionId: featuredSessionModel!.sessionId,
-              ),
+      body: GestureDetector(
+        onTap: () {
+          // Hide keyboard when tapping outside of a text field
+          FocusScope.of(context).unfocus();
+        },
+        child: Stack(
+          children: [
+            ListView(
+              children: [
+                PostDetailsWidget(
+                  sessionId: featuredSessionModel!.sessionId,
+                ),
 
-              AnimationLimiter(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  physics:
-                  BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
-                  itemCount: 1,
-                  itemBuilder: (BuildContext c, int i) {
-                    return AnimationConfiguration.staggeredList(
-                      position: i,
-                      delay: Duration(milliseconds: 500),
-                      child: SlideAnimation(
-                        duration: Duration(milliseconds: 1000),
-                        curve: Curves.linearToEaseOut,
-                        horizontalOffset: 100,
-                        verticalOffset: 350.0,
-                        child: FlipAnimation(
+                AnimationLimiter(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics:
+                    BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
+                    itemCount: 1,
+                    itemBuilder: (BuildContext c, int i) {
+                      return AnimationConfiguration.staggeredList(
+                        position: i,
+                        delay: Duration(milliseconds: 500),
+                        child: SlideAnimation(
                           duration: Duration(milliseconds: 1000),
-                          curve: Curves.easeInCubic,
-                          flipAxis: FlipAxis.y,
+                          curve: Curves.linearToEaseOut,
+                          horizontalOffset: 100,
+                          verticalOffset: 350.0,
+                          child: FlipAnimation(
+                            duration: Duration(milliseconds: 1000),
+                            curve: Curves.easeInCubic,
+                            flipAxis: FlipAxis.y,
 
-                          child: StreamBuilder(
-                              stream: firebaseServices.getFeaturedSessionsComments(
-                                  widget.featuredSessionModel!.sessionId.toString()),
-                              builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
-                                if (snapShot.hasError) {
+                            child: StreamBuilder(
+                                stream: firebaseServices.getFeaturedSessionsComments(
+                                    widget.featuredSessionModel!.sessionId.toString()),
+                                builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
+                                  if (snapShot.hasError) {
+                                    return Container();
+                                  }
+
+                                  if (snapShot.hasData) {
+                                    _commentList.clear();
+
+                                    /// clear list
+                                    snapShot.data!.docs
+                                        .map((e) => _commentList
+                                        .add(CommentSessionModel.fromJson(e.data())))
+                                        .toList();
+                                    return Column(
+
+                                      children: [
+
+                                        ..._commentList
+                                            .map((element) => CommentWidget(
+                                          commentSessionModel: element,
+                                          // onPressed is now removed. The CommentWidget handles its own logic.
+                                          onShare: () => _share(element.message),
+                                          featuredSessionModel: widget.featuredSessionModel!,
+                                          userId: widget.featuredSessionModel!.userId.toString(),
+                                        ))
+                                            .toList(),
+
+                                        SizedBox(height: 4,),
+                                        Text(
+                                          "Check the next sessions from same category - " + featuredSessionModel!.category1.toString(),
+                                          style: TextStyle(
+                                            color: secondaryTextColor,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+
+                                        SimilarCategorySessions(element: featuredSessionModel!,),
+                                        SizedBox(height: 4),
+                                      ],
+                                    );
+                                  }
                                   return Container();
                                 }
-
-                                if (snapShot.hasData) {
-                                  _commentList.clear();
-
-                                  /// clear list
-                                  snapShot.data!.docs
-                                      .map((e) => _commentList
-                                      .add(CommentSessionModel.fromJson(e.data())))
-                                      .toList();
-                                  return Column(
-
-                                    children: [
-
-                                      ..._commentList
-                                          .map((element) => CommentWidget(
-                                        commentSessionModel: element,
-                                        // onPressed is now removed. The CommentWidget handles its own logic.
-                                        onShare: () => _share(element.message),
-                                        featuredSessionModel: widget.featuredSessionModel!,
-                                        userId: widget.featuredSessionModel!.userId.toString(),
-                                      ))
-                                          .toList(),
-
-                                      SizedBox(height: 4,),
-                                      Text(
-                                        "Check the next sessions from same category - " + featuredSessionModel!.category1.toString(),
-                                        style: TextStyle(
-                                          color: secondaryTextColor,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-
-                                      SimilarCategorySessions(element: featuredSessionModel!,),
-                                      SizedBox(height: 4),
-                                    ],
-                                  );
-                                }
-                                return Container();
-                              }
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
+                ),
+
+
+                SizedBox(
+                  height: 120,
+                )
+              ],
+            ),
+
+            // --- COMPLIANT BANNER AD PLACEMENT ---
+            if (egoModeSessionDetailBottomBanner != null && _isBannerAdInitialized)
+              Positioned(
+                bottom: 60,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: egoModeSessionDetailBottomBanner!.size.height.toDouble(),
+                  width: egoModeSessionDetailBottomBanner!.size.width.toDouble(),
+                  child: AdWidget(ad: egoModeSessionDetailBottomBanner!),
+                  alignment: Alignment.center,
                 ),
               ),
 
+            // Your chat input field at the very bottom
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: FutureBuilder<UserModel>(
+                future: _userFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox.shrink(); // Or a loading indicator
+                  }
 
-              SizedBox(
-                height: 120,
-              )
-            ],
-          ),
+                  bool hasPermission = false;
 
-          // --- COMPLIANT BANNER AD PLACEMENT ---
-          if (egoModeSessionDetailBottomBanner != null && _isBannerAdInitialized)
-            Positioned(
-              bottom: 60, // Positioned above the ChatEditField
-              left: 0,
-              right: 0,
-              child: Container(
-                height: egoModeSessionDetailBottomBanner!.size.height.toDouble(),
-                width: egoModeSessionDetailBottomBanner!.size.width.toDouble(),
-                child: AdWidget(ad: egoModeSessionDetailBottomBanner!),
-                alignment: Alignment.center,
+                  // First, check if the current user is the owner of the session.
+                  // Note: `featuredSessionModel` from the state is used here as `widget.featuredSessionModel` is not available in `_EgoModeSessionDetailState`.
+                  final isSessionOwner = featuredSessionModel?.userId == currentUser?.uid;
+
+                  if (isSessionOwner) {
+                    // If the user is the owner, they always have permission.
+                    hasPermission = true;
+                  } else if (snapshot.hasData) {
+                    // If not the owner, check the user's role.
+                    final user = snapshot.data!;
+                    final userType = user.userType ?? '';
+                    final hasRequiredRole = ['REGULAR', 'ADMIN', 'SUPER_ADMIN'].contains(userType);
+                    hasPermission = hasRequiredRole;
+                  }
+                  // If the user is not the owner and user data fails to load, hasPermission remains false.
+
+                  return ChatEditField(
+                    canComment: hasPermission,
+                    onTap: (String comment, String voiceNote, String image1, String image2) {
+                      if (hasPermission) {
+                        _sendComment(comment, voiceNote, widget.featuredSessionModel!, image1, image2);
+                      }
+                    },
+                  );
+                },
               ),
-            ),
+            )
 
-          // Your chat input field at the very bottom
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: FutureBuilder<UserModel>(
-              future: _userFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox.shrink(); // Or a loading indicator
-                }
-
-                bool hasPermission = false;
-
-                // First, check if the current user is the owner of the session.
-                // Note: `featuredSessionModel` from the state is used here as `widget.featuredSessionModel` is not available in `_EgoModeSessionDetailState`.
-                final isSessionOwner = featuredSessionModel?.userId == currentUser?.uid;
-
-                if (isSessionOwner) {
-                  // If the user is the owner, they always have permission.
-                  hasPermission = true;
-                } else if (snapshot.hasData) {
-                  // If not the owner, check the user's role.
-                  final user = snapshot.data!;
-                  final userType = user.userType ?? '';
-                  final hasRequiredRole = ['REGULAR', 'ADMIN', 'SUPER_ADMIN'].contains(userType);
-                  hasPermission = hasRequiredRole;
-                }
-                // If the user is not the owner and user data fails to load, hasPermission remains false.
-
-                return ChatEditField(
-                  canComment: hasPermission,
-                  onTap: (String comment, String voiceNote, String image1, String image2) {
-                    if (hasPermission) {
-                      _sendComment(comment, voiceNote, widget.featuredSessionModel!, image1, image2);
-                    }
-                  },
-                );
-              },
-            ),
-          )
-
-        ],
+          ],
+        ),
       ),
     );
   }

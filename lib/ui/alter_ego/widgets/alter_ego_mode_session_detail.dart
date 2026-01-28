@@ -161,7 +161,12 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
         iconTheme: IconThemeData(color: textColor),
       ),
       // --- ADMOB COMPLIANCE FIX 4: Restructure body with a Stack ---
-      body: Stack(
+        body: GestureDetector(
+          onTap: () {
+            // Hide keyboard when tapping outside of a text field
+            FocusScope.of(context).unfocus();
+          },
+          child: Stack(
         children: [
           CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
           ListView(
@@ -305,7 +310,8 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
           )
 
         ],
-      ),
+          ),
+        ),
     );
   }
 

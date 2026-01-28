@@ -147,122 +147,126 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
         title: Text(chatRoomPodo!.title!),
         elevation: 0,
       ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            ListView(
-              children: [
-                AnimationLimiter(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics:
-                    BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
-                    itemCount: 1,
-                    itemBuilder: (BuildContext c, int i) {
-                      return AnimationConfiguration.staggeredList(
-                        position: i,
-                        delay: Duration(milliseconds: 500),
-                        child: SlideAnimation(
-                          duration: Duration(milliseconds: 2500),
+        body: GestureDetector(
+          onTap: () {
+            // Hide keyboard when tapping outside of a text field
+            FocusScope.of(context).unfocus();
+          },
+          child: Stack(
+        children: [
+          ListView(
+            children: [
+              AnimationLimiter(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  physics:
+                  BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
+                  itemCount: 1,
+                  itemBuilder: (BuildContext c, int i) {
+                    return AnimationConfiguration.staggeredList(
+                      position: i,
+                      delay: Duration(milliseconds: 500),
+                      child: SlideAnimation(
+                        duration: Duration(milliseconds: 2500),
+                        curve: Curves.fastLinearToSlowEaseIn,
+                        horizontalOffset: 30,
+                        verticalOffset: 300.0,
+                        child: FlipAnimation(
+                          duration: Duration(milliseconds: 3000),
                           curve: Curves.fastLinearToSlowEaseIn,
-                          horizontalOffset: 30,
-                          verticalOffset: 300.0,
-                          child: FlipAnimation(
-                            duration: Duration(milliseconds: 3000),
-                            curve: Curves.fastLinearToSlowEaseIn,
-                            flipAxis: FlipAxis.y,
-                            child: StreamBuilder(
-                                stream: firebaseServices.getAlterEgoChats(
-                                    chatRoomPodo),
-                                builder: (context,
-                                    AsyncSnapshot<
-                                        QuerySnapshot<Map<String, dynamic>>>
-                                    snapShot) {
-                                  if (snapShot.hasData) {
-                                    _chatList
-                                        .clear(); // Clear list before populating
-                                    snapShot.data!.docs
-                                        .map((e) =>
-                                        _chatList
-                                            .add(Temp(
-                                            e.id, ChatModel.fromJson(e.data()))))
-                                        .toList();
-                                    return Column(
-                                      children: [
-                                        AlterEgoSubDiaryRoomWidget(
-                                            element: widget.chatRoomPodo),
-                                        ..._chatList
-                                            .map((element) =>
-                                            AlterEgoChatWidget(
-                                              documentID: element.id,
-                                              chatModel: element.chatModel,
-                                              chatRoomPodo: chatRoomPodo,
-                                            ))
-                                            .toList(),
-                                      ],
-                                    );
-                                  }
-                                  return Container();
-                                }),
-                          ),
+                          flipAxis: FlipAxis.y,
+                          child: StreamBuilder(
+                              stream: firebaseServices.getAlterEgoChats(
+                                  chatRoomPodo),
+                              builder: (context,
+                                  AsyncSnapshot<
+                                      QuerySnapshot<Map<String, dynamic>>>
+                                  snapShot) {
+                                if (snapShot.hasData) {
+                                  _chatList
+                                      .clear(); // Clear list before populating
+                                  snapShot.data!.docs
+                                      .map((e) =>
+                                      _chatList
+                                          .add(Temp(
+                                          e.id, ChatModel.fromJson(e.data()))))
+                                      .toList();
+                                  return Column(
+                                    children: [
+                                      AlterEgoSubDiaryRoomWidget(
+                                          element: widget.chatRoomPodo),
+                                      ..._chatList
+                                          .map((element) =>
+                                          AlterEgoChatWidget(
+                                            documentID: element.id,
+                                            chatModel: element.chatModel,
+                                            chatRoomPodo: chatRoomPodo,
+                                          ))
+                                          .toList(),
+                                    ],
+                                  );
+                                }
+                                return Container();
+                              }),
                         ),
-                      );
-                    },
-                  ),
-                ),
-                // Adjust space for the input field AND the banner ad
-                SizedBox(height: 120),
-              ],
-            ),
-
-            // --- BANNER AD PLACEMENT ---
-            // Positioned above the ChatEditField.
-            if (_bottomBannerAd != null && _isBannerAdInitialized)
-              Positioned(
-                bottom: 60, // Position it 60 pixels from the bottom.
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: _bottomBannerAd!.size.height.toDouble(),
-                  width: _bottomBannerAd!.size.width.toDouble(),
-                  child: AdWidget(ad: _bottomBannerAd!),
-                  alignment: Alignment.center,
+                      ),
+                    );
+                  },
                 ),
               ),
+              // Adjust space for the input field AND the banner ad
+              SizedBox(height: 120),
+            ],
+          ),
 
-            // --- CHAT INPUT FIELD ---
-            Stack(
-              children: [
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ChatEditField(
-                    // This is an Alter Ego chat room, so commenting is always open for everyone with an Alter Ego role.
-                    // We pass `canComment: true` to ensure the text field is always visible
-                    // and does not show the "Request Alter Ego Access" button.
-                    canComment: true,
-                    onTap: (v, voiceNote, image1, image2) =>
-                        _sendMessage(v, voiceNote, image1, image2),
-                  ),
+          // --- BANNER AD PLACEMENT ---
+          // Positioned above the ChatEditField.
+          if (_bottomBannerAd != null && _isBannerAdInitialized)
+            Positioned(
+              bottom: 60, // Position it 60 pixels from the bottom.
+              left: 0,
+              right: 0,
+              child: Container(
+                height: _bottomBannerAd!.size.height.toDouble(),
+                width: _bottomBannerAd!.size.width.toDouble(),
+                child: AdWidget(ad: _bottomBannerAd!),
+                alignment: Alignment.center,
+              ),
+            ),
+
+          // --- CHAT INPUT FIELD ---
+          Stack(
+            children: [
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ChatEditField(
+                  // This is an Alter Ego chat room, so commenting is always open for everyone with an Alter Ego role.
+                  // We pass `canComment: true` to ensure the text field is always visible
+                  // and does not show the "Request Alter Ego Access" button.
+                  canComment: true,
+                  onTap: (v, voiceNote, image1, image2) =>
+                      _sendMessage(v, voiceNote, image1, image2),
                 ),
-                // The overlay that shows only when sending
-                if (_isSending)
-                  Positioned.fill(
-                    child: Container(
-                      color:Colors.black.withValues(alpha: 0.5), // Semi-transparent overlay
-                      child: const Center(
-                        child: CupertinoActivityIndicator(
-                          color: Colors.white,
-                          radius: 15,
-                        ),
+              ),
+              // The overlay that shows only when sending
+              if (_isSending)
+                Positioned.fill(
+                  child: Container(
+                    color:Colors.black.withValues(alpha: 0.5), // Semi-transparent overlay
+                    child: const Center(
+                      child: CupertinoActivityIndicator(
+                        color: Colors.white,
+                        radius: 15,
                       ),
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
+          ),
 
-          ],
-        ),
+        ],
       ),
+        ),
     );
   }
 

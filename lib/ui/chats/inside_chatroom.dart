@@ -152,124 +152,128 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Text(chatRoomPodo!.title!),
         elevation: 0,
       ),
-      body: SafeArea(
+      body: GestureDetector(
+        onTap: () {
+          // Hide keyboard when tapping outside of a text field
+          FocusScope.of(context).unfocus();
+        },
         child: Stack(
-          children: [
-            // This ListView now contains only chat-related content
-            ListView(
-              children: [
-                AnimationLimiter(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: BouncingScrollPhysics(
-                        parent: NeverScrollableScrollPhysics()),
-                    itemCount: 1,
-                    itemBuilder: (BuildContext c, int i) {
-                      return AnimationConfiguration.staggeredList(
-                        position: i,
-                        delay: Duration(milliseconds: 500),
-                        child: SlideAnimation(
+        children: [
+          // This ListView now contains only chat-related content
+          ListView(
+            children: [
+              AnimationLimiter(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  physics: BouncingScrollPhysics(
+                      parent: NeverScrollableScrollPhysics()),
+                  itemCount: 1,
+                  itemBuilder: (BuildContext c, int i) {
+                    return AnimationConfiguration.staggeredList(
+                      position: i,
+                      delay: Duration(milliseconds: 500),
+                      child: SlideAnimation(
+                        //... (rest of your animation code)
+                        child: FlipAnimation(
                           //... (rest of your animation code)
-                          child: FlipAnimation(
-                            //... (rest of your animation code)
-                            child: StreamBuilder(
-                              stream: firebaseServices.getChats(chatRoomPodo),
-                              //...
-                              builder: (context, AsyncSnapshot<
-                                  QuerySnapshot<Map<String, dynamic>>> snapShot) {
-                                if (snapShot.hasError) {
-                                  return Center(
-                                      child: Text("Something went wrong"));
-                                }
-                                if (snapShot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return Center(
-                                      child: CircularProgressIndicator());
-                                }
-
-                                if (snapShot.hasData) {
-                                  // --- THIS IS THE CRITICAL FIX ---
-                                  // Clear the list to prevent duplicates on each rebuild
-                                  _chatList.clear();
-                                  // Process the snapshot and populate the _chatList
-                                  snapShot.data!.docs.map((e) {
-                                    _chatList.add(
-                                        Temp(e.id, ChatModel.fromJson(e.data())));
-                                  }).toList();
-                                  // --- END OF FIX ---
-
-                                  return Column(
-                                    children: [
-                                      SubDiaryRoomWidget(
-                                          element: widget.chatRoomPodo),
-                                      ..._chatList.map((element) =>
-                                          ChatWidget(
-                                            documentID: element.id,
-                                            chatModel: element.chatModel,
-                                            chatRoomPodo: chatRoomPodo,
-                                          )).toList(),
-                                    ],
-                                  );
-                                }
-                                // Fallback for no data
+                          child: StreamBuilder(
+                            stream: firebaseServices.getChats(chatRoomPodo),
+                            //...
+                            builder: (context, AsyncSnapshot<
+                                QuerySnapshot<Map<String, dynamic>>> snapShot) {
+                              if (snapShot.hasError) {
                                 return Center(
-                                  child: Text("No messages yet."),
+                                    child: Text("Something went wrong"));
+                              }
+                              if (snapShot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Center(
+                                    child: CircularProgressIndicator());
+                              }
+
+                              if (snapShot.hasData) {
+                                // --- THIS IS THE CRITICAL FIX ---
+                                // Clear the list to prevent duplicates on each rebuild
+                                _chatList.clear();
+                                // Process the snapshot and populate the _chatList
+                                snapShot.data!.docs.map((e) {
+                                  _chatList.add(
+                                      Temp(e.id, ChatModel.fromJson(e.data())));
+                                }).toList();
+                                // --- END OF FIX ---
+
+                                return Column(
+                                  children: [
+                                    SubDiaryRoomWidget(
+                                        element: widget.chatRoomPodo),
+                                    ..._chatList.map((element) =>
+                                        ChatWidget(
+                                          documentID: element.id,
+                                          chatModel: element.chatModel,
+                                          chatRoomPodo: chatRoomPodo,
+                                        )).toList(),
+                                  ],
                                 );
-                              },
-                            ),
+                              }
+                              // Fallback for no data
+                              return Center(
+                                child: Text("No messages yet."),
+                              );
+                            },
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ),
-                // Adjust SizedBox to account for both the chat field and the banner
-                SizedBox(height: 120),
-              ],
-            ),
-
-            // --- BANNER AD PLACEMENT ---
-            // Positioned above the ChatEditField
-            if (insideChatroomBottomBanner != null && _isBannerAdInitialized)
-              Positioned(
-                bottom: 60, // Position it 60 pixels from the bottom.
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: insideChatroomBottomBanner!.size.height.toDouble(),
-                  width: insideChatroomBottomBanner!.size.width.toDouble(),
-                  child: AdWidget(ad: insideChatroomBottomBanner!),
-                  alignment: Alignment.center,
+                      ),
+                    );
+                  },
                 ),
               ),
+              // Adjust SizedBox to account for both the chat field and the banner
+              SizedBox(height: 120),
+            ],
+          ),
 
-            // --- CHAT INPUT FIELD ---
-            Stack(
-              children: [
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ChatEditField(
-                    // This is a chat room, so commenting is always open for everyone.
-                    canComment: true,onTap: (v, voiceNote, image1, image2) =>
-                      _sendMessage(v, voiceNote, image1, image2),
-                  ),
+          // --- BANNER AD PLACEMENT ---
+          // Positioned above the ChatEditField
+          if (insideChatroomBottomBanner != null && _isBannerAdInitialized)
+            Positioned(
+              bottom: 60, // Position it 60 pixels from the bottom.
+              left: 0,
+              right: 0,
+              child: Container(
+                height: insideChatroomBottomBanner!.size.height.toDouble(),
+                width: insideChatroomBottomBanner!.size.width.toDouble(),
+                child: AdWidget(ad: insideChatroomBottomBanner!),
+                alignment: Alignment.center,
+              ),
+            ),
+
+          // --- CHAT INPUT FIELD ---
+          Stack(
+            children: [
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ChatEditField(
+                  // This is a chat room, so commenting is always open for everyone.
+                  canComment: true,onTap: (v, voiceNote, image1, image2) =>
+                    _sendMessage(v, voiceNote, image1, image2),
                 ),
-                // The overlay that shows only when sending
-                if (_isSending)
-                  Positioned.fill(
-                    child: Container(
-                      color:Colors.black.withValues(alpha: 0.5), // Semi-transparent overlay
-                      child: const Center(
-                        child: CupertinoActivityIndicator(
-                          color: Colors.white,
-                          radius: 15,
-                        ),
+              ),
+              // The overlay that shows only when sending
+              if (_isSending)
+                Positioned.fill(
+                  child: Container(
+                    color:Colors.black.withValues(alpha: 0.5), // Semi-transparent overlay
+                    child: const Center(
+                      child: CupertinoActivityIndicator(
+                        color: Colors.white,
+                        radius: 15,
                       ),
                     ),
                   ),
-              ],
-            ),
-          ],
+                ),
+            ],
+                ),
+        ],
         ),
       ),
     );

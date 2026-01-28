@@ -46,7 +46,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         elevation: 0,
         iconTheme: IconThemeData(color: textColor),
       ),
-      body: Stack(
+      body: GestureDetector(
+        onTap: () {
+          // Hide keyboard when tapping outside of a text field
+          FocusScope.of(context).unfocus();
+        },
+        child: Stack(
         children: [
           ListView(
             children: [
@@ -167,6 +172,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
         ],
       ),
+    ),
     );
   }
 

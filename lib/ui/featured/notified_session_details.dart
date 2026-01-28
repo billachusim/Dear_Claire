@@ -66,6 +66,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   int _currentPage = 0;
   final GlobalKey<UnifiedMediaViewerState> _mediaViewerKey = GlobalKey<UnifiedMediaViewerState>();
   bool _isAvatarLoading = false;
+  late Future<UserModel> _userFuture;
 
   List<CommentSessionModel> _commentList = [];
 
@@ -82,6 +83,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
     super.initState();
     _updateLanguagePreference();
     _createAdviseInterstitialAd();
+    _userFuture = firebaseServices.getUserInfo();
   }
 
 
@@ -219,7 +221,12 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
         elevation: 0,
         iconTheme: IconThemeData(color: textColor),
       ),
-      body: Stack(
+      body: GestureDetector(
+        onTap: () {
+          // Hide keyboard when tapping outside of a text field
+          FocusScope.of(context).unfocus();
+        },
+        child: Stack(
         children: [
           ListView(
           children: [
@@ -1210,7 +1217,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
           Align(
             alignment: Alignment.bottomCenter,
             child: FutureBuilder<UserModel>(
-              future: firebaseServices.getUserInfo(), // Fetches the current user's data
+              future: _userFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox.shrink(); // Or a loading indicator
@@ -1255,6 +1262,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
 
         ]
       ),
+    ),
     );
   }
 

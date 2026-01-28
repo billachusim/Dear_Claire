@@ -160,97 +160,101 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
         title: Text(widget.chatModel!.userNickname ?? 'Diary Room'),
         elevation: 0,
       ),
-      body: SafeArea(
+      body: GestureDetector(
+        onTap: () {
+          // Hide keyboard when tapping outside of a text field
+          FocusScope.of(context).unfocus();
+        },
         child: Stack(
-          children: [
-            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: firebaseServices.getAlterEgoSubMessages(
-                  widget.documentID!,
-                  widget.chatRoomPodo,
-                  widget.chatModel!),
-              builder: (context, snapShot) {
-                if (!snapShot.hasData) {
-                  return const Center(child: CupertinoActivityIndicator());
-                }
+        children: [
+          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: firebaseServices.getAlterEgoSubMessages(
+                widget.documentID!,
+                widget.chatRoomPodo,
+                widget.chatModel!),
+            builder: (context, snapShot) {
+              if (!snapShot.hasData) {
+                return const Center(child: CupertinoActivityIndicator());
+              }
 
-                // Reverse the docs if your stream isn't already handling the UI order
-                final docs = snapShot.data!.docs;
+              // Reverse the docs if your stream isn't already handling the UI order
+              final docs = snapShot.data!.docs;
 
-                return ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 160, top: 10),
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: docs.length + 1, // +1 for the header (InsideInsideAlterEgoChatWidget)
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      // Header: The original corner message
-                      return InsideInsideAlterEgoChatWidget(
-                          documentID: widget.documentID,
-                          chatModel: widget.chatModel,
-                          chatRoomPodo: widget.chatRoomPodo);
+              return ListView.builder(
+                padding: const EdgeInsets.only(bottom: 160, top: 10),
+                physics: const BouncingScrollPhysics(),
+                itemCount: docs.length + 1, // +1 for the header (InsideInsideAlterEgoChatWidget)
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    // Header: The original corner message
+                    return InsideInsideAlterEgoChatWidget(
+                        documentID: widget.documentID,
+                        chatModel: widget.chatModel,
+                        chatRoomPodo: widget.chatRoomPodo);
+                  }
+
+                  // Replies
+                  final doc = docs[index - 1];
+                  final chatData = ChatModel.fromJson(doc.data());
+
+                  return InsideInsideInsideAlterEgoChatWidget(
+                    documentID: doc.id,
+                    chatModel: chatData,
+                    chatRoomPodo: widget.chatRoomPodo,
+                  );
+                },
+              );
+            },
+          ),
+
+          // Banner Ad
+          if (_bottomBannerAd != null && _isBannerAdInitialized)
+            Positioned(
+              bottom: 65,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: SizedBox(
+                  height: _bottomBannerAd!.size.height.toDouble(),
+                  width: _bottomBannerAd!.size.width.toDouble(),
+                  child: AdWidget(ad: _bottomBannerAd!),
+                ),
+              ),
+            ),
+
+          // Input Field
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Builder(
+              builder: (context) {
+                // This is a chat room or room corner, so commenting should always be open for everyone
+                // who is not explicitly blocked (e.g., in an eavesdrop room and not the owner).
+                // The `canSendMessage` variable already correctly handles this logic.
+                // We pass its value directly to `canComment`.
+                return ChatEditField(
+                  canComment: canSendMessage,
+                  onTap: (v, voiceNote, image1, image2) {
+                    if (canSendMessage) {
+                      _sendMessage(v, voiceNote, image1, image2);
                     }
-
-                    // Replies
-                    final doc = docs[index - 1];
-                    final chatData = ChatModel.fromJson(doc.data());
-
-                    return InsideInsideInsideAlterEgoChatWidget(
-                      documentID: doc.id,
-                      chatModel: chatData,
-                      chatRoomPodo: widget.chatRoomPodo,
-                    );
                   },
                 );
               },
             ),
+          ),
 
-            // Banner Ad
-            if (_bottomBannerAd != null && _isBannerAdInitialized)
-              Positioned(
-                bottom: 65,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: SizedBox(
-                    height: _bottomBannerAd!.size.height.toDouble(),
-                    width: _bottomBannerAd!.size.width.toDouble(),
-                    child: AdWidget(ad: _bottomBannerAd!),
-                  ),
+          // Sending Overlay
+          if (_isSending)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.5),
+                child: const Center(
+                  child: CupertinoActivityIndicator(color: Colors.white, radius: 15),
                 ),
-              ),
-
-            // Input Field
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Builder(
-                builder: (context) {
-                  // This is a chat room or room corner, so commenting should always be open for everyone
-                  // who is not explicitly blocked (e.g., in an eavesdrop room and not the owner).
-                  // The `canSendMessage` variable already correctly handles this logic.
-                  // We pass its value directly to `canComment`.
-                  return ChatEditField(
-                    canComment: canSendMessage,
-                    onTap: (v, voiceNote, image1, image2) {
-                      if (canSendMessage) {
-                        _sendMessage(v, voiceNote, image1, image2);
-                      }
-                    },
-                  );
-                },
               ),
             ),
-
-            // Sending Overlay
-            if (_isSending)
-              Positioned.fill(
-                child: Container(
-                  color: Colors.black.withOpacity(0.5),
-                  child: const Center(
-                    child: CupertinoActivityIndicator(color: Colors.white, radius: 15),
-                  ),
-                ),
-              ),
-          ],
-        ),
+        ],
+      ),
       ),
     );
   }
