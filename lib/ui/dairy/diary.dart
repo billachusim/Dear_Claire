@@ -5,14 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 
-import '../../widgets/toast.dart';
-import '../routes/routes.dart';
-
-
 class DiaryPage extends StatefulWidget {
-  DiaryPage({Key? key, required this.title}) : super(key: key);
-
   final String title;
+  final bool showAppBar;
+
+  DiaryPage({
+    Key? key,
+    required this.title,
+    this.showAppBar = false,
+  }) : super(key: key);
 
   @override
   _DiaryPageState createState() => _DiaryPageState();
@@ -20,52 +21,67 @@ class DiaryPage extends StatefulWidget {
 
 class _DiaryPageState extends State<DiaryPage> {
 
+  Widget _buildContent() {
+    return Stack(
+      children: [
+        StreamBuilder<List<Session>>(
+          stream: firebaseServices.getDiarySessionsStream(),
+          builder: (context, AsyncSnapshot<List<Session>> sessionSnapshot) {
+            if (sessionSnapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: RotateImage(50, 50));
+            }
+            if (sessionSnapshot.hasError) {
+              return Center(child: Text("Error loading diary."));
+            }
+            if (!sessionSnapshot.hasData || sessionSnapshot.data!.isEmpty) {
+              return EmptySessionWidget();
+            }
+
+            // Use the data from the stream snapshot
+            return ListView(
+              children: [
+                SizedBox(height: 10),
+                DiarySessionNotice(),
+                SizedBox(height: 10),
+                ...sessionSnapshot.data!
+                    .map((element) => EgoModeSessionCard(
+                  element: element,
+                  visitedUsersID: '',
+                  visitedEgoName: '',
+                ))
+                    .toList(),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (bool didPop, dynamic result) {
-          if (didPop) return;
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-          showToast("Press back again to exit.");
-        },
-        child: Scaffold(
-          body: Stack(
-            children: [
+    // If showAppBar is true, build the page with a Scaffold and AppBar
+    if (widget.showAppBar) {
+      bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+      Color appBarTextColor = isDarkMode ? Colors.white : Colors.black;
+      Color appBarBackgroundColor = isDarkMode ? Colors.black : Colors.white;
 
-              FutureBuilder(
-                future: firebaseServices.getDiarySessions(),
-                builder: (context, AsyncSnapshot<List<Session>> session) {
-                  if (session.connectionState == ConnectionState.waiting) {
-                    return RotateImage(50, 50);
-                  }
-                  if (session.data?.length == 0) {
-                    return EmptySessionWidget();
-                  }
-
-                  if (session.hasError) {
-                    return Container();
-                  }
-
-                  if (session.hasData) {
-                    return ListView(
-                      children: [
-                        DiarySessionNotice(),
-                        ...session.data!
-                            .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
-                            .toList(),
-                      ],
-                    );
-                  }
-                  return Container();
-                }
-                ),
-        ]
-          ),
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title, style: TextStyle(color: appBarTextColor)),
+          backgroundColor: appBarBackgroundColor,
+          elevation: 0,
+          iconTheme: IconThemeData(color: appBarTextColor),
+          automaticallyImplyLeading: true, // Ensures back button is shown
         ),
-      ),
-    );
+        body: _buildContent(), // Use the extracted content widget
+      );
+    } else {
+      // Otherwise, return only the content, to be used inside another Scaffold (like HomePage)
+      // The PopScope and SafeArea are intentionally removed here as they are handled by the parent Scaffold.
+      return _buildContent();
+    }
   }
 }
 
@@ -76,9 +92,11 @@ class DiarySessionNotice extends StatelessWidget {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Text(
           "ONLY YOUR Diary Sessions appear here. Archive can be found on Ego page.\n"
               "Open Up, write or record, share or save it and Claire will be there for you.",
+          textAlign: TextAlign.center,
           style: TextStyle(
             color: isDarkMode ? Colors.white : Colors.black,
             fontSize: 10,

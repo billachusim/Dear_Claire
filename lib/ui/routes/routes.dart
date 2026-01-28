@@ -92,7 +92,7 @@ class AppRouter {
 
       case AppRoutes.diarySessions:
         return MaterialPageRoute<dynamic>(
-          builder: (_) => DiaryPage(title: "Dear Claire"),
+          builder: (_) => DiaryPage(title: "Dear Claire", showAppBar: true),
           settings: settings,
           fullscreenDialog: true,
         );
@@ -244,10 +244,11 @@ class AppRouter {
 
       case AppRoutes.egoPage:
         return MaterialPageRoute<dynamic>(
-          builder: (_) => EgoProfilePage(title: 'Dear Claire'),
+          builder: (_) => EgoProfilePage(title: 'Dear Claire', showAppBar: true),
           settings: settings,
           fullscreenDialog: false,
         );
+
 
       case AppRoutes.spaceShooter:
         return MaterialPageRoute<dynamic>(

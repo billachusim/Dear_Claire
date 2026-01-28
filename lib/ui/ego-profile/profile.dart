@@ -37,10 +37,12 @@ import 'clairevatar.dart';
 
 class EgoProfilePage extends StatefulWidget {
   final String title;
-  const EgoProfilePage({
+  final bool showAppBar;  const EgoProfilePage({
     Key? key,
     required this.title,
+    this.showAppBar = false,
   }) : super(key: key);
+
 
   @override
   _EgoProfilePageState createState() => _EgoProfilePageState();
@@ -1110,8 +1112,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildContent(BuildContext context) {
     return SafeArea(
       child: PopScope(
         canPop: false,
@@ -1139,7 +1140,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                         sessionCount: data?["sessionCount"].toString() ?? "0",
                         advisesCount: data?["adviseCount"].toString() ?? "0",
                         totalLoveCount:
-                            data?["totalLoveCount"].toString() ?? "0",
+                        data?["totalLoveCount"].toString() ?? "0",
                         userType: data?["userType"] ?? "Ego",
                         avatarUrl: data?["avatarUrl"] ?? " ",
                       );
@@ -1147,7 +1148,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                     // Show a placeholder or compact loader while the header loads
                     return SizedBox(
                         height:
-                            150, // Give it a fixed height to avoid layout jumps
+                        150, // Give it a fixed height to avoid layout jumps
                         child: Center(child: CircularProgressIndicator()));
                   },
                 ),
@@ -1201,11 +1202,11 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                     decoration: BoxDecoration(
                                         border: currentTabIndex != 0
                                             ? Border.all(
-                                                color: Pallet.colorPrimary,
-                                                width: 3)
+                                            color: Pallet.colorPrimary,
+                                            width: 3)
                                             : Border.all(
-                                                color: Pallet.colorPrimary,
-                                                width: 6),
+                                            color: Pallet.colorPrimary,
+                                            width: 6),
                                         borderRadius: BorderRadius.circular(25),
                                         color: currentTabIndex != 0
                                             ? Pallet.colorWhite
@@ -1219,9 +1220,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                               style: TextStyle(
                                                   color: Pallet.colorPrimary,
                                                   fontWeight:
-                                                      currentTabIndex != 0
-                                                          ? FontWeight.w500
-                                                          : FontWeight.w700,
+                                                  currentTabIndex != 0
+                                                      ? FontWeight.w500
+                                                      : FontWeight.w700,
                                                   fontSize: currentTabIndex != 0
                                                       ? 14
                                                       : 14)),
@@ -1229,7 +1230,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                           currentTabIndex != 0
                                               ? SizedBox.shrink()
                                               : Icon(Icons.circle_notifications,
-                                                  color: Pallet.colorPrimary)
+                                              color: Pallet.colorPrimary)
                                         ],
                                       ),
                                     ),
@@ -1253,11 +1254,11 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                     decoration: BoxDecoration(
                                         border: currentTabIndex != 1
                                             ? Border.all(
-                                                color: Pallet.colorSecondary,
-                                                width: 3)
+                                            color: Pallet.colorSecondary,
+                                            width: 3)
                                             : Border.all(
-                                                color: Pallet.colorSecondary,
-                                                width: 6),
+                                            color: Pallet.colorSecondary,
+                                            width: 6),
                                         borderRadius: BorderRadius.circular(25),
                                         color: currentTabIndex != 1
                                             ? Pallet.colorWhite
@@ -1271,9 +1272,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                               style: TextStyle(
                                                   color: Pallet.colorSecondary,
                                                   fontWeight:
-                                                      currentTabIndex != 1
-                                                          ? FontWeight.w500
-                                                          : FontWeight.w700,
+                                                  currentTabIndex != 1
+                                                      ? FontWeight.w500
+                                                      : FontWeight.w700,
                                                   fontSize: currentTabIndex != 1
                                                       ? 14
                                                       : 14)),
@@ -1281,8 +1282,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                           currentTabIndex != 1
                                               ? SizedBox.shrink()
                                               : Icon(
-                                                  Icons.monetization_on_rounded,
-                                                  color: Pallet.colorSecondary)
+                                              Icons.monetization_on_rounded,
+                                              color: Pallet.colorSecondary)
                                         ],
                                       ),
                                     ),
@@ -1306,11 +1307,11 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                     decoration: BoxDecoration(
                                         border: currentTabIndex != 2
                                             ? Border.all(
-                                                color: Pallet.deepGreen,
-                                                width: 3)
+                                            color: Pallet.deepGreen,
+                                            width: 3)
                                             : Border.all(
-                                                color: Pallet.deepGreen,
-                                                width: 6),
+                                            color: Pallet.deepGreen,
+                                            width: 6),
                                         borderRadius: BorderRadius.circular(25),
                                         color: currentTabIndex != 2
                                             ? Pallet.colorWhite
@@ -1324,9 +1325,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                               style: TextStyle(
                                                   color: Pallet.deepGreen,
                                                   fontWeight:
-                                                      currentTabIndex != 2
-                                                          ? FontWeight.w500
-                                                          : FontWeight.w700,
+                                                  currentTabIndex != 2
+                                                      ? FontWeight.w500
+                                                      : FontWeight.w700,
                                                   fontSize: currentTabIndex != 2
                                                       ? 14
                                                       : 14)),
@@ -1334,7 +1335,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                           currentTabIndex != 2
                                               ? SizedBox.shrink()
                                               : Icon(Icons.archive_rounded,
-                                                  color: Pallet.deepGreen)
+                                              color: Pallet.deepGreen)
                                         ],
                                       ),
                                     ),
@@ -1369,6 +1370,26 @@ class _EgoProfilePageState extends State<EgoProfilePage>
       ),
     );
   }
+
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.showAppBar) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+          backgroundColor: Pallet.colorSecondaryDark, // Or your preferred color
+          elevation: 0,
+          automaticallyImplyLeading: true, // This ensures the back button appears
+        ),
+        backgroundColor: Pallet.colorSecondaryDark, // Match your theme
+        body: _buildContent(context),
+      );
+    } else {
+      return _buildContent(context);
+    }
+  }
+
 }
 
 class AudioPlayerWidget extends StatefulWidget {

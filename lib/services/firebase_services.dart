@@ -626,30 +626,35 @@ class FirebaseServices extends ChangeNotifier {
     return _snap;
   }
 
-  /// Get the user sessions that haven't been flagged and archived
-  /// @param lastSession The last session from previous request. Used for pagination
-  /// @param userId The id of the user to get diary sessions for
-  /// @return LiveData
-  Future<List<Session>> getDiarySessions() async {
-    List<Session> _sessionList = [];
+
+  /// Get the user sessions that haven't been flagged and archived as a real-time stream.
+  /// @return A stream of session lists.
+  Stream<List<Session>> getDiarySessionsStream() {
+    if (_usersID == null || _usersID!.isEmpty) {
+      return Stream.value([]);
+    }
+
     try {
-      final _value = await _firebaseFirestore
+      return _firebaseFirestore
           .collection(AppString.appFeaturedSessions)
           .where("userId", isEqualTo: _usersID)
-          //.where("flagged", isEqualTo: false)
           .where("archived", isEqualTo: false)
           .orderBy('timeLastActivity', descending: true)
           .limit(AppString.appSessionLength)
-          .get();
-
-      _value.docs
-          .map((e) => _sessionList.addAll([Session.fromJson(e.data())]))
-          .toList();
+          .snapshots() // Use snapshots() for a real-time stream
+          .map((querySnapshot) {
+        // Map the query snapshot to a list of Session objects
+        return querySnapshot.docs
+            .map((doc) => Session.fromJson(doc.data()))
+            .toList();
+      });
     } catch (e) {
       logger.e(e);
+      // On error, return a stream that emits an error.
+      return Stream.error(e);
     }
-    return _sessionList;
   }
+
 
   /// Get new sessions that no admin has responded to before
   /// @param lastSession The last session from previous request. Used for pagination

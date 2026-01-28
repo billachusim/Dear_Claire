@@ -196,9 +196,10 @@ class _MetooButtonState extends State<MetooButton>
       // --- START ACTIVITY AND NOTIFICATION LOGIC ---
       try {
         // *** SAVE USER ACTIVITY FOR THE REACTION ***
+        final senderName = reactingUser.nickname ?? 'Someone';
         await _firebaseServices.saveUserActivity(
-          activityMessage: 'You reacted with $reactionValue to the session: "${widget.session.title}"',
-          activityType: reactionValue, // Use the specific reaction as the activity type
+          activityMessage: '$senderName reacted with $reactionValue to your session: "${widget.session.title}"',
+          activityType: reactionValue,
           recipientId: sessionOwnerId,
           sessionId: widget.session.sessionId!,
         );

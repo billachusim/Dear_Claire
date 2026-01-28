@@ -26,7 +26,6 @@ import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'package:clairediary/ui/chats/data/roomdata.dart';
 import 'package:clairediary/ui/alter_ego/alter_ego_room_data.dart';
 import 'package:clairediary/ui/chats/widget/inside_alter_ego_diaryroom.dart';
-// Import for AppRoutes
 
 class ActivityWidget extends StatefulWidget {
   final String userId;
@@ -805,6 +804,7 @@ class UserActivityCard extends StatelessWidget {
         return Icons.comment_outlined;
     // Make all reactions use the same favorite icon
       case 'react':
+      case 'self_reaction':
       case 'Cheers👍':
       case 'Thanks💕':
       case 'Sorry🖐':
@@ -842,13 +842,16 @@ class UserActivityCard extends StatelessWidget {
         switch (activityType) {
         // Session-related activities
           case 'monitor':
-          // Navigate directly to the main Diary page as requested
-            PageRouter.gotoWidget(DiaryPage(title: 'Dear Claire',), context);
+            if (element.sessionId != null && element.sessionId!.isNotEmpty) {
+              PageRouter.gotoWidget(
+                  NotifiedSessionDetails(sessionId: element.sessionId!), context);
+            }
             break;
 
           case 'session':
           case 'comment':
           case 'react':
+          case 'self_reaction':
           case 'thank':
           case 'follow':
           case 'Cheers👍':

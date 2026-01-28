@@ -932,9 +932,8 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                       ),
                       new Spacer(),
                       // NEW MODERATION POPUP BUTTON (HIDDEN FROM OWNER) ---
-                      Visibility(
-                        visible: widget.element.userId != currentUser?.uid,
-                        child: PopupMenuButton<String>(
+                      if (widget.element.userId != currentUser?.uid)
+                        PopupMenuButton<String>(
                           icon: Icon(Icons.more_horiz, color: textColor.withValues(alpha: 0.5)),
                           onSelected: (String value) {
                             final sessionId = widget.element.sessionId;
@@ -946,7 +945,8 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                                   "Cannot perform action: Invalid session data.");
                               return;
                             }
-                            // This check is now redundant due to Visibility, but kept for safety.
+
+                            // This check is redundant due to the 'if' condition above, but good for safety.
                             if (sessionOwnerId == currentUser?.uid) {
                               showToast(
                                   message:
@@ -954,35 +954,35 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                               return;
                             }
 
-                          switch (value) {
-                            case 'remove_session':
-                              _removeSessionFromFeed(sessionId);
-                              break;
-                            case 'report_session':
-                              _reportSessionAndOwner(sessionId);
-                              break;
-                            case 'block_user':
-                              _blockUser(sessionOwnerId);
-                              break;
-                          }
-                        },
-                        itemBuilder: (BuildContext context) =>
-                            <PopupMenuEntry<String>>[
-                          const PopupMenuItem<String>(
-                            value: 'remove_session',
-                            child: Text('Remove post from my feed'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'report_session',
-                            child: Text('Report this post & owner'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'block_user',
-                            child: Text('Block owner of this post'),
-                          ),
-                        ],
-                      ),
-                      ),
+                            switch (value) {
+                              case 'remove_session':
+                                _removeSessionFromFeed(sessionId);
+                                break;
+                              case 'report_session':
+                                _reportSessionAndOwner(sessionId);
+                                break;
+                              case 'block_user':
+                                _blockUser(sessionOwnerId);
+                                break;
+                            }
+                          },
+                          itemBuilder: (BuildContext context) =>
+                          <PopupMenuEntry<String>>[
+                            const PopupMenuItem<String>(
+                              value: 'remove_session',
+                              child: Text('Remove post from my feed'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'report_session',
+                              child: Text('Report this post & owner'),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'block_user',
+                              child: Text('Block owner of this post'),
+                            ),
+                          ],
+                        ),
+
 
                       Visibility(
                         visible: widget.element.userId == currentUser?.uid,
@@ -1014,31 +1014,28 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                         visible: widget.element.userId == currentUser?.uid,
                         child: GestureDetector(
                           onTap: () {
-                            if (widget.element.archived == false)
-                              showCustomDialog(context,
-                                  message: widget.element.archived == true
-                                      ? AppString.unarchive_alert_note
-                                      : AppString.archive_alert_note,
-                                  onPressed: () {
-                                sendToArchive();
-                                Navigator.pushReplacementNamed(
-                                    context, AppRoutes.diarySessions);
-                              });
-                            else
-                              showCustomDialog(context,
-                                  message: widget.element.archived == false
-                                      ? AppString.archive_alert_note
-                                      : AppString.unarchive_alert_note,
-                                  onPressed: () {
-                                Navigator.pushReplacementNamed(
-                                    context, AppRoutes.diarySessions);
-                                removeFromArchive();
-                              });
+                            if (widget.element.archived == false) {
+                              showCustomDialog(
+                                context,
+                                message: AppString.archive_alert_note,
+                                onPressed: () async {
+                                  await sendToArchive();
+                                },
+                              );
+                            } else {
+                              showCustomDialog(
+                                context,
+                                message: AppString.unarchive_alert_note,
+                                onPressed: () async {
+                                  await removeFromArchive();
+                                },
+                              );
+                            }
                           },
                           child: Container(
                             child: Visibility(
                               visible:
-                                  widget.element.userId == currentUser?.uid,
+                              widget.element.userId == currentUser?.uid,
                               child: Icon(
                                 widget.element.archived == true
                                     ? Icons.archive_rounded

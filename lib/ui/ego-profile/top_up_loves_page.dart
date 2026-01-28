@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -211,15 +212,28 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: () => iapController.buyProduct(product),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Pallet.colorPrimary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                        elevation: 5,
-                      ),
-                      child: Text("Top Up", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                      onPressed: iapController.isLoading.value
+                          ? null // Disable button while any purchase is in progress
+                          : () => iapController.buyProduct(product),style: ElevatedButton.styleFrom(
+                      backgroundColor: Pallet.colorPrimary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      elevation: 5,
                     ),
+                      child: Obx(() {
+                        bool isThisProductLoading = iapController.isLoading.value &&
+                            iapController.isLoading.value == product.id;
+
+                        if (isThisProductLoading) {
+                          return const CupertinoActivityIndicator(
+                            color: Colors.white,
+                          );
+                        } else {
+                          return Text("Top Up", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.5));
+                        }
+                      }),
+                    ),
+
                   ),
                 ],
               ),

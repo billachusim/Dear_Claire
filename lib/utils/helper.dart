@@ -55,39 +55,85 @@ double getDeviceHeight(BuildContext context) =>
 double getDeviceWidth(BuildContext context) =>
     MediaQuery.of(context).size.width;
 
+// Private stateful widget to manage the dialog's loading state
+class _StatefulCustomDialog extends StatefulWidget {
+  final String message;final Function()? onPressed;
+
+  const _StatefulCustomDialog({
+    required this.message,
+    required this.onPressed,
+  });
+
+  @override
+  _StatefulCustomDialogState createState() => _StatefulCustomDialogState();
+}
+
+class _StatefulCustomDialogState extends State<_StatefulCustomDialog> {
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("NO"),
+      onPressed: _isLoading ? null : () => Navigator.of(context).pop(), // Disable while loading
+    );
+
+    Widget continueButton = TextButton(
+      child: _isLoading
+          ? SizedBox(
+        height: 20,
+        width: 20,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      )
+          : Text("YES"),
+      onPressed: widget.onPressed == null || _isLoading
+          ? null // Disable button if no action or already loading
+          : () async {
+        setState(() {
+          _isLoading = true; // Show progress indicator
+        });
+
+        // Await the passed function
+        if (widget.onPressed != null) {
+          await widget.onPressed!();
+        }
+
+        // Only pop if the dialog is still mounted (the async operation might have closed it)
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+    );
+
+    // set up the AlertDialog
+    return AlertDialog(
+      title: Text("Claire🌺"),
+      content: Text(widget.message),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+  }
+}
+
+
 /// custom dialog box
 void showCustomDialog(BuildContext context,
     {required Function()? onPressed, required String message}) {
-  // set up the buttons
-  Widget cancelButton = TextButton(
-    child: Text("NO"),
-    onPressed: () {
-      Navigator.of(context).pop();
-    },
-  );
-  Widget continueButton = TextButton(
-    child: Text("YES"),
-    onPressed: onPressed,
-  );
-
-  // set up the AlertDialog
-  AlertDialog alert = AlertDialog(
-    title: Text("Claire🌺"),
-    content: Text(message),
-    actions: [
-      cancelButton,
-      continueButton,
-    ],
-  );
-
-  // show the dialog
   showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (BuildContext context) {
-      return alert;
+      return _StatefulCustomDialog(
+        message: message,
+        onPressed: onPressed,
+      );
     },
   );
 }
+
 
 /// validate users email
 bool isValidEmail(String email) {
