@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../Admob/ad_state.dart';
@@ -85,6 +86,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   String _audioStatusHint = "...write a new ego mantra...";
   String? _recordedAudioPath;
   bool _isUploadingAudio = false;
+  bool _showMantraRecorder = false;
+  bool _isPermissionCheckComplete = false;
+
 
   @override
   void initState() {
@@ -95,13 +99,26 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     _createEgoMantraInterstitialAd();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {});
+    _checkInitialPermission();
   }
+
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
     _interstitialAd2?.dispose();
+  }
+
+  // --- NEW: Method to check permission ---
+  Future<void> _checkInitialPermission() async {
+    final status = await Permission.microphone.status;
+    if (mounted) {
+      setState(() {
+        _showMantraRecorder = status.isGranted;
+        _isPermissionCheckComplete = true;
+      });
+    }
   }
 
   // Admob Ad Units.
@@ -344,6 +361,57 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
       recipientNickname: widget.visitedEgoName,
     );
   }
+
+  /// Handles microphone permission and visibility for the mantra recorder.
+  Future<void> _handleMantraRecordTap() async {
+    // 1. Check the current permission status
+    final PermissionStatus status = await Permission.microphone.status;
+
+    // 2. Handle the different permission states
+    if (status.isGranted) {
+      // Permission already granted, show the recorder
+      setState(() => _showMantraRecorder = true);
+    } else if (status.isPermanentlyDenied) {
+      // Permission permanently denied, show a dialog to open settings
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: const Text('Microphone Permission'),
+          content: const Text(
+              'Microphone permission is required to record a message. Please enable it in app settings.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Open Settings'),
+              onPressed: () {
+                openAppSettings();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Request permission for the first time or if previously denied once.
+      final PermissionStatus requestStatus = await Permission.microphone.request();
+      if (requestStatus.isGranted) {
+        if (mounted) {
+          setState(() => _showMantraRecorder = true);
+        }
+      } else {
+        // Show a snackbar if permission is denied
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Microphone permission is required to record a message.'),
+        ));
+      }
+    }
+  }
+
 
   Future<void> pushMantraNotification() async {
     final egoMessage = _visitorMantraController.text;
@@ -1074,33 +1142,59 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                               ),
                               Row(
                                 children: [
-                                  AudioRecorder(
+                                  // --- NEW: Conditionally show recorder, mic button, or loading indicator ---
+                                  !_isPermissionCheckComplete
+                                      ? Container(
+                                    height: 48,
+                                    width: 48,
+                                    padding: const EdgeInsets.all(14.0),
+                                    child: const CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                      : _showMantraRecorder
+                                      ? AudioRecorder(
                                     onStart: () {
-                                      // When recording starts, clear old paths and update the hint
                                       setState(() {
                                         _recordedAudioPath = null;
                                         _audioStatusHint = "Recording audio...";
-                                        // Disable the text field while recording
                                         _visitorMantraController.clear();
                                       });
                                     },
                                     onStop: (String path) {
-                                      // When recording stops, store the path and update the hint
                                       setState(() {
                                         _recordedAudioPath = path;
-                                        _audioStatusHint =
-                                            "Audio recorded! Hit send.";
+                                        _audioStatusHint = "Audio recorded! Hit send.";
+                                        _showMantraRecorder = false; // Hide recorder
                                       });
                                     },
                                     onCancel: () {
-                                      // If recording is cancelled, reset everything
                                       setState(() {
                                         _recordedAudioPath = null;
-                                        _audioStatusHint =
-                                            "...write a new ego mantra...";
+                                        _audioStatusHint = "...write a new ego mantra...";
+                                        _showMantraRecorder = false; // Hide recorder
                                       });
                                     },
+                                  )
+                                      : GestureDetector(
+                                    onTap: _handleMantraRecordTap,
+                                    child: Container(
+                                      height: 40,
+                                      width: 40,
+                                      margin: EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                          color: Pallet.colorWhite,
+                                          borderRadius: BorderRadius.circular(100)),
+                                      child: Icon(
+                                        Icons.mic,
+                                        color: Pallet.colorPrimary,
+                                        size: 20,
+                                      ),
+                                    ),
                                   ),
+
+
                                   Expanded(
                                     child: ConstrainedBox(
                                       constraints: BoxConstraints(

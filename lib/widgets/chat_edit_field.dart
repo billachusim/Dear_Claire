@@ -79,6 +79,77 @@ class _ChatEditFieldState extends State<ChatEditField> {
     });
   }
 
+  /// Handles microphone permission and navigation for recording.
+  Future<void> _handleMicrophoneTap() async {
+    if (!await _firebaseServices.isUserSignIn(context)) return;
+
+    // 1. Check the current permission status
+    PermissionStatus status = await Permission.microphone.status;
+
+    // 2. Handle the different permission states
+    if (status.isGranted) {
+      // Permission already granted, proceed to record
+      _navigateToRecorder();
+    } else if (status.isPermanentlyDenied) {
+      // Permission permanently denied, show a dialog to open settings
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: const Text('Microphone Permission'),
+          content: const Text(
+              'Microphone permission is required to record audio. Please enable it in app settings.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Open Settings'),
+              onPressed: () {
+                openAppSettings();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Request permission (handles isDenied, isRestricted, etc.)
+      status = await Permission.microphone.request();
+      if (status.isGranted) {
+        _navigateToRecorder();
+      } else {
+        // Show a snackbar if permission is denied
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Microphone permission is required to record audio.'),
+        ));
+      }
+    }
+  }
+
+  /// Navigates to the sound recorder screen.
+  Future<void> _navigateToRecorder() async {
+    if (!mounted) return;
+
+    final data = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SoundRecorderWidget(
+          onRecordComplete: (recordFile) {},
+        ),
+      ),
+    );
+
+    if (data != null) {
+      setState(() {
+        _recordFile = data;
+      });
+    }
+  }
+
+
   /// Uploads the recorded audio file to Firebase Storage.
   Future<String> uploadCommentAudio(File file) async {
     final timeStamp = DateFormat("yyyy-MM-dd HH:mm:ss").format(DateTime.now());
@@ -256,40 +327,7 @@ class _ChatEditFieldState extends State<ChatEditField> {
                   ),
                   FloatingActionButton(
                     heroTag: "Record",
-                    onPressed: isProcessing
-                        ? null
-                        : () async {
-                      if (!await _firebaseServices.isUserSignIn(context))
-                        return;
-
-                      var status = await Permission.microphone.request();
-
-                      if (status.isGranted) {
-                        if (!mounted) return;
-                        var data = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => SoundRecorderWidget(
-                              onRecordComplete: (recordFile) {},
-                            ),
-                          ),
-                        );
-                        if (data != null) {
-                          setState(() {
-                            _recordFile = data;
-                          });
-                        }
-                      } else if (status.isPermanentlyDenied) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text(
-                                'Microphone permission is required. Please enable it in settings.')));
-                        await openAppSettings();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text(
-                                'Microphone permission is required to record audio.')));
-                      }
-                    },
+                    onPressed: isProcessing ? null : _handleMicrophoneTap,
                     mini: true,
                     backgroundColor: Pallet.colorPrimary,
                     child: Icon(Icons.mic_rounded, size: 35),

@@ -433,6 +433,9 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                             child: Text("Delete"),
                             onPressed: () {
                               _deleteAudioFromHive();
+                              setState(() {
+                                recordFile = null;
+                              });
                               Navigator.of(ctx).pop();
                             },
                           ),
@@ -836,37 +839,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                         size: 35,
                         color: Pallet.colorWhite,
                       ),
-                      onPressed: () async {
-                        var status = await Permission.microphone.request();
-
-                        // 2. Check the permission status
-                        if (status.isGranted) {
-                          // Permission is granted, proceed to the recorder
-                          if (!mounted) return;
-                          var data = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => SoundRecorderWidget(
-                                onRecordComplete: (recordFile) {},
-                              ),
-                            ),
-                          );
-                          if (data != null) {
-                            setState(() {
-                              recordFile = data;
-                            });
-                          }
-                        } else if (status.isPermanentlyDenied) {
-                          // Permission is permanently denied, show a dialog to open settings
-                          showToast(
-                              'Microphone permission is required to record audio. Please enable it in your phone settings.');
-                          await openAppSettings();
-                        } else {
-                          // Permission was denied, but not permanently.
-                          showToast(
-                              'Microphone permission is required to record audio.');
-                        }
-                      },
+                      onPressed: _handleMicrophoneTap,
                     )),
                 SizedBox(
                   width: 10.w,
@@ -1063,21 +1036,70 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     );
   }
 
+  /// Handles microphone permission and navigation for recording.
+  Future<void> _handleMicrophoneTap() async {
+    // 1. Check the current permission status
+    final PermissionStatus status = await Permission.microphone.status;
 
+    // 2. Handle the different permission states
+    if (status.isGranted) {
+      // Permission already granted, proceed to record
+      _navigateToRecorder();
+    } else if (status.isPermanentlyDenied) {
+      // Permission permanently denied, show a dialog to open settings
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: const Text('Microphone Permission'),
+          content: const Text(
+              'Microphone permission is required to record audio. Please enable it in app settings.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Open Settings'),
+              onPressed: () {
+                openAppSettings();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Request permission (handles isDenied, isRestricted, etc.)
+      final PermissionStatus requestStatus = await Permission.microphone.request();
+      if (requestStatus.isGranted) {
+        _navigateToRecorder();
+      } else {
+        // Show a toast/snackbar if permission is denied
+        if (!mounted) return;
+        showToast('Microphone permission is required to record audio.');
+      }
+    }
+  }
 
-  /// Update a session's timeLastActivity when new comment is made.
+  /// Navigates to the sound recorder screen.
+  Future<void> _navigateToRecorder() async {
+    if (!mounted) return;
 
-  Future<void> updateSessionTimeLastActivity(CreateSessionModel? session) async {
-    FirebaseFirestore.instance
-        .collection("sessions")
-        .doc(session?.sessionId)
-        .update({
-      'timeLastActivity': FieldValue.serverTimestamp(),
-      'respondentUserId': 'ClaireAI',
-    },
+    final data = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SoundRecorderWidget(
+          onRecordComplete: (recordFile) {},
+        ),
+      ),
     );
-    logger.d('Successfully updated time of last activity');
 
+    if (data != null) {
+      setState(() {
+        recordFile = data;
+      });
+    }
   }
 
 

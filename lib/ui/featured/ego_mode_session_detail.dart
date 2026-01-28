@@ -63,9 +63,8 @@ class _EgoModeSessionDetailState
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
+  late Future<UserModel> _userFuture;
 
-  //ChatGPT? chatGPT;
-  StreamSubscription? _subscription;
 
 
 
@@ -73,8 +72,8 @@ class _EgoModeSessionDetailState
   @override
   void initState() {
     super.initState();
-    //chatGPT = ChatGPT.instance.builder(API_KEY);
     _createAdviseInterstitialAd();
+    _userFuture = firebaseServices.getUserInfo();
   }
 
 
@@ -286,7 +285,7 @@ class _EgoModeSessionDetailState
           Align(
             alignment: Alignment.bottomCenter,
             child: FutureBuilder<UserModel>(
-              future: firebaseServices.getUserInfo(), // Fetches the current user's data
+              future: _userFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox.shrink(); // Or a loading indicator

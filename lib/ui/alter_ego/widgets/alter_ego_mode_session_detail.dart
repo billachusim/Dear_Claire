@@ -54,12 +54,14 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
   bool _isBannerAdInitialized = false;
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
+  late Future<UserModel> _userFuture;
 
 
   @override
   void initState() {
     super.initState();
     _createAdviseInterstitialAd();
+    _userFuture = firebaseServices.getUserInfo();
   }
 
   @override
@@ -269,7 +271,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
           Align(
             alignment: Alignment.bottomCenter,
             child: FutureBuilder<UserModel>(
-              future: firebaseServices.getUserInfo(), // Fetches the current user's data
+              future: _userFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox.shrink(); // Or a loading indicator

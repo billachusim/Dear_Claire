@@ -36,16 +36,18 @@ class _AudioRecorderState extends State<AudioRecorder> {
   }
 
   Future<void> _initializeRecorder() async {
-    final status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
-      print("Microphone permission not granted");
-      return;
+    try {
+      await _audioRecorder!.openRecorder();
+      if (mounted) {
+        setState(() {
+        _isRecorderInitialized = true;
+      });
+      }
+    } catch (e) {
+      print('Failed to start audio recorder: $e');
     }
-    await _audioRecorder!.openRecorder();
-    setState(() {
-      _isRecorderInitialized = true;
-    });
   }
+
 
   @override
   void dispose() {

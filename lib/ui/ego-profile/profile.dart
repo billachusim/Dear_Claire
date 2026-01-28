@@ -27,6 +27,7 @@ import 'package:focused_menu/focused_menu.dart';
 import 'package:focused_menu/modals.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/notification_service.dart';
 import '../routes/page_router_animation.dart';
@@ -61,6 +62,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   String _audioStatusHint = "...write a new ego mantra...";
   String? _recordedAudioPath;
   bool _isUploadingAudio = false;
+  bool _showMantraRecorder = false;
+  bool _isPermissionCheckComplete = false;
 
   @override
   void initState() {
@@ -72,7 +75,9 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     });
     _createEgoNameInterstitialAd();
     _createEgoMantraInterstitialAd();
+    _checkInitialPermission();
   }
+
 
   @override
   void dispose() {
@@ -90,6 +95,17 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   Future<UserModel> getUser() async {
     userModel = await firebaseServices.getUserInfo();
     return userModel;
+  }
+
+  // --- NEW: Method to check permission ---
+  Future<void> _checkInitialPermission() async {
+    final status = await Permission.microphone.status;
+    if (mounted) {
+      setState(() {
+        _showMantraRecorder = status.isGranted;
+        _isPermissionCheckComplete = true;
+      });
+    }
   }
 
   /// Edit nickname
@@ -144,6 +160,10 @@ class _EgoProfilePageState extends State<EgoProfilePage>
               // This callback updates the UI without navigating away
               setState(() {
                 userModel.avatarUrl = newAvatarUrl;
+                Future.delayed(Duration(seconds: 4),
+                        () {
+                      _showEgoNameInterstitialAd();
+                    });
               });
             },
           ),
@@ -190,6 +210,55 @@ class _EgoProfilePageState extends State<EgoProfilePage>
       activityMessage: "You left a new mantra for yourself, $egoName.",
     );
   }
+
+  /// Handles microphone permission and visibility for the mantra recorder.
+  Future<void> _handleMantraRecordTap() async {
+    // 1. Check the current permission status
+    final PermissionStatus status = await Permission.microphone.status;
+
+    // 2. Handle the different permission states
+    if (status.isGranted) {
+      // Permission already granted, show the recorder
+      setState(() => _showMantraRecorder = true);
+    } else if (status.isPermanentlyDenied) {
+      // Permission permanently denied, show a dialog to open settings
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: const Text('Microphone Permission'),
+          content: const Text(
+              'Microphone permission is required to record your mantra. Please enable it in app settings.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Open Settings'),
+              onPressed: () {
+                openAppSettings();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Request permission for the first time or if previously denied once.
+      final PermissionStatus requestStatus = await Permission.microphone.request();
+      if (requestStatus.isGranted) {
+        setState(() => _showMantraRecorder = true);
+      } else {
+        // Show a snackbar if permission is denied
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Microphone permission is required to record a mantra.'),
+        ));
+      }
+    }
+  }
+
 
   /// Save Ego audio mantra
 
@@ -383,6 +452,10 @@ class _EgoProfilePageState extends State<EgoProfilePage>
               _nicknameController.clear();
               cardKey2.currentState?.toggleCard();
               HapticFeedback.mediumImpact();
+              Future.delayed(Duration(seconds: 4),
+                      () {
+                    _showEgoNameInterstitialAd();
+                  });
             },
           )
         ],
@@ -596,7 +669,21 @@ class _EgoProfilePageState extends State<EgoProfilePage>
               trailing: IconButton(
                 icon: Icon(Icons.delete_outline_rounded,
                     color: hintTextColor, size: 18),
-                onPressed: () => deleteEgoStreamMessage(doc.id),
+                onPressed: () {
+                  // Get the unique document ID
+                  final String documentId =
+                      doc.id;
+
+                  showCustomDialog(context,
+                      message: AppString
+                          .delete_mantra_alert_note,
+                      onPressed: () {
+                        PageRouter.goBack(context);
+                        // Call the new universal delete method
+                        deleteEgoStreamMessage(
+                            documentId);
+                      });
+                },
               ),
             );
           }).toList(),
@@ -621,30 +708,99 @@ class _EgoProfilePageState extends State<EgoProfilePage>
           const SizedBox(height: 8),
           Row(
             children: [
-              AudioRecorder(
-                onStart: () => setState(() => _mantraController.clear()),
-                onStop: (path) => setState(() => _recordedAudioPath = path),
+              // --- NEW: Conditional Recorder UI ---
+              !_isPermissionCheckComplete
+                  ? Container(
+                height: 48,
+                width: 48,
+                padding: const EdgeInsets.all(12.0),
+                child:
+                const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+                  : _showMantraRecorder
+                  ? AudioRecorder(
+                onStart: () => setState(() {
+                  _mantraController.clear();
+                  _audioStatusHint = "Recording audio...";
+                  _recordedAudioPath = null;
+                }),
+                onStop: (path) => setState(() {
+                  _recordedAudioPath = path;
+                  _audioStatusHint = "Audio recorded! Hit send.";
+                  _showMantraRecorder = false;
+                }),
+                onCancel: () => setState(() {
+                  _recordedAudioPath = null;
+                  _audioStatusHint = "...write a new ego mantra...";
+                  _showMantraRecorder = false;                }),
+              )
+                  : GestureDetector(
+                onTap: _handleMantraRecordTap,
+                child: Container(
+                  height: 48, // Match FAB height
+                  width: 48, // Match FAB width
+                  decoration: BoxDecoration(
+                      color: Pallet.colorWhite, shape: BoxShape.circle),
+                  child: Icon(
+                    Icons.mic,
+                    color: Pallet.colorPrimary,
+                    size: 24,
+                  ),
+                ),
               ),
+
               const SizedBox(width: 8),
               Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(15)),
-                  child: TextField(
-                    controller: _mantraController,
-                    maxLines: 2,
-                    style: GoogleFonts.plusJakartaSans(
-                        color: Colors.white, fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: _recordedAudioPath != null
-                          ? "Audio ready..."
-                          : "Write or record...",
-                      hintStyle: GoogleFonts.plusJakartaSans(
-                          color: Colors.white30, fontSize: 13),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth: getDeviceWidth(context),
+                    maxWidth: getDeviceWidth(context),
+                    minHeight: 50.0,
+                    maxHeight: 90.0,
+                  ),
+                  child: Scrollbar(
+                    child: Container(
+                      padding: EdgeInsets.zero,
+                      decoration: BoxDecoration(
+                        borderRadius:
+                        BorderRadius.circular(30),
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                      child: TextField(
+                        // The text field is now read-only when an audio path is set
+                        readOnly:
+                        _recordedAudioPath != null ||
+                            _isUploadingAudio,
+                        cursorColor:
+                        Pallet.colorSplashScreen,
+                        keyboardType:
+                        TextInputType.multiline,
+                        style:
+                        TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                        maxLines: 2,
+                        controller:
+                        _mantraController,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.only(
+                              left: 13.0,
+                              right: 13.0,
+                              top: 10,
+                              bottom: 10),
+                          // USE THE DYNAMIC HINT TEXT
+                          hintText: _audioStatusHint,
+                          hintStyle: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: Colors.white54,
+                            fontSize: 14,
+                          ),
+                          counterText: '',
+                        ),
+                        maxLength: 160,
+                      ),
                     ),
                   ),
                 ),
@@ -656,10 +812,21 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                 onPressed: () {
                   if (_recordedAudioPath != null) {
                     saveEgoAudioMantra(_recordedAudioPath!);
+                    // Reset state after saving
+                    setState(() {
+                      _recordedAudioPath = null;
+                      _showMantraRecorder = false;
+                    });
                   } else if (_mantraController.text.isNotEmpty) {
                     saveEgoMantra();
+                    _mantraController.clear();
                   }
                   cardKey.currentState?.toggleCard();
+                  HapticFeedback.mediumImpact();
+                  Future.delayed(Duration(seconds: 4),
+                          () {
+                        _showEgoMantraInterstitialAd();
+                      });
                 },
                 child: Icon(Icons.send_rounded,
                     color: Pallet.colorPrimary, size: 18),
@@ -670,6 +837,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
       ),
     );
   }
+
 
   // --- FULL PAGE HEADER ---
   Widget _pageHeader({

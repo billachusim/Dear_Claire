@@ -259,14 +259,55 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
   }
 
   Future<bool> _requestMicPermission() async {
-    PermissionStatus status = await Permission.microphone.request();
-    if (!status.isGranted) {
+    // 1. Check the current permission status
+    PermissionStatus status = await Permission.microphone.status;
+
+    // 2. Handle the different permission states
+    if (status.isGranted) {
+      // Permission is already granted.
+      return true;
+    }
+
+    if (status.isPermanentlyDenied) {
+      // Permission is permanently denied, show a dialog to open settings.
+      if (mounted) {
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) => AlertDialog(
+            title: const Text('Microphone Permission'),
+            content: const Text(
+                'Microphone permission is required for Claire to listen. Please enable it in app settings.'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              TextButton(
+                child: const Text('Open Settings'),
+                onPressed: () {
+                  openAppSettings();
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      }
+      return false; // Return false as permission was not granted.
+    }
+
+    // 3. For other cases (isDenied, isRestricted, etc.), request the permission.
+    status = await Permission.microphone.request();
+
+    if (status.isGranted) {
+      return true;
+    } else {
+      // If permission is still not granted, show a toast.
       showToast("Microphone permission is required for Claire to listen.");
-      if (status.isPermanentlyDenied) openAppSettings();
       return false;
     }
-    return true;
   }
+
 
   void _scheduleOneTime(TimeOfDay time) async {
     if (_isProcessing) return;
