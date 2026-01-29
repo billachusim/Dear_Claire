@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../controllers/iap_controller.dart';
 import '../../utils/color.dart';
@@ -28,7 +29,10 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
     "assets/images/alter_ego_slide_4.png",
   ];
 
-  final List<String> perks = [
+  // --- MODIFIED: Added new premium perks ---
+  final List<String> allPerks = [
+    "No Ads & All Access",
+    "Get 10,000 Loves Monthly",
     "Automatic Diary & Monitoring Spirit",
     "Voice & Video Calls With Claire",
     "Unlock Alter Ego Mode & Cashout",
@@ -41,9 +45,11 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
     super.initState();
     _pageController = PageController(viewportFraction: 0.85);
     _pageController.addListener(() {
-      setState(() {
-        _currentPage = _pageController.page!;
-      });
+      if (_pageController.hasClients && _pageController.page != null) {
+        setState(() {
+          _currentPage = _pageController.page!;
+        });
+      }
     });
   }
 
@@ -54,6 +60,12 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
     } else {
       AppToast.showError('Could not launch $url');
     }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -70,7 +82,6 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
       ),
       body: Stack(
         children: [
-          // Animated Background Glow
           Positioned(
             top: -100,
             right: -50,
@@ -79,13 +90,12 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Pallet.colorPrimary.withValues(alpha: 0.15),
+                color: Pallet.colorPrimary.withAlpha(38),
               ),
             ),
           ),
-
           Obx(() {
-            if (iapController.isLoading.value) {
+            if (iapController.isLoading.value && iapController.products.isEmpty) {
               return Center(child: CircularProgressIndicator(color: Pallet.colorPrimary));
             }
 
@@ -98,8 +108,6 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
                 children: [
                   const SizedBox(height: 120),
                   _buildFeatureAd(),
-
-                  // Circular Rolling Carousel
                   SizedBox(
                     height: 500,
                     child: PageView.builder(
@@ -107,10 +115,8 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
                       itemCount: iapController.products.length,
                       itemBuilder: (context, index) {
                         final product = iapController.products[index];
-                        // Animation Logic
-                        double scale = (1 - ((_currentPage - index).abs() * 0.15)).clamp(0.0, 1.0);
-                        double opacity = (1 - ((_currentPage - index).abs() * 0.5)).clamp(0.4, 1.0);
-
+                        double scale = (1 - ((_currentPage - index).abs() * 0.15)).clamp(0.85, 1.0);
+                        double opacity = (1 - ((_currentPage - index).abs() * 0.5)).clamp(0.5, 1.0);
                         return Transform.scale(
                           scale: scale,
                           child: Opacity(
@@ -121,10 +127,7 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
                       },
                     ),
                   ),
-
                   const SizedBox(height: 60),
-
-                  // Legal Footer
                   _buildFooter(),
                   const SizedBox(height: 40),
                 ],
@@ -136,8 +139,17 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
     );
   }
 
-  Widget _buildProductCard(dynamic product, int index) {
+  Widget _buildProductCard(ProductDetails product, int index) {
+    // --- MODIFIED: Logic to identify premium product ---
+    final bool isPremium = product.id == IAPController.premiumProductId;
+    final String title = isPremium ? "Premium Plan" : product.title.split('(').first.toUpperCase();
+    final List<String> perksToShow = isPremium ? allPerks : allPerks.sublist(2, 5);
+    final String buttonText = isPremium ? "Subscribe" : "Top Up";
+    final IconData cardIcon = isPremium ? Icons.star_purple500_sharp : Icons.auto_awesome;
+    final Color iconColor = isPremium ? Colors.yellowAccent : Colors.amberAccent;
+
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(30),
         gradient: LinearGradient(
@@ -145,12 +157,12 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
           end: Alignment.bottomRight,
           colors: [
             Pallet.colorSecondary,
-            Pallet.colorSecondaryDark.withValues(alpha: 0.8),
+            Pallet.colorSecondaryDark.withAlpha(204),
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: Pallet.colorPrimary.withValues(alpha: 0.3),
+            color: Pallet.colorPrimary.withAlpha(76),
             blurRadius: 20,
             spreadRadius: 2,
           )
@@ -160,7 +172,6 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
         borderRadius: BorderRadius.circular(30),
         child: Stack(
           children: [
-            // Background Image Asset
             Positioned.fill(
               child: Opacity(
                 opacity: 0.4,
@@ -170,8 +181,6 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
                 ),
               ),
             ),
-
-            // Content
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -181,9 +190,9 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
-                        child: Icon(Icons.auto_awesome, color: Colors.amberAccent, size: 24),
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
+                        child: Icon(cardIcon, color: iconColor, size: 24),
                       ),
                       Text(
                         product.price,
@@ -193,11 +202,11 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
                   ),
                   const Spacer(),
                   Text(
-                    product.title.split('(').first.toUpperCase(),
-                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 26),
+                    title,
+                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 26, letterSpacing: 1.1),
                   ),
                   const SizedBox(height: 10),
-                  ...perks.take(3).map((perk) => Padding(
+                  ...perksToShow.map((perk) => Padding(
                     padding: const EdgeInsets.only(bottom: 6.0),
                     child: Row(
                       children: [
@@ -206,34 +215,36 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
                         Expanded(child: Text(perk, style: GoogleFonts.lato(color: Colors.white70, fontSize: 13))),
                       ],
                     ),
-                  )),
-                  const SizedBox(height: 24),
+                  )).toList(),
+                  const Spacer(),
                   SizedBox(
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
+                      // --- MODIFIED: Call correct purchase method ---
                       onPressed: iapController.isLoading.value
-                          ? null // Disable button while any purchase is in progress
-                          : () => iapController.buyProduct(product),style: ElevatedButton.styleFrom(
-                      backgroundColor: Pallet.colorPrimary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                      elevation: 5,
-                    ),
-                      child: Obx(() {
-                        bool isThisProductLoading = iapController.isLoading.value &&
-                            iapController.isLoading.value == product.id;
-
-                        if (isThisProductLoading) {
-                          return const CupertinoActivityIndicator(
-                            color: Colors.white,
-                          );
+                          ? null
+                          : () {
+                        if (isPremium) {
+                          iapController.buySubscription(product);
                         } else {
-                          return Text("Top Up", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.5));
+                          iapController.buyProduct(product);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isPremium ? Pallet.colorPrimaryDark : Pallet.colorPrimary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        elevation: 5,
+                      ),
+                      child: Obx(() {
+                        if (iapController.isLoading.value) {
+                          return const CupertinoActivityIndicator(color: Colors.white);
+                        } else {
+                          return Text(buttonText, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, letterSpacing: 1.5));
                         }
                       }),
                     ),
-
                   ),
                 ],
               ),
@@ -243,7 +254,6 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
       ),
     );
   }
-
 
   Widget _buildFooter() {
     return Padding(
@@ -256,7 +266,7 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
           const SizedBox(height: 12),
           GestureDetector(
             onTap: () => _launchUrl("https://sites.google.com/view/claire-diary/claire-privacy-policy"),
-            child: Text("Terms & Privacy Policy",
+            child: const Text("Terms & Privacy Policy",
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, decoration: TextDecoration.underline, fontSize: 12)),
           ),
         ],
@@ -269,9 +279,9 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.cloud_off, color: Colors.white24, size: 60),
+          const Icon(Icons.cloud_off, color: Colors.white24, size: 60),
           const SizedBox(height: 16),
-          Text(msg, style: TextStyle(color: Colors.white)),
+          Text(msg, style: const TextStyle(color: Colors.white)),
         ],
       ),
     );
@@ -282,6 +292,14 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
 
     Map<String, dynamic> ad;
     switch (widget.feature) {
+      case 'renew_subscription':
+        ad = {
+          'title': 'Your Premium Subscription Has Expired',
+          'desc': 'Renew now to continue enjoying an ad-free experience, monthly loves, and all-access features!',
+          'icon': Icons.star_purple500_sharp,
+          'color': Pallet.colorSecondary,
+        };
+        break;
       case 'autodiary':
         ad = {
           'title': 'Activate Monitoring Spirit',
@@ -330,9 +348,9 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: ad['color'].withOpacity(0.1),
+        color: (ad['color'] as Color).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: ad['color'].withOpacity(0.3)),
+        border: Border.all(color: (ad['color'] as Color).withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -343,6 +361,7 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(ad['title'], style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
+                const SizedBox(height: 4),
                 Text(ad['desc'], style: GoogleFonts.lato(fontSize: 12, color: Colors.white70)),
               ],
             ),
@@ -351,6 +370,4 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
       ),
     );
   }
-
-
 }

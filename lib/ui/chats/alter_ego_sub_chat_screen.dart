@@ -50,6 +50,8 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
 
   List<Temp> _chatList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
+  late Future<UserModel> _userFuture;
+  bool _isPremium = false;
 
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
@@ -62,13 +64,24 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
   @override
   void initState() {
     super.initState();
-    _createSubChatInterstitialAd();
+    _userFuture = firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createSubChatInterstitialAd();
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
-    // --- ADMOB COMPLIANCE FIX 2: Show interstitial on exit and dispose all ads ---
-    _showSubChatInterstitialAd();
+    if (!_isPremium) {
+      _showSubChatInterstitialAd();
+    }
     _interstitialAd?.dispose();
     _bottomBannerAd?.dispose();
     super.dispose();
@@ -118,10 +131,10 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isBannerAdInitialized) {
+    if (!_isBannerAdInitialized && !_isPremium) {
       final adState = Provider.of<AdState>(context);
       adState.initialization.then((status) {
-        if (mounted) {
+        if (mounted && !_isPremium) {
           setState(() {
             _bottomBannerAd = BannerAd(
                 size: AdSize.banner,
@@ -208,7 +221,7 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
           ),
 
           // Banner Ad
-          if (_bottomBannerAd != null && _isBannerAdInitialized)
+          if (!_isPremium && _bottomBannerAd != null && _isBannerAdInitialized)
             Positioned(
               bottom: 65,
               left: 0,

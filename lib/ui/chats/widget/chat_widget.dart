@@ -20,8 +20,6 @@ import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../../../services/data/notification_model.dart' as push_notification;
 import '../../../services/notification_service.dart';
 import '../../../utils/strings.dart';
 import '../../../widgets/custom_image_widget.dart';
@@ -62,6 +60,7 @@ class _ChatWidgetState extends State<ChatWidget> {
   late String visitedEgoName;
 
   late UserModel _userModel;
+  bool _isPremium = false;
 
   // Ad-related variables remain the same
   InterstitialAd? _joinChatInterstitialAd;
@@ -75,9 +74,6 @@ class _ChatWidgetState extends State<ChatWidget> {
   void initState() {
     super.initState();
     _updateLanguagePreference();
-    _createJoinChatInterstitialAd();
-    _createLeaveChatInterstitialAd();
-    _createContChatInterstitialAd();
   }
 
   Future<void> _updateLanguagePreference() async {
@@ -108,7 +104,15 @@ class _ChatWidgetState extends State<ChatWidget> {
           _currentUserModel = userModel;
           // Also update the existing userModel variable to ensure compatibility elsewhere in the widget
           this.userModel = userModel;
+          _isPremium = userModel.isPremium;
         });
+
+        if (!_isPremium) {
+          _createJoinChatInterstitialAd();
+          _createLeaveChatInterstitialAd();
+          _createContChatInterstitialAd();
+        }
+
       }
     }
   }
@@ -151,7 +155,7 @@ class _ChatWidgetState extends State<ChatWidget> {
   }
 
   void _showJoinChatInterstitialAd() {
-    if (_joinChatInterstitialAd != null) {
+    if (_joinChatInterstitialAd == null || _isPremium) return;
       _joinChatInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
@@ -163,7 +167,6 @@ class _ChatWidgetState extends State<ChatWidget> {
         },
       );
       _joinChatInterstitialAd!.show();
-    }
   }
 
 
@@ -192,7 +195,7 @@ class _ChatWidgetState extends State<ChatWidget> {
   }
 
   void _showLeaveChatInterstitialAd() {
-    if (_leaveChatInterstitialAd != null) {
+    if (_leaveChatInterstitialAd == null || _isPremium) return;
       _leaveChatInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
@@ -204,7 +207,6 @@ class _ChatWidgetState extends State<ChatWidget> {
         },
       );
       _leaveChatInterstitialAd!.show();
-    }
   }
 
   /// Create and show Continue Chat interstitial ad.
@@ -232,7 +234,7 @@ class _ChatWidgetState extends State<ChatWidget> {
   }
 
   void _showContChatInterstitialAd() {
-    if (_contChatInterstitialAd != null) {
+    if (_contChatInterstitialAd == null || _isPremium) return;
       _contChatInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
@@ -244,7 +246,6 @@ class _ChatWidgetState extends State<ChatWidget> {
         },
       );
       _contChatInterstitialAd!.show();
-    }
   }
 
   @override
@@ -536,7 +537,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_user.nickname.toString() ?? '',
+                            Text(_user.nickname.toString(),
                                 textAlign: TextAlign.start,
                                 maxLines: 1,
                                 style: GoogleFonts.lato(

@@ -15,12 +15,13 @@ class IAPController extends GetxController {
   final RxBool isAvailable = false.obs;
   final RxBool isLoading = true.obs;
 
-  // Product IDs defined in Play Store / App Store
+  static const String premiumProductId = 'premium_monthly';
   static const Set<String> _kIds = {
     'loves_1000',
     'loves_5000',
     'loves_10000',
     'loves_donate',
+    'premium_monthly',
   };
 
   @override
@@ -65,18 +66,32 @@ class IAPController extends GetxController {
     _inAppPurchase.buyConsumable(purchaseParam: purchaseParam);
   }
 
-  Future<void> _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) async {
+  // --- NEW: Method for buying the subscription ---
+  void buySubscription(ProductDetails product) {
+    final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
+    // Subscriptions are treated as non-consumables
+    _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+  }
+
+  Future<void> _listenToPurchaseUpdated(
+      List<PurchaseDetails> purchaseDetailsList) async {
     for (var purchaseDetails in purchaseDetailsList) {
       if (purchaseDetails.status == PurchaseStatus.pending) {
         // Show loading or pending UI
       } else {
         if (purchaseDetails.status == PurchaseStatus.error) {
-          Get.snackbar("Error", "Purchase failed: ${purchaseDetails.error?.message}");
+          Get.snackbar(
+              "Error", "Purchase failed: ${purchaseDetails.error?.message}");
         } else if (purchaseDetails.status == PurchaseStatus.purchased ||
             purchaseDetails.status == PurchaseStatus.restored) {
 
-          // CRITICAL: Deliver the product
-          bool delivered = await _deliverLoves(purchaseDetails);
+          bool delivered = false;
+          // --- MODIFIED: Route to correct delivery method ---
+          if (purchaseDetails.productID == 'premium_monthly') {
+            delivered = await _deliverSubscription(purchaseDetails);
+          } else {
+            delivered = await _deliverLoves(purchaseDetails);
+          }
 
           if (delivered) {
             await _inAppPurchase.completePurchase(purchaseDetails);
@@ -86,14 +101,54 @@ class IAPController extends GetxController {
     }
   }
 
-  Future<bool> _deliverLoves(PurchaseDetails purchase) async {
-    print("IAP_DEBUG: Starting delivery for ProductID: ${purchase.productID}");
+  // --- NEW: Delivery logic for premium subscription ---
+  Future<bool> _deliverSubscription(PurchaseDetails purchase) async {
+    print("IAP_DEBUG: Starting subscription delivery for ProductID: ${purchase.productID}");
 
     final firebaseServices = FirebaseServices();
     final userId = currentUser?.uid;
 
     if (userId == null) {
-      print("IAP_DEBUG: User ID is null. Cannot deliver.");
+      print("IAP_DEBUG: User ID is null. Cannot deliver subscription.");
+      return false;
+    }
+
+    // For subscriptions, we set the premium flag and add the bonus loves.
+    try {
+      bool result = await firebaseServices.activatePremiumSubscription(
+        userId: userId,
+        bonusLoves: 10000,
+        metadata: {
+          'source': 'in_app_purchase_subscription',
+          'product_id': purchase.productID,
+          'purchase_id': purchase.purchaseID,
+          'transaction_date': purchase.transactionDate,
+        },
+      );
+      print("IAP_DEBUG: Firebase subscription activation result: $result");
+      return result;
+    } catch (e) {
+      print("IAP_DEBUG: Exception during subscription activation: $e");
+      // Record failed transaction for manual checking
+      await Get.find<TransactionService>().recordTransaction(
+        userId: userId,
+        amount: 0,
+        type: t_model.TransactionType.credit,
+        description: "ERROR: Premium subscription activation failed for Product ID: ${purchase.productID}",
+        status: t_model.TransactionStatus.failed,
+      );
+      return false;
+    }
+  }
+
+  Future<bool> _deliverLoves(PurchaseDetails purchase) async {
+    print("IAP_DEBUG: Starting loves delivery for ProductID: ${purchase.productID}");
+
+    final firebaseServices = FirebaseServices();
+    final userId = currentUser?.uid;
+
+    if (userId == null) {
+      print("IAP_DEBUG: User ID is null. Cannot deliver loves.");
       return false;
     }
 
@@ -110,7 +165,6 @@ class IAPController extends GetxController {
 
     if (amount == 0) {
       print("IAP_DEBUG: Failed to map ProductID ${purchase.productID} to an amount.");
-      // Log this failure as a pending transaction so you have a record of the error
       await Get.find<TransactionService>().recordTransaction(
         userId: userId,
         amount: 0,
@@ -136,14 +190,13 @@ class IAPController extends GetxController {
           'transaction_date': purchase.transactionDate,
         },
       );
-      print("IAP_DEBUG: Firebase update result: $result");
+      print("IAP_DEBUG: Firebase loves update result: $result");
       return result;
     } catch (e) {
-      print("IAP_DEBUG: Exception during Firebase update: $e");
+      print("IAP_DEBUG: Exception during Firebase loves update: $e");
       return false;
     }
   }
-
 
   @override
   void onClose() {

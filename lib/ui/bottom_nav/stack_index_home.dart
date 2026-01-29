@@ -155,6 +155,130 @@ class _HomeDashboardPageState extends State<HomePage>
     EgoProfilePage(title: 'Dear Claire'),
   ];
 
+
+
+  /// Checks if the user's premium subscription is expired and shows a renewal modal.
+  void _checkAndPromptForRenewal(UserModel user) {
+    // The smart condition: user was premium, but the expiry date has passed.
+    final bool wasPremium = user.isPremium;
+    final DateTime? expiryDate = user.premiumExpiryDate?.toDate();
+    final bool isExpired = expiryDate != null && expiryDate.isBefore(DateTime.now());
+
+    if (wasPremium && isExpired) {
+      // Use a short delay to ensure the home page UI has settled.
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          _showRenewSubscriptionModal();
+        }
+      });
+    }
+  }
+
+  /// Displays a bottom sheet prompting the user to renew their subscription.
+  void _showRenewSubscriptionModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Pallet.colorSecondaryDark,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Pallet.colorPrimary.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 5,
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 50,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Icon(
+                  Icons.star_purple500_sharp,
+                  color: Colors.amberAccent.withOpacity(0.7),
+                  size: 50,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Your Premium Has Expired',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Renew now to continue enjoying an ad-free experience, monthly loves, and all-access features!',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.lato(
+                    fontSize: 15,
+                    color: Colors.white70,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close the modal
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const TopUpLovesPage(
+                          feature: 'renew_subscription',
+                        ),
+                      ));
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Pallet.colorSecondary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    child: Text(
+                      'Renew Now',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the modal
+                  },
+                  child: const Text(
+                    'Maybe Later',
+                    style: TextStyle(color: Colors.white54),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
   /// Get the Ego User info
   Future<UserModel?> getEgoInfo() async {
     // Null check at the beginning
@@ -169,12 +293,12 @@ class _HomeDashboardPageState extends State<HomePage>
           .collection(AppString.users)
           .doc(userId)
           .get();
-
-      // Check if document exists before processing
       if (response.exists && response.data() != null) {
         var egoInfo =
             UserModel.fromFirestore(response.data() as Map<String, dynamic>);
-        // Use setState only if you need to update UI properties directly
+
+        _checkAndPromptForRenewal(egoInfo);
+
         if (mounted) {
           setState(() {
             userName = egoInfo.nickname.toString();
@@ -184,8 +308,6 @@ class _HomeDashboardPageState extends State<HomePage>
         }
         final _userId = egoInfo.userId.toString();
         await firebaseServices.updateUserLastTimeUnlocked(_userId);
-        logger.d(
-            'Successfully got an Ego user model and updated time last unlocked.');
         return egoInfo;
       } else {
         logger.w("User document not found for userId: $userId");
@@ -1114,7 +1236,7 @@ class _AppDrawerState extends State<_AppDrawer> {
             },
           ),
           _MenuTile(
-            title: "Top-Up Love Wallet",
+            title: "Top-Up Love/Go Premium",
             icon: Icons.card_giftcard,
             onTap: () {
               Navigator.pop(context);

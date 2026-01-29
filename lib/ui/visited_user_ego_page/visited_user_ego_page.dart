@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/firebase_services.dart';
-import 'package:clairediary/ui/featured/notified_session_details.dart';
 import 'package:clairediary/ui/visited_user_ego_page/visited_profile_page_model.dart';
 import 'package:clairediary/ui/visited_user_ego_page/visited_user_claireloves.dart';
 import 'package:clairediary/ui/visited_user_ego_page/visited_user_model.dart';
@@ -74,6 +73,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
 
   /// create instance of FirebaseMessaging
   FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  final FirebaseServices _firebaseServices = FirebaseServices();
 
   int currentTabIndex = 0;
   User? currentUser = FirebaseAuth.instance.currentUser;
@@ -88,6 +88,9 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   bool _isUploadingAudio = false;
   bool _showMantraRecorder = false;
   bool _isPermissionCheckComplete = false;
+  late Future<UserModel> _userFuture;
+  bool _isPremium = false;
+  bool _isBannerAdInitialized = false;
 
 
   @override
@@ -96,10 +99,20 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     _fetchInitialData();
     _userActivitiesFuture = getActivityByVisitedUser();
     _userSessionsStream = visitedUsersSessions();
-    _createEgoMantraInterstitialAd();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {});
     _checkInitialPermission();
+    _userFuture = _firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createEgoMantraInterstitialAd();
+        }
+      }
+    });
   }
 
 
@@ -130,51 +143,53 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // We can remove the _areAdsInitialized check to allow for reloading if needed,
-    // since the individual loaded flags will prevent crashes.
-    final adState = Provider.of<AdState>(context);
+    if (!_isBannerAdInitialized && !_isPremium) {
+      final adState = Provider.of<AdState>(context);
+      if (adState != null) {
+        adState.initialization.then((status) {
+          if (!mounted || _isPremium) return;
+          setState(() {
+            // --- Load Top of Sessions Banner ---
+            visitedUserTopOfSessionsBanner = BannerAd(
+                size: AdSize.banner,
+                adUnitId: adState.visitedUserTopOfSessionBannerAdUnitId,
+                request: AdRequest(),
+                listener: BannerAdListener(
+                  onAdLoaded: (ad) {
+                    print('Ad loaded: ${ad.adUnitId}');
+                    setState(() {
+                      _isTopOfSessionsBannerLoaded = true;
+                    });
+                  },
+                  onAdFailedToLoad: (ad, error) {
+                    print('Ad failed to load: ${ad.adUnitId}, error: $error');
+                    ad.dispose();
+                  },
+                ))
+              ..load();
 
-    adState.initialization.then((status) {
-      setState(() {
-        // --- Load Top of Sessions Banner ---
-        visitedUserTopOfSessionsBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.visitedUserTopOfSessionBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdLoaded: (ad) {
-                print('Ad loaded: ${ad.adUnitId}');
-                setState(() {
-                  _isTopOfSessionsBannerLoaded = true;
-                });
-              },
-              onAdFailedToLoad: (ad, error) {
-                print('Ad failed to load: ${ad.adUnitId}, error: $error');
-                ad.dispose();
-              },
-            ))
-          ..load();
-
-        // --- Load Bottom of Sessions Banner ---
-        visitedUserBottomOfSessionsBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.visitedUserBottomOfSessionsBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdLoaded: (ad) {
-                print('Ad loaded: ${ad.adUnitId}');
-                setState(() {
-                  _isBottomOfSessionsBannerLoaded = true;
-                });
-              },
-              onAdFailedToLoad: (ad, error) {
-                print('Ad failed to load: ${ad.adUnitId}, error: $error');
-                ad.dispose();
-              },
-            ))
-          ..load();
-      });
-    });
+            // --- Load Bottom of Sessions Banner ---
+            visitedUserBottomOfSessionsBanner = BannerAd(
+                size: AdSize.banner,
+                adUnitId: adState.visitedUserBottomOfSessionsBannerAdUnitId,
+                request: AdRequest(),
+                listener: BannerAdListener(
+                  onAdLoaded: (ad) {
+                    print('Ad loaded: ${ad.adUnitId}');
+                    setState(() {
+                      _isBottomOfSessionsBannerLoaded = true;
+                    });
+                  },
+                  onAdFailedToLoad: (ad, error) {
+                    print('Ad failed to load: ${ad.adUnitId}, error: $error');
+                    ad.dispose();
+                  },
+                ))
+              ..load();
+          });
+        });
+      }
+    }
   }
 
   Future<void> _fetchInitialData() async {
@@ -574,7 +589,7 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
   }
 
   void _showEgoMantraInterstitialAd() {
-    if (_interstitialAd2 != null) {
+    if (_interstitialAd2 == null || _isPremium) return;
       _interstitialAd2!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
@@ -586,7 +601,6 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
         },
       );
       _interstitialAd2!.show();
-    }
   }
 
 

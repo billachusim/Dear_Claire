@@ -18,6 +18,7 @@ import '../../Admob/ad_state.dart';
 import '../../helpers/toast_helper.dart';
 import '../../services/firebase_services.dart';
 import '../../services/notification_service.dart';
+import '../../services/user_model.dart';
 
 class Temp {
   String id;
@@ -49,6 +50,8 @@ class _SubChatScreenState extends State<SubChatScreen> {
   List<Temp> _chatList = [];
   bool _isSending = false;
   User? currentUser = FirebaseAuth.instance.currentUser;
+  late Future<UserModel> _userFuture;
+  bool _isPremium = false;
 
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
@@ -60,7 +63,17 @@ class _SubChatScreenState extends State<SubChatScreen> {
   @override
   void initState() {
     super.initState();
-    _createSubChatInterstitialAd();
+    _userFuture = firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createSubChatInterstitialAd();
+        }
+      }
+    });
     _checkAdminStatus();
   }
 
@@ -81,8 +94,9 @@ class _SubChatScreenState extends State<SubChatScreen> {
 
   @override
   void dispose() {
-    // --- ADMOB COMPLIANCE FIX 2: Show interstitial on exit and dispose all ads ---
-    _showSubChatInterstitialAd();
+    if (!_isPremium) {
+      _showSubChatInterstitialAd();
+    }
     _interstitialAd?.dispose();
     _bottomBannerAd?.dispose();
     super.dispose();
@@ -133,10 +147,10 @@ class _SubChatScreenState extends State<SubChatScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isBannerAdInitialized) {
+    if (!_isBannerAdInitialized && !_isPremium) {
       final adState = Provider.of<AdState>(context);
       adState.initialization.then((status) {
-        if (mounted) {
+        if (mounted && !_isPremium) {
           setState(() {
             _bottomBannerAd = BannerAd(
                 size: AdSize.banner,
@@ -229,7 +243,7 @@ class _SubChatScreenState extends State<SubChatScreen> {
           ),
 
           // --- Banner Ads and Input Field remain in the Stack ---
-          if (_bottomBannerAd != null && _isBannerAdInitialized)
+          if (!_isPremium && _bottomBannerAd != null && _isBannerAdInitialized)
             Positioned(
               bottom: 60,
               left: 0,

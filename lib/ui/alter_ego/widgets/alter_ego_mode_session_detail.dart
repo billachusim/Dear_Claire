@@ -55,19 +55,31 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
   late Future<UserModel> _userFuture;
+  bool _isPremium = false;
 
 
   @override
   void initState() {
     super.initState();
-    _createAdviseInterstitialAd();
     _userFuture = firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createAdviseInterstitialAd();
+        }
+      }
+    });
   }
+
 
   @override
   void dispose() {
-    // --- ADMOB COMPLIANCE FIX 2: Show interstitial on exit and dispose all ads ---
-    _showAdviseInterstitialAd();
+    if (!_isPremium) {
+      _showAdviseInterstitialAd();
+    }
     _interstitialAd?.dispose();
     _bottomBannerAd?.dispose();
     super.dispose();
@@ -111,14 +123,13 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     }
   }
 
-  // --- ADMOB COMPLIANCE FIX 3: Clean up banner ad loading logic ---
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isBannerAdInitialized) {
+    if (!_isBannerAdInitialized && !_isPremium) {
       final adState = Provider.of<AdState>(context);
       adState.initialization.then((status) {
-        if (mounted) {
+        if (mounted && !_isPremium) {
           setState(() {
             _bottomBannerAd = BannerAd(
                 size: AdSize.banner,
@@ -260,7 +271,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
           ),
 
           // --- ADMOB COMPLIANCE FIX 6: Place a single, compliant banner ad ---
-          if (_bottomBannerAd != null && _isBannerAdInitialized)
+          if (!_isPremium && _bottomBannerAd != null && _isBannerAdInitialized)
             Positioned(
               bottom: 60, // Position above the ChatEditField
               left: 0,

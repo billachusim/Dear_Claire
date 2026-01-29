@@ -12,7 +12,6 @@ import 'package:clairediary/widgets/metoo_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -67,6 +66,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   final GlobalKey<UnifiedMediaViewerState> _mediaViewerKey = GlobalKey<UnifiedMediaViewerState>();
   bool _isAvatarLoading = false;
   late Future<UserModel> _userFuture;
+  bool _isPremium = false;
 
   List<CommentSessionModel> _commentList = [];
 
@@ -82,19 +82,32 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   void initState() {
     super.initState();
     _updateLanguagePreference();
-    _createAdviseInterstitialAd();
-    _userFuture = firebaseServices.getUserInfo();
+    _userFuture = firebaseServices.getUserInfo();  _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createAdviseInterstitialAd();
+        }
+      }
+    });
   }
 
 
 
   @override
   void dispose() {
-    _showAdviseInterstitialAd();
+    if (!_isPremium) {
+      _showAdviseInterstitialAd();
+    }
     _interstitialAd?.dispose();
-    egoModeSessionDetailBottomBanner.dispose();
+    if (_isBannerAdInitialized) {
+      egoModeSessionDetailBottomBanner.dispose();
+    }
     super.dispose();
   }
+
 
   /// Get user detail for language/translation sake.
   Future<void> _updateLanguagePreference() async {
@@ -180,10 +193,10 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isBannerAdInitialized) {
+    if (!_isBannerAdInitialized && !_isPremium) {
       final adState = Provider.of<AdState>(context);
       adState.initialization.then((status) {
-        if (mounted) { // Ensure widget is still in the tree
+        if (mounted && !_isPremium) {
           setState(() {
             egoModeSessionDetailBottomBanner = BannerAd(
                 size: AdSize.banner,
@@ -1201,7 +1214,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
           ]
         ),
 
-          if (egoModeSessionDetailBottomBanner != null && _isBannerAdInitialized)
+          if (!_isPremium && _isBannerAdInitialized)
             Positioned(
               bottom: 60, // Position above the ChatEditField
               left: 0,

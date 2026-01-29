@@ -45,12 +45,9 @@ Future<void> main() async {
 
   await initializeService();
   await _updateFcmTokenOnAppStart();
-  final initFuture = MobileAds.instance.initialize();
-  final adState = AdState(initFuture);
-  await initFuture;
-  MobileAds.instance.updateRequestConfiguration(
-    RequestConfiguration(testDeviceIds: ['51F4CA28BB7EDD1F5E61C5F0F8EFFF00']),
-  );
+
+  final adState = await _initializeAdsForUser();
+
   final RemoteMessage? initialRemoteMessage =
   await FirebaseMessaging.instance.getInitialMessage();
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -79,6 +76,44 @@ Future<void> main() async {
     ),
   );
 }
+
+Future<AdState> _initializeAdsForUser() async {
+  User? currentUser = FirebaseAuth.instance.currentUser;
+  bool isPremium = false;
+
+  if (currentUser != null) {
+    try {
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
+      if (userDoc.exists) {
+        final data = userDoc.data()!;
+        // --- NEW: Check for a valid expiry date ---
+        if (data.containsKey('premiumExpiryDate') && data['premiumExpiryDate'] != null) {
+          final Timestamp expiryTimestamp = data['premiumExpiryDate'];
+          final DateTime expiryDate = expiryTimestamp.toDate();
+          // User is premium if the expiry date is in the future
+          isPremium = expiryDate.isAfter(DateTime.now());
+        }
+      }
+    } catch (e) {
+      print("Error fetching premium status: $e");
+      isPremium = false; // Default to non-premium on error
+    }
+  }
+
+  if (!isPremium) {
+    print("User is not premium. Initializing ads.");
+    final initFuture = MobileAds.instance.initialize();
+    MobileAds.instance.updateRequestConfiguration(
+      RequestConfiguration(testDeviceIds: ['51F4CA28BB7EDD1F5E61C5F0F8EFFF00']),
+    );
+    return AdState(initFuture);
+  } else {
+    print("Premium user detected (Subscription valid). Skipping ad initialization.");
+    // Provide a dummy AdState so the Provider doesn't crash
+    return AdState(Future.value(InitializationStatus({})));
+  }
+}
+
 
 Future<void> _updateFcmTokenOnAppStart() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);

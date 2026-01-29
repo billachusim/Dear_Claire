@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../services/user_model.dart';
 import '../../widgets/toast.dart';
 import '../splash_screen/rotate_logo.dart';
 
@@ -26,6 +27,8 @@ class _LoginPage extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final FirebaseServices _firebaseServices = FirebaseServices();
   late String _theEmail;
+  late Future<UserModel> _userFuture;
+  bool _isPremium = false;
 
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
@@ -33,7 +36,17 @@ class _LoginPage extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _createInterstitialAd();
+    _userFuture = _firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createInterstitialAd();
+        }
+      }
+    });
   }
 
   void _launchClairePolicySite() async {
@@ -79,7 +92,7 @@ class _LoginPage extends State<LoginPage> {
   }
 
   void _showInterstitialAd() {
-    if (_interstitialAd != null) {
+    if (_interstitialAd == null || _isPremium) return;
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
@@ -91,7 +104,6 @@ class _LoginPage extends State<LoginPage> {
         },
       );
       _interstitialAd!.show();
-    }
   }
 
   Future<void> _showForgotEgoCodeDialog() async {
@@ -341,14 +353,12 @@ class _LoginPage extends State<LoginPage> {
             isSigningIn = true;
           });
           await _firebaseServices.signIn(context, _emailController.text, _secretCodeController.text);
-          // Your original ad logic and timing
-          Future.delayed(Duration(seconds: 4), () {
-            _showInterstitialAd();
-          });
-          // The firebase service handles navigation, so we just need to reset the state
           if (mounted) {
             setState(() {
               isSigningIn = false;
+              Future.delayed(Duration(seconds: 4), () {
+                _showInterstitialAd();
+              });
             });
           }
         } else {

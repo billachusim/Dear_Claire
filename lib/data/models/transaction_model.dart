@@ -1,7 +1,7 @@
 // lib/models/transaction_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum TransactionStatus { pending, approved, declined }
+enum TransactionStatus { pending, approved, declined, failed }
 enum TransactionType { credit, debit }
 
 class TransactionModel {
@@ -58,6 +58,8 @@ class TransactionModel {
     switch (status) {
       case 'approved':
         return TransactionStatus.approved;
+      case 'failed':
+        return TransactionStatus.failed;
       case 'declined':
         return TransactionStatus.declined;
       case 'pending':

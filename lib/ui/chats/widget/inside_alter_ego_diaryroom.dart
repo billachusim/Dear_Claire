@@ -14,6 +14,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../../helpers/toast_helper.dart';
 import '../../../services/notification_service.dart';
+import '../../../services/user_model.dart';
 import '../../../utils/color.dart';
 import 'alter_ego_chat_widget.dart';
 import 'alter_ego_sub_room_widget.dart';
@@ -42,6 +43,8 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
   bool _isSending = false;
   List<Temp> _chatList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
+  late Future<UserModel> _userFuture;
+  bool _isPremium = false;
 
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
@@ -50,18 +53,30 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
   int _interstitialLoadAttempts = 0;
 
 
+  // Replace the existing initState()
   @override
   void initState() {
     super.initState();
-    _createNewChatInterstitialAd();
+    _userFuture = firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createNewChatInterstitialAd();
+        }
+      }
+    });
   }
 
 
 
   @override
   void dispose() {
-    // --- ADMOB COMPLIANCE FIX 2: Show interstitial on exit and dispose all ads ---
-    _showNewChatInterstitialAd();
+    if (!_isPremium) {
+      _showNewChatInterstitialAd();
+    }
     _interstitialAd?.dispose();
     _bottomBannerAd?.dispose();
     super.dispose();
@@ -107,18 +122,16 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
   }
 
 
-  // --- ADMOB COMPLIANCE FIX 3: Clean up banner ad loading logic ---
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isBannerAdInitialized) {
+    if (!_isBannerAdInitialized && !_isPremium) {
       final adState = Provider.of<AdState>(context);
       adState.initialization.then((status) {
-        if (mounted) {
+        if (mounted && !_isPremium) {
           setState(() {
             _bottomBannerAd = BannerAd(
                 size: AdSize.banner,
-                // Using a unique ad unit ID for this page
                 adUnitId: adState.insideChatroomBottomBannerAdUnitId,
                 request: AdRequest(),
                 listener: BannerAdListener(
@@ -221,7 +234,7 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
 
           // --- BANNER AD PLACEMENT ---
           // Positioned above the ChatEditField.
-          if (_bottomBannerAd != null && _isBannerAdInitialized)
+          if (!_isPremium && _bottomBannerAd != null && _isBannerAdInitialized)
             Positioned(
               bottom: 60, // Position it 60 pixels from the bottom.
               left: 0,

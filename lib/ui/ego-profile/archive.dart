@@ -20,6 +20,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../helpers/toast_helper.dart';
 import '../../services/firebase_services.dart';
+import '../../services/user_model.dart';
 import '../../utils/mood.dart';
 import '../create_session/session_model.dart';
 
@@ -38,13 +39,25 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
   final List<Session> sessions = [];
   final List<DateTime> _dateLists = [];
   int maxFailedLoadAttempts = 3;
+  late Future<UserModel> _userFuture;
+  bool _isPremium = false;
 
   DateTime? _focusedDay = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _createQuickInterstitialAd();
+    _userFuture = _firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createQuickInterstitialAd();
+        }
+      }
+    });
   }
 
   @override
@@ -140,7 +153,7 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
   }
 
   void _showQuickInterstitialAd() {
-    if (_quickInterstitialAd != null) {
+    if (_quickInterstitialAd == null || _isPremium) return;
       _quickInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
@@ -152,7 +165,6 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
         },
       );
       _quickInterstitialAd!.show();
-    }
   }
 
 
@@ -274,10 +286,10 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Pallet.colorSecondary.withOpacity(0.9),
+          backgroundColor: Pallet.colorSecondary.withValues(alpha: 0.9),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withOpacity(0.3)),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
           ),
           title: Text(
             'Add a Quick Entry',
@@ -317,10 +329,10 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Pallet.colorSecondary.withOpacity(0.95),
+          backgroundColor: Pallet.colorSecondary.withValues(alpha: 0.95),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withOpacity(0.3)),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
           ),
           title: Text(
             'How are you feeling?',

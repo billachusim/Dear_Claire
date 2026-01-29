@@ -23,13 +23,26 @@ class EditClairevatar extends StatefulWidget {
 const int maxFailedLoadAttempts = 3;
 
 class _EditClairevatarState extends State<EditClairevatar> {
+  final FirebaseServices _firebaseServices = FirebaseServices();
   User? currentUser = FirebaseAuth.instance.currentUser;
   late String avatarUrl;
+  late Future<UserModel> _userFuture;
+  bool _isPremium = false;
 
   @override
   void initState() {
     super.initState();
-    _createInterstitialAd();
+    _userFuture = _firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createInterstitialAd();
+        }
+      }
+    });
   }
 
   @override
@@ -95,7 +108,7 @@ class _EditClairevatarState extends State<EditClairevatar> {
   }
 
   void _showInterstitialAd() {
-    if (_interstitialAd != null) {
+    if (_interstitialAd == null || _isPremium) return;
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
@@ -107,7 +120,6 @@ class _EditClairevatarState extends State<EditClairevatar> {
         },
       );
       _interstitialAd!.show();
-    }
   }
 
   @override

@@ -64,6 +64,8 @@ class _EgoModeSessionDetailState
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
   late Future<UserModel> _userFuture;
+  bool _isPremium = false;
+  bool _isBannerAdInitialized = false;
 
 
 
@@ -72,18 +74,29 @@ class _EgoModeSessionDetailState
   @override
   void initState() {
     super.initState();
-    _createAdviseInterstitialAd();
     _userFuture = firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createAdviseInterstitialAd();
+        }
+      }
+    });
   }
 
 
 
   @override
   void dispose() {
-    super.dispose();
-    _showAdviseInterstitialAd();
+    if (!_isPremium) {
+      _showAdviseInterstitialAd();
+    }
     _interstitialAd?.dispose();
     egoModeSessionDetailBottomBanner?.dispose();
+    super.dispose();
   }
 
 
@@ -134,18 +147,18 @@ class _EgoModeSessionDetailState
 
   // Admob Ad Units.
   BannerAd? egoModeSessionDetailBottomBanner;
-  bool _isBannerAdInitialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isBannerAdInitialized) {
-      final adState = Provider.of<AdState>(context);
-      adState.initialization.then((status) {
-        setState(() {
-          egoModeSessionDetailBottomBanner = BannerAd(
+    if (!_isBannerAdInitialized && !_isPremium) {
+      final adState = Provider.of<AdState?>(context);
+      if (adState != null) {
+        adState.initialization.then((status) {
+          if (!mounted || _isPremium) return;
+          setState(() {
+            egoModeSessionDetailBottomBanner = BannerAd(
               size: AdSize.banner,
-              // Using the bottom ad unit ID, but you can choose either one
               adUnitId: adState.egoModeBottomCommentBannerAdUnitId,
               request: const AdRequest(),
               listener: BannerAdListener(
@@ -154,13 +167,15 @@ class _EgoModeSessionDetailState
                   print('Session detail banner failed to load: $error');
                   ad.dispose();
                 },
-              )
-          )..load();
-          _isBannerAdInitialized = true;
+              ),
+            )..load();
+            _isBannerAdInitialized = true;
+          });
         });
-      });
+      }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -272,8 +287,7 @@ class _EgoModeSessionDetailState
               ],
             ),
 
-            // --- COMPLIANT BANNER AD PLACEMENT ---
-            if (egoModeSessionDetailBottomBanner != null && _isBannerAdInitialized)
+            if (!_isPremium && egoModeSessionDetailBottomBanner != null && _isBannerAdInitialized)
               Positioned(
                 bottom: 60,
                 left: 0,
@@ -458,7 +472,7 @@ class _EgoModeSessionDetailState
           payload: "wallet");
 
       Future.delayed(Duration(seconds: 5), () {
-        _showAdviseInterstitialAd(); // Make sure this function exists in the file
+        _showAdviseInterstitialAd();
       });
       return true;
     }

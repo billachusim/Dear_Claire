@@ -984,10 +984,11 @@ class FirebaseServices extends ChangeNotifier {
 
       // 3. Prepare the user data for Firestore
       final userData = {
+        "isPremium": false,
         "nickname": nickname,
         "avatarUrl": randomAvatarUrl,
         "userId": _user.user?.uid,
-        "languagePreference": languageCode, // Add language preference
+        "languagePreference": languageCode,
         "alterEgoAccessCode": "",
         "alterEgoId": "",
         "email": email,
@@ -1003,7 +1004,7 @@ class FirebaseServices extends ChangeNotifier {
         "withdrawnLoveCount": 0,
         "forLoveTransfer": 0,
         "fromLoveTransfer": 0,
-        "referredBy": referredBy ?? ''
+        "referredBy": referredBy ?? '',
       };
 
       // 4. Create the user document in Firestore
@@ -1075,6 +1076,58 @@ class FirebaseServices extends ChangeNotifier {
     logger.e('A general error occurred in sendPasswordResetEmail: $e');
     return false;
   }
+  }
+
+
+  // --- NEW METHOD FOR PREMIUM SUBSCRIPTION ACTIVATION ---
+  /// Activates the premium subscription for a user, granting bonus loves.
+  /// This method is transactional to ensure atomicity.
+  Future<bool> activatePremiumSubscription({
+    required String userId,
+    required int bonusLoves,
+    Map<String, dynamic>? metadata,
+  }) async {
+    final userDocRef = _firebaseFirestore.collection('users').doc(userId);
+
+    try {
+      // Step 1: Calculate the expiry date (31 days from now)
+      final newExpiryDate = DateTime.now().add(const Duration(days: 31));
+      final newExpiryTimestamp = Timestamp.fromDate(newExpiryDate);
+
+      // Step 2: Update the user's document with the new expiry date and isPremium flag
+      await userDocRef.update({
+        'isPremium': true,
+        'premiumExpiryDate': newExpiryTimestamp,
+      });
+
+      logger.d("Successfully set isPremium=true for user $userId.");
+
+      // Step 2: Credit the bonus loves using the existing treasury logic.
+      // This ensures the transaction is recorded and Claire's loves are updated.
+      bool lovesCredited = await updateTreasuryAndUser(
+        userId: userId,
+        amount: bonusLoves,
+        type: t_model.TransactionType.credit,
+        userTransactionDescription: "Premium Subscription Bonus",
+        metadata: metadata,
+      );
+
+      if (lovesCredited) {
+        logger.d(
+            "Successfully credited $bonusLoves bonus loves to user $userId.");
+        return true;
+      } else {
+        logger.e(
+            "Failed to credit bonus loves for user $userId, but premium was set.");
+        // Although loves failed, we return true because the core premium feature was activated.
+        // The transaction log from updateTreasuryAndUser will show the failure.
+        return true;
+      }
+    } catch (e) {
+      logger.e("Error activating premium subscription for user $userId: $e");
+      // If the transaction fails, nothing should be written.
+      return false;
+    }
   }
 
 

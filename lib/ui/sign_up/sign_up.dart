@@ -5,7 +5,6 @@ import 'package:clairediary/utils/strings.dart';
 import 'package:clairediary/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import '../../utils/helper.dart';
@@ -29,13 +28,11 @@ class _SignUpPage extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
   final FirebaseServices _firebaseServices = FirebaseServices();
 
-  InterstitialAd? _interstitialAd;
-  int _interstitialLoadAttempts = 0;
+
 
   @override
   void initState() {
     super.initState();
-    _createInterstitialAd();
   }
 
   void _launchClairePolicySite() async {
@@ -48,52 +45,12 @@ class _SignUpPage extends State<SignUpPage> {
     }
   }
 
-  void _createInterstitialAd() {
-    InterstitialAd.load(
-      adUnitId: Platform.isAndroid
-          ? "ca-app-pub-2404156870680632/6980026455"
-          : Platform.isIOS
-          ? "ca-app-pub-2404156870680632/1979266624"
-          : '',
-      request: AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          _interstitialAd = ad;
-          _interstitialLoadAttempts = 0;
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          _interstitialLoadAttempts += 1;
-          _interstitialAd = null;
-          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
-            _createInterstitialAd();
-          }
-        },
-      ),
-    );
-  }
-
-  void _showInterstitialAd() {
-    if (_interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          _createInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          _createInterstitialAd();
-        },
-      );
-      _interstitialAd!.show();
-    }
-  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _secretCodeController.dispose();
     _egoNameController.dispose();
-    _interstitialAd?.dispose();
     super.dispose();
   }
 
@@ -259,10 +216,6 @@ class _SignUpPage extends State<SignUpPage> {
             languageCode, // Pass the language code
             referredBy: _referralController.text.trim(),
           );
-
-          Future.delayed(Duration(seconds: 4), () {
-            _showInterstitialAd();
-          });
 
           if (mounted) {
             setState(() {

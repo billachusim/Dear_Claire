@@ -71,6 +71,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   var currentUser = FirebaseAuth.instance.currentUser;
 
   UserModel userModel = UserModel();
+  late Future<UserModel> _userFuture;
+  bool _isPremium = false;
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+  InterstitialAd? _quickInterstitialAd;
+  int _quickInterstitialLoadAttempts = 0;
 
 //used for generating random id for each session
   var uuid = Uuid();
@@ -191,18 +197,27 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   @override
   void initState() {
     super.initState();
-    //chatGPT = ChatGPT.instance.builder(API_KEY);
-    _createInterstitialAd();
-    _createQuickInterstitialAd();
+    _userFuture = _firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createInterstitialAd();
+          _createQuickInterstitialAd();
+        }
+      }
+    });
     randomizeBackgroundColor();
     initializeDatabaseObject();
     sessionTextFocusNode = FocusNode();
     Future.delayed(Duration(seconds: 8), () {
       sessionTextFocusNode.requestFocus();
-    }
-    );
+    });
     randomizeNewDiarySessionToast();
   }
+
 
   void initializeDatabaseObject() async {
     box = await Hive.openBox('draft');
@@ -1292,12 +1307,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
 
   /// Create new session interstitial ad.
-
-  InterstitialAd? _interstitialAd;
-  int _interstitialLoadAttempts = 0;
-
-  // Create interstitial ad.
-
   void _createInterstitialAd() {
     InterstitialAd.load(
       adUnitId: Platform.isAndroid
@@ -1324,28 +1333,24 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   }
 
   void _showInterstitialAd() {
-    if (_interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          _createInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          _createInterstitialAd();
-        },
-      );
-      _interstitialAd!.show();
-    }
+    if (_interstitialAd == null || _isPremium) return;
+
+    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (InterstitialAd ad) {
+        ad.dispose();
+        _createInterstitialAd();
+      },
+      onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+        ad.dispose();
+        _createInterstitialAd();
+      },
+    );
+    _interstitialAd!.show();
   }
 
 
 
-  InterstitialAd? _quickInterstitialAd;
-  int _quickInterstitialLoadAttempts = 0;
-
   // Create quick session interstitial ad.
-
   void _createQuickInterstitialAd() {
     InterstitialAd.load(
       adUnitId: Platform.isAndroid
@@ -1372,7 +1377,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   }
 
   void _showQuickInterstitialAd() {
-    if (_quickInterstitialAd != null) {
+    if (_quickInterstitialAd == null || _isPremium) return;
+
       _quickInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (InterstitialAd ad) {
           ad.dispose();
@@ -1384,7 +1390,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         },
       );
       _quickInterstitialAd!.show();
-    }
   }
 
 

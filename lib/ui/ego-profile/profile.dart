@@ -28,7 +28,6 @@ import 'package:focused_menu/modals.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/notification_service.dart';
 import '../routes/page_router_animation.dart';
 import '../splash_screen/rotate_logo.dart';
@@ -66,6 +65,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   bool _isUploadingAudio = false;
   bool _showMantraRecorder = false;
   bool _isPermissionCheckComplete = false;
+  bool _isPremium = false;
 
   @override
   void initState() {
@@ -75,8 +75,17 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     _tabController.addListener(() {
       print(_tabController.index);
     });
-    _createEgoNameInterstitialAd();
-    _createEgoMantraInterstitialAd();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createEgoNameInterstitialAd();
+          _createEgoMantraInterstitialAd();
+        }
+      }
+    });
     _checkInitialPermission();
   }
 
@@ -358,35 +367,37 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   }
 
   void _showEgoNameInterstitialAd() {
-    if (_interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          _createEgoNameInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          _createEgoNameInterstitialAd();
-        },
-      );
-      _interstitialAd!.show();
-    }
+    if (_interstitialAd == null || _isPremium) return;
+
+    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (InterstitialAd ad) {
+        ad.dispose();
+        _createEgoNameInterstitialAd();
+      },
+      onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+        ad.dispose();
+        _createEgoNameInterstitialAd();
+      },
+    );
+    _interstitialAd!.show();
+    _interstitialAd = null;
   }
 
   void _showEgoMantraInterstitialAd() {
-    if (_interstitialAd2 != null) {
-      _interstitialAd2!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          _createEgoMantraInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          _createEgoMantraInterstitialAd();
-        },
-      );
-      _interstitialAd2!.show();
-    }
+    if (_interstitialAd2 == null || _isPremium) return; // <-- Add this check
+
+    _interstitialAd2!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (InterstitialAd ad) {
+        ad.dispose();
+        _createEgoMantraInterstitialAd();
+      },
+      onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+        ad.dispose();
+        _createEgoMantraInterstitialAd();
+      },
+    );
+    _interstitialAd2!.show();
+    _interstitialAd2 = null;
   }
 
   flagEgoAlertDialog(BuildContext context) {

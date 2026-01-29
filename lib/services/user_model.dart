@@ -31,6 +31,8 @@ class UserModel {
   int? claireminderDelay;
   List<String> blockedUsers;
   String? languagePreference;
+  bool isPremium;
+  Timestamp? premiumExpiryDate;
 
   UserModel({
     this.alterEgoAccessCode,
@@ -63,6 +65,8 @@ class UserModel {
     this.claireminderDelay,
     this.blockedUsers = const [],
     this.languagePreference,
+    this.isPremium = false,
+    this.premiumExpiryDate,
   });
 
   factory UserModel.fromJson(json) {
@@ -97,6 +101,8 @@ class UserModel {
       claireminderDelay: json['claireminderDelay'] ?? 0,
       blockedUsers: List<String>.from(json['blockedUsers'] ?? []),
       languagePreference: json['languagePreference'] ?? 'en',
+      isPremium: json['isPremium'] ?? false,
+      premiumExpiryDate: json['premiumExpiryDate'],
     );
   }
 
@@ -132,6 +138,8 @@ class UserModel {
       claireminderDelay: json['claireminderDelay'] ?? 0,
       blockedUsers: List<String>.from(json['blockedUsers'] ?? []),
       languagePreference: json['languagePreference'] ?? 'en',
+      isPremium: json['isPremium'] ?? false,
+      premiumExpiryDate: json['premiumExpiryDate'],
     );
   }
 
@@ -151,6 +159,10 @@ class UserModel {
     'moods': moods,
     'referredBy': referredBy,
     'influencerStatus': influencerStatus,
+    'tiktok': tiktok,
+    'instagram': instagram,
+    'twitter': twitter,
+    'whatsapp': whatsapp,
     'sessionCount': sessionCount,
     'adviseCount': adviseCount,
     'totalLoveCount': totalLoveCount,
@@ -162,5 +174,7 @@ class UserModel {
     'claireminderDelay': claireminderDelay,
     'blockedUsers': blockedUsers,
     'languagePreference': languagePreference,
+    'isPremium': isPremium,
+    'premiumExpiryDate': premiumExpiryDate,
   };
 }

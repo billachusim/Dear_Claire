@@ -15,6 +15,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../helpers/toast_helper.dart';
 import '../../services/notification_service.dart';
+import '../../services/user_model.dart';
 import 'widget/chat_widget.dart';
 
 class Temp {
@@ -45,23 +46,39 @@ class _ChatScreenState extends State<ChatScreen> {
   _ChatScreenState(this.chatRoomPodo);
   bool _isSending = false;
   List<Temp> _chatList = [];
+  late Future<UserModel> _userFuture;
+  bool _isPremium = false;
+
 
   @override
   void initState() {
     super.initState();
-    _createNewChatInterstitialAd();
+    _userFuture = firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createNewChatInterstitialAd();
+        }
+      }
+    });
   }
+
 
 
 
   @override
   void dispose() {
-    // --- SHOW THE AD WHEN THE USER LEAVES THE SCREEN ---
-    _showNewChatInterstitialAd();
-    // The interstitial ad will be disposed inside the _showNewChatInterstitialAd callbacks,
-    // so we don't need to call _interstitialAd?.dispose() here anymore.
+    if (!_isPremium) {
+      _showNewChatInterstitialAd();
+    }
+    _interstitialAd?.dispose();
+    insideChatroomBottomBanner?.dispose();
     super.dispose();
   }
+
 
 
 
@@ -117,10 +134,9 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Check if ad is already initialized to avoid re-loading.
-    if (!_isBannerAdInitialized) {
-      final adState = Provider.of<AdState>(context);
-      adState.initialization.then((status) {
+    if (!_isBannerAdInitialized && !_isPremium) {    final adState = Provider.of<AdState>(context);
+    adState.initialization.then((status) {
+      if (mounted && !_isPremium) {
         setState(() {
           insideChatroomBottomBanner = BannerAd(
             size: AdSize.banner,
@@ -136,7 +152,8 @@ class _ChatScreenState extends State<ChatScreen> {
           )..load();
           _isBannerAdInitialized = true;
         });
-      });
+      }
+    });
     }
   }
 
@@ -234,7 +251,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
           // --- BANNER AD PLACEMENT ---
           // Positioned above the ChatEditField
-          if (insideChatroomBottomBanner != null && _isBannerAdInitialized)
+          if (!_isPremium && insideChatroomBottomBanner != null && _isBannerAdInitialized)
             Positioned(
               bottom: 60, // Position it 60 pixels from the bottom.
               left: 0,
