@@ -80,6 +80,7 @@ class _HomeDashboardPageState extends State<HomePage>
   late Future<UserModel?> _egoInfoFuture;
   Timer? _flowerTimer;
   static bool _hasRandomizedInitialPage = false;
+  late final ScrollController _featuredScrollController;
 
   void _showFallingFlowers() {
     // A single claire flower emoji
@@ -147,13 +148,7 @@ class _HomeDashboardPageState extends State<HomePage>
 
   PageController _pageController = PageController(initialPage: 0);
 
-  List<Widget> _body = [
-    FeaturedPage(title: 'Dear Claire'),
-    FollowedPage(title: 'Dear Claire'),
-    DiaryPage(title: 'Dear Claire'),
-    ChatRoomsPage(title: 'Dear Claire'),
-    EgoProfilePage(title: 'Dear Claire'),
-  ];
+  late List<Widget> _body;
 
 
 
@@ -402,14 +397,27 @@ class _HomeDashboardPageState extends State<HomePage>
     _webViewController.loadRequest(uri);
   }
 
-  Future<void> setTabIndex(index) async {
-    if (await firebaseServices.isUserSignIn(context))
-      _pageController.animateToPage(index,
-          duration: Duration(milliseconds: 500), curve: Curves.easeInOut);
+  void setTabIndex(int index) {
+    // If the "Featured" tab is tapped and it's already the current index...
+    if (index == 0 && _currentIndex == 0) {
+      // ...and the controller is attached to a scroll view...
+      if (_featuredScrollController.hasClients) {
+        // ...scroll to the top.
+        _featuredScrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+      return;
+    }
     setState(() {
+      _title = allDestinations[index].title;
       _currentIndex = index;
     });
+    _pageController.jumpToPage(index);
   }
+
 
   void _listenForCallsFromClaire() {
     _userCallListener?.cancel();
@@ -498,6 +506,16 @@ class _HomeDashboardPageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
+    _featuredScrollController = ScrollController();
+
+    _body = [
+      FeaturedPage(title: 'Dear Claire', scrollController: _featuredScrollController),
+      FollowedPage(title: 'Dear Claire'),
+      DiaryPage(title: 'Dear Claire'),
+      ChatRoomsPage(title: 'Dear Claire'),
+      EgoProfilePage(title: 'Dear Claire'),
+    ];
+
     _title = "Dear Claire";
     int initialPage = 0;
     if (currentUser != null && !_hasRandomizedInitialPage) {
@@ -521,7 +539,7 @@ class _HomeDashboardPageState extends State<HomePage>
     // Initialize WebViewController for TicTacToe
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      // --- CHANNEL 1: VIBRATION ---
+    // --- CHANNEL 1: VIBRATION ---
       ..addJavaScriptChannel(
         'Vibration',
         onMessageReceived: (JavaScriptMessage message) async {
@@ -530,7 +548,7 @@ class _HomeDashboardPageState extends State<HomePage>
           }
         },
       )
-      // --- CHANNEL 2: SOUND ---
+    // --- CHANNEL 2: SOUND ---
       ..addJavaScriptChannel(
         'Sound',
         onMessageReceived: (JavaScriptMessage message) async {
@@ -545,7 +563,7 @@ class _HomeDashboardPageState extends State<HomePage>
           }
         },
       )
-      // --- CHANNEL 3: SCORE & GAME LOGIC ---
+    // --- CHANNEL 3: SCORE & GAME LOGIC ---
       ..addJavaScriptChannel(
         'Score',
         onMessageReceived: (JavaScriptMessage message) {
@@ -703,6 +721,7 @@ class _HomeDashboardPageState extends State<HomePage>
     _userCallListener?.cancel();
     _audioPlayer.dispose();
     _pageController.dispose();
+    _featuredScrollController.dispose();
     super.dispose();
   }
 

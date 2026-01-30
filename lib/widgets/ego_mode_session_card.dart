@@ -232,8 +232,9 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
       },
     );
     logger.d('Successfully changed archive');
-    print('Is Archived?: $value');
-    isArchived = value;
+    setState(() {
+      isArchived = value;
+    });
     return value;
   }
 

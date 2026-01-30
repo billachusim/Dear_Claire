@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:clairediary/services/transaction_service.dart';
@@ -1385,16 +1386,19 @@ $motivation
           _followYourSession(context, session: session);
         });
   }
-
   /// request to follow a featured session
-  void followThisSession(BuildContext context, {Session? session}) {
+  Future<bool> followThisSession(BuildContext context, {required Session session, required bool isFollowAction}) async {
+    final completer = Completer<bool>();
     showCustomDialog(context,
-        message: session!.followers!.contains(_usersID)
-            ? AppString.unFollowDiarySessions
-            : AppString.followDiarySessions, onPressed: () {
-      PageRouter.goBack(context);
-      _followASession(context, session: session);
-    });
+        message: isFollowAction
+            ? AppString.followDiarySessions
+            : AppString.unFollowDiarySessions,
+        onPressed: () {
+            _followASession(context, session: session);
+          completer.complete(true); // User confirmed
+        },
+    );
+    return completer.future;
   }
 
 

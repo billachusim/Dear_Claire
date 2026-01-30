@@ -797,7 +797,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                           if (isAlreadyFollowing) {
                                             firebaseServices.followThisSession(
                                                 context,
-                                                session: _session);
+                                                session: _session, isFollowAction: false);
                                             showToast(
                                                 "You've unfollowed this session.");
                                             return; // Stop here
@@ -831,7 +831,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                                           if (success) {
                                             firebaseServices.followThisSession(
                                                 context,
-                                                session: _session);
+                                                session: _session, isFollowAction: true);
                                             await firebaseServices
                                                 .updateSessionLastTimeActivity(
                                                 _session.sessionId

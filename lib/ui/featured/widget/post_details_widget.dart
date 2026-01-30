@@ -717,7 +717,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
                                     // --- UNFOLLOW LOGIC ---
                                     if (isAlreadyFollowing) {
-                                      firebaseServices.followThisSession(context, session: _session);
+                                      firebaseServices.followThisSession(context, session: _session, isFollowAction: false);
                                       showToast("You've unfollowed this session.");
                                       return; // Stop here
                                     }
@@ -748,7 +748,7 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                     // 2. HANDLE SUCCESS (UPDATE DB, NOTIFY, LOG ACTIVITY)
                                     if (success) {
                                       // A. Update Firestore and timestamp (your existing logic)
-                                      firebaseServices.followThisSession(context, session: _session);
+                                      firebaseServices.followThisSession(context, session: _session, isFollowAction: true);
                                       await firebaseServices
                                           .updateSessionLastTimeActivity(_session.sessionId.toString());
 

@@ -22,8 +22,14 @@ import '../../widgets/ego_mode_session_card.dart';
 /// First class is the featured sessions
 class TheFeaturedSessions extends StatefulWidget {
   final ScrollController? scrollController;
+  final Future<void> Function() onRefresh; // Add this line
 
-  const TheFeaturedSessions({Key? key, this.scrollController}) : super(key: key);
+  const TheFeaturedSessions({
+    Key? key,
+    this.scrollController,
+    required this.onRefresh, // Add this line
+  }) : super(key: key);
+
 
   @override
   State<TheFeaturedSessions> createState() => _TheFeaturedSessionsState();
@@ -120,17 +126,21 @@ class _TheFeaturedSessionsState extends State<TheFeaturedSessions> {
             );
           }
 
-          return Scrollbar(
-            child: ListView.builder(
-              controller: widget.scrollController,
-              itemCount: filteredSessions.length,
-              itemBuilder: (context, index) {
-                return EgoModeSessionCard(
-                  element: filteredSessions[index],
-                  visitedUsersID: '',
-                  visitedEgoName: '',
-                );
-              },
+          return RefreshIndicator(
+            onRefresh: widget.onRefresh,
+            color: Pallet.colorPrimary,
+            child: Scrollbar(
+              child: ListView.builder(
+                controller: widget.scrollController,
+                itemCount: filteredSessions.length,
+                itemBuilder: (context, index) {
+                  return EgoModeSessionCard(
+                    element: filteredSessions[index],
+                    visitedUsersID: '',
+                    visitedEgoName: '',
+                  );
+                },
+              ),
             ),
           );
         },

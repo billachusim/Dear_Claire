@@ -1037,7 +1037,6 @@ class _CommentWidgetState extends State<CommentWidget> {
                                   ? AppString.unflag_advise_alert_note
                                   : AppString.flag_advise_alert_note,
                               onPressed: () {
-                                PageRouter.goBack(context);
                                 sendToFlagged();
                               });
                         else
@@ -1046,7 +1045,6 @@ class _CommentWidgetState extends State<CommentWidget> {
                                   ? AppString.flag_advise_alert_note
                                   : AppString.unflag_advise_alert_note,
                               onPressed: () {
-                                PageRouter.goBack(context);
                                 removeFromFlagged();
                               });
                       },

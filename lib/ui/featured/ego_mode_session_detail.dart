@@ -91,9 +91,6 @@ class _EgoModeSessionDetailState
 
   @override
   void dispose() {
-    if (!_isPremium) {
-      _showAdviseInterstitialAd();
-    }
     _interstitialAd?.dispose();
     egoModeSessionDetailBottomBanner?.dispose();
     super.dispose();
