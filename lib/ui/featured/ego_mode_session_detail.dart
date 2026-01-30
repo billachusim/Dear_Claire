@@ -18,8 +18,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../data/models/transaction_model.dart' as t_model;
 import '../../services/data/notification_model.dart' as push_notification;
+import '../../services/in_app_review_service.dart..dart';
 import '../../services/notification_service.dart';
-import '../../services/transaction_service.dart';
 import '../../utils/color.dart';
 import '../../utils/strings.dart';
 import '../../widgets/comment_widget.dart';
@@ -54,8 +54,8 @@ class _EgoModeSessionDetailState
     extends State<EgoModeSessionDetail> {
   Session? featuredSessionModel;
   CommentSessionModel? commentSessionModel;
-  final TransactionService _transactionService = TransactionService();
   _EgoModeSessionDetailState(this.featuredSessionModel);
+  final InAppReviewService _inAppReviewService = InAppReviewService();
 
   List<CommentSessionModel> _commentList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
@@ -381,18 +381,16 @@ class _EgoModeSessionDetailState
 
 
     firebaseServices.addCommentNotification(
-        title: session.title ?? '',
-        docId: session.sessionId!,
-        sender: _userModel.nickname.toString(),
+      title: session.title ?? '',
+      docId: session.sessionId!,
+      sender: _userModel.nickname.toString(),
     );
 
     updateSessionTimeLastActivity(session);
     isOriginalAdvise(context, comment, session);
     saveUserCommentActivity();
     firebaseServices.followAdvisedSessionImmediately(session);
-    if (session.featured != true) {
-      //startAiChat(session, comment);
-    }
+    _inAppReviewService.incrementCommentCountAndRequestReview();
   }
 
 
@@ -421,7 +419,6 @@ class _EgoModeSessionDetailState
       // This is a simple stat counter and can remain.
       incrementAdviseCount();
 
-      // The old incrementTotalLoveCount() and _transactionService calls are removed from here.
 
       if (currentUser != null) {
         // --- NEW TREASURY LOGIC ---

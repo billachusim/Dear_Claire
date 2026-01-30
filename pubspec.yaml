@@ -91,6 +91,7 @@ dependencies:
   animate_do: ^4.2.0
   flutter_email_sender: ^8.0.0
   agora_rtc_engine: ^6.5.3
+  in_app_review: ^2.0.11
 
 dev_dependencies:
   flutter_test:

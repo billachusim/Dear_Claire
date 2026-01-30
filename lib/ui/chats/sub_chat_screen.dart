@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
 import '../../helpers/toast_helper.dart';
 import '../../services/firebase_services.dart';
+import '../../services/in_app_review_service.dart..dart';
 import '../../services/notification_service.dart';
 import '../../services/user_model.dart';
 
@@ -52,6 +53,8 @@ class _SubChatScreenState extends State<SubChatScreen> {
   User? currentUser = FirebaseAuth.instance.currentUser;
   late Future<UserModel> _userFuture;
   bool _isPremium = false;
+  final InAppReviewService _inAppReviewService = InAppReviewService();
+
 
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
@@ -367,6 +370,8 @@ class _SubChatScreenState extends State<SubChatScreen> {
         }
       }
       showToast(message: 'Message Sent. Remember, positive vibes only.');
+      _inAppReviewService.incrementCommentCountAndRequestReview();
+
 
     } catch (e) {
       // Handle any potential errors

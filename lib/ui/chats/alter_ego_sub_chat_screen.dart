@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
 import '../../helpers/toast_helper.dart';
 import '../../services/firebase_services.dart';
+import '../../services/in_app_review_service.dart..dart';
 import '../../services/notification_service.dart';
 import '../../services/user_model.dart';
 import '../../utils/strings.dart';
@@ -47,6 +48,7 @@ const int maxFailedLoadAttempts = 3;
 
 
 class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
+  final InAppReviewService _inAppReviewService = InAppReviewService();
 
   List<Temp> _chatList = [];
   User? currentUser = FirebaseAuth.instance.currentUser;
@@ -373,6 +375,8 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
       }
 
       showToast(message: isAdminPortal ? 'Replied as Claire.' : 'Message Sent.');
+      _inAppReviewService.incrementCommentCountAndRequestReview();
+
 
     } catch (e) {
       debugPrint("Error in _sendMessage: $e");

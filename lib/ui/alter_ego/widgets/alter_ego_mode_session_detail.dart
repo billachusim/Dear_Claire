@@ -21,6 +21,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../data/models/transaction_model.dart' as t_model;
 import '../../../services/data/notification_model.dart' as push_notification;
 import '../../../services/firebase_services.dart';
+import '../../../services/in_app_review_service.dart..dart';
 import '../../../services/notification_service.dart';
 import '../../../services/transaction_service.dart';
 import '../../../services/user_model.dart';
@@ -36,6 +37,7 @@ class AlterEgoModeSessionDetail extends StatefulWidget {
   _AlterEgoModeSessionDetailState createState() =>
       _AlterEgoModeSessionDetailState(featuredSessionModel);
 }
+final InAppReviewService _inAppReviewService = InAppReviewService();
 
 const int maxFailedLoadAttempts = 3;
 
@@ -370,6 +372,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
     isOriginalAdvise(context, comment, session);
     saveAlterEgoCommentActivity();
     firebaseServices.subscribeAlterEgoToAdvisedSession(session);
+    _inAppReviewService.incrementCommentCountAndRequestReview();
   }
 
   String timeAgo() {
