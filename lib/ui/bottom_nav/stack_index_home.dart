@@ -41,6 +41,7 @@ import '../../utils/helper.dart';
 import '../../widgets/pre_call_dialog.dart';
 import '../call/companion_call_page.dart';
 import '../call/live_call_page.dart';
+import '../ego-profile/archive.dart';
 import '../love_store/love_store_page.dart';
 import '../routes/page_router_animation.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
@@ -511,7 +512,7 @@ class _HomeDashboardPageState extends State<HomePage>
     _body = [
       FeaturedPage(title: 'Dear Claire', scrollController: _featuredScrollController),
       FollowedPage(title: 'Dear Claire'),
-      DiaryPage(title: 'Dear Claire'),
+      ArchiveWidget(),
       ChatRoomsPage(title: 'Dear Claire'),
       EgoProfilePage(title: 'Dear Claire'),
     ];

@@ -657,6 +657,35 @@ class FirebaseServices extends ChangeNotifier {
   }
 
 
+  /// Get the user sessions that have been archived as a real-time stream.
+  /// @return A stream of session lists.
+  Stream<List<Session>> getArchivedDiarySessionsStream() {
+    if (_usersID == null || _usersID!.isEmpty) {
+      return Stream.value([]);
+    }
+
+    try {
+      return _firebaseFirestore
+          .collection(AppString.appFeaturedSessions)
+          .where("userId", isEqualTo: _usersID)
+          .where("archived", isEqualTo: true)
+          .orderBy('timeLastActivity', descending: true)
+          .limit(AppString.appSessionLength)
+          .snapshots() // Use snapshots() for a real-time stream
+          .map((querySnapshot) {
+        // Map the query snapshot to a list of Session objects
+        return querySnapshot.docs
+            .map((doc) => Session.fromJson(doc.data()))
+            .toList();
+      });
+    } catch (e) {
+      logger.e(e);
+      // On error, return a stream that emits an error.
+      return Stream.error(e);
+    }
+  }
+
+
   /// Get new sessions that no admin has responded to before
   /// @param lastSession The last session from previous request. Used for pagination
   /// @return LiveData

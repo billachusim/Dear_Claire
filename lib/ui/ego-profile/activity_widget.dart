@@ -18,9 +18,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/user_model.dart';
 import '../../utils/constant.dart';
 import '../../widgets/toast.dart';
-import '../chats/data/chatroompodo.dart';
 import '../chats/inside_chatroom.dart';
-import '../dairy/diary.dart';
 import '../featured/notified_session_details.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'package:clairediary/ui/chats/data/roomdata.dart';
@@ -35,7 +33,7 @@ class ActivityWidget extends StatefulWidget {
   State<ActivityWidget> createState() => _ActivityWidgetState();
 }
 
-class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProviderStateMixin {
+class _ActivityWidgetState extends State<ActivityWidget> with TickerProviderStateMixin {
   late AnimationController _moodPulseController;
   List<UserActivityModel> _activities = [];
   bool _isLoading = true;
@@ -51,17 +49,25 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
   String _currentActivity = 'Not Available';
   String _popularActivity = 'Not Available';
   Map<String, int> _activityCounts = {};
+  late final AnimationController _chartPulseController;
+  bool _isChartTapped = false;
+
 
   @override
   void initState() {
     super.initState();
     _fetchInitialData();
 
-    // Initialize infinite pulse: 2 seconds per cycle
     _moodPulseController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 3),
     )..repeat(reverse: true);
+
+    _chartPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+
   }
 
   @override
@@ -285,7 +291,6 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
         .take(5)
         .toList();
 
-    // Reusable decoration for Glassmorphism
     BoxDecoration glassDecoration() => BoxDecoration(
       gradient: LinearGradient(
         begin: Alignment.topCenter,
@@ -302,7 +307,7 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
       ),
     );
 
-    // --- FALLBACK UI ---
+    // --- FALLBACK UI (Texts are already white) ---
     if (topActivities.length < 3) {
       return Padding(
         padding: const EdgeInsets.all(16),
@@ -348,54 +353,85 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
       );
     }
 
-    // --- RADAR CHART UI ---
+    // --- ENHANCED IMMERSIVE RADAR CHART ---
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: glassDecoration(),
-            height: 250,
-            child: RadarChart(
-              RadarChartData(
-                dataSets: [
-                  RadarDataSet(
-                    dataEntries: topActivities
-                        .map((entry) => RadarEntry(value: entry.value.toDouble()))
-                        .toList(),
-                    borderColor: Pallet.colorWhite,
-                    fillColor: Pallet.colorWhite.withValues(alpha: 0.4),
-                  ),
-                ],
-                radarShape: RadarShape.circle,
-                radarBackgroundColor: Colors.transparent,
-                borderData: FlBorderData(show: false),
-                radarBorderData: const BorderSide(color: Colors.white24, width: 1.5),
-                getTitle: (index, angle) {
-                  if (index < topActivities.length) {
-                    final entry = topActivities[index];
-                    return RadarChartTitle(
-                      text: entry.key,
-                      angle: angle,
-                    );
-                  }
-                  return RadarChartTitle(text: '');
+      child: GestureDetector(
+        onTapDown: (_) {
+          HapticFeedback.lightImpact();
+          setState(() => _isChartTapped = true);
+        },
+        onTapUp: (_) => Future.delayed(const Duration(milliseconds: 200), () {
+          if (mounted) setState(() => _isChartTapped = false);
+        }),
+        onTapCancel: () => Future.delayed(const Duration(milliseconds: 200), () {
+          if (mounted) setState(() => _isChartTapped = false);
+        }),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: glassDecoration(),
+              height: 250,
+              child: AnimatedBuilder(
+                animation: _chartPulseController,
+                builder: (context, child) {
+                  return RadarChart(
+                    RadarChartData(
+                      titleTextStyle: GoogleFonts.lato(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                      dataSets: [
+                        RadarDataSet(
+                          dataEntries: topActivities
+                              .map((entry) =>
+                              RadarEntry(value: entry.value.toDouble()))
+                              .toList(),
+                          borderColor: _isChartTapped
+                              ? Pallet.colorWhite.withValues(alpha: 0.8)
+                              : Colors.white,
+                          borderWidth: _isChartTapped ? 15 : 2.0,
+                          fillColor: Colors.white.withValues(alpha:
+                            0.2 + (_chartPulseController.value * 0.60),
+                          ),
+                        ),
+                      ],
+                      radarShape: RadarShape.circle,
+                      radarBackgroundColor: Colors.transparent,
+                      borderData: FlBorderData(show: false),
+                      radarBorderData:
+                      const BorderSide(color: Colors.white24, width: 1.5),
+                      getTitle: (index, angle) {
+                        if (index < topActivities.length) {
+                          final entry = topActivities[index];
+                          return RadarChartTitle(
+                            text: entry.key,
+                            angle: angle,
+                          );
+                        }
+                        return RadarChartTitle(text: '');
+                      },
+                      tickCount: 4,
+                      ticksTextStyle: const TextStyle(color: Colors.transparent),
+                      tickBorderData: const BorderSide(color: Colors.white24),
+                      gridBorderData:
+                      const BorderSide(color: Colors.white24, width: 1.5),
+                    ),
+                    swapAnimationDuration: const Duration(milliseconds: 400),
+                  );
                 },
-                tickCount: 4,
-                ticksTextStyle: const TextStyle(color: Colors.transparent),
-                tickBorderData: const BorderSide(color: Colors.white24),
-                gridBorderData: const BorderSide(color: Colors.white24, width: 1.5),
               ),
-              swapAnimationDuration: const Duration(milliseconds: 400),
             ),
           ),
         ),
       ),
     );
   }
+
 
 
 
@@ -547,12 +583,12 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -612,7 +648,7 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: color.withOpacity(0.4 * pulseAnimation.value),
+                                color: color.withValues(alpha: 0.4 * pulseAnimation.value),
                                 blurRadius: 15 * scale,
                                 spreadRadius: 2,
                               ),
@@ -633,7 +669,7 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
               subtitle,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
-                color: color.withOpacity(0.9),
+                color: color.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -656,7 +692,7 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
         builder: (context, setModalState) => Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Pallet.colorSecondary.withOpacity(0.95),
+            color: Pallet.colorSecondary.withValues(alpha: 0.95),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
           ),
           child: Column(
@@ -724,7 +760,7 @@ class _ActivityWidgetState extends State<ActivityWidget> with SingleTickerProvid
       builder: (context) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: AlertDialog(
-          backgroundColor: Pallet.colorSecondary.withOpacity(0.9),
+          backgroundColor: Pallet.colorSecondary.withValues(alpha: 0.9),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text("Mood Swing Analysis", style: GoogleFonts.lato(color: Colors.white, fontWeight: FontWeight.bold)),
           content: Text(

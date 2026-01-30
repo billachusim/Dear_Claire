@@ -260,87 +260,91 @@ class TrendingCategories extends StatelessWidget {
 
 
 /// This is a stream class showing users' sessions based on their categories.
-
-
-class UsersArchiveCategories extends StatelessWidget {
-
+class UsersArchiveCategories extends StatefulWidget {
   UsersArchiveCategories({Key? key}) : super(key: key);
 
-  final List<Session>? _sessionList = [];
+  @override
+  State<UsersArchiveCategories> createState() => _UsersArchiveCategoriesState();
+}
 
+class _UsersArchiveCategoriesState extends State<UsersArchiveCategories> {
+  late final Stream<QuerySnapshot<Map<String, dynamic>>> _categoryStream;
+  final List<Session> _sessionList = [];
 
-  /// Get Featured session for the trending category.
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> archiveCategoryCards() {
+  @override
+  void initState() {
+    super.initState();
+    _categoryStream = _getArchiveCategoryCards();
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> _getArchiveCategoryCards() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      return const Stream.empty(); // Return an empty stream if no user
+    }
     return FirebaseFirestore.instance
         .collection(AppString.appFeaturedSessions)
-        .where("repliesEnabled", isEqualTo: true)
+        .where("userId", isEqualTo: currentUser.uid)
         .where("category1", isNotEqualTo: null)
-        .limit(25)
+        .limit(100)
         .orderBy('timeLastActivity', descending: true)
         .snapshots();
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
-    return
-      Column(
-        children: [
-          Container(
-            child: StreamBuilder(
-              stream: archiveCategoryCards(),
-              builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                if (session.connectionState == ConnectionState.waiting) {
-                  return Text("");
-                }
-                if (!session.hasData) {
-                  return Center(
-                    child: Text("No Session data",
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.lato(
-                            fontSize: 3.0,
-                            color: Pallet.colorBlack,
-                            //fontStyle: FontStyle.normal,
-                            fontWeight: FontWeight.w600)),
-                  );
-                }
-                if (session.hasData) {
-                  // clear list
-                  _sessionList!.clear();
+    return Container(
+      height: 40, // Set a fixed height for the horizontal list
+      child: StreamBuilder<QuerySnapshot>(
+        stream: _categoryStream,
+        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
+          if (session.connectionState == ConnectionState.waiting) {
+            return const SizedBox.shrink(); // Show nothing while loading
+          }
+          if (!session.hasData || session.data!.docs.isEmpty) {
+            return const SizedBox.shrink(); // Or a message like "No categories found"
+          }
 
-                  session.data!.docs.map((e) {
-                    _sessionList!.add(Session.fromJson(e.data()));
-                  }).toList();
+          _sessionList.clear();
+          session.data!.docs.forEach((doc) {
+            final data = doc.data() as Map<String, dynamic>?;
+            if (data != null) {
+              _sessionList.add(Session.fromJson(data));
+            }
+          });
 
-                  return Scrollbar(
-                    child: SizedBox(
-                      height: 40,
-                      child: ListView(
-                        shrinkWrap: true,
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          ..._sessionList!
-                              .map((element) =>
-                              ArchiveCategoryStream(element: element))
-                              .toList(),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-                return Container();
+          // Use a Set to store unique category names
+          final uniqueCategoryNames = <String>{};
+          final uniqueSessions = <Session>[];
+
+          for (var sess in _sessionList) {
+            if (sess.category1 != null && !uniqueCategoryNames.contains(sess.category1)) {
+              uniqueCategoryNames.add(sess.category1!);
+              uniqueSessions.add(sess);
+            }
+          }
+
+          if (uniqueSessions.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          return Scrollbar(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: uniqueSessions.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: EdgeInsets.only(left: (index == 0) ? 16.0 : 8.0, right: (index == uniqueSessions.length - 1) ? 16.0 : 0),
+                  // IMPORTANT: You will likely need to create this new widget in the next step
+                  child: ArchiveCategoryStream(element: uniqueSessions[index]),
+                );
               },
             ),
-          ),
-        ],
-      );
+          );
+        },
+      ),
+    );
   }
-
 }
 
 

@@ -23,6 +23,7 @@ import '../../services/firebase_services.dart';
 import '../../services/user_model.dart';
 import '../../utils/mood.dart';
 import '../create_session/session_model.dart';
+import '../dairy/diary.dart';
 
 class ArchiveWidget extends StatefulWidget {
   const ArchiveWidget({Key? key}) : super(key: key);
@@ -195,18 +196,14 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
     required String title,
     required String message,
     required DateTime selectedDate,
-    required int moodId, // Now required
+    required int moodId,
   }) async {
     if (currentUser == null) return;
-
-    // Show a loading indicator or toast
-    showToast(message: "Creating quick session...");
-
+    showToast(message: "Adding quick session...");
     try {
       userModel = await _firebaseServices.getUserInfo();
       String sessionId = uuid.v4();
       final randomColor = Constant.DIARY_COLORS_HEXCODE[Random().nextInt(Constant.DIARY_COLORS_HEXCODE.length)];
-
       final sessionData = CreateSessionModel(
         sessionId: sessionId,
         userId: userModel.userId,
@@ -218,33 +215,22 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
         featured: false,
         private: false,
         repliesEnabled: false,
-        timeCreated: Timestamp.now(),
-        timeLastActivity: Timestamp.now(),
+        timeCreated: Timestamp.fromDate(selectedDate), // Use selectedDate
+        timeLastActivity: Timestamp.fromDate(selectedDate), // Use selectedDate
         moodId: moodId,
         colorHex: randomColor,
       );
-
       await _firebaseServices.createSession(session: sessionData);
-
-      // --- ADDING THE REQUESTED METHODS ---
-
-      // 1. Update user moods
       await _firebaseServices.updateUserMoods(moodId);
-
-      // 2. Save user activity
       await _firebaseServices.saveUserActivity(
         activityType: 'session',
         activityMessage: "You started a quick diary session: '$title'.",
         sessionId: sessionId,
       );
-
-      // 3. Handle notifications for Claire and the user
       if (currentUser!.displayName != null) {
         _firebaseServices.subscribeToYourSession(currentUser!.displayName!, sessionData);
         _firebaseServices.notifyClaireForSession(currentUser!.displayName!, sessionData);
       }
-
-      // --- END OF ADDED METHODS ---
 
       // Refresh the calendar data after creating the session
       setState(() {
@@ -416,7 +402,6 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
                   style: GoogleFonts.lato(
                       fontSize: 15.0,
                       color: Pallet.colorBlack,
-                      //fontStyle: FontStyle.normal,
                       fontWeight: FontWeight.w600)),
             );
           }
@@ -427,30 +412,51 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
               Text(
                 "Browse your sessions by calendar.",
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                   fontSize: 12,
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: calendarWidget(),
+              ),
               SizedBox(height: 4,),
-              calendarWidget(),
-              SizedBox(height: 4,),
-              Text(
-                "Browse your sessions by mood.",
-                style: TextStyle(
-                  color: Colors.white70,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+                child: Text(
+                  "Browse your sessions by mood.",style: TextStyle(
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                   fontSize: 12,
                 ),
+                ),
               ),
+
               ArchiveMoodStream(),
               SizedBox(height: 4,),
-              Text(
-                "Browse your sessions by categories.",
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+                child: Text(
+                  "Browse your sessions by categories.",
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               UsersArchiveCategories(),
+
+              const SizedBox(height: 8),
+
+              // Recent Diary Sessions
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Text("Recent Diary Sessions", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+              // Using a container with a fixed height to avoid layout errors
+              Container(
+                height: 800, // Adjust height as needed
+                child: DiaryPage(title: "Recent Diary Sessions", showAppBar: false),
+              ),
             ]);
           }
           return Container();

@@ -5,27 +5,27 @@ import 'package:flutter/material.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 
-class DiaryPage extends StatefulWidget {
+class ArchivedDiaryPage extends StatefulWidget {
   final String title;
   final bool showAppBar;
 
-  DiaryPage({
+  ArchivedDiaryPage({
     Key? key,
     required this.title,
     this.showAppBar = false,
   }) : super(key: key);
 
   @override
-  _DiaryPageState createState() => _DiaryPageState();
+  _ArchivedDiaryPageState createState() => _ArchivedDiaryPageState();
 }
 
-class _DiaryPageState extends State<DiaryPage> {
+class _ArchivedDiaryPageState extends State<ArchivedDiaryPage> {
 
   Widget _buildContent() {
     return Stack(
       children: [
         StreamBuilder<List<Session>>(
-          stream: firebaseServices.getDiarySessionsStream(),
+          stream: firebaseServices.getArchivedDiarySessionsStream(),
           builder: (context, AsyncSnapshot<List<Session>> sessionSnapshot) {
             if (sessionSnapshot.connectionState == ConnectionState.waiting) {
               return Center(child: RotateImage(50, 50));

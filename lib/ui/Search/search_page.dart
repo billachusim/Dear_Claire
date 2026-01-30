@@ -167,15 +167,21 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildSearchBar(searchBarColor, searchBarTextColor),
-          Expanded(
-            child: _searchQuery.isNotEmpty || _selectedContinent != null || _selectedMoodId != null
-                ? _buildSearchResults()
-                : _buildKeywordSections(),
-          ),
-        ],
+      body: GestureDetector(
+        onTap: () {
+          // Hide keyboard when tapping outside of a text field
+          FocusScope.of(context).unfocus();
+        },
+        child: Column(
+          children: [
+            _buildSearchBar(searchBarColor, searchBarTextColor),
+            Expanded(
+              child: _searchQuery.isNotEmpty || _selectedContinent != null || _selectedMoodId != null
+                  ? _buildSearchResults()
+                  : _buildKeywordSections(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -283,11 +289,17 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       itemBuilder: (context, index) {
         final keyword = _keywords[index];
         // --- AD INTEGRATION ---
-        if (index == 3 && searchPageMiddleBanner != null) {
+        if (index == 0 && searchPageMiddleBanner != null) {
           return Column(children: [_AdWidget(bannerAd: searchPageMiddleBanner), _KeywordSection(keyword: keyword)]);
+        }
+        if (index == 3 && searchPageMiddleBanner2 != null) {
+          return Column(children: [_AdWidget(bannerAd: searchPageMiddleBanner2), _KeywordSection(keyword: keyword)]);
         }
         if (index == 7 && searchPageBottomBanner != null) {
           return Column(children: [_AdWidget(bannerAd: searchPageBottomBanner), _KeywordSection(keyword: keyword)]);
+        }
+        if (index == 10 && searchPageBottomBanner2 != null) {
+          return Column(children: [_AdWidget(bannerAd: searchPageBottomBanner2), _KeywordSection(keyword: keyword)]);
         }
         return _KeywordSection(keyword: keyword);
       },

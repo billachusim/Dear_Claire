@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 import 'package:clairediary/ui/create_session/sound/custom_play_sound_widget.dart';
 import 'package:clairediary/widgets/audio_recorder.dart';
@@ -12,12 +13,10 @@ import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/utils/strings.dart';
 import 'package:clairediary/widgets/toast.dart';
 import 'package:flip_card/flip_card.dart';
-import 'package:flutter_svg/svg.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:clairediary/services/user_model.dart';
 import 'package:clairediary/ui/ego-profile/activity_widget.dart';
-import 'package:clairediary/ui/ego-profile/archive.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,6 +28,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../services/notification_service.dart';
+import '../dairy/archived_diary.dart';
 import '../routes/page_router_animation.dart';
 import '../splash_screen/rotate_logo.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
@@ -67,12 +67,22 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   bool _isPermissionCheckComplete = false;
   bool _isPremium = false;
 
+
+
   @override
   void initState() {
     super.initState();
+
+    final random = Random();final initialIndex = random.nextInt(3);
+    currentTabIndex = initialIndex;
     _userFuture = getUser();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: initialIndex);
     _tabController.addListener(() {
+      if (mounted) {
+        setState(() {
+          currentTabIndex = _tabController.index;
+        });
+      }
       print(_tabController.index);
     });
     _userFuture.then((user) {
@@ -1127,7 +1137,8 @@ class _EgoProfilePageState extends State<EgoProfilePage>
     return SafeArea(
       child: PopScope(
         canPop: false,
-        onPopInvoked: (didPop) {
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          if (didPop) return;
           Navigator.of(context).pushReplacementNamed(AppRoutes.home);
           showToast("Press back again to exit.");
         },
@@ -1365,7 +1376,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                                 // Pass the CORRECT userId from the loaded data
                                 ActivityWidget(userId: loadedUserModel.userId!),
                                 ClaireLoves(),
-                                ArchiveWidget(),
+                                ArchivedDiaryPage(title: 'Diary'),
                               ],
                             ),
                           )

@@ -670,117 +670,123 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         ),
         backgroundColor:
             Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
-        body: isLoading
-            ? Center(
+        body: GestureDetector(
+            onTap: () {
+              // Hide keyboard when tapping outside of a text field
+              FocusScope.of(context).unfocus();
+            },
+            child: isLoading
+              ? Center(
+                  child: Container(
+                      height: 200,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          RotateImage(60, 60),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Text("Please Wait, your Diary Session is being created, "
+                              "If you added videos and images, it may take a minute.",
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white))
+                        ],
+                      )))
+              : SingleChildScrollView(
                 child: Container(
-                    height: 200,
+                    height: MediaQuery.of(context).size.height,
+                    padding: EdgeInsets.all(10),
                     child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        RotateImage(60, 60),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text("Please Wait, your Diary Session is being created, "
-                            "If you added videos and images, it may take a minute.",
-                            style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white))
-                      ],
-                    )))
-            : SingleChildScrollView(
-              child: Container(
-                  height: MediaQuery.of(context).size.height,
-                  padding: EdgeInsets.all(10),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: AutoSizeTextField(
-                            style: Constant
-                                .DIARY_FONT_STYLES[c.selectedFontIndex.value],
-                            maxLines: null,
-                            minLines: 1,
-                            onChanged: (text) {
-                              if (text != null) {
-                                setState(() {
-                                  isTyping = true;
-                                  box.put("text", text);
-                                });
-                              } else {
-                                isTyping = false;
-                                setState(() {
+                        Expanded(
+                          child: Container(
+                            alignment: Alignment.center,
+                            child: AutoSizeTextField(
+                              style: Constant
+                                  .DIARY_FONT_STYLES[c.selectedFontIndex.value],
+                              maxLines: null,
+                              minLines: 1,
+                              onChanged: (text) {
+                                if (text != null) {
+                                  setState(() {
+                                    isTyping = true;
+                                    box.put("text", text);
+                                  });
+                                } else {
                                   isTyping = false;
-                                });
-                              }
-                            },
+                                  setState(() {
+                                    isTyping = false;
+                                  });
+                                }
+                              },
 
-                            scrollPadding: EdgeInsets.all(20.0),
-                            controller: sessionTextEditingController,
-                            focusNode: sessionTextFocusNode,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.all(10),
-                              focusedBorder: InputBorder.none,
-                              disabledBorder: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              border: InputBorder.none,
-                              focusedErrorBorder: InputBorder.none,
-                              errorBorder: InputBorder.none,
-                              hintText:
-                                  "Start your text or voice note with Dear Claire",
-                              hintStyle: TextStyle(
-                                  color: Pallet.colorWhite, fontSize: 12.sp),
+                              scrollPadding: EdgeInsets.all(20.0),
+                              controller: sessionTextEditingController,
+                              focusNode: sessionTextFocusNode,
+                              decoration: InputDecoration(
+                                contentPadding: EdgeInsets.all(10),
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                border: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                hintText:
+                                    "Start your text or voice note with Dear Claire",
+                                hintStyle: TextStyle(
+                                    color: Pallet.colorWhite, fontSize: 12.sp),
+                              ),
                             ),
                           ),
                         ),
-                      ),
 
-                      SizedBox(
-                        width: 15.w,
-                      ),
-
-
-                      _buildVideoSelector(),
-
-                      SizedBox(height: 20,),
-
-                      Align(
-                          alignment: Alignment.center,
-                          child: _imagesGridView()
-                      ),
-
-                      _buildAudioPlayer(),
-
-
-
-                      SizedBox(height: 20,),
-
-
-                      /// Introducing Quick Sessions.
-                      Visibility(
-                        visible: !isTyping,
-                        child: QuickSessionWidget(
-                          sessionTitleController: sessionTitleController,
-                          sessionTextEditingController: sessionTextEditingController,
-                          createQuickSession: (newMood) {
-                            // This anonymous function calls your existing method
-                            // and handles the mood update.
-                            setState(() {
-                              mood = newMood;
-                            });
-                            createQuickSession();
-                          },
+                        SizedBox(
+                          width: 15.w,
                         ),
-                      ),
 
-                      SizedBox(height: 80,),
-                    ],
+
+                        _buildVideoSelector(),
+
+                        SizedBox(height: 20,),
+
+                        Align(
+                            alignment: Alignment.center,
+                            child: _imagesGridView()
+                        ),
+
+                        _buildAudioPlayer(),
+
+
+
+                        SizedBox(height: 20,),
+
+
+                        /// Introducing Quick Sessions.
+                        Visibility(
+                          visible: !isTyping,
+                          child: QuickSessionWidget(
+                            sessionTitleController: sessionTitleController,
+                            sessionTextEditingController: sessionTextEditingController,
+                            createQuickSession: (newMood) {
+                              // This anonymous function calls your existing method
+                              // and handles the mood update.
+                              setState(() {
+                                mood = newMood;
+                              });
+                              createQuickSession();
+                            },
+                          ),
+                        ),
+
+                        SizedBox(height: 80,),
+                      ],
+                    ),
                   ),
-                ),
-            ),
+              ),
+        ),
         bottomSheet: Container(
             padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
             decoration: BoxDecoration(
