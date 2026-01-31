@@ -3,7 +3,7 @@ description: A secret diary chat.
 
 publish_to: 'none'
 
-version: 14.3.0+143
+version: 14.4.0+144
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -100,10 +100,10 @@ dev_dependencies:
   flutter_native_splash: ^2.4.4
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
   remove_alpha_ios: true
-  image_path: "assets/images/iconWhitePetal.png"
+  image_path: "assets/images/StoreLogo.png"
   adaptive_icon_background: "#000000"
   adaptive_icon_foreground: "assets/images/iconWhitePetal.png"
 
