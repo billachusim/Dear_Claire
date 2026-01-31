@@ -92,13 +92,14 @@ class _AlterEgoLoginPageState extends State<AlterEgoLoginPage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Alter Ego',
+          'Alter Ego Switch',
           style: GoogleFonts.montserrat( // New, more stylish font
             fontSize: 22.0,
             color: Pallet.colorWhite.withValues(alpha: 0.9),
             fontWeight: FontWeight.w600,
           ),
         ),
+        automaticallyImplyLeading: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(

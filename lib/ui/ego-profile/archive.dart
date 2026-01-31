@@ -409,11 +409,14 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
           if (userSessions.hasData) {
             extractDatesFromSession(userSessions);
             return ListView(children: [
-              Text(
-                "Browse your sessions by calendar.",
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                  fontSize: 12,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 2, 8.0, 0),
+                child: Text(
+                  "Browse your sessions by calendar.",
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               Padding(

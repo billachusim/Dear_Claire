@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 import 'dart:async';
+import 'package:clairediary/ui/alter_ego/alter_ego_login.dart';
 import 'package:clairediary/ui/ego-profile/top_up_loves_page.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
 import 'package:rxdart/rxdart.dart';
@@ -162,7 +163,7 @@ class _HomeDashboardPageState extends State<HomePage>
 
     if (wasPremium && isExpired) {
       // Use a short delay to ensure the home page UI has settled.
-      Future.delayed(const Duration(seconds: 2), () {
+      Future.delayed(const Duration(seconds: 59), () {
         if (mounted) {
           _showRenewSubscriptionModal();
         }
@@ -398,20 +399,25 @@ class _HomeDashboardPageState extends State<HomePage>
     _webViewController.loadRequest(uri);
   }
 
-  void setTabIndex(int index) {
-    // If the "Featured" tab is tapped and it's already the current index...
+  Future<void> setTabIndex(int index) async {
+    // First, check if the user is signed in. This will handle navigation for new users.
+    if (!await firebaseServices.isUserSignIn(context)) {
+      return; // Stop execution if the user is not signed in and is being navigated.
+    }
+    // If the "Featured" tab (index 0) is tapped and it's already the current tab...
     if (index == 0 && _currentIndex == 0) {
-      // ...and the controller is attached to a scroll view...
+      // ...and its scroll controller has a client (i.e., it's attached to a scrollable view)...
       if (_featuredScrollController.hasClients) {
-        // ...scroll to the top.
+        // ...then scroll to the top of the FeaturedPage.
         _featuredScrollController.animateTo(
           0.0,
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeInOut,
         );
       }
-      return;
+      return; // Exit after handling the scroll-to-top action.
     }
+    // For any other tab tap, update the state and jump to the new page.
     setState(() {
       _title = allDestinations[index].title;
       _currentIndex = index;
@@ -837,10 +843,12 @@ class _HomeDashboardPageState extends State<HomePage>
                         const TopUpLovesPage(feature: 'alterego'),
                   ));
             } else {
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                AppRoutes.alterEgoLogin,
-                (Route<dynamic> route) => false,
-              );
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                    const AlterEgoLoginPage(),
+                  ));
             }
           }
         },
@@ -1251,7 +1259,6 @@ class _AppDrawerState extends State<_AppDrawer> {
             title: Text('Buy Things With Love',
                 style: TextStyle(color: Pallet.colorWhite)),
             onTap: () {
-              Navigator.pop(context);
               PageRouter.gotoWidget(LoveStorePage(), context);
             },
           ),
@@ -1259,7 +1266,6 @@ class _AppDrawerState extends State<_AppDrawer> {
             title: "Top-Up Love/Go Premium",
             icon: Icons.card_giftcard,
             onTap: () {
-              Navigator.pop(context);
               PageRouter.gotoWidget(TopUpLovesPage(), context);
             },
           ),
@@ -1267,7 +1273,6 @@ class _AppDrawerState extends State<_AppDrawer> {
             title: "More Games With Claire",
             icon: Icons.gamepad_rounded,
             onTap: () {
-              Navigator.pop(context);
               Navigator.of(context).pushNamed(AppRoutes.games);
             },
           ),
@@ -1276,7 +1281,6 @@ class _AppDrawerState extends State<_AppDrawer> {
             title: Text('Anonymous Referral Program',
                 style: TextStyle(color: Pallet.colorWhite)),
             onTap: () {
-              Navigator.pop(context);
               Navigator.pushNamed(context, AppRoutes.referralProgram);
             },
           ),
