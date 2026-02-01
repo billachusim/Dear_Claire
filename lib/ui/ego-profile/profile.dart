@@ -36,12 +36,15 @@ import 'clairevatar.dart';
 
 class EgoProfilePage extends StatefulWidget {
   final String title;
-  final bool showAppBar;  const EgoProfilePage({
+  final bool showAppBar;
+  final ScrollController scrollController;
+
+  const EgoProfilePage({
     Key? key,
     required this.title,
     this.showAppBar = false,
+    required this.scrollController,
   }) : super(key: key);
-
 
   @override
   _EgoProfilePageState createState() => _EgoProfilePageState();
@@ -50,8 +53,9 @@ class EgoProfilePage extends StatefulWidget {
 bool _isAvatarLoading = false;
 const int maxFailedLoadAttempts = 3;
 
+
 class _EgoProfilePageState extends State<EgoProfilePage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   late Future<UserModel> _userFuture;
   final TextEditingController _mantraController = TextEditingController();
@@ -66,25 +70,24 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   bool _showMantraRecorder = false;
   bool _isPermissionCheckComplete = false;
   bool _isPremium = false;
+  final ValueNotifier<int> _currentTabIndexNotifier = ValueNotifier<int>(0);
 
 
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
+    final random = Random();
+    final initialIndex = random.nextInt(3);
 
-    final random = Random();final initialIndex = random.nextInt(3);
     currentTabIndex = initialIndex;
+    _currentTabIndexNotifier.value = initialIndex;
+
     _userFuture = getUser();
     _tabController = TabController(length: 3, vsync: this, initialIndex: initialIndex);
-    _tabController.addListener(() {
-      if (mounted) {
-        setState(() {
-          currentTabIndex = _tabController.index;
-        });
-      }
-      print(_tabController.index);
-    });
+
     _userFuture.then((user) {
       if (mounted) {
         setState(() {
@@ -103,6 +106,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   @override
   void dispose() {
     _tabController.dispose();
+    _currentTabIndexNotifier.dispose();
     super.dispose();
     _interstitialAd?.dispose();
     _interstitialAd2?.dispose();
@@ -1127,259 +1131,95 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   }
 
   Widget _buildContent(BuildContext context) {
-    return SafeArea(
-      child: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (bool didPop, dynamic result) {
-          if (didPop) return;
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-          showToast("Press back again to exit.");
-        },
-        child: Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop) return;
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        showToast("Press back again to exit.");
+      },
+      child: Scaffold(
+        appBar: widget.showAppBar
+            ? AppBar(
+          title: Text(widget.title),
           backgroundColor: Pallet.colorSecondaryDark,
-          body: Column(
-            children: [
-              // This part for the header can remain as it is, as it has its own FutureBuilder
-              Material(
-                elevation: 10,
+          elevation: 0,
+          automaticallyImplyLeading: true,
+        )
+            : null, // No AppBar if showAppBar is false
+        backgroundColor: Pallet.colorSecondaryDark,
+        body: NestedScrollView(
+          controller: widget.scrollController, // Use controller from parent
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            // These are the widgets that will scroll away (the header)
+            return <Widget>[
+              // Sliver 1: The main profile header
+              SliverToBoxAdapter(
                 child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                  future: FirebaseFirestore.instance
-                      .collection("users")
-                      .doc(currentUser?.uid)
-                      .get(),
+                  future: FirebaseFirestore.instance.collection("users").doc(currentUser?.uid).get(),
                   builder: (_, snapshot) {
                     if (snapshot.hasData) {
                       var data = snapshot.data!.data();
+                      // This is your existing _pageHeader method
                       return _pageHeader(
                         userName: data?["nickname"] ?? "Claire's Darling",
                         sessionCount: data?["sessionCount"].toString() ?? "0",
                         advisesCount: data?["adviseCount"].toString() ?? "0",
-                        totalLoveCount:
-                        data?["totalLoveCount"].toString() ?? "0",
+                        totalLoveCount: data?["totalLoveCount"].toString() ?? "0",
                         userType: data?["userType"] ?? "Ego",
                         avatarUrl: data?["avatarUrl"] ?? " ",
                       );
                     }
-                    // Show a placeholder or compact loader while the header loads
                     return SizedBox(
-                        height:
-                        150, // Give it a fixed height to avoid layout jumps
-                        child: Center(child: CircularProgressIndicator()));
-                  },
-                ),
-              ),
-
-              // --- THE FIX IS APPLIED HERE ---
-              // We wrap the part of the UI that needs the userModel in a FutureBuilder
-              Expanded(
-                child: FutureBuilder<UserModel>(
-                  future: _userFuture,
-                  builder: (context, userSnapshot) {
-                    // While waiting for the user data, show a single loading indicator
-                    if (userSnapshot.connectionState ==
-                        ConnectionState.waiting) {
-                      return Center(child: RotateImage(70, 70));
-                    }
-
-                    // If we failed to get the user data, show an error
-                    if (userSnapshot.hasError || !userSnapshot.hasData) {
-                      return Center(
-                          child: Text("Could not load user data.",
-                              style: TextStyle(color: Colors.white70)));
-                    }
-
-                    // SUCCESS: We have the user data!
-                    final loadedUserModel = userSnapshot.data!;
-
-                    // Now, we can build the rest of the UI with confidence
-                    return DefaultTabController(
-                      length: 3,
-                      child: Column(
-                        children: [
-                          SizedBox(height: 7.h),
-                          // Your custom Tab Bar UI
-                          Container(
-                            decoration: BoxDecoration(),
-                            child: Row(children: [
-                              // Activity Tab Button
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _tabController.animateTo(0);
-                                      currentTabIndex = 0;
-                                    });
-                                  },
-                                  child: Container(
-                                    margin: EdgeInsets.only(bottom: 8),
-                                    height: 43,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                        border: currentTabIndex != 0
-                                            ? Border.all(
-                                            color: Pallet.colorPrimary,
-                                            width: 3)
-                                            : Border.all(
-                                            color: Pallet.colorPrimary,
-                                            width: 6),
-                                        borderRadius: BorderRadius.circular(25),
-                                        color: currentTabIndex != 0
-                                            ? Pallet.colorWhite
-                                            : Pallet.colorWhite),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(3.0),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text("Activity",
-                                              style: TextStyle(
-                                                  color: Pallet.colorPrimary,
-                                                  fontWeight:
-                                                  currentTabIndex != 0
-                                                      ? FontWeight.w500
-                                                      : FontWeight.w700,
-                                                  fontSize: currentTabIndex != 0
-                                                      ? 14
-                                                      : 14)),
-                                          SizedBox(width: 14),
-                                          currentTabIndex != 0
-                                              ? SizedBox.shrink()
-                                              : Icon(Icons.circle_notifications,
-                                              color: Pallet.colorPrimary)
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              // Wallet (Claire Love) Tab Button
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _tabController.animateTo(1);
-                                      currentTabIndex = 1;
-                                    });
-                                  },
-                                  child: Container(
-                                    margin: EdgeInsets.only(bottom: 8),
-                                    height: 43,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                        border: currentTabIndex != 1
-                                            ? Border.all(
-                                            color: Pallet.colorSecondary,
-                                            width: 3)
-                                            : Border.all(
-                                            color: Pallet.colorSecondary,
-                                            width: 6),
-                                        borderRadius: BorderRadius.circular(25),
-                                        color: currentTabIndex != 1
-                                            ? Pallet.colorWhite
-                                            : Pallet.colorWhite),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(3.0),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text("Wallet",
-                                              style: TextStyle(
-                                                  color: Pallet.colorSecondary,
-                                                  fontWeight:
-                                                  currentTabIndex != 1
-                                                      ? FontWeight.w500
-                                                      : FontWeight.w700,
-                                                  fontSize: currentTabIndex != 1
-                                                      ? 14
-                                                      : 14)),
-                                          SizedBox(width: 14),
-                                          currentTabIndex != 1
-                                              ? SizedBox.shrink()
-                                              : Icon(
-                                              Icons.monetization_on_rounded,
-                                              color: Pallet.colorSecondary)
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              // Archive Tab Button
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _tabController.animateTo(2);
-                                      currentTabIndex = 2;
-                                    });
-                                  },
-                                  child: Container(
-                                    margin: EdgeInsets.only(bottom: 8),
-                                    height: 43,
-                                    alignment: Alignment.center,
-                                    decoration: BoxDecoration(
-                                        border: currentTabIndex != 2
-                                            ? Border.all(
-                                            color: Pallet.deepGreen,
-                                            width: 3)
-                                            : Border.all(
-                                            color: Pallet.deepGreen,
-                                            width: 6),
-                                        borderRadius: BorderRadius.circular(25),
-                                        color: currentTabIndex != 2
-                                            ? Pallet.colorWhite
-                                            : Pallet.colorWhite),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(3.0),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text("Archive",
-                                              style: TextStyle(
-                                                  color: Pallet.deepGreen,
-                                                  fontWeight:
-                                                  currentTabIndex != 2
-                                                      ? FontWeight.w500
-                                                      : FontWeight.w700,
-                                                  fontSize: currentTabIndex != 2
-                                                      ? 14
-                                                      : 14)),
-                                          SizedBox(width: 14),
-                                          currentTabIndex != 2
-                                              ? SizedBox.shrink()
-                                              : Icon(Icons.archive_rounded,
-                                              color: Pallet.deepGreen)
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ]),
-                          ),
-
-                          // The TabBarView that contains the widgets
-                          Expanded(
-                            child: TabBarView(
-                              physics: NeverScrollableScrollPhysics(),
-                              controller: _tabController,
-                              children: [
-                                // Pass the CORRECT userId from the loaded data
-                                ActivityWidget(userId: loadedUserModel.userId!),
-                                ClaireLoves(),
-                                ArchivedDiaryPage(title: 'Diary'),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
+                      height: 150,
+                      child: Center(child: CircularProgressIndicator()),
                     );
                   },
                 ),
               ),
-            ],
+              // Sliver 2: The sticky TabBar
+              // In _buildContent, inside the NestedScrollView's headerSliverBuilder:
+              SliverPersistentHeader(
+                delegate: _SliverAppBarDelegate(
+                  // Your Container of tabs remains the same
+                  Container(
+                    padding: EdgeInsets.only(top: 5.h, bottom: 5),
+                    color: Pallet.colorSecondaryDark,
+                    child: Row(
+                      children: [
+                        _buildTabButton(0, "Activity", Pallet.colorPrimary, Icons.circle_notifications),
+                        _buildTabButton(1, "Wallet", Pallet.colorSecondary, Icons.monetization_on_rounded),
+                        _buildTabButton(2, "Archive", Pallet.deepGreen, Icons.archive_rounded),
+                      ],
+                    ),
+                  ),
+                  _currentTabIndexNotifier, // Pass the notifier here
+                ),
+                pinned: true,
+              ),
+            ];
+          },
+          // This is the content of the tabs
+          body: FutureBuilder<UserModel>(
+            future: _userFuture,
+            builder: (context, userSnapshot) {
+              if (userSnapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: RotateImage(70, 70));
+              }
+              if (userSnapshot.hasError || !userSnapshot.hasData) {
+                return Center(child: Text("Could not load user data.", style: TextStyle(color: Colors.white70)));
+              }
+              final loadedUserModel = userSnapshot.data!;
+              return TabBarView(
+                physics: NeverScrollableScrollPhysics(),
+                controller: _tabController,
+                children: [
+                  ActivityWidget(userId: loadedUserModel.userId!),
+                  ClaireLoves(),
+                  ArchivedDiaryPage(title: 'Diary'),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -1387,23 +1227,62 @@ class _EgoProfilePageState extends State<EgoProfilePage>
   }
 
 
+
   @override
   Widget build(BuildContext context) {
-    if (widget.showAppBar) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-          backgroundColor: Pallet.colorSecondaryDark, // Or your preferred color
-          elevation: 0,
-          automaticallyImplyLeading: true, // This ensures the back button appears
-        ),
-        backgroundColor: Pallet.colorSecondaryDark, // Match your theme
-        body: _buildContent(context),
-      );
-    } else {
-      return _buildContent(context);
-    }
+    super.build(context);
+    return _buildContent(context);
   }
+
+
+
+  Widget _buildTabButton(int index, String text, Color color, IconData icon) {
+    return ValueListenableBuilder<int>(
+      valueListenable: _currentTabIndexNotifier,builder: (context, currentIndex, child) {
+      bool isSelected = currentIndex == index;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () {
+            _tabController.animateTo(index);
+            _currentTabIndexNotifier.value = index;
+          },
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: 4),
+            height: 43,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isSelected ? color : Pallet.colorWhite,
+              border: Border.all(color: color, width: 2),
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isSelected) ...[
+                    Icon(icon, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                  ],
+                  Text(
+                    text,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : color,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: isSelected ? 14 : 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+    );
+  }
+
 
 }
 
@@ -1626,3 +1505,34 @@ deleteEgoAlertDialog(BuildContext context) {
     },
   );
 }
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverAppBarDelegate(this.tabBar, this.tabIndexNotifier); // Update constructor
+  final Container tabBar;
+  final ValueNotifier<int> tabIndexNotifier; // Add this
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    // Wrap the UI in a ValueListenableBuilder
+    return ValueListenableBuilder<int>(
+      valueListenable: tabIndexNotifier,
+      builder: (context, value, child) {
+        // This builder will ONLY run when the notifier's value changes.
+        // It rebuilds the tabBar (your Row of buttons) with the new state.
+        return tabBar;
+      },
+    );
+  }
+
+  @override
+  double get maxExtent => tabBar.padding!.vertical + 43;
+  @override
+  double get minExtent => tabBar.padding!.vertical + 43;
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return tabBar != oldDelegate.tabBar || tabIndexNotifier != oldDelegate.tabIndexNotifier;
+  }
+}
+
+

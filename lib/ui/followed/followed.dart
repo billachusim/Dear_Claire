@@ -9,9 +9,14 @@ import '../../widgets/toast.dart';
 import '../routes/routes.dart';
 
 class FollowedPage extends StatefulWidget {
-  FollowedPage({Key? key, required this.title}) : super(key: key);
-
   final String title;
+  final ScrollController scrollController;
+
+  const FollowedPage({
+    Key? key,
+    required this.title,
+    required this.scrollController,
+  }) : super(key: key);
 
   @override
   _FollowedPageState createState() => _FollowedPageState();
@@ -53,8 +58,8 @@ class _FollowedPageState extends State<FollowedPage> {
                       .toList();
                   return Scrollbar(
                     child: ListView(
+                      controller: widget.scrollController,
                       children: [
-                        FollowedSessionNotice(),
                         ..._sessionList!
                             .map((element) => EgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
                             .toList(),
@@ -66,28 +71,6 @@ class _FollowedPageState extends State<FollowedPage> {
               },
             ),
         ]
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// This shows a notice header about followed sessions.
-class FollowedSessionNotice extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return Center(
-      child: Container(
-        child: Text(
-          "Diary sessions you followed. You'll get notifications.\n"
-              "Follow your own diary sessions too. Unfollow to stop notifications.",
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            fontStyle: FontStyle.italic,
           ),
         ),
       ),

@@ -73,6 +73,7 @@ class _ActivityWidgetState extends State<ActivityWidget> with TickerProviderStat
   @override
   void dispose() {
     _moodPulseController.dispose();
+    _chartPulseController.dispose();
     _vibeDebounce?.cancel();
     super.dispose();
   }

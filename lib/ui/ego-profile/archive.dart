@@ -26,9 +26,12 @@ import '../../services/user_model.dart';
 import '../../utils/mood.dart';
 import '../create_session/session_model.dart';
 import '../dairy/diary.dart';
+import '../routes/routes.dart';
 
 class ArchiveWidget extends StatefulWidget {
-  const ArchiveWidget({Key? key}) : super(key: key);
+  final ScrollController scrollController;
+
+  const ArchiveWidget({Key? key, required this.scrollController}) : super(key: key);
 
   @override
   State<ArchiveWidget> createState() => _ArchiveWidgetState();
@@ -501,87 +504,100 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop) return;
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        showToast(message: "Press back again to exit.");
+      },
+      child: FutureBuilder<List<Session>>(
         future: firebaseServices.getUserSessionByDate(startDate: kFirstDay),
         builder: (context, AsyncSnapshot<List<Session>> userSessions) {
           if (userSessions.connectionState == ConnectionState.waiting) {
-            return RotateImage(70, 70);
-          }
-          if (!userSessions.hasData) {
-            return ListView(children: [calendarWidget()]);
+            return Center(child: RotateImage(70, 70));
           }
 
           if (userSessions.hasError) {
-            return Container(
-              child: Text(userSessions.error.toString(),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.lato(
-                      fontSize: 15.0,
-                      color: Pallet.colorBlack,
-                      fontWeight: FontWeight.w600)),
+            return Center(
+              child: Text(
+                userSessions.error.toString(),
+                textAlign: TextAlign.center,
+                style: GoogleFonts.lato(fontSize: 15.0, color: Colors.red),
+              ),
             );
           }
 
+          // If data exists, or even if it's empty, we build the scroll view
           if (userSessions.hasData) {
             extractDatesFromSession(userSessions);
-            return ListView(children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 2, 8.0, 0),
-                child: Text(
-                  "Browse your sessions by calendar.",
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodySmall?.color,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: calendarWidget(),
-              ),
-              SizedBox(height: 4,),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
-                child: Text(
-                  "Browse your sessions by mood.",style: TextStyle(
-                  color: Theme.of(context).textTheme.bodySmall?.color,
-                  fontSize: 12,
-                ),
-                ),
-              ),
-
-              ArchiveMoodStream(),
-              SizedBox(height: 4,),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
-                child: Text(
-                  "Browse your sessions by categories.",
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodySmall?.color,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              UsersArchiveCategories(),
-
-              const SizedBox(height: 8),
-
-              // Recent Diary Sessions
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Text("Recent Diary Sessions", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              ),
-              // Using a container with a fixed height to avoid layout errors
-              Container(
-                height: 800, // Adjust height as needed
-                child: DiaryPage(title: "Recent Diary Sessions", showAppBar: false),
-              ),
-            ]);
           }
-          return Container();
-        });
+
+          // Use NestedScrollView for the main structure
+          return NestedScrollView(
+            controller: widget.scrollController, // Use the controller from the parent
+            headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+              // These are the widgets that will scroll away.
+              return <Widget>[
+                SliverToBoxAdapter(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8.0, 2, 8.0, 0),
+                        child: Text(
+                          "Browse your sessions by calendar.",
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: calendarWidget(), // Your existing calendar widget
+                      ),
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+                        child: Text(
+                          "Browse your sessions by mood.",
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      ArchiveMoodStream(),
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+                        child: Text(
+                          "Browse your sessions by categories.",
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      UsersArchiveCategories(),
+                      const SizedBox(height: 8),
+                      // This is the header for the part that will NOT scroll away
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        child: Text("Recent Diary Sessions", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                    ],
+                  ),
+                ),
+              ];
+            },
+            // The body is the part that remains and scrolls internally.
+            body: DiaryPage(title: "Recent Diary Sessions", showAppBar: false),
+          );
+        },
+      ),
+    );
   }
 
   Widget calendarWidget() {

@@ -51,6 +51,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../data/models/transaction_model.dart' as t_model;
 
 class HomePage extends StatefulWidget {
+  final int initialIndex;
+  const HomePage({super.key, this.initialIndex = 0});
   @override
   _HomeDashboardPageState createState() => _HomeDashboardPageState();
 }
@@ -83,6 +85,11 @@ class _HomeDashboardPageState extends State<HomePage>
   Timer? _flowerTimer;
   static bool _hasRandomizedInitialPage = false;
   late final ScrollController _featuredScrollController;
+  late final ScrollController _archiveScrollController;
+  late final ScrollController _followedScrollController;
+  late final ScrollController _chatRoomsScrollController;
+  late final ScrollController _egoProfileScrollController;
+
 
   void _showFallingFlowers() {
     // A single claire flower emoji
@@ -404,18 +411,65 @@ class _HomeDashboardPageState extends State<HomePage>
     if (!await firebaseServices.isUserSignIn(context)) {
       return; // Stop execution if the user is not signed in and is being navigated.
     }
-    // If the "Featured" tab (index 0) is tapped and it's already the current tab...
+
+    // Handle scroll-to-top for Featured tab (index 0)
     if (index == 0 && _currentIndex == 0) {
-      // ...and its scroll controller has a client (i.e., it's attached to a scrollable view)...
       if (_featuredScrollController.hasClients) {
-        // ...then scroll to the top of the FeaturedPage.
         _featuredScrollController.animateTo(
           0.0,
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeInOut,
         );
       }
-      return; // Exit after handling the scroll-to-top action.
+      return;
+    }
+
+    // Handle scroll-to-top for Followed tab (index 1)
+    if (index == 1 && _currentIndex == 1) {
+      if (_followedScrollController.hasClients) {
+        _followedScrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+      return;
+    }
+
+    // Handle scroll-to-top for Archive tab (index 2)
+    if (index == 2 && _currentIndex == 2) {
+      if (_archiveScrollController.hasClients) {
+        _archiveScrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+      return;
+    }
+
+    // Handle scroll-to-top for Chat Rooms tab (index 3)
+    if (index == 3 && _currentIndex == 3) {
+      if (_chatRoomsScrollController.hasClients) {
+        _chatRoomsScrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+      return;
+    }
+
+    // Handle scroll-to-top for Ego Profile tab (index 4)
+    if (index == 4 && _currentIndex == 4) {
+      if (_egoProfileScrollController.hasClients) {
+        _egoProfileScrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+      return;
     }
     // For any other tab tap, update the state and jump to the new page.
     setState(() {
@@ -514,13 +568,17 @@ class _HomeDashboardPageState extends State<HomePage>
   void initState() {
     super.initState();
     _featuredScrollController = ScrollController();
+    _archiveScrollController = ScrollController();
+    _followedScrollController = ScrollController();
+    _chatRoomsScrollController = ScrollController();
+    _egoProfileScrollController = ScrollController();
 
     _body = [
       FeaturedPage(title: 'Dear Claire', scrollController: _featuredScrollController),
-      FollowedPage(title: 'Dear Claire'),
-      ArchiveWidget(),
-      ChatRoomsPage(title: 'Dear Claire'),
-      EgoProfilePage(title: 'Dear Claire'),
+      FollowedPage(title: 'Dear Claire', scrollController: _followedScrollController),
+      ArchiveWidget(scrollController: _archiveScrollController),
+      ChatRoomsPage(title: 'Dear Claire', scrollController: _chatRoomsScrollController),
+      EgoProfilePage(title: 'Dear Claire', scrollController: _egoProfileScrollController),
     ];
 
     _title = "Dear Claire";
@@ -729,6 +787,10 @@ class _HomeDashboardPageState extends State<HomePage>
     _audioPlayer.dispose();
     _pageController.dispose();
     _featuredScrollController.dispose();
+    _archiveScrollController.dispose();
+    _followedScrollController.dispose();
+    _chatRoomsScrollController.dispose();
+    _egoProfileScrollController.dispose();
     super.dispose();
   }
 

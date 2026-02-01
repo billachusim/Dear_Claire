@@ -9,7 +9,13 @@ import 'inside_chatroom.dart';
 
 class ChatRoomsPage extends StatefulWidget {
   final String title;
-  const ChatRoomsPage({Key? key, required this.title}) : super(key: key);
+  final ScrollController scrollController; // Add this line
+
+  const ChatRoomsPage({
+    Key? key,
+    required this.title,
+    required this.scrollController, // Add this line
+  }) : super(key: key);
 
   @override
   _ChatRoomsPageState createState() => _ChatRoomsPageState();
@@ -62,6 +68,7 @@ class _ChatRoomsPageState extends State<ChatRoomsPage> {
           body: Stack(
             children: [
               ListView(
+                controller: widget.scrollController,
               children: RoomData.room().map((room) => ChatRoomWidget(element: room)).toList(),
             ),
         ]

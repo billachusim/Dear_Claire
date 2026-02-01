@@ -320,13 +320,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             initialRemoteMessage: widget.initialRemoteMessage,
             initialLocalNotification: widget.initialLocalNotification,
           ),
-          routes: {
-            "create_session": (_) => CreateSessionPage(),
-            "diaryRooms": (_) => ChatRoomsPage(title: 'Dear Claire'),
-            "egoPage": (_) => EgoProfilePage(title: 'Dear Claire'),
-            "alterEgoHomepage": (_) => AlterEgoHomePage(),
-            "alterEgoDiaryRooms": (_) => ChatRooms(),
-          },
           onGenerateRoute: (RouteSettings settings) {
             switch (settings.name) {
               case '/notifiedSessionDetails':

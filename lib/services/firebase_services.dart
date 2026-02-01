@@ -611,7 +611,7 @@ class FirebaseServices extends ChangeNotifier {
         .collection(AppString.appFeaturedSessions)
         .where("repliesEnabled", isEqualTo: true)
         .where("archived", isEqualTo: false)
-        .where('followers', arrayContains: _usersID)
+        .where('followers', arrayContains: currentUser?.uid)
         .limit(AppString.appSessionLength)
         .orderBy('timeLastActivity', descending: true)
         .snapshots();

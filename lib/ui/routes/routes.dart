@@ -244,7 +244,7 @@ class AppRouter {
 
       case AppRoutes.egoPage:
         return MaterialPageRoute<dynamic>(
-          builder: (_) => EgoProfilePage(title: 'Dear Claire', showAppBar: true),
+          builder: (_) => HomePage(initialIndex: 4),
           settings: settings,
           fullscreenDialog: false,
         );
@@ -266,7 +266,7 @@ class AppRouter {
 
       case AppRoutes.diaryRooms:
         return MaterialPageRoute<dynamic>(
-          builder: (_) => ChatRoomsPage(title: 'Dear Claire'),
+          builder: (_) => HomePage(initialIndex: 3), // Pass the index for the Chat Rooms tab
           settings: settings,
           fullscreenDialog: false,
         );
