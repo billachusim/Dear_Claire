@@ -693,18 +693,11 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                 icon: Icon(Icons.delete_outline_rounded,
                     color: hintTextColor, size: 18),
                 onPressed: () {
-                  // Get the unique document ID
-                  final String documentId =
-                      doc.id;
-
+                  final String documentId = doc.id;
                   showCustomDialog(context,
-                      message: AppString
-                          .delete_mantra_alert_note,
+                      message: AppString.delete_mantra_alert_note,
                       onPressed: () {
-                        PageRouter.goBack(context);
-                        // Call the new universal delete method
-                        deleteEgoStreamMessage(
-                            documentId);
+                        deleteEgoStreamMessage(documentId);
                       });
                 },
               ),

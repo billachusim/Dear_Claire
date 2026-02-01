@@ -13,8 +13,10 @@ import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:uuid/uuid.dart';
 
@@ -74,8 +76,23 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
     hashCode: getHashCode,
   );
 
+  final String _quickSessionDateKey = 'quick_session_selected_date';
+  Future<void> _saveDateToLocal(DateTime date) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_quickSessionDateKey, date.toIso8601String());
+  }
+
+  Future<DateTime?> _getDateFromLocal() async {
+    final prefs = await SharedPreferences.getInstance();
+    final dateString = prefs.getString(_quickSessionDateKey);
+    if (dateString != null) {
+      await prefs.remove(_quickSessionDateKey);
+      return DateTime.parse(dateString);
+    }
+    return null;
+  }
+
   /// Example events.
-  ///
   /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
   final kEvents = LinkedHashMap<DateTime, List<Session>>(
     equals: isSameDay,
@@ -169,37 +186,51 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
   }
 
 
-  _onDateTapped(DateTime selectedDay, DateTime focusedDay) {
-    List<Session> selectedSessions = _getSessionForDay(selectedDay);
+  void _handleDaySelection(DateTime selectedDay, DateTime focusedDay) async {
+    // Check if there are already sessions for this day
+    List<Session> sessionsOnDay = _getSessionForDay(selectedDay);
 
-    if (selectedSessions.isEmpty) {
-      // If no sessions exist on this day, show the quick entry popup.
-      _showQuickEntryPopup(selectedDay);
+    if (sessionsOnDay.isEmpty) {
+      // If no sessions, this is a "quick add" action.
+      // 1. Save the selected date to local storage immediately.
+      await _saveDateToLocal(selectedDay);
+      // 2. Show the popup. Do NOT pass the date.
+      _showQuickEntryPopup();
     } else {
-      // If sessions exist, navigate to the archived sessions page as before.
+      // If sessions exist, navigate to the archive page for that day.
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) =>
-              ArchivedSessions(
-                sessions: selectedSessions,
-                selectedDate: selectedDay,
-                suggestion: null, // No suggestion needed as sessions exist
-              ),
+          builder: (_) => ArchivedSessions(
+            sessions: sessionsOnDay,
+            selectedDate: selectedDay,
+            suggestion: null,
+          ),
         ),
       );
     }
   }
 
-  // Method to create the session, adapted from create_session_page.dart
+
+
   void _createQuickCalendarSession({
     required String title,
     required String message,
-    required DateTime selectedDate,
     required int moodId,
   }) async {
     if (currentUser == null) return;
+
+    final correctDate = await _getDateFromLocal();
+
+    if (correctDate == null) {
+      showToast(message: "Error: Could not retrieve the selected date.");
+      return;
+    }
+
     showToast(message: "Adding quick session...");
+
+    final correctTimestamp = Timestamp.fromDate(correctDate);
+
     try {
       userModel = await _firebaseServices.getUserInfo();
       String sessionId = uuid.v4();
@@ -215,12 +246,13 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
         featured: false,
         private: false,
         repliesEnabled: false,
-        timeCreated: Timestamp.fromDate(selectedDate), // Use selectedDate
-        timeLastActivity: Timestamp.fromDate(selectedDate), // Use selectedDate
+        timeCreated: correctTimestamp,
+        timeLastActivity: correctTimestamp,
         moodId: moodId,
         colorHex: randomColor,
       );
       await _firebaseServices.createSession(session: sessionData);
+      Navigator.of(context).pop(); // Pops mood dialog
       await _firebaseServices.updateUserMoods(moodId);
       await _firebaseServices.saveUserActivity(
         activityType: 'session',
@@ -232,18 +264,14 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
         _firebaseServices.notifyClaireForSession(currentUser!.displayName!, sessionData);
       }
 
-      // Refresh the calendar data after creating the session
-      setState(() {
-        _focusedDay = selectedDate; // Focus the day where the session was added
-      });
-
-      // Pop the dialog (will pop twice: once for mood, once for main dialog)
-      Navigator.of(context).pop();
-      Navigator.of(context).pop();
-
       showToast(message: "Quick session saved!");
 
-      // Show ad after a delay
+      setState(() {
+        _focusedDay = correctDate; // Focus the day where the session was added
+      });
+
+      Navigator.of(context).pop(); // Pops quick entry dialog
+
       Future.delayed(Duration(seconds: 2), () {
         _showQuickInterstitialAd();
       });
@@ -257,48 +285,136 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
 
 
   // Method to show the popup with quick entry options
-  void _showQuickEntryPopup(DateTime selectedDate) {
-    // Pre-defined templates for the popup
-    final templates = {
-      'Period Start': 'Dear Claire, my period just started today.',
-      'Period Stop': 'Dear Claire, my period ended today.',
-      'Ovulation Start': 'Dear Claire, I think I\'m ovulating today.',
-      'Ovulation Stop': 'Dear Claire, my ovulation should be over now.',
-      'Feeling Happy': 'Dear Claire, I\'m feeling genuinely happy today. 😊',
-      'Feeling Stressed': 'Dear Claire, I\'m feeling very stressed and overwhelmed today.',
+  void _showQuickEntryPopup() {
+    // Pre-defined templates for the popup, categorized for clarity
+    final Map<String, Map<String, String>> categorizedTemplates = {
+      'Cycle Tracking': {
+        '🩸 Period Start': 'Dear Claire, my period just started today.',
+        '🩸 Period End': 'Dear Claire, my period ended today.',
+      },
+      'Mood & Feelings': {
+        '😊 Feeling Happy': 'Dear Claire, I\'m feeling genuinely happy and content today.',
+        '😥 Feeling Sad': 'Dear Claire, a wave of sadness came over me today.',
+        '🧘 Feeling Calm': 'Dear Claire, I felt a sense of calm and peace today.',
+        '⚡️ Feeling Energized': 'Dear Claire, I had so much energy and motivation today!',
+      },
+      'Mental Wellness': {
+        '😰 Feeling Anxious': 'Dear Claire, I\'m feeling very anxious and on edge today.',
+        '😫 Feeling Stressed': 'Dear Claire, I feel stressed and overwhelmed.',
+        '🧘‍♀️ Self-Care Day': 'Dear Claire, I dedicated today to self-care and rest.',
+        '🎉 Small Victory': 'Dear Claire, I want to celebrate a small win today!',
+      },
+      'Lifestyle & Events': {
+        '✈️ Traveled Today': 'Dear Claire, I went on a trip today!',
+        '❤️ Date Night': 'Dear Claire, it was date night tonight.',
+        '☀️ Beautiful Day': 'Dear Claire, the weather was so beautiful today, it lifted my spirits.',
+        '🤒 Feeling Unwell': 'Dear Claire, I haven\'t been feeling well today.',
+      }
     };
 
     showDialog(
       context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Pallet.colorSecondary.withValues(alpha: 0.9),
+          backgroundColor: Pallet.colorPrimary.withValues(alpha: 0.9), // Base for glass effect
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+            borderRadius: BorderRadius.circular(25),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
           ),
-          title: Text(
-            'Add a Quick Entry',
-            style: GoogleFonts.plusJakartaSans(
-                color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: templates.entries.map((entry) {
-                return ListTile(
-                  title: Text(entry.key, style: TextStyle(color: Colors.white70)),
-                  onTap: () {
-                    // Show mood selection dialog
-                    _showMoodSelectionDialog(selectedDate, entry.key, entry.value);
-                  },
-                );
-              }).toList(),
+          title: Center(
+            child: Text(
+              'Add Quick Session To Date',
+              style: GoogleFonts.plusJakartaSans(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20),
             ),
           ),
+          content: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                width: double.maxFinite,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: categorizedTemplates.entries.map((category) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding:
+                            const EdgeInsets.only(top: 16.0, bottom: 8.0, left: 4.0),
+                            child: Text(
+                              category.key,
+                              style: GoogleFonts.plusJakartaSans(
+                                color: Colors.white.withValues(alpha: 0.85),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          GridView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 2.5,
+                            ),
+                            itemCount: category.value.length,
+                            itemBuilder: (context, index) {
+                              final title = category.value.keys.elementAt(index);
+                              final message = category.value.values.elementAt(index);
+                              return GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  _showMoodSelectionDialog(title, message);
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                      child: Text(
+                                        title,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            color: Colors.white.withValues(alpha: 0.9),
+                                            fontSize: 13),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
           actions: [
             TextButton(
-              child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+              child: const Text('Cancel',
+                  style: TextStyle(color: Colors.white70, fontSize: 16)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -309,11 +425,13 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
     );
   }
 
-  // New method to show the mood selection dialog
-  void _showMoodSelectionDialog(DateTime selectedDate, String title, String message) {
+
+  // method to show the mood selection dialog
+  void _showMoodSelectionDialog( String title, String message) {
     showDialog(
       context: context,
       builder: (context) {
+
         return AlertDialog(
           backgroundColor: Pallet.colorSecondary.withValues(alpha: 0.95),
           shape: RoundedRectangleBorder(
@@ -341,10 +459,10 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
                 final emoji = _getEmoji(index);
                 return GestureDetector(
                   onTap: () {
+                    HapticFeedback.lightImpact();
                     _createQuickCalendarSession(
                       title: title,
                       message: message,
-                      selectedDate: selectedDate,
                       moodId: index,
                     );
                   },
@@ -573,7 +691,7 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
               },
             ),
 
-            onDaySelected: _onDateTapped,
+            onDaySelected: _handleDaySelection,
             eventLoader: _getSessionForDay,
             onFormatChanged: (format) {
               if (_calendarFormat != format) {

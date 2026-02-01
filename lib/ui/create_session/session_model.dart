@@ -170,7 +170,7 @@ class CreateSessionModel {
     data['theContext'] = theContext;
     data['respondentUserId'] = respondentUserId;
     data['sessionId'] = sessionId;
-    data['timeCreated'] = Timestamp.now();
+    data['timeCreated'] = timeCreated;
     data['timeLastActivity'] = timeLastActivity;
     data['userAvatarUrl'] = userAvatarUrl;
     data['userId'] = userId;

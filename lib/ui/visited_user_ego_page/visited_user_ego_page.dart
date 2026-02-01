@@ -1542,18 +1542,12 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
                                                 data['senderId'],
                                         child: GestureDetector(
                                           onTap: () {
-                                            // Get the unique document ID
-                                            final String documentId =
-                                                document.id;
-
+                                            final String documentId = document.id;
                                             showCustomDialog(context,
                                                 message: AppString
                                                     .delete_mantra_alert_note,
                                                 onPressed: () {
-                                              PageRouter.goBack(context);
-                                              // Call the new universal delete method
-                                              deleteEgoStreamMessage(
-                                                  documentId);
+                                              deleteEgoStreamMessage(documentId);
                                             });
                                           },
                                           child: Icon(
