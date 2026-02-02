@@ -54,6 +54,8 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
   int _currentPage = 0;
   final GlobalKey<UnifiedMediaViewerState> _mediaViewerKey = GlobalKey<UnifiedMediaViewerState>();
   bool _isAvatarLoading = false;
+  bool _isFollowing = false;
+
 
   @override
   void initState() {
@@ -705,10 +707,14 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       ),
                                     )
                                   : FollowButton(
+                                isLoading: _isFollowing,
                                 text: _session.followers!.contains(currentUser?.uid)
                                     ? 'Unfollow'
                                     : 'Follow',
                                 onPressed: () async {
+                                  setState(() {
+                                    _isFollowing = true;
+                                  });
                                   if (await firebaseServices.isUserSignIn(context)) {
                                     final follower = await firebaseServices.getUserInfo();
                                     final sessionOwnerId = _session.userId;
@@ -717,6 +723,9 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
                                     // --- UNFOLLOW LOGIC ---
                                     if (isAlreadyFollowing) {
+                                      setState(() {
+                                        _isFollowing = false;
+                                      });
                                       firebaseServices.followThisSession(context, session: _session, isFollowAction: false);
                                       showToast("You've unfollowed this session.");
                                       return; // Stop here
@@ -751,6 +760,10 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       firebaseServices.followThisSession(context, session: _session, isFollowAction: true);
                                       await firebaseServices
                                           .updateSessionLastTimeActivity(_session.sessionId.toString());
+
+                                      setState(() {
+                                        _isFollowing = false;
+                                      });
 
                                       // B. Save the user activity (your existing logic)
                                       await firebaseServices.saveUserActivity(
@@ -800,7 +813,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
                                       // D. Show confirmation toast to the user
                                       showToast("Now following! 1❤️ was sent to the author.");
-
                                     } else {
                                       showToast("Could not complete the follow. Please try again.");
                                     }

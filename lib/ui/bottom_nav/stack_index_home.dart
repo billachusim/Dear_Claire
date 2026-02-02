@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 import 'dart:async';
+import 'package:audioplayers/audioplayers.dart' hide AudioPlayer;
 import 'package:clairediary/ui/alter_ego/alter_ego_login.dart';
 import 'package:clairediary/ui/ego-profile/top_up_loves_page.dart';
 import 'package:flutter_confetti/flutter_confetti.dart';
@@ -617,10 +618,10 @@ class _HomeDashboardPageState extends State<HomePage>
       ..addJavaScriptChannel(
         'Sound',
         onMessageReceived: (JavaScriptMessage message) async {
-          if (message.message == 'win') {
+          if (message.message == 'draw') {
             try {
-              if (_audioPlayer.playing) await _audioPlayer.stop();
-              await _audioPlayer.setAsset('assets/audio/win_sound.mp3');
+             // if (_audioPlayer.playing) await _audioPlayer.stop();
+              await _audioPlayer.setAsset('assets/audio/tictactoeWin.mp3');
               _audioPlayer.play();
             } catch (e) {
               print("Error playing win sound: $e");

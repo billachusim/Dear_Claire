@@ -3,65 +3,49 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class FollowButton extends StatelessWidget {
-  Function()? onPressed;
-  int? count;
-  String? text;
+class FollowButton extends StatelessWidget {  final Function()? onPressed;
+final int? count;
+final String? text;
+final bool isLoading; // New parameter
 
-  FollowButton({Key? key, required this.onPressed, required this.count, required this.text})
-      : super(key: key);
+const FollowButton({
+  Key? key,
+  required this.onPressed,
+  required this.count,
+  required this.text,
+  this.isLoading = false, // Default to false
+}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoButton(
-        padding: EdgeInsets.zero,
-        child: Row(
-          children: [
-            Icon(
-              Icons.add_circle,
-              size: 17,
-              color: Pallet.colorWhite,
-            ),
-            Text(
-              '$text $count',
-              style: GoogleFonts.lato(
-                  fontSize: 15.0,
-                  color: Pallet.colorWhite,
-                  fontWeight: FontWeight.w900)
-            ),
-          ],
+@override
+Widget build(BuildContext context) {
+  return CupertinoButton(
+    padding: EdgeInsets.zero,
+    onPressed: isLoading ? null : onPressed, // Disable button when loading
+    child: isLoading
+        ? const SizedBox(
+      width: 17,
+      height: 17,
+      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+    )
+        : Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.add_circle,
+          size: 17,
+          color: Pallet.colorWhite,
         ),
-        onPressed: onPressed);
-  }
-}
-
-class FollowNoCountButton extends StatelessWidget {
-  Function()? onPressed;
-
-  FollowNoCountButton({Key? key, required this.onPressed,})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoButton(
-        padding: EdgeInsets.zero,
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(5),
-              border: Border.all(color: Pallet.colorWhite)),
-          child: Row(
-            children: [
-              Text(
-                  ' Follow',
-                  style: GoogleFonts.lato(
-                      fontSize: 15.0,
-                      color: Pallet.colorWhite,
-                      fontWeight: FontWeight.w900)
-              ),
-            ],
+        const SizedBox(width: 4),
+        Text(
+          '$text $count',
+          style: GoogleFonts.lato(
+            fontSize: 15.0,
+            color: Pallet.colorWhite,
+            fontWeight: FontWeight.w900,
           ),
         ),
-        onPressed: onPressed);
-  }
+      ],
+    ),
+  );
+}
 }
