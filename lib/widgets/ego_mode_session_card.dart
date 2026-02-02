@@ -58,9 +58,10 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
   final TransactionService _transactionService = TransactionService();
   User? currentUser = FirebaseAuth.instance.currentUser;
   final PageController _pageController = PageController();
-  final GlobalKey<UnifiedMediaViewerState> _mediaViewerKey =
-      GlobalKey<UnifiedMediaViewerState>();
+  final GlobalKey<UnifiedMediaViewerState> _mediaViewerKey = GlobalKey<UnifiedMediaViewerState>();
   bool _isAvatarLoading = false;
+  bool _isExpanded = false;
+  bool _isTextLong = false;
 
   @override
   void initState() {
@@ -699,35 +700,85 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                   ),
                   Column(
                     children: [
-                      Padding(
-                          padding: const EdgeInsets.fromLTRB(2.0, 0, 2.0, 0.0),
-                          child: Text(
-                            // Choose translated message if available, otherwise default to original
-                            (_currentUserModel?.languagePreference != null &&
-                                widget.element.translatedSession != null &&
-                                widget.element.translatedSession!
-                                    .containsKey(_currentUserModel!.languagePreference))
-                                ? widget.element.translatedSession![_currentUserModel!.languagePreference]!
-                                : widget.element.message!,
-                            textAlign: TextAlign.justify,
-                            maxLines: (widget.element.imageUrls?.isNotEmpty ??
-                                false) ||
-                                (widget.element.videoUrls?.isNotEmpty ??
-                                    false)
-                                ? 2
-                                : 7,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize:
-                              17.0,
-                              color: textColor,
-                              fontWeight: FontWeight.w600,
-                              height:
-                              1.4,
-                              letterSpacing:
-                              -0.2,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          )),
+                      // Replace the existing Padding widget with this LayoutBuilder
+
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final text = (_currentUserModel?.languagePreference != null &&
+                              widget.element.translatedSession != null &&
+                              widget.element.translatedSession!
+                                  .containsKey(_currentUserModel!.languagePreference))
+                              ? widget.element.translatedSession![_currentUserModel!.languagePreference]!
+                              : widget.element.message!;
+
+                          final style = GoogleFonts.plusJakartaSans(
+                            fontSize: 17.0,
+                            color: textColor,
+                            fontWeight: FontWeight.w600,
+                            height: 1.4,
+                            letterSpacing: -0.2,
+                          );
+
+                          final maxLines = (widget.element.imageUrls?.isNotEmpty ?? false) ||
+                              (widget.element.videoUrls?.isNotEmpty ?? false)
+                              ? 3
+                              : 7;
+
+                          // Use TextPainter to determine if the text will overflow
+                          final textPainter = TextPainter(
+                            text: TextSpan(text: text, style: style),
+                            maxLines: maxLines,
+                            textDirection: TextDirection.ltr,
+                          )..layout(maxWidth: constraints.maxWidth);
+
+                          // We check if the text exceeds the allowed lines.
+                          // We only want to set this state once during the build phase.
+                          if (textPainter.didExceedMaxLines && !_isTextLong) {
+                            // Post-frame callback to safely update the state after the build.
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) {
+                                setState(() {
+                                  _isTextLong = true;
+                                });
+                              }
+                            });
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(2.0, 0, 2.0, 0.0),
+                                child: Text(
+                                  text,
+                                  textAlign: TextAlign.justify,
+                                  maxLines: _isExpanded ? null : maxLines,
+                                  style: style,
+                                ),
+                              ),
+                              if (_isTextLong)
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _isExpanded = !_isExpanded;
+                                    });
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 2.0, top: 4.0),
+                                    child: Text(
+                                      _isExpanded ? 'Read less' : 'Read more',
+                                      style: GoogleFonts.lato(
+                                        fontSize: 14.0,
+                                        color: secondaryTextColor,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
 
 
                       SizedBox(
@@ -1306,7 +1357,6 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
     // For this example, we assume success. Replace with your actual call.
     final bool success = true;
 
-    if (success) {
       await HiddenPostsService().hidePost(sessionId);
       if (mounted) {
         showToast(
@@ -1315,9 +1365,6 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
         // Trigger a refresh on the feed page.
         App.refreshFeed.add(true);
       }
-    } else if (mounted) {
-      showToast(message: "Failed to report this session. Please try again.");
-    }
   }
 
   /// Option 3: Blocks the session owner and hides their content.
