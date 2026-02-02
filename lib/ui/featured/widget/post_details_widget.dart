@@ -723,11 +723,10 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
 
                                     // --- UNFOLLOW LOGIC ---
                                     if (isAlreadyFollowing) {
+                                      firebaseServices.followThisSession(context, session: _session, isFollowAction: false);
                                       setState(() {
                                         _isFollowing = false;
                                       });
-                                      firebaseServices.followThisSession(context, session: _session, isFollowAction: false);
-                                      showToast("You've unfollowed this session.");
                                       return; // Stop here
                                     }
 
@@ -761,9 +760,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       await firebaseServices
                                           .updateSessionLastTimeActivity(_session.sessionId.toString());
 
-                                      setState(() {
-                                        _isFollowing = false;
-                                      });
 
                                       // B. Save the user activity (your existing logic)
                                       await firebaseServices.saveUserActivity(
@@ -773,6 +769,10 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                         recipientNickname: _session.userNickname,
                                         sessionId: _session.sessionId,
                                       );
+
+                                      setState(() {
+                                        _isFollowing = false;
+                                      });
 
                                       // --- C. START: NEW TARGETED NOTIFICATION LOGIC ---
                                       try {
@@ -811,8 +811,6 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                       }
                                       // --- END: NEW TARGETED NOTIFICATION LOGIC ---
 
-                                      // D. Show confirmation toast to the user
-                                      showToast("Now following! 1❤️ was sent to the author.");
                                     } else {
                                       showToast("Could not complete the follow. Please try again.");
                                     }
