@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui'; // DartPluginRegistrant is now in dart:ui
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/services/notification.dart';
@@ -26,6 +27,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
+import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
@@ -37,6 +41,11 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isIOS) {
+    final InAppPurchaseStoreKitPlatformAddition iosPlatformAddition =
+    InAppPurchase.instance.getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
+    await iosPlatformAddition.setDelegate(ExamplePaymentQueueDelegate());
+  }
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await FirebaseAppCheck.instance.activate(
     providerAndroid: kDebugMode ? const AndroidDebugProvider() : const AndroidPlayIntegrityProvider(),
@@ -333,5 +342,22 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+}
+/// Example implementation of the
+/// [`SKPaymentQueueDelegate`](https://developer.apple.com/documentation/storekit/skpaymentqueuedelegate?language=objc).
+///
+/// The payment queue delegate can be implemented to provide information
+/// needed to complete transactions.
+class ExamplePaymentQueueDelegate implements SKPaymentQueueDelegateWrapper {
+  @override
+  bool shouldContinueTransaction(
+      SKPaymentTransactionWrapper transaction, SKStorefrontWrapper storefront) {
+    return true;
+  }
+
+  @override
+  bool shouldShowPriceConsent() {
+    return false;
   }
 }

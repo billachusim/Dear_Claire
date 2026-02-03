@@ -3,7 +3,7 @@ description: A secret diary chat.
 
 publish_to: 'none'
 
-version: 14.6.0+146
+version: 14.7.0+147
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -20,6 +20,7 @@ dependencies:
   qr_flutter: ^4.1.0
   rxdart: ^0.28.0
   in_app_purchase: ^3.2.3
+  in_app_purchase_storekit: ^0.4.7
 
   # Updated Firebase dependencies
   firebase_app_check: ^0.4.1+2
