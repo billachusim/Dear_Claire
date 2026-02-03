@@ -197,8 +197,12 @@ class _SignUpPage extends State<SignUpPage> {
   Widget _buildCreateEgoButton() {
     return GestureDetector(
       onTap: () async {
-        // Disable tap if terms are not accepted or if already signing in
-        if (isSigningIn || !_termsAccepted) return;
+        if (isSigningIn) return;
+
+        if (!_termsAccepted) {
+          showToast("Please accept the terms and policy to continue.");
+          return;
+        }
 
         if (_formKey.currentState!.validate()) {
           setState(() {
@@ -263,8 +267,8 @@ class _SignUpPage extends State<SignUpPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Theme(
-              data: ThemeData(
-                unselectedWidgetColor: Pallet.colorWhite.withValues(alpha: 0.7),
+              data: Theme.of(context).copyWith(
+                unselectedWidgetColor: Pallet.colorWhite,
               ),
               child: Checkbox(
                 value: _termsAccepted,
@@ -275,6 +279,7 @@ class _SignUpPage extends State<SignUpPage> {
                 },
                 checkColor: Pallet.colorPrimary,
                 activeColor: Pallet.colorWhite,
+                side: BorderSide(color: Pallet.colorWhite, width: 2),
               ),
             ),
             Flexible(

@@ -607,9 +607,11 @@ class FirebaseServices extends ChangeNotifier {
   /// Get sessions that have not been featured, flagged or even archived
   /// But has the [userId] found in the followers field
   Stream<QuerySnapshot<Map<String, dynamic>>> getFollowingSessions() {
+    if (currentUser?.uid == null) {
+      return Stream.value(Future.value(null) as QuerySnapshot<Map<String, dynamic>>);
+    }
     return _firebaseFirestore
         .collection(AppString.appFeaturedSessions)
-        .where("repliesEnabled", isEqualTo: true)
         .where("archived", isEqualTo: false)
         .where('followers', arrayContains: currentUser?.uid)
         .limit(AppString.appSessionLength)

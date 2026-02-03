@@ -137,7 +137,7 @@ class AppString{
   static const String sendClaireLink = "https://dearclaire.page.link/InstallNow";
 
 
-  static const int appSessionLength = 50;
+  static const int appSessionLength = 100;
   static const int allSessionLength = 300;
   static const String photos = 'image';
   static const String audio = '/audio/';
