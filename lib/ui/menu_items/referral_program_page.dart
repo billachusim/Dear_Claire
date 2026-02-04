@@ -7,11 +7,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:velocity_x/velocity_x.dart';
 
-import '../../services/user_model.dart';
 import '../ego-profile/claire_loves.dart';
 
 class ReferralProgramPage extends StatefulWidget {

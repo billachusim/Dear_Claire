@@ -2,7 +2,6 @@ import 'package:clairediary/ui/chats/widget/inside_alter_ego_diaryroom.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/helper.dart';
-import '../../widgets/toast.dart';
 import '../chats/data/chatroompodo.dart';
 import '../chats/widget/alter_ego_diaryrooms_widget.dart';
 import '../routes/routes.dart';

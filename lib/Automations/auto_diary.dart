@@ -108,10 +108,6 @@ class AutoDiary {
     final FirebaseServices _firebaseServices = FirebaseServices();
 
     final userModel = await _firebaseServices.getUserInfo();
-    if (userModel == null) {
-      print('BACKGROUND: Failed to get user model. Aborting.');
-      return;
-    }
 
     CreateSessionModel sessionObject = CreateSessionModel();
     File recordFile = File(recordedFilePath);

@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../utils/helper.dart';
-import '../../widgets/toast.dart';
 import '../routes/routes.dart';
 import '../splash_screen/custom_rotate_bacground.dart';
 

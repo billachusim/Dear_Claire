@@ -174,10 +174,6 @@ class _LiveCallPageState extends State<LiveCallPage> {
     final FirebaseServices _firebaseServices = FirebaseServices();
 
     final currentUserInfo = await _firebaseServices.getUserWithId(id: widget.user.uid);
-    if (currentUserInfo == null) {
-      print('LIVE_CALL: Failed to get user model for diary creation.');
-      return;
-    }
 
     final callDoc = await FirebaseFirestore.instance.collection('live_sessions').doc(_callDocId).get();
     if (!callDoc.exists) {

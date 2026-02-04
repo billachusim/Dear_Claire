@@ -104,10 +104,8 @@ class UnifiedMediaViewerState extends State<UnifiedMediaViewer> {
         // This is the "eaten scroll" fix. It only triggers on a true overscroll.
         if (notification is OverscrollNotification && notification.overscroll != 0) {
           final parentScrollable = Scrollable.of(context);
-          if (parentScrollable != null) {
-            parentScrollable.position.jumpTo(parentScrollable.position.pixels + notification.overscroll);
-          }
-          // Cancel the glow effect from the PageView.
+          parentScrollable.position.jumpTo(parentScrollable.position.pixels + notification.overscroll);
+                  // Cancel the glow effect from the PageView.
           return true;
         }
         // Allow other notifications (like ScrollUpdate) to pass through.

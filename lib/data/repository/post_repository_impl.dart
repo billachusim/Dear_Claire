@@ -1,5 +1,4 @@
 
-import 'package:firebase_database/firebase_database.dart';
 
 class SessionService {
   //final _databaseRef = FirebaseDatabase.instance.reference();

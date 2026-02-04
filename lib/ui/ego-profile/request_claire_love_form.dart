@@ -1,13 +1,11 @@
 import 'package:clairediary/services/notification_service.dart';
 import 'package:clairediary/utils/color.dart';
-import 'package:clairediary/utils/constant.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:clairediary/data/models/transaction_model.dart' as t_model;
-import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/firebase_services.dart';
 
 class RequestClaireLovesForm extends StatefulWidget {

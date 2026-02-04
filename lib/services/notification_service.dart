@@ -2,11 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clairediary/services/firebase_services.dart';
-import 'package:clairediary/utils/strings.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:googleapis_auth/auth_io.dart';
-import 'package:logger/logger.dart';
 
 final NotificationService notificationService = NotificationService();
 

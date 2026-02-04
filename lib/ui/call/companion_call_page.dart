@@ -167,10 +167,6 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
     final FirebaseServices _firebaseServices = FirebaseServices();
 
     final currentUserInfo = await _firebaseServices.getUserWithId(id: widget.user.uid);
-    if (currentUserInfo == null) {
-      print('COMPANION_CALL: Failed to get user model for diary creation.');
-      return;
-    }
 
     final callDoc = await FirebaseFirestore.instance.collection('companion_calls').doc(_callDocId).get();
     if (!callDoc.exists) {

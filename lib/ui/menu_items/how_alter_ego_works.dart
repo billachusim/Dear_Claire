@@ -7,7 +7,6 @@ import 'package:clairediary/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui';
 
 import '../ego-profile/top_up_loves_page.dart'; // Needed for ImageFilter.blur

@@ -30,7 +30,6 @@ import '../ui/create_session/sound/custom_play_sound_widget.dart';
 import '../ui/ego-profile/top_up_loves_page.dart';
 import '../utils/global_app_state.dart';
 import '../utils/strings.dart';
-import '../ui/routes/routes.dart';
 import 'unified_media_widget.dart';
 
 class EgoModeSessionCard extends StatefulWidget {

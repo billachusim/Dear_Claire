@@ -2093,7 +2093,7 @@ $motivation
             .get();
 
         allSessions.addAll(querySnapshot.docs
-            .map((doc) => Session.fromJson(doc.data() as Map<String, dynamic>))
+            .map((doc) => Session.fromJson(doc.data()))
             .toList());
       } catch (e) {
         print('Error batch fetching sessions: $e');

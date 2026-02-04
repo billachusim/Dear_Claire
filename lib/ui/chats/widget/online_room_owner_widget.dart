@@ -5,7 +5,6 @@ import 'package:clairediary/ui/visited_user_ego_page/visited_user_ego_page.dart'
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../../services/data/notification_model.dart' as push_notification;
 import '../../../services/notification_service.dart';
 import '../../../services/user_model.dart';
 import '../../../utils/constant.dart';

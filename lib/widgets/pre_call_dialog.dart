@@ -150,13 +150,13 @@ Future<CallSetupDetails?> showPreCallDialog(BuildContext context, {required bool
                     title: const Text('Private Session', style: TextStyle(color: Colors.white)),
                     value: isPrivate,
                     onChanged: (bool value) => setState(() => isPrivate = value),
-                    activeColor: Pallet.colorSecondary,
+                    activeThumbColor: Pallet.colorSecondary,
                   ),
                   SwitchListTile(
                     title: const Text('Enable Replies', style: TextStyle(color: Colors.white)),
                     value: repliesEnabled,
                     onChanged: (bool value) => setState(() => repliesEnabled = value),
-                    activeColor: Pallet.colorSecondary,
+                    activeThumbColor: Pallet.colorSecondary,
                   ),
 
                   // --- Location Toggle ---
@@ -174,7 +174,7 @@ Future<CallSetupDetails?> showPreCallDialog(BuildContext context, {required bool
                         locationData = ''; // Clear location data if toggled off
                       }
                     },
-                    activeColor: Pallet.colorSecondary,
+                    activeThumbColor: Pallet.colorSecondary,
                   ),
                 ],
               ),

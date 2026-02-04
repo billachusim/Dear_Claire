@@ -67,8 +67,6 @@ class _ChatWidgetState extends State<ChatWidget> {
   int _joinChatInterstitialLoadAttempts = 0;
   InterstitialAd? _leaveChatInterstitialAd;
   int _leaveChatInterstitialLoadAttempts = 0;
-  InterstitialAd? _contChatInterstitialAd;
-  int _contChatInterstitialLoadAttempts = 0;
 
   @override
   void initState() {
@@ -110,7 +108,6 @@ class _ChatWidgetState extends State<ChatWidget> {
         if (!_isPremium) {
           _createJoinChatInterstitialAd();
           _createLeaveChatInterstitialAd();
-          _createContChatInterstitialAd();
         }
 
       }
@@ -122,7 +119,6 @@ class _ChatWidgetState extends State<ChatWidget> {
   void dispose() {
     _joinChatInterstitialAd?.dispose();
     _leaveChatInterstitialAd?.dispose();
-    _contChatInterstitialAd?.dispose();
     super.dispose();
   }
 
@@ -209,44 +205,6 @@ class _ChatWidgetState extends State<ChatWidget> {
       _leaveChatInterstitialAd!.show();
   }
 
-  /// Create and show Continue Chat interstitial ad.
-
-  void _createContChatInterstitialAd() {
-    InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/2293350565" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/3728601600" :
-      '',      request: AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          _contChatInterstitialAd = ad;
-          _contChatInterstitialLoadAttempts = 0;
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          print('Failed to load an interstitial ad: ${error.message}');
-          _contChatInterstitialLoadAttempts += 1;
-          _contChatInterstitialAd = null;
-          if (_contChatInterstitialLoadAttempts <= maxFailedLoadAttempts) {
-            _createContChatInterstitialAd();
-          }
-        },
-      ),
-    );
-  }
-
-  void _showContChatInterstitialAd() {
-    if (_contChatInterstitialAd == null || _isPremium) return;
-      _contChatInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          _createContChatInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          _createContChatInterstitialAd();
-        },
-      );
-      _contChatInterstitialAd!.show();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -833,7 +791,6 @@ class _ChatWidgetState extends State<ChatWidget> {
                             activityMessage: "You re-entered ${cornerOwnerNickname}'s corner inside ${widget.chatRoomPodo?.title ?? 'Chatrooms'}'.",
                             sessionId: widget.chatRoomPodo!.id.toString(),
                           );
-                          _showContChatInterstitialAd(); // Show ad on successful continuation
 
                           // Safety check before navigating
                           if (!mounted) return;

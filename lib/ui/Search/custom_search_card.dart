@@ -3,7 +3,6 @@ import 'package:clairediary/ui/routes/page_router_animation.dart';
 import 'package:clairediary/ui/featured/model/comment_session_model.dart';
 import 'package:clairediary/ui/featured/model/session.dart';
 import 'package:clairediary/ui/featured/ego_mode_session_detail.dart';
-import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/utils/mood.dart';
@@ -14,7 +13,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/firebase_services.dart';
 import '../../services/notification_service.dart';
 import '../../services/user_model.dart';

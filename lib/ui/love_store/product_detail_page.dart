@@ -3,7 +3,6 @@ import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/services/user_model.dart';
 import 'package:clairediary/ui/featured/model/comment_session_model.dart';
 import 'package:clairediary/ui/love_store/product_model.dart';
-import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/widgets/chat_edit_field.dart';
 import 'package:clairediary/widgets/comment_widget.dart';

@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 
 // Placeholder for the card we will create in the next step
 import '../routes/page_router_animation.dart';
-import '../routes/routes.dart';
 import 'love_store_item_card.dart';
 
 class LoveStorePage extends StatefulWidget {

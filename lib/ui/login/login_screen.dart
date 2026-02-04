@@ -5,7 +5,6 @@ import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/helper.dart';
 import 'package:clairediary/utils/strings.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';

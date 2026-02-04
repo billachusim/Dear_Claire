@@ -11,7 +11,6 @@ import 'package:clairediary/widgets/chat_edit_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
@@ -59,8 +58,7 @@ class _SubChatScreenState extends State<SubChatScreen> {
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
   bool _isBannerAdInitialized = false;
-  InterstitialAd? _interstitialAd;
-  int _interstitialLoadAttempts = 0;
+
 
 
   @override
@@ -72,9 +70,6 @@ class _SubChatScreenState extends State<SubChatScreen> {
         setState(() {
           _isPremium = user.isPremium;
         });
-        if (!_isPremium) {
-          _createSubChatInterstitialAd();
-        }
       }
     });
     _checkAdminStatus();
@@ -97,53 +92,11 @@ class _SubChatScreenState extends State<SubChatScreen> {
 
   @override
   void dispose() {
-    if (!_isPremium) {
-      _showSubChatInterstitialAd();
-    }
-    _interstitialAd?.dispose();
     _bottomBannerAd?.dispose();
     super.dispose();
   }
 
 
-  /// Create new sub chat interstitial ad.
-  void _createSubChatInterstitialAd() {
-    InterstitialAd.load(
-      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/9839548530" :
-      Platform.isIOS? "ca-app-pub-2404156870680632/8291211887" :
-      '',      request: AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          _interstitialAd = ad;
-          _interstitialLoadAttempts = 0;
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          print('Failed to load an interstitial ad: ${error.message}');
-          _interstitialLoadAttempts += 1;
-          _interstitialAd = null;
-          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
-            _createSubChatInterstitialAd();
-          }
-        },
-      ),
-    );
-  }
-
-  // --- ADMOB COMPLIANCE FIX 3: Add the show interstitial method ---
-  void _showSubChatInterstitialAd() {
-    if (_interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-        },
-      );
-      _interstitialAd!.show();
-      _interstitialAd = null; // Prevent showing the same ad twice
-    }
-  }
 
 
   // --- ADMOB COMPLIANCE FIX 4: Clean up banner ad loading logic ---

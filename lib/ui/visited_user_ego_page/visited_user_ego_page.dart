@@ -145,51 +145,49 @@ class _VisitedUserEgoProfilePageState extends State<VisitedUserEgoProfilePage>
     super.didChangeDependencies();
     if (!_isBannerAdInitialized && !_isPremium) {
       final adState = Provider.of<AdState>(context);
-      if (adState != null) {
-        adState.initialization.then((status) {
-          if (!mounted || _isPremium) return;
-          setState(() {
-            // --- Load Top of Sessions Banner ---
-            visitedUserTopOfSessionsBanner = BannerAd(
-                size: AdSize.banner,
-                adUnitId: adState.visitedUserTopOfSessionBannerAdUnitId,
-                request: AdRequest(),
-                listener: BannerAdListener(
-                  onAdLoaded: (ad) {
-                    print('Ad loaded: ${ad.adUnitId}');
-                    setState(() {
-                      _isTopOfSessionsBannerLoaded = true;
-                    });
-                  },
-                  onAdFailedToLoad: (ad, error) {
-                    print('Ad failed to load: ${ad.adUnitId}, error: $error');
-                    ad.dispose();
-                  },
-                ))
-              ..load();
+      adState.initialization.then((status) {
+        if (!mounted || _isPremium) return;
+        setState(() {
+          // --- Load Top of Sessions Banner ---
+          visitedUserTopOfSessionsBanner = BannerAd(
+              size: AdSize.banner,
+              adUnitId: adState.visitedUserTopOfSessionBannerAdUnitId,
+              request: AdRequest(),
+              listener: BannerAdListener(
+                onAdLoaded: (ad) {
+                  print('Ad loaded: ${ad.adUnitId}');
+                  setState(() {
+                    _isTopOfSessionsBannerLoaded = true;
+                  });
+                },
+                onAdFailedToLoad: (ad, error) {
+                  print('Ad failed to load: ${ad.adUnitId}, error: $error');
+                  ad.dispose();
+                },
+              ))
+            ..load();
 
-            // --- Load Bottom of Sessions Banner ---
-            visitedUserBottomOfSessionsBanner = BannerAd(
-                size: AdSize.banner,
-                adUnitId: adState.visitedUserBottomOfSessionsBannerAdUnitId,
-                request: AdRequest(),
-                listener: BannerAdListener(
-                  onAdLoaded: (ad) {
-                    print('Ad loaded: ${ad.adUnitId}');
-                    setState(() {
-                      _isBottomOfSessionsBannerLoaded = true;
-                    });
-                  },
-                  onAdFailedToLoad: (ad, error) {
-                    print('Ad failed to load: ${ad.adUnitId}, error: $error');
-                    ad.dispose();
-                  },
-                ))
-              ..load();
-          });
+          // --- Load Bottom of Sessions Banner ---
+          visitedUserBottomOfSessionsBanner = BannerAd(
+              size: AdSize.banner,
+              adUnitId: adState.visitedUserBottomOfSessionsBannerAdUnitId,
+              request: AdRequest(),
+              listener: BannerAdListener(
+                onAdLoaded: (ad) {
+                  print('Ad loaded: ${ad.adUnitId}');
+                  setState(() {
+                    _isBottomOfSessionsBannerLoaded = true;
+                  });
+                },
+                onAdFailedToLoad: (ad, error) {
+                  print('Ad failed to load: ${ad.adUnitId}, error: $error');
+                  ad.dispose();
+                },
+              ))
+            ..load();
         });
-      }
-    }
+      });
+        }
   }
 
   Future<void> _fetchInitialData() async {

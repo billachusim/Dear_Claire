@@ -93,6 +93,7 @@ dependencies:
   flutter_email_sender: ^8.0.0
   agora_rtc_engine: ^6.5.3
   in_app_review: ^2.0.11
+  collection: ^1.19.1
 
 dev_dependencies:
   flutter_test:

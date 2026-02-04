@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:clairediary/ui/create_session/sound/custom_play_sound_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/ui/featured/model/comment_session_model.dart';
@@ -19,7 +18,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/models/transaction_model.dart' as t_model;
 import '../services/data/notification_model.dart' as pushNotification;
 import '../services/notification_service.dart';
-import '../services/transaction_service.dart';
 import '../services/user_model.dart';
 import '../ui/featured/model/session.dart';
 import '../ui/routes/page_router_animation.dart';

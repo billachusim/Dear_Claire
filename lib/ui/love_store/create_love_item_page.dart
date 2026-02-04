@@ -16,8 +16,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../utils/helper.dart';
-import '../../utils/strings.dart';
 import '../create_session/create_session_controller.dart';
 
 class CreateLoveItemPage extends StatefulWidget {
@@ -130,10 +128,8 @@ class _CreateLoveItemPageState extends State<CreateLoveItemPage> {
           String? thumbUrl =
           await _firebaseServices.uploadVideoThumbnailToStorage(videoFile);
           videoUrls.add(videoUrl);
-          if (thumbUrl != null) {
-            videoThumbUrls.add(thumbUrl);
-          }
-        }
+          videoThumbUrls.add(thumbUrl);
+                }
       }
 
 

@@ -11,7 +11,6 @@ import 'package:clairediary/widgets/chat_edit_field.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../../Admob/ad_state.dart';
@@ -20,7 +19,6 @@ import '../../services/firebase_services.dart';
 import '../../services/in_app_review_service.dart..dart';
 import '../../services/notification_service.dart';
 import '../../services/user_model.dart';
-import '../../utils/strings.dart';
 
 class Temp {
   String id;

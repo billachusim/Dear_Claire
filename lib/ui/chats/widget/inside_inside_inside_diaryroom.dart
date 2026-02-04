@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:clairediary/services/user_model.dart';
 import 'package:clairediary/ui/chats/data/chatroompodo.dart';
@@ -11,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 import '../../../helpers/toast_helper.dart';
-import '../../../services/firebase_services.dart';
 import '../../visited_user_ego_page/visited_user_ego_page.dart';
 import 'chat_message_bubble.dart';
 

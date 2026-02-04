@@ -7,7 +7,6 @@ import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../helpers/toast_helper.dart';
 import '../../utils/helper.dart';
 import '../routes/routes.dart';
 import '../splash_screen/custom_rotate_bacground.dart';

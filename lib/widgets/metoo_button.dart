@@ -400,7 +400,7 @@ class _MetooButtonState extends State<MetooButton>
       },
     );
 
-    Overlay.of(context)!.insert(_overlayEntry!);
+    Overlay.of(context).insert(_overlayEntry!);
     _animationController.forward(from: 0.0);
   }
 

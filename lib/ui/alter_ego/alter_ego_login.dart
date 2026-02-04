@@ -2,7 +2,6 @@ import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/ui/routes/routes.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/utils/constant.dart';
-import 'package:clairediary/utils/strings.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

@@ -32,10 +32,8 @@ import '../../data/models/transaction_model.dart' as t_model;
 import '../../services/notification_service.dart';
 import '../../services/transaction_service.dart';
 import '../../widgets/unified_media_widget.dart';
-import '../featured/model/comment_session_model.dart';
 import '../featured/model/session.dart';
 import '../featured/notified_session_details.dart';
-import '../routes/page_router_animation.dart';
 import 'create_session_controller.dart';
 import 'sound/sound_widget.dart';
 
@@ -568,7 +566,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                                   c.followClaire.value = value;
                                 },
                                 activeTrackColor: Colors.purpleAccent,
-                                activeColor: Pallet.colorSecondary,
+                                activeThumbColor: Pallet.colorSecondary,
                               ))
                         ],
                       )),
@@ -710,18 +708,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                               maxLines: null,
                               minLines: 1,
                               onChanged: (text) {
-                                if (text != null) {
-                                  setState(() {
-                                    isTyping = true;
-                                    box.put("text", text);
-                                  });
-                                } else {
-                                  isTyping = false;
-                                  setState(() {
-                                    isTyping = false;
-                                  });
-                                }
-                              },
+                                setState(() {
+                                  isTyping = true;
+                                  box.put("text", text);
+                                });
+                                                            },
 
                               scrollPadding: EdgeInsets.all(20.0),
                               controller: sessionTextEditingController,

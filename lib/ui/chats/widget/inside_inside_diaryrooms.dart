@@ -15,7 +15,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../services/data/notification_model.dart' as push_notification;
 import '../../../services/firebase_services.dart';
 import '../../../services/notification_service.dart';
 import '../../../widgets/custom_image_widget.dart';

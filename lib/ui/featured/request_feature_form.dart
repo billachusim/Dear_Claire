@@ -10,7 +10,6 @@ import 'package:http/http.dart' as http;
 
 import '../../data/models/transaction_model.dart' as t_model;
 import '../../helpers/toast_helper.dart';
-import '../../services/data/notification_model.dart' as push_notification;
 import '../../services/notification_service.dart';
 import '../../services/transaction_service.dart';
 import '../../utils/constant.dart';

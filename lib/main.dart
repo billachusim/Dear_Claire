@@ -3,12 +3,7 @@ import 'dart:io';
 import 'dart:ui'; // DartPluginRegistrant is now in dart:ui
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/services/notification.dart';
-import 'package:clairediary/ui/alter_ego/alter_ego_homepage.dart';
-import 'package:clairediary/ui/alter_ego/chatrooms.dart';
-import 'package:clairediary/ui/chats/chatrooms.dart';
 import 'package:clairediary/ui/create_session/create_session_controller.dart';
-import 'package:clairediary/ui/create_session/create_session_page.dart';
-import 'package:clairediary/ui/ego-profile/profile.dart';
 import 'package:clairediary/ui/featured/notified_session_details.dart';
 import 'package:clairediary/ui/routes/routes.dart';
 import 'package:clairediary/ui/splash_screen/splash.dart';

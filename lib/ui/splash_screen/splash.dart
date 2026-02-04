@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:clairediary/Automations/setup_autoDiary_widget.dart';
 import 'package:clairediary/ui/routes/routes.dart';
 import 'package:clairediary/utils/color.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../featured/notified_session_details.dart';
 
 class SplashPage extends StatefulWidget {
   final RemoteMessage? initialRemoteMessage;

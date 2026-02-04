@@ -1,4 +1,3 @@
-import 'package:clairediary/utils/color.dart';
 import 'package:clairediary/widgets/toast.dart';
 import 'package:flutter/material.dart';
 
