@@ -631,7 +631,10 @@ class _EgoModeSessionCardState extends State<EgoModeSessionCard> {
                             SizedBox(
                               height: 4,
                             ),
-                            Text(timeConverter(widget.element.timeCreated!),
+                            Text(
+                                widget.element.timeCreated != null
+                                    ? timeConverter(widget.element.timeCreated!)
+                                    : '',
                                 textAlign: TextAlign.start,
                                 maxLines: 1,
                                 style: GoogleFonts.lato(

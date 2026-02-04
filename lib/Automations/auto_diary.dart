@@ -143,6 +143,7 @@ class AutoDiary {
     sessionObject.userId = userModel.userId;
     sessionObject.moodId = moodId;
     sessionObject.location = finalLocationString;
+    sessionObject.timeCreated = Timestamp.now();
     sessionObject.timeLastActivity = Timestamp.now();
 
     bool isSuccessful =

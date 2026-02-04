@@ -329,7 +329,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       }
       service.invoke('scheduleRecording', {'time': scheduledDateTime.toIso8601String()});
       if (mounted) setState(() => isServiceRunning = true);
-      showToast("Claire scheduled for ${DateFormat.jm().format(scheduledDateTime)}. (1,000 Loves deducted)");
+      showToast("Claire scheduled for ${DateFormat.jm().format(scheduledDateTime)}. (300 Loves deducted)");
 
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) Navigator.of(context).pop();
@@ -354,7 +354,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
       }
       service.invoke('instantRecording');
       if (mounted) setState(() => isServiceRunning = true);
-      showToast("Claire is now monitoring you. (1,000 Loves deducted)");
+      showToast("Claire is now monitoring you. (300 Loves deducted)");
 
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) Navigator.of(context).pop();
@@ -386,7 +386,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
           _currentView = _SanctuaryView.main;
         });
       }
-      showToast("Daily monitoring set for ${time.format(context)}. (1,000 Loves deducted)");
+      showToast("Daily monitoring set for ${time.format(context)}. (300 Loves deducted)");
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }

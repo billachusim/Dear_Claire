@@ -1146,6 +1146,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     sessionObject.userId = userModel.userId;
     sessionObject.moodId = mood;
     sessionObject.location = '#QuickSession';
+    sessionObject.timeCreated = Timestamp.now();
     sessionObject.timeLastActivity = Timestamp.now();
 
     bool isSuccessfull =
@@ -1242,6 +1243,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.userId = userModel.userId;
       sessionObject.moodId = Constant.USER_SESSION_MOODS.indexOf(c.sessionMood.value);
       sessionObject.location = _location;
+      sessionObject.timeCreated = Timestamp.now();
       sessionObject.timeLastActivity = Timestamp.now();
 
       await _firebaseServices.createSession(session: sessionObject);

@@ -354,7 +354,9 @@ class _CustomSearchCardState extends State<CustomSearchCard> {
                         SizedBox(
                           height: 1,
                         ),
-                        Text(timeConverter(widget.element.timeCreated!),
+                        Text(widget.element.timeCreated != null
+                            ? timeConverter(widget.element.timeCreated!)
+                            : '',
                             textAlign: TextAlign.start,
                             maxLines: 1,
                             style: GoogleFonts.lato(

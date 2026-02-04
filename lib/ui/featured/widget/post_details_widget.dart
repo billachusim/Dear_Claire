@@ -411,7 +411,9 @@ class _PostDetailsWidgetState extends State<PostDetailsWidget> {
                                     SizedBox(
                                       height: 5,
                                     ),
-                                    Text(timeConverter(_session.timeCreated!),
+                                    Text(_session.timeCreated != null
+                                        ? timeConverter(_session.timeCreated!)
+                                        : '',
                                         textAlign: TextAlign.start,
                                         maxLines: 1,
                                         style: GoogleFonts.lato(

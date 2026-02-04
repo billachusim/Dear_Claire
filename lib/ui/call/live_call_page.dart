@@ -203,6 +203,7 @@ class _LiveCallPageState extends State<LiveCallPage> {
     sessionObject.userId = currentUserInfo.userId;
     sessionObject.moodId = callData['moodId'] ?? 17;
     sessionObject.location = finalLocationString;
+    sessionObject.timeCreated = Timestamp.now();
     sessionObject.timeLastActivity = Timestamp.now();
 
     bool isSuccessful = await _firebaseServices.createSession(session: sessionObject);
