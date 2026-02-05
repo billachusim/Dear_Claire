@@ -276,13 +276,25 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   /// checks if session meets original session rules...
   /// if it does, then increment necessary counts.
-  Future<bool> isOriginalSession(String sessionText) async {
+  Future<bool> isOriginalSession(
+      String sessionText, CreateSessionModel session) async {
     final _session = sessionText.toString();
     final _length = _session.length;
 
+    bool isOriginal = false;
+
+    // Condition 1: Original text-based check
     if (_session.contains("ear") &&
         _session.contains("laire") &&
         _length >= 50) {
+      isOriginal = true;
+    }
+    // Condition 2: Simplified check for any audio session
+    else if (session.containsAudio == true) {
+      isOriginal = true;
+    }
+
+    if (isOriginal) {
       incrementSessionCount();
 
       if (currentUser != null) {
@@ -329,10 +341,6 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
           print("Failed to send 'Original Session' push notification: $e");
         }
       }
-
-      // This local notification is still useful for immediate UI feedback.
-      flutterLocalNotificationsPlugin.show(0, 'Clairelove Wallet',
-          "You started an original diary session. 10 Loves for you.", _notificationDetails(), payload: "wallet");
 
       return true;
     }
@@ -1261,7 +1269,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
       categorize(sessionObject);
 
-      isOriginalSession(sessionTextEditingController.text);
+      isOriginalSession(sessionTextEditingController.text, sessionObject);
 
       ascertainCurrentLoveCount();
 
