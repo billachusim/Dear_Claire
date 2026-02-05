@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
+import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../controllers/iap_controller.dart';
 import '../../utils/color.dart';
@@ -73,6 +75,8 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
       backgroundColor: Pallet.colorSecondaryDark,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: true,
         title: Text("Top Up Love",
             style: GoogleFonts.poppins(fontWeight: FontWeight.w800, letterSpacing: 1.2, color: Colors.white)),
         centerTitle: true,
@@ -138,14 +142,50 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
     );
   }
 
+  // REPLACE the existing _buildProductCard method with this one.
   Widget _buildProductCard(ProductDetails product, int index) {
-    // --- MODIFIED: Logic to identify premium product ---
     final bool isPremium = product.id == IAPController.premiumProductId;
     final String title = isPremium ? "Premium Plan" : product.title.split('(').first.toUpperCase();
     final List<String> perksToShow = isPremium ? allPerks : allPerks.sublist(2, 5);
     final String buttonText = isPremium ? "Subscribe" : "Top Up";
     final IconData cardIcon = isPremium ? Icons.star_purple500_sharp : Icons.auto_awesome;
     final Color iconColor = isPremium ? Colors.yellowAccent : Colors.amberAccent;
+
+    // --- CORRECTED LOGIC: Accessing platform-specific details ---
+    String subscriptionPeriod = '';
+    if (isPremium && product is AppStoreProductDetails) {
+      // Cast to AppStoreProductDetails to access App Store specific properties
+      final AppStoreProductDetails appStoreProductDetails = product;
+      final SKProductSubscriptionPeriodWrapper? subscriptionPeriodDetails = appStoreProductDetails.skProduct.subscriptionPeriod;
+      if (subscriptionPeriodDetails != null) {
+        final int numberOfUnits = subscriptionPeriodDetails.numberOfUnits;
+        final SKSubscriptionPeriodUnit unit = subscriptionPeriodDetails.unit;
+
+        String unitText = '';
+        switch (unit) {
+          case SKSubscriptionPeriodUnit.day:
+            unitText = numberOfUnits == 1 ? 'day' : 'days';
+            break;
+          case SKSubscriptionPeriodUnit.week:
+            unitText = numberOfUnits == 1 ? 'week' : 'weeks';
+            break;
+          case SKSubscriptionPeriodUnit.month:
+            unitText = numberOfUnits == 1 ? 'month' : 'months';
+            break;
+          case SKSubscriptionPeriodUnit.year:
+            unitText = numberOfUnits == 1 ? 'year' : 'years';
+            break;
+        }
+
+        // If a subscription is for 1 month, it will display "/ month"
+        // If it were for 3 months, it would display "/ 3 months"
+        if (numberOfUnits == 1) {
+          subscriptionPeriod = '/ $unitText';
+        } else {
+          subscriptionPeriod = '/ $numberOfUnits $unitText';
+        }
+      }
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
@@ -187,15 +227,30 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
                         child: Icon(cardIcon, color: iconColor, size: 24),
                       ),
-                      Text(
-                        product.price,
-                        style: GoogleFonts.lato(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            product.price,
+                            style: GoogleFonts.lato(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 22),
+                          ),
+                          if (subscriptionPeriod.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 4, bottom: 2),
+                              child: Text(
+                                subscriptionPeriod,
+                                style: GoogleFonts.lato(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 14),
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -220,7 +275,6 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      // --- MODIFIED: Call correct purchase method ---
                       onPressed: iapController.isLoading.value
                           ? null
                           : () {
@@ -254,24 +308,47 @@ class _TopUpLovesPageState extends State<TopUpLovesPage> {
     );
   }
 
+
+
   Widget _buildFooter() {
+    const linkStyle = TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+      decoration: TextDecoration.underline,
+      decorationColor: Colors.white,
+      fontSize: 12,
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Column(
         children: [
-          Text("Secure store payment encryption enabled.",
-              textAlign: TextAlign.center,
-              style: GoogleFonts.lato(color: Colors.white38, fontSize: 11)),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () => _launchUrl("https://sites.google.com/view/claire-diary/claire-privacy-policy"),
-            child: const Text("Terms & Privacy Policy",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, decoration: TextDecoration.underline, fontSize: 12)),
+          Text(
+            "Secure store payment encryption enabled.",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.lato(color: Colors.white38, fontSize: 11),
+          ),
+          const SizedBox(height: 16),
+          // --- MODIFIED: Added separate links for Terms and Privacy ---
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () => _launchUrl("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"),
+                child: const Text("Terms of Use (EULA)", style: linkStyle),
+              ),
+              const Text("  &  ", style: TextStyle(color: Colors.white, fontSize: 12)),
+              GestureDetector(
+                onTap: () => _launchUrl("https://sites.google.com/view/claire-diary/claire-privacy-policy"),
+                child: const Text("Privacy Policy", style: linkStyle),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+
 
   Widget _buildErrorState(String msg) {
     return Center(
