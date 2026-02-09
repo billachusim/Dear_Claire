@@ -36,6 +36,7 @@ import '../../Automations/setup_autoDiary_widget.dart';
 import '../../helpers/toast_helper.dart';
 import '../../services/firebase_services.dart';
 import '../../services/notification_service.dart';
+import '../../services/settings_page.dart';
 import '../../services/user_model.dart';
 import '../../utils/helper.dart';
 import '../../widgets/pre_call_dialog.dart';
@@ -193,7 +194,7 @@ class _HomeDashboardPageState extends State<HomePage>
             ),
             boxShadow: [
               BoxShadow(
-                color: Pallet.colorPrimary.withOpacity(0.3),
+                color: Pallet.colorPrimary.withValues(alpha: 0.3),
                 blurRadius: 20,
                 spreadRadius: 5,
               ),
@@ -215,7 +216,7 @@ class _HomeDashboardPageState extends State<HomePage>
                 const SizedBox(height: 24),
                 Icon(
                   Icons.star_purple500_sharp,
-                  color: Colors.amberAccent.withOpacity(0.7),
+                  color: Colors.amberAccent.withValues(alpha: 0.7),
                   size: 50,
                 ),
                 const SizedBox(height: 16),
@@ -1345,6 +1346,17 @@ class _AppDrawerState extends State<_AppDrawer> {
               Navigator.pushNamed(context, AppRoutes.referralProgram);
             },
           ),
+
+          ListTile(
+            leading: Icon(Icons.settings_rounded, color: Pallet.colorWhite),
+              title: Text('Settings',
+                  style: TextStyle(color: Pallet.colorWhite)),
+            onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));
+              },
+          ),
+
+
         ],
       ),
     );
