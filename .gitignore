@@ -11,7 +11,17 @@
 
 # Custom Project Ignores
 lib/services/api_consts.dart
+
+# Secrets and local environment files
+.env
+.env.*
+!.env.example
+*.env
 secrets/
+*.pem
+*.p8
+*.key
+
 
 # IntelliJ related
 *.iml

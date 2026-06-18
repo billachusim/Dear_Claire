@@ -23,6 +23,12 @@ class RequestFeatureForm extends StatefulWidget {
 }
 
 class _RequestFeatureFormState extends State<RequestFeatureForm> {
+  static const String _geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
+  static const String _geminiModel = String.fromEnvironment(
+    'GEMINI_MODEL',
+    defaultValue: 'gemini-pro',
+  );
+
   final TextEditingController _whyFeatureController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isProcessing = false;
@@ -231,11 +237,21 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
 
 
   Future<bool> _checkForAbusiveLanguage(String title, String message, String egoName) async {
-    const apiKey = 'AIzaSyA2Nh3m4lupDBewWT_Z0ZBkwpjXY9x6Fi4';
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$apiKey';
+    if (_geminiApiKey.isEmpty) {
+      logger.w(
+        'Skipping abusive-language check because GEMINI_API_KEY is not set.',
+      );
+      return false;
+    }
+
+    final url = Uri.https(
+      'generativelanguage.googleapis.com',
+      '/v1beta/models/$_geminiModel:generateContent',
+      {'key': _geminiApiKey},
+    );
 
     final response = await http.post(
-      Uri.parse(url),
+      url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'contents': [
