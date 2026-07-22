@@ -122,8 +122,8 @@ class AutoDiary {
       return;
     }
 
-    final randomColor = Constant.DIARY_COLORS_HEXCODE[
-    Random().nextInt(Constant.DIARY_COLORS_HEXCODE.length)];
+    final randomColor = AppConstants.DIARY_COLORS_HEXCODE[
+    Random().nextInt(AppConstants.DIARY_COLORS_HEXCODE.length)];
 
     String finalLocationString = '#AutoDiary';
     if (locationEnabled && locationData.isNotEmpty) {
@@ -216,7 +216,7 @@ class AutoDiary {
     }
 
     Random random = Random();
-    int randomNumber = random.nextInt(Constant.TOAST_NUMBERS.length);
+    int randomNumber = random.nextInt(AppConstants.TOAST_NUMBERS.length);
     var message = randomNumber == 1
         ? "Go on, Darling, talk to me..."
         : randomNumber == 2

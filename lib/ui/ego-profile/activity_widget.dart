@@ -997,7 +997,7 @@ class _ActivityWidgetState extends State<ActivityWidget> with TickerProviderStat
 
 
   void _showMoodUpdateModal() {
-    String localSelectedMood = Constant.USER_SESSION_MOODS.first;
+    String localSelectedMood = AppConstants.USER_SESSION_MOODS.first;
     String currentMoodText = _splitMood(_currentMood)['text'] ?? 'Available';
     bool isUpdating = false; // State variable for loading
 
@@ -1035,7 +1035,7 @@ class _ActivityWidgetState extends State<ActivityWidget> with TickerProviderStat
                   underline: const SizedBox.shrink(),
                   icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
                   style: GoogleFonts.lato(fontSize: 16, color: Colors.white),
-                  items: Constant.USER_SESSION_MOODS.map((String v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                  items: AppConstants.USER_SESSION_MOODS.map((String v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
                   onChanged: (v) => setModalState(() => localSelectedMood = v!),
                 ),
               ),
@@ -1055,7 +1055,7 @@ class _ActivityWidgetState extends State<ActivityWidget> with TickerProviderStat
                       onPressed: isUpdating ? null : () async {
                         setModalState(() => isUpdating = true); // Start loading
 
-                        int moodId = Constant.USER_SESSION_MOODS.indexOf(localSelectedMood);
+                        int moodId = AppConstants.USER_SESSION_MOODS.indexOf(localSelectedMood);
                         await firebaseServices.updateUserMoods(moodId);
 
                         if (mounted) {

@@ -18,7 +18,7 @@ class CreateSessionController extends GetxController {
   randomizeBackgroundColor(){
     Random random = new Random();
     // Corrected the range to avoid out-of-bounds errors
-    int randomNumber = random.nextInt(Constant.DIARY_COLORS.length);
+    int randomNumber = random.nextInt(AppConstants.DIARY_COLORS.length);
     selectedBackgroundColor = randomNumber.obs;
   }
   var selectedBackgroundColor;
@@ -42,7 +42,7 @@ class CreateSessionController extends GetxController {
   void changeColor() {
     print(selectedBackgroundColor.value);
     // Updated the condition to match the length of the DIARY_COLORS list
-    if (selectedBackgroundColor.value < Constant.DIARY_COLORS.length - 1) {
+    if (selectedBackgroundColor.value < AppConstants.DIARY_COLORS.length - 1) {
       selectedBackgroundColor++;
     } else {
       selectedBackgroundColor.value = 0;

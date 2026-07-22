@@ -237,7 +237,7 @@ class _ArchiveWidgetState extends State<ArchiveWidget> {
     try {
       userModel = await _firebaseServices.getUserInfo();
       String sessionId = uuid.v4();
-      final randomColor = Constant.DIARY_COLORS_HEXCODE[Random().nextInt(Constant.DIARY_COLORS_HEXCODE.length)];
+      final randomColor = AppConstants.DIARY_COLORS_HEXCODE[Random().nextInt(AppConstants.DIARY_COLORS_HEXCODE.length)];
       final sessionData = CreateSessionModel(
         sessionId: sessionId,
         userId: userModel.userId,

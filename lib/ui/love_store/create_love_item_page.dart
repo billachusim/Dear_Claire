@@ -44,7 +44,7 @@ class _CreateLoveItemPageState extends State<CreateLoveItemPage> {
 
   void randomizeBackgroundColor() {
     Random random = Random();
-    int randomNumber = random.nextInt(Constant.DIARY_COLORS.length);
+    int randomNumber = random.nextInt(AppConstants.DIARY_COLORS.length);
     c.selectedBackgroundColor = randomNumber.obs;
   }
 
@@ -148,7 +148,7 @@ class _CreateLoveItemPageState extends State<CreateLoveItemPage> {
         videoThumbnailUrls: videoThumbUrls,
 
         // CORRECTED: Use DIARY_COLORS_HEXCODE to get the String value
-        colorHex: Constant.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value],
+        colorHex: AppConstants.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value],
 
         followers: [currentUser!.uid], // Seller auto-follows
         timeCreated: null, // Firestore will set this
@@ -183,7 +183,7 @@ class _CreateLoveItemPageState extends State<CreateLoveItemPage> {
     return Obx(
           () => Scaffold(
         backgroundColor:
-        Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
+        AppConstants.DIARY_COLORS[c.selectedBackgroundColor.value],
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,

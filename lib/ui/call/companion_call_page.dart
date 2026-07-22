@@ -176,7 +176,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
     final callData = callDoc.data() as Map<String, dynamic>;
 
     CreateSessionModel sessionObject = CreateSessionModel();
-    final randomColor = Constant.DIARY_COLORS_HEXCODE[Random().nextInt(Constant.DIARY_COLORS_HEXCODE.length)];
+    final randomColor = AppConstants.DIARY_COLORS_HEXCODE[Random().nextInt(AppConstants.DIARY_COLORS_HEXCODE.length)];
     String finalLocationString = '#CompanionCall';
     if (callData['locationEnabled'] == true && (callData['locationData'] as String).isNotEmpty) {
       finalLocationString = callData['locationData'];
@@ -373,7 +373,7 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
     final int moodId = widget.incomingCall?.moodId ?? widget.callDetails.moodId;
     final String locationData = widget.incomingCall?.locationData ?? widget.callDetails.locationData;
 
-    final moodIcon = Constant.USER_SESSION_MOODS[moodId];
+    final moodIcon = AppConstants.USER_SESSION_MOODS[moodId];
     final hasLocation = locationData.isNotEmpty;
 
     return Scaffold(

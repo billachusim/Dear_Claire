@@ -61,7 +61,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
 
   // --- User Settings State ---
   final TextEditingController _titleController = TextEditingController();
-  String _selectedMood = Constant.USER_SESSION_MOODS[0];
+  String _selectedMood = AppConstants.USER_SESSION_MOODS[0];
   bool _isPrivate = false;
   bool _repliesEnabled = true;
   bool _locationEnabled = false;
@@ -136,7 +136,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
         _repliesEnabled = prefs.getBool('autoDiaryRepliesEnabled') ?? true;
         _locationEnabled = prefs.getBool('autoDiaryLocationEnabled') ?? false;
         int moodId = prefs.getInt('autoDiaryMoodId') ?? 0;
-        _selectedMood = Constant.USER_SESSION_MOODS[moodId];
+        _selectedMood = AppConstants.USER_SESSION_MOODS[moodId];
       });
     }
   }
@@ -149,8 +149,8 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
     await prefs.setBool('autoDiaryRepliesEnabled', _repliesEnabled);
     await prefs.setBool('autoDiaryLocationEnabled', _locationEnabled);
     await prefs.setInt(
-        'autoDiaryMoodId', Constant.USER_SESSION_MOODS.indexOf(_selectedMood));
-    final int moodId = Constant.USER_SESSION_MOODS.indexOf(_selectedMood);
+        'autoDiaryMoodId', AppConstants.USER_SESSION_MOODS.indexOf(_selectedMood));
+    final int moodId = AppConstants.USER_SESSION_MOODS.indexOf(_selectedMood);
     await prefs.setInt('autoDiaryMoodId', moodId);
     final firebaseServices = FirebaseServices();
     await firebaseServices.updateUserMoods(moodId);
@@ -600,7 +600,7 @@ class _SetupAutoDiaryState extends State<SetupAutoDiary>
               icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
               style: GoogleFonts.lato(fontSize: 16, color: Colors.white),
               onChanged: (String? v) => setState(() => _selectedMood = v!),
-              items: Constant.USER_SESSION_MOODS
+              items: AppConstants.USER_SESSION_MOODS
                   .map<DropdownMenuItem<String>>(
                       (String v) => DropdownMenuItem<String>(value: v, child: Text(v)))
                   .toList(),

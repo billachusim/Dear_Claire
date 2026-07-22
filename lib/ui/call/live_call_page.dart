@@ -183,7 +183,7 @@ class _LiveCallPageState extends State<LiveCallPage> {
     final callData = callDoc.data() as Map<String, dynamic>;
 
     CreateSessionModel sessionObject = CreateSessionModel();
-    final randomColor = Constant.DIARY_COLORS_HEXCODE[Random().nextInt(Constant.DIARY_COLORS_HEXCODE.length)];
+    final randomColor = AppConstants.DIARY_COLORS_HEXCODE[Random().nextInt(AppConstants.DIARY_COLORS_HEXCODE.length)];
     String finalLocationString = '#LiveSession';
     if (callData['locationEnabled'] == true && (callData['locationData'] as String).isNotEmpty) {
       finalLocationString = callData['locationData'];
@@ -415,7 +415,7 @@ class _LiveCallPageState extends State<LiveCallPage> {
         ),
       );
     } else {
-      final moodIcon = Constant.USER_SESSION_MOODS[widget.callDetails.moodId];
+      final moodIcon = AppConstants.USER_SESSION_MOODS[widget.callDetails.moodId];
       final hasLocation = widget.callDetails.locationData.isNotEmpty;
 
       return Container(

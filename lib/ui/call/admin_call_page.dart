@@ -277,7 +277,7 @@ class _AdminCallPageState extends State<AdminCallPage> {
   @override
   Widget build(BuildContext context) {
     // --- NEW: Extract details for the UI ---
-    final moodIcon = Constant.USER_SESSION_MOODS[widget.call.moodId];
+    final moodIcon = AppConstants.USER_SESSION_MOODS[widget.call.moodId];
     final hasLocation = widget.call.locationData.isNotEmpty;
     // --- END NEW ---
 

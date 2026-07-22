@@ -17,7 +17,7 @@ VisitedUserModel visitedUserModel = VisitedUserModel();
 final SharedPreference sharedPreference = SharedPreference();
 
 
-class Constant {
+class AppConstants {
   //static const Float LASH_DELAY = 1500L;
   static const String EVENT_OPEN_ALTER_EGO = "EVENT_OPEN_ALTER_EGO";
   static const String INSTAGRAM_PAGE_URL = "https://www.instagram.com/socialfaculty";

@@ -296,7 +296,7 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKee
 
   Widget _buildIncomingCallCard(IncomingCall call) {
     final icon = call.isVideoCall ? Icons.videocam : Icons.call;
-    final moodIcon = Constant.USER_SESSION_MOODS[call.moodId];
+    final moodIcon = AppConstants.USER_SESSION_MOODS[call.moodId];
     final hasLocation = call.locationData.isNotEmpty;
 
     return Card(
@@ -337,7 +337,7 @@ class _AlterEgoCallsPageState extends State<AlterEgoCallsPage> with AutomaticKee
 
   Widget _buildRecentCallCard(IncomingCall call) {
     final icon = call.isVideoCall ? Icons.videocam : Icons.call;
-    final moodIcon = Constant.USER_SESSION_MOODS[call.moodId];
+    final moodIcon = AppConstants.USER_SESSION_MOODS[call.moodId];
     final hasLocation = call.locationData.isNotEmpty;
 
     // --- Format Date and Time ---

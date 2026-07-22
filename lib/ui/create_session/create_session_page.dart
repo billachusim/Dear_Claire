@@ -187,7 +187,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   randomizeBackgroundColor() {
     Random random = new Random();
-    int randomNumber = random.nextInt(Constant.DIARY_COLORS.length);
+    int randomNumber = random.nextInt(AppConstants.DIARY_COLORS.length);
     c.selectedBackgroundColor = randomNumber.obs;
   }
 
@@ -230,7 +230,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   randomizeNewDiarySessionToast() async {
     Random random = new Random();
-    int randomNumber = random.nextInt(Constant.TOAST_NUMBERS.length);
+    int randomNumber = random.nextInt(AppConstants.TOAST_NUMBERS.length);
     var message = randomNumber == 1 ? "Go on, Darling, talk to me..." :
     randomNumber == 2 ? "Start typing or recording anything." :
     randomNumber == 3 ? "You have come to a safe place." :
@@ -515,7 +515,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                             color: Colors.pink,
                           ),
                           items:
-                              Constant.USER_SESSION_MOODS.map((String items) {
+                              AppConstants.USER_SESSION_MOODS.map((String items) {
                             return DropdownMenuItem(
                                 value: items, child: Text(items));
                           }).toList(),
@@ -663,7 +663,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         appBar: AppBar(
           centerTitle: true,
           backgroundColor:
-              Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
+              AppConstants.DIARY_COLORS[c.selectedBackgroundColor.value],
           title: Text(
             "Start A Diary Session",
             style: TextStyle(
@@ -675,7 +675,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
           elevation: 0,
         ),
         backgroundColor:
-            Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
+            AppConstants.DIARY_COLORS[c.selectedBackgroundColor.value],
         body: GestureDetector(
             onTap: () {
               // Hide keyboard when tapping outside of a text field
@@ -711,7 +711,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                           child: Container(
                             alignment: Alignment.center,
                             child: AutoSizeTextField(
-                              style: Constant
+                              style: AppConstants
                                   .DIARY_FONT_STYLES[c.selectedFontIndex.value],
                               maxLines: null,
                               minLines: 1,
@@ -789,7 +789,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         bottomSheet: Container(
             padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
             decoration: BoxDecoration(
-              color: Constant.DIARY_COLORS[c.selectedBackgroundColor.value],
+              color: AppConstants.DIARY_COLORS[c.selectedBackgroundColor.value],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -1002,11 +1002,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     return SingleChildScrollView(
       child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: Constant.ALTER_EGO_FONT_STYLES
+          children: AppConstants.ALTER_EGO_FONT_STYLES
               .map((e) => ListTile(
                     title: e,
                     onTap: () {
-                      var index = Constant.ALTER_EGO_FONT_STYLES.indexOf(e);
+                      var index = AppConstants.ALTER_EGO_FONT_STYLES.indexOf(e);
                       c.selectFont(index);
                       Navigator.pop(context);
                     },
@@ -1149,7 +1149,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     sessionObject.repliesEnabled = false;
     sessionObject.message = sessionTextEditingController.text;
     sessionObject.colorHex =
-    Constant.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
+    AppConstants.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
     sessionObject.sessionId = uuid.v1();
     sessionObject.userId = userModel.userId;
     sessionObject.moodId = mood;
@@ -1246,17 +1246,17 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       sessionObject.private = c.acceptReplies.value;
       sessionObject.repliesEnabled = c.acceptReplies.value;
       sessionObject.message = sessionTextEditingController.text;
-      sessionObject.colorHex = Constant.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
+      sessionObject.colorHex = AppConstants.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
       sessionObject.sessionId = uuid.v1();
       sessionObject.userId = userModel.userId;
-      sessionObject.moodId = Constant.USER_SESSION_MOODS.indexOf(c.sessionMood.value);
+      sessionObject.moodId = AppConstants.USER_SESSION_MOODS.indexOf(c.sessionMood.value);
       sessionObject.location = _location;
       sessionObject.timeCreated = Timestamp.now();
       sessionObject.timeLastActivity = Timestamp.now();
 
       await _firebaseServices.createSession(session: sessionObject);
 
-      await _firebaseServices.updateUserMoods(Constant.USER_SESSION_MOODS.indexOf(c.sessionMood.value));
+      await _firebaseServices.updateUserMoods(AppConstants.USER_SESSION_MOODS.indexOf(c.sessionMood.value));
 
       await _firebaseServices.saveUserActivity(
         activityType: 'session',

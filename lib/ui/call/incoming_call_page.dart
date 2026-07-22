@@ -134,7 +134,7 @@ class _IncomingCallPageState extends State<IncomingCallPage> {
 
   @override
   Widget build(BuildContext context) {
-    final moodIcon = Constant.USER_SESSION_MOODS[widget.call.moodId];
+    final moodIcon = AppConstants.USER_SESSION_MOODS[widget.call.moodId];
     final hasLocation = widget.call.locationData.isNotEmpty;
     final callType =
     widget.call.isVideoCall ? "Incoming Video Call" : "Incoming Audio Call";

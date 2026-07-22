@@ -302,7 +302,7 @@ class _AdminLiveCallPageState extends State<AdminLiveCallPage> {
 
   Widget _callInfoOverlay() {
     // --- NEW: Extract mood and location for UI ---
-    final moodIcon = Constant.USER_SESSION_MOODS[widget.call.moodId];
+    final moodIcon = AppConstants.USER_SESSION_MOODS[widget.call.moodId];
     final hasLocation = widget.call.locationData.isNotEmpty;
     // --- END NEW ---
 

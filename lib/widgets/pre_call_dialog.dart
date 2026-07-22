@@ -32,7 +32,7 @@ class CallSetupDetails {
 Future<CallSetupDetails?> showPreCallDialog(BuildContext context, {required bool isVideoCall}) async {
   final TextEditingController titleController = TextEditingController(text: isVideoCall ? "Live Session" : "Companion Call");
 
-  String selectedMood = Constant.USER_SESSION_MOODS[17]; // Default to Claire mood 🌺
+  String selectedMood = AppConstants.USER_SESSION_MOODS[17]; // Default to Claire mood 🌺
   bool isPrivate = true;
   bool repliesEnabled = false;
   bool locationEnabled = false;
@@ -136,7 +136,7 @@ Future<CallSetupDetails?> showPreCallDialog(BuildContext context, {required bool
                         selectedMood = newValue!;
                       });
                     },
-                    items: Constant.USER_SESSION_MOODS.map<DropdownMenuItem<String>>((String value) {
+                    items: AppConstants.USER_SESSION_MOODS.map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Text(value),
@@ -218,7 +218,7 @@ Future<CallSetupDetails?> showPreCallDialog(BuildContext context, {required bool
                       title: titleController.text.trim().isEmpty
                           ? (isVideoCall ? "Live Session" : "Companion Call")
                           : titleController.text.trim(),
-                      moodId: Constant.USER_SESSION_MOODS.indexOf(selectedMood),
+                      moodId: AppConstants.USER_SESSION_MOODS.indexOf(selectedMood),
                       isPrivate: isPrivate,
                       repliesEnabled: repliesEnabled,
                       locationEnabled: locationEnabled,

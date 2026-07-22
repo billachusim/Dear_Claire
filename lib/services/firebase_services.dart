@@ -458,33 +458,33 @@ class FirebaseServices extends ChangeNotifier {
   /// get AlterEgoId
   Future<String> getAlterEgoUserAccessCode() async {
     prefs = await SharedPreferences.getInstance();
-    return prefs!.getString(Constant.PREF_KEY_ALTER_EGO_ACCESS_CODE) ?? '';
+    return prefs!.getString(AppConstants.PREF_KEY_ALTER_EGO_ACCESS_CODE) ?? '';
   }
 
   /// get AlterEgoAccessCode
   Future<String> getAlterEgoUserId() async {
     prefs = await SharedPreferences.getInstance();
-    return prefs!.getString(Constant.PREF_KEY_ALTER_EGO_ID) ?? '';
+    return prefs!.getString(AppConstants.PREF_KEY_ALTER_EGO_ID) ?? '';
   }
 
   /// cache user
   void setUser(UserModel userModel) async {
     final _user = FirebaseAuth.instance;
     prefs = await SharedPreferences.getInstance();
-    prefs!.setString(Constant.PREF_KEY_USER_AVATAR_URL, userModel.avatarUrl!);
-    prefs!.setString(Constant.PREF_KEY_USER_NICKNAME, userModel.nickname!);
-    prefs!.setString(Constant.PREF_KEY_USER_SECRET_CODE, userModel.secretCode!);
-    prefs!.setString(Constant.PREF_KEY_USER_EMAIL, userModel.email!);
-    prefs!.setString(Constant.PREF_KEY_USER_FCM_ID, _user.currentUser!.uid);
-    prefs!.setString(Constant.PREF_KEY_USER_GENDER, userModel.gender!);
-    prefs!.setString(Constant.PREF_KEY_USER_ID, userModel.userId!);
-    prefs!.setString(Constant.PREF_KEY_USER_USER_TYPE, userModel.userType!);
-    prefs!.setString(Constant.PREF_KEY_ALTER_EGO_ID, userModel.alterEgoId!);
+    prefs!.setString(AppConstants.PREF_KEY_USER_AVATAR_URL, userModel.avatarUrl!);
+    prefs!.setString(AppConstants.PREF_KEY_USER_NICKNAME, userModel.nickname!);
+    prefs!.setString(AppConstants.PREF_KEY_USER_SECRET_CODE, userModel.secretCode!);
+    prefs!.setString(AppConstants.PREF_KEY_USER_EMAIL, userModel.email!);
+    prefs!.setString(AppConstants.PREF_KEY_USER_FCM_ID, _user.currentUser!.uid);
+    prefs!.setString(AppConstants.PREF_KEY_USER_GENDER, userModel.gender!);
+    prefs!.setString(AppConstants.PREF_KEY_USER_ID, userModel.userId!);
+    prefs!.setString(AppConstants.PREF_KEY_USER_USER_TYPE, userModel.userType!);
+    prefs!.setString(AppConstants.PREF_KEY_ALTER_EGO_ID, userModel.alterEgoId!);
     prefs!.setString(
-        Constant.PREF_KEY_ALTER_EGO_ACCESS_CODE, userModel.alterEgoAccessCode!);
-    prefs!.setString(Constant.PREF_KEY_USER_TIME_REGISTERED,
+        AppConstants.PREF_KEY_ALTER_EGO_ACCESS_CODE, userModel.alterEgoAccessCode!);
+    prefs!.setString(AppConstants.PREF_KEY_USER_TIME_REGISTERED,
         userModel.timeRegistered!.toDate().toString());
-    prefs!.setString(Constant.PREF_KEY_USER_LAST_UNLOCKED,
+    prefs!.setString(AppConstants.PREF_KEY_USER_LAST_UNLOCKED,
         userModel.timeLastUnlocked!.toDate().toString());
     //prefs!.setString(usersModelKey, id);
     notifyListeners();
@@ -493,19 +493,19 @@ class FirebaseServices extends ChangeNotifier {
   /// get user
   Future<UserModel> getUser() async {
     prefs = await SharedPreferences.getInstance();
-    var avatar = prefs!.getString(Constant.PREF_KEY_USER_AVATAR_URL) ?? '';
-    var nickname = prefs!.getString(Constant.PREF_KEY_USER_NICKNAME) ?? '';
-    var secretCode = prefs!.getString(Constant.PREF_KEY_USER_SECRET_CODE) ?? '';
-    var email = prefs!.getString(Constant.PREF_KEY_USER_EMAIL) ?? '';
-    var uid = prefs!.getString(Constant.PREF_KEY_USER_FCM_ID) ?? '';
-    var gender = prefs!.getString(Constant.PREF_KEY_USER_GENDER) ?? '';
-    var userId = prefs!.getString(Constant.PREF_KEY_USER_ID) ?? '';
-    var userType = prefs!.getString(Constant.PREF_KEY_USER_USER_TYPE) ?? '';
-    var alterEgoId = prefs!.getString(Constant.PREF_KEY_ALTER_EGO_ID) ?? '';
+    var avatar = prefs!.getString(AppConstants.PREF_KEY_USER_AVATAR_URL) ?? '';
+    var nickname = prefs!.getString(AppConstants.PREF_KEY_USER_NICKNAME) ?? '';
+    var secretCode = prefs!.getString(AppConstants.PREF_KEY_USER_SECRET_CODE) ?? '';
+    var email = prefs!.getString(AppConstants.PREF_KEY_USER_EMAIL) ?? '';
+    var uid = prefs!.getString(AppConstants.PREF_KEY_USER_FCM_ID) ?? '';
+    var gender = prefs!.getString(AppConstants.PREF_KEY_USER_GENDER) ?? '';
+    var userId = prefs!.getString(AppConstants.PREF_KEY_USER_ID) ?? '';
+    var userType = prefs!.getString(AppConstants.PREF_KEY_USER_USER_TYPE) ?? '';
+    var alterEgoId = prefs!.getString(AppConstants.PREF_KEY_ALTER_EGO_ID) ?? '';
     var alterEgoAccessCode =
-        prefs!.getString(Constant.PREF_KEY_ALTER_EGO_ACCESS_CODE) ?? '';
-    //var timeRegistered = prefs!.getString(Constant.PREF_KEY_USER_TIME_REGISTERED) ?? '';
-    //var timeLastUnlocked = prefs!.getString(Constant.PREF_KEY_USER_LAST_UNLOCKED) ?? '';
+        prefs!.getString(AppConstants.PREF_KEY_ALTER_EGO_ACCESS_CODE) ?? '';
+    //var timeRegistered = prefs!.getString(AppConstants.PREF_KEY_USER_TIME_REGISTERED) ?? '';
+    //var timeLastUnlocked = prefs!.getString(AppConstants.PREF_KEY_USER_LAST_UNLOCKED) ?? '';
     return UserModel(
         alterEgoAccessCode: alterEgoAccessCode,
         alterEgoId: alterEgoId,
