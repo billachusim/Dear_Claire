@@ -15,6 +15,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "635604110866-1t83ln5ov1uk7422ns1326lti3j012ml.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mobymagic.clairediary",
+            "certificate_hash": "d66efad23d89527c24116c3cfdf4d7ff6ce9ba38"
+          }
+        },
+        {
+          "client_id": "635604110866-1u9ls074bmnkuul3ugbqa2dke2g40367.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mobymagic.clairediary",
+            "certificate_hash": "347611e4f0dea707cc978dbf8aaa0f02a89041d9"
+          }
+        },
+        {
           "client_id": "635604110866-2k1ev1fu7836plqol8vi07cqvogu5ovv.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -36,6 +52,14 @@
           "android_info": {
             "package_name": "com.mobymagic.clairediary",
             "certificate_hash": "eae48b43242ea1db208e1b25255698738fc1ffee"
+          }
+        },
+        {
+          "client_id": "635604110866-amtrljt57eqhput4aajoqctvoh2f8tnb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mobymagic.clairediary",
+            "certificate_hash": "5498917f48cab416b0621f7aeeeae41a5bc4f7bd"
           }
         },
         {

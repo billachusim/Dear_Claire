@@ -143,6 +143,8 @@ class _SignUpPage extends State<SignUpPage> {
                   ),
                   SizedBox(height: 40),
                   _buildCreateEgoButton(),
+                  SizedBox(height: 15),
+                  _buildGoogleSignUpButton(),
                   SizedBox(height: 20),
                   _buildTermsAndPolicyText(),
                   SizedBox(height: 20),
@@ -234,27 +236,83 @@ class _SignUpPage extends State<SignUpPage> {
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          color: _termsAccepted ? Pallet.colorWhite : Pallet.colorWhite.withValues(alpha: 0.5),
+          color: _termsAccepted
+              ? Pallet.colorWhite
+              : Pallet.colorWhite.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(30),
         ),
         child: Center(
           child: isSigningIn
               ? SizedBox(
-            height: 24,
-            width: 24,
-            child: CircularProgressIndicator(
-              color: Pallet.colorPrimary,
-              strokeWidth: 3,
-            ),
-          )
+                  height: 24,
+                  width: 24,
+                  child: CircularProgressIndicator(
+                    color: Pallet.colorPrimary,
+                    strokeWidth: 3,
+                  ),
+                )
               : Text(
-            AppString.create_ego,
-            style: GoogleFonts.lato(
-              fontSize: 18.0,
-              color: Pallet.colorPrimary,
-              fontWeight: FontWeight.bold,
+                  AppString.create_ego,
+                  style: GoogleFonts.lato(
+                    fontSize: 18.0,
+                    color: Pallet.colorPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoogleSignUpButton() {
+    return GestureDetector(
+      onTap: () async {
+        if (isSigningIn) return;
+
+        if (!_termsAccepted) {
+          showToast("Please accept the terms and policy to continue.");
+          return;
+        }
+
+        setState(() {
+          isSigningIn = true;
+        });
+
+        await _firebaseServices.signInWithGoogle(context);
+
+        if (mounted) {
+          setState(() {
+            isSigningIn = false;
+          });
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: 18),
+        decoration: BoxDecoration(
+          color: _termsAccepted
+              ? Colors.white
+              : Colors.white.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/google.png',
+              height: 24,
             ),
-          ),
+            SizedBox(width: 10),
+            Text(
+              "Sign up with Google",
+              style: GoogleFonts.lato(
+                fontSize: 18.0,
+                color: Pallet.colorPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );

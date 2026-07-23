@@ -288,6 +288,8 @@ class _LoginPage extends State<LoginPage> {
                   ),
                   SizedBox(height: 40),
                   _buildOpenUpButton(),
+                  SizedBox(height: 15),
+                  _buildGoogleSignInButton(),
                   SizedBox(height: 20),
                   _buildTermsAndPolicyText(),
                   SizedBox(height: 20),
@@ -375,6 +377,50 @@ class _LoginPage extends State<LoginPage> {
             AppString.open_up,
             style: GoogleFonts.lato(fontSize: 18.0, color: Pallet.colorPrimary, fontWeight: FontWeight.bold),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoogleSignInButton() {
+    return GestureDetector(
+      onTap: () async {
+        if (isSigningIn) return;
+        setState(() {
+          isSigningIn = true;
+        });
+        await _firebaseServices.signInWithGoogle(context);
+        if (mounted) {
+          setState(() {
+            isSigningIn = false;
+          });
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: 18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/google.png',
+              height: 24,
+            ),
+            SizedBox(width: 10),
+            Text(
+              "Continue with Google",
+              style: GoogleFonts.lato(
+                fontSize: 18.0,
+                color: Pallet.colorPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );

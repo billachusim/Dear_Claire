@@ -29,6 +29,7 @@ dependencies:
   firebase_crashlytics: ^5.2.6
   firebase_analytics: ^12.4.5
   firebase_auth: ^6.5.6
+  google_sign_in: ^6.2.2
   cloud_firestore: ^6.7.1
   firebase_database: ^12.4.6
   firebase_in_app_messaging: ^0.9.2+6
@@ -118,6 +119,7 @@ flutter_native_splash:
 flutter:
   uses-material-design: true
   assets:
+    - assets/
     - secrets/
     - assets/images/
     - assets/audio/
