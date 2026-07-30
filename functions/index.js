@@ -1,6 +1,7 @@
 const functions = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 const { RtcTokenBuilder, RtcRole } = require("agora-token");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 admin.initializeApp();
 
@@ -27,9 +28,6 @@ exports.generateAgoraToken = functions.https.onCall(async (data, context) => {
 
   // --- THE CRITICAL FIX IS HERE ---
   // Use the UID passed from the client if it exists and is a valid number.
-  // This allows the admin to have a static UID like 1.
-  // For regular users, if no UID is passed or it's invalid, it safely defaults to 0,
-  // which tells Agora to assign a dynamic UID.
   const uid = data.uid && typeof data.uid === 'number' ? data.uid : 0;
   // ---------------------------------
 
@@ -59,5 +57,54 @@ exports.generateAgoraToken = functions.https.onCall(async (data, context) => {
       "internal",
       "Failed to generate Agora token."
     );
+  }
+});
+
+// Use runWith to declare that this function needs access to the GEMINI_API_KEY secret
+exports.moderateFeatureRequest = functions.runWith({ secrets: ["GEMINI_API_KEY"] }).https.onCall(async (data, context) => {
+  // Authentication check
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "The function must be called while authenticated."
+    );
+  }
+
+  const { title, message, egoName, sessionMessage } = data;
+  if (!title || !message) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      'The function must be called with "title" and "message".'
+    );
+  }
+
+  // Access the secret from environment variables
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.error("GEMINI_API_KEY is not set in secrets.");
+    return { isAbusive: false, error: "Configuration error" };
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: "You are a content moderator for 'Dear Claire', a secret diary app. " +
+        "Analyze the user's feature request and the associated session content for abusive, illicit, or harmful content. " +
+        "Answer with ONLY 'true' if it is harmful/abusive, or 'false' if it is safe.",
+    });
+
+    const prompt = `User's Feature Request:\nTitle: ${title}\nExplanation: ${message}\n\nSession Content to Feature:\n${sessionMessage || 'N/A'}\n\nSubmitted by: ${egoName}`;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text().toLowerCase().trim();
+
+    console.log(`Moderation result for ${egoName}: ${text}`);
+
+    return { isAbusive: text === "true" };
+  } catch (error) {
+    console.error("Gemini Moderation Error:", error);
+    // Safe fallback: if AI fails, allow the request but log the error
+    return { isAbusive: false, error: "Moderation service unavailable" };
   }
 });

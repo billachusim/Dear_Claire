@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/ui/featured/model/session.dart';
 import 'package:clairediary/utils/color.dart';
@@ -5,8 +6,6 @@ import 'package:clairediary/utils/strings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 import '../../data/models/transaction_model.dart' as t_model;
 import '../../helpers/toast_helper.dart';
@@ -23,12 +22,6 @@ class RequestFeatureForm extends StatefulWidget {
 }
 
 class _RequestFeatureFormState extends State<RequestFeatureForm> {
-  static const String _geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
-  static const String _geminiModel = String.fromEnvironment(
-    'GEMINI_MODEL',
-    defaultValue: 'gemini-pro',
-  );
-
   final TextEditingController _whyFeatureController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isProcessing = false;
@@ -156,8 +149,9 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
       final title = widget.session.title!;
       final message = _whyFeatureController.text;
       final egoName = widget.session.userNickname!;
+      final sessionMessage = widget.session.message!;
 
-      final isAbusive = await _checkForAbusiveLanguage(title, message, egoName);
+      final isAbusive = await _checkForAbusiveLanguage(title, message, egoName, sessionMessage);
 
       if (isAbusive) {
         showToast(
@@ -236,41 +230,19 @@ class _RequestFeatureFormState extends State<RequestFeatureForm> {
 
 
 
-  Future<bool> _checkForAbusiveLanguage(String title, String message, String egoName) async {
-    if (_geminiApiKey.isEmpty) {
-      logger.w(
-        'Skipping abusive-language check because GEMINI_API_KEY is not set.',
-      );
-      return false;
-    }
+  Future<bool> _checkForAbusiveLanguage(String title, String message, String egoName, String sessionMessage) async {
+    try {
+      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('moderateFeatureRequest');
+      final response = await callable.call({
+        'title': title,
+        'message': message,
+        'egoName': egoName,
+        'sessionMessage': sessionMessage,
+      });
 
-    final url = Uri.https(
-      'generativelanguage.googleapis.com',
-      '/v1beta/models/$_geminiModel:generateContent',
-      {'key': _geminiApiKey},
-    );
-
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'contents': [
-          {
-            'parts': [
-              {
-                'text': 'Is the following text abusive, illicit, or harmful in any way? Answer with only "true" or "false".\n\n$title. $message. $egoName'
-              }
-            ]
-          }
-        ]
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final result = data['candidates'][0]['content']['parts'][0]['text'];
-      return result.toLowerCase() == 'true';
-    } else {
+      return response.data['isAbusive'] ?? false;
+    } catch (e) {
+      logger.e("Error calling moderation function: $e");
       // Safely assume not abusive if API fails
       return false;
     }
