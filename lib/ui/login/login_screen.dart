@@ -7,6 +7,7 @@ import 'package:clairediary/utils/strings.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/user_model.dart';
 import '../../widgets/toast.dart';
@@ -290,6 +291,7 @@ class _LoginPage extends State<LoginPage> {
                   _buildOpenUpButton(),
                   SizedBox(height: 15),
                   _buildGoogleSignInButton(),
+                  _buildAppleSignInButton(),
                   SizedBox(height: 20),
                   _buildTermsAndPolicyText(),
                   SizedBox(height: 20),
@@ -422,6 +424,27 @@ class _LoginPage extends State<LoginPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAppleSignInButton() {
+    if (!Platform.isIOS) return SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 15),
+      child: SignInWithAppleButton(
+        onPressed: () async {
+          if (isSigningIn) return;
+          setState(() {
+            isSigningIn = true;
+          });
+          await _firebaseServices.signInWithApple(context);
+          if (mounted) {
+            setState(() {
+              isSigningIn = false;
+            });
+          }
+        },
       ),
     );
   }

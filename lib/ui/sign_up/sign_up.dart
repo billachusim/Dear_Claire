@@ -5,6 +5,7 @@ import 'package:clairediary/utils/strings.dart';
 import 'package:clairediary/widgets/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import '../../utils/helper.dart';
@@ -145,6 +146,7 @@ class _SignUpPage extends State<SignUpPage> {
                   _buildCreateEgoButton(),
                   SizedBox(height: 15),
                   _buildGoogleSignUpButton(),
+                  _buildAppleSignUpButton(),
                   SizedBox(height: 20),
                   _buildTermsAndPolicyText(),
                   SizedBox(height: 20),
@@ -314,6 +316,35 @@ class _SignUpPage extends State<SignUpPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAppleSignUpButton() {
+    if (!Platform.isIOS) return SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 15),
+      child: SignInWithAppleButton(
+        onPressed: () async {
+          if (isSigningIn) return;
+
+          if (!_termsAccepted) {
+            showToast("Please accept the terms and policy to continue.");
+            return;
+          }
+
+          setState(() {
+            isSigningIn = true;
+          });
+
+          await _firebaseServices.signInWithApple(context);
+
+          if (mounted) {
+            setState(() {
+              isSigningIn = false;
+            });
+          }
+        },
       ),
     );
   }
