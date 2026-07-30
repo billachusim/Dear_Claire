@@ -44,10 +44,19 @@ class _SplashPageState extends State<SplashPage>
   }
 
   void _handleInitialNotification() {
+    // --- AUTH CHECK ---
+    final bool isLoggedIn = FirebaseAuth.instance.currentUser != null;
+
     // --- Handle Remote (FCM) Notification ---
     if (widget.initialRemoteMessage != null) {
       final route = widget.initialRemoteMessage!.data["route"];
       if (route != null) {
+        // If not logged in, ignore notification and go to auth
+        if (!isLoggedIn) {
+          navService.pushReplacementNamed(AppRoutes.authSelection);
+          return;
+        }
+
         // We removed the nested callback. Navigation now happens directly.
         switch (route) {
         // This is the correct, unified case for both room types
@@ -96,6 +105,11 @@ class _SplashPageState extends State<SplashPage>
         widget.initialLocalNotification!.didNotificationLaunchApp) {
       final payload = widget.initialLocalNotification!.notificationResponse?.payload;
       if (payload == 'auto_diary_record') {
+        // If not logged in, go to auth
+        if (!isLoggedIn) {
+          navService.pushReplacementNamed(AppRoutes.authSelection);
+          return;
+        }
         // No callback needed here either.
         navService.pushReplacementNamed(AppRoutes.setupAutoDiary);
         return; // Handled, so we exit.
@@ -106,7 +120,11 @@ class _SplashPageState extends State<SplashPage>
     // This listener is only added if no notification was handled.
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        if (isLoggedIn) {
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        } else {
+          Navigator.pushReplacementNamed(context, AppRoutes.authSelection);
+        }
       }
     });
   }

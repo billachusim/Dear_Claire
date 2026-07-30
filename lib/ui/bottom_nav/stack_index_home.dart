@@ -567,6 +567,15 @@ class _HomeDashboardPageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
+
+    // Safety check: redirect to auth if reached without a session
+    if (FirebaseAuth.instance.currentUser == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.authSelection);
+      });
+      return;
+    }
+
     _featuredScrollController = ScrollController();
     _archiveScrollController = ScrollController();
     _followedScrollController = ScrollController();

@@ -51,6 +51,36 @@ class NotificationService {
         logger.e('STATUS: ${e.response?.statusCode}');
         logger.e('DATA: ${e.response?.data}');
         logger.e('HEADERS: ${e.response?.headers}');
+
+        // Handle UNREGISTERED (NotRegistered) error
+        final errorData = e.response?.data;
+        if (errorData is Map && errorData['error'] != null) {
+          final error = errorData['error'];
+          final details = error['details'] as List?;
+          bool isUnregistered = error['status'] == 'NOT_FOUND' ||
+              error['message'] == 'NotRegistered';
+
+          if (details != null) {
+            for (var detail in details) {
+              if (detail is Map && detail['errorCode'] == 'UNREGISTERED') {
+                isUnregistered = true;
+                break;
+              }
+            }
+          }
+
+          if (isUnregistered) {
+            final originalData = e.requestOptions.data;
+            if (originalData is Map && originalData['message'] != null) {
+              final message = originalData['message'];
+              final token = message['token'];
+              if (token != null && token is String) {
+                logger.w('FCM token is UNREGISTERED. Cleaning up Firestore...');
+                FirebaseServices().removeInvalidFcmToken(token);
+              }
+            }
+          }
+        }
       } else {
         logger.e('Error sending request!');
         logger.e(e.message);

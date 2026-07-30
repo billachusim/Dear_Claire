@@ -1161,6 +1161,23 @@ class FirebaseServices extends ChangeNotifier {
     return _data;
   }
 
+  /// Removes an FCM token from all user documents if it's reported as invalid.
+  Future<void> removeInvalidFcmToken(String token) async {
+    try {
+      final querySnapshot = await _firebaseFirestore
+          .collection(AppString.users)
+          .where('fcmId', isEqualTo: token)
+          .get();
+
+      for (var doc in querySnapshot.docs) {
+        await doc.reference.update({'fcmId': ''});
+        logger.i('Removed invalid FCM token for user: ${doc.id}');
+      }
+    } catch (e) {
+      logger.e('Error removing invalid FCM token: $e');
+    }
+  }
+
 
   /// SignUp user
   Future<bool> register(
