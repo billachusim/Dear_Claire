@@ -173,15 +173,22 @@ Future<void> initializeService() async {
   await service.configure(
     androidConfiguration: AndroidConfiguration(
       onStart: onStart,
-      autoStart: true,
+      // Do not start on app launch. The service runs as a microphone/location
+      // foreground service, and Android 14+ throws (crashing the app) if it is
+      // started before those permissions are granted. Auto Diary starts it
+      // explicitly once the user turns the feature on.
+      autoStart: false,
       isForegroundMode: true,
       notificationChannelId: notificationChannelId,
       initialNotificationTitle: 'AutoDiary',
       initialNotificationContent: 'Claire is active.',
       foregroundServiceNotificationId: notificationId,
+      // Only claim the microphone type. Claiming location too makes Android
+      // 14+ throw when location permission has not been granted.
+      foregroundServiceTypes: [AndroidForegroundType.microphone],
     ),
     iosConfiguration: IosConfiguration(
-      autoStart: true,
+      autoStart: false,
       onForeground: onStart,
       onBackground: (ServiceInstance service) async {
         return true;
