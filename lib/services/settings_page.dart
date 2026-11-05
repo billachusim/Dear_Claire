@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -136,6 +138,27 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
+          const Divider(height: 32),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Text('More apps from us', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          ListTile(
+            leading: const Icon(Icons.psychology_alt),
+            title: const Text('Alter Ego: Shadow Work Map'),
+            subtitle: const Text('Private, offline map of your inner archetypes'),
+            onTap: () => _launchUrl(Platform.isIOS
+                ? 'https://apps.apple.com/app/id6759404823'
+                : 'https://play.google.com/store/apps/details?id=com.socialfaculty.alter_ego&referrer=utm_source%3Ddear_claire%26utm_medium%3Dsettings'),
+          ),
+          if (Platform.isAndroid)
+            ListTile(
+              leading: const Icon(Icons.graphic_eq),
+              title: const Text('Eavesdrop: Live Voice Rooms'),
+              subtitle: const Text('Listen in on live, honest conversations'),
+              onTap: () => _launchUrl(
+                  'https://play.google.com/store/apps/details?id=com.socialfaculty.eavesdrop&referrer=utm_source%3Ddear_claire%26utm_medium%3Dsettings'),
+            ),
         ],
       ),
     );
