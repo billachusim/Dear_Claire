@@ -74,8 +74,11 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
   FlutterLocalNotificationsPlugin();
 
   // Admob Ad Units.
-  late BannerAd egoModeSessionDetailBottomBanner;
+  BannerAd? egoModeSessionDetailBottomBanner;
   bool _isBannerAdInitialized = false;
+  // Only true after the banner has actually loaded; a banner that failed to
+  // load is disposed and must never be put in an AdWidget.
+  bool _isBannerAdLoaded = false;
 
 
   @override
@@ -103,7 +106,7 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
     }
     _interstitialAd?.dispose();
     if (_isBannerAdInitialized) {
-      egoModeSessionDetailBottomBanner.dispose();
+      egoModeSessionDetailBottomBanner?.dispose();
     }
     super.dispose();
   }
@@ -203,10 +206,19 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
                 adUnitId: adState.egoModeBottomCommentBannerAdUnitId,
                 request: const AdRequest(),
                 listener: BannerAdListener(
-                  onAdLoaded: (ad) => print('Notified session banner loaded.'),
+                  onAdLoaded: (ad) {
+                    print('Notified session banner loaded.');
+                    if (mounted) setState(() => _isBannerAdLoaded = true);
+                  },
                   onAdFailedToLoad: (ad, error) {
                     print('Notified session banner failed to load: $error');
                     ad.dispose();
+                    if (mounted) {
+                      setState(() {
+                        _isBannerAdLoaded = false;
+                        egoModeSessionDetailBottomBanner = null;
+                      });
+                    }
                   },
                 ))
               ..load();
@@ -1216,15 +1228,15 @@ class _NotifiedSessionDetailsState extends State<NotifiedSessionDetails> {
           ]
         ),
 
-          if (!_isPremium && _isBannerAdInitialized)
+          if (!_isPremium && _isBannerAdLoaded && egoModeSessionDetailBottomBanner != null)
             Positioned(
               bottom: 60, // Position above the ChatEditField
               left: 0,
               right: 0,
               child: Container(
-                height: egoModeSessionDetailBottomBanner.size.height.toDouble(),
-                width: egoModeSessionDetailBottomBanner.size.width.toDouble(),
-                child: AdWidget(ad: egoModeSessionDetailBottomBanner),
+                height: egoModeSessionDetailBottomBanner!.size.height.toDouble(),
+                width: egoModeSessionDetailBottomBanner!.size.width.toDouble(),
+                child: AdWidget(ad: egoModeSessionDetailBottomBanner!),
                 alignment: Alignment.center,
               ),
             ),

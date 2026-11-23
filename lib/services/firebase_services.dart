@@ -1733,6 +1733,7 @@ $motivation
     return _firebaseFirestore
         .collection('products')
         .orderBy('timeCreated', descending: true)
+        .limit(100)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) => Product.fromJson(doc.data())).toList();

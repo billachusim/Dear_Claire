@@ -53,7 +53,7 @@ class _EditClairevatarState extends State<EditClairevatar> {
 
   /// Query Clairevatars from Firestore
   final Stream<QuerySnapshot> _clairevatarGrid =
-  FirebaseFirestore.instance.collection('claire_vartar').snapshots();
+  FirebaseFirestore.instance.collection('claire_vartar').limit(300).snapshots();
 
   /// Get user's Clairevatar
   Future<String?> getUserClairevatar() async {

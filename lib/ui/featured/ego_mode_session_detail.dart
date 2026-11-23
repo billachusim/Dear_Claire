@@ -66,6 +66,9 @@ class _EgoModeSessionDetailState
   late Future<UserModel> _userFuture;
   bool _isPremium = false;
   bool _isBannerAdInitialized = false;
+  // Only true after the banner has actually loaded; a banner that failed to
+  // load is disposed and must never be put in an AdWidget.
+  bool _isBannerAdLoaded = false;
 
 
 
@@ -159,10 +162,19 @@ class _EgoModeSessionDetailState
               adUnitId: adState.egoModeBottomCommentBannerAdUnitId,
               request: const AdRequest(),
               listener: BannerAdListener(
-                onAdLoaded: (ad) => print('Session detail banner loaded.'),
+                onAdLoaded: (ad) {
+                    print('Session detail banner loaded.');
+                    if (mounted) setState(() => _isBannerAdLoaded = true);
+                  },
                 onAdFailedToLoad: (ad, error) {
                   print('Session detail banner failed to load: $error');
                   ad.dispose();
+                    if (mounted) {
+                      setState(() {
+                        _isBannerAdLoaded = false;
+                        egoModeSessionDetailBottomBanner = null;
+                      });
+                    }
                 },
               ),
             )..load();
@@ -284,7 +296,7 @@ class _EgoModeSessionDetailState
               ],
             ),
 
-            if (!_isPremium && egoModeSessionDetailBottomBanner != null && _isBannerAdInitialized)
+            if (!_isPremium && egoModeSessionDetailBottomBanner != null && _isBannerAdLoaded)
               Positioned(
                 bottom: 60,
                 left: 0,

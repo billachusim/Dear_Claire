@@ -49,6 +49,9 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
   bool _isBannerAdInitialized = false;
+  // Only true after the banner has actually loaded; a banner that failed to
+  // load is disposed and must never be put in an AdWidget.
+  bool _isBannerAdLoaded = false;
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
 
@@ -135,10 +138,19 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
                 adUnitId: adState.insideChatroomBottomBannerAdUnitId,
                 request: AdRequest(),
                 listener: BannerAdListener(
-                  onAdLoaded: (ad) => print('Alter Ego chat banner loaded.'),
+                  onAdLoaded: (ad) {
+                    print('Alter Ego chat banner loaded.');
+                    if (mounted) setState(() => _isBannerAdLoaded = true);
+                  },
                   onAdFailedToLoad: (ad, error) {
                     print('Alter Ego chat banner failed to load: $error');
                     ad.dispose();
+                    if (mounted) {
+                      setState(() {
+                        _isBannerAdLoaded = false;
+                        _bottomBannerAd = null;
+                      });
+                    }
                   },
                 )
             )..load();
@@ -234,7 +246,7 @@ class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
 
           // --- BANNER AD PLACEMENT ---
           // Positioned above the ChatEditField.
-          if (!_isPremium && _bottomBannerAd != null && _isBannerAdInitialized)
+          if (!_isPremium && _bottomBannerAd != null && _isBannerAdLoaded)
             Positioned(
               bottom: 60, // Position it 60 pixels from the bottom.
               left: 0,

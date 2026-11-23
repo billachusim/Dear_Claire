@@ -130,6 +130,9 @@ class _ChatScreenState extends State<ChatScreen> {
 // We only need one banner for this screen now.
   BannerAd? insideChatroomBottomBanner; // Make it nullable
   bool _isBannerAdInitialized = false; // Add this flag
+  // Only true after the banner has actually loaded; a banner that failed to
+  // load is disposed and must never be put in an AdWidget.
+  bool _isBannerAdLoaded = false;
 
   @override
   void didChangeDependencies() {
@@ -143,10 +146,19 @@ class _ChatScreenState extends State<ChatScreen> {
             adUnitId: adState.insideChatroomBottomBannerAdUnitId,
             request: AdRequest(),
             listener: BannerAdListener(
-              onAdLoaded: (ad) => print('Banner ad loaded for chatroom.'),
+              onAdLoaded: (ad) {
+                    print('Banner ad loaded for chatroom.');
+                    if (mounted) setState(() => _isBannerAdLoaded = true);
+                  },
               onAdFailedToLoad: (ad, error) {
                 print('Banner ad failed to load for chatroom: $error');
                 ad.dispose();
+                    if (mounted) {
+                      setState(() {
+                        _isBannerAdLoaded = false;
+                        insideChatroomBottomBanner = null;
+                      });
+                    }
               },
             ),
           )..load();
@@ -251,7 +263,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
           // --- BANNER AD PLACEMENT ---
           // Positioned above the ChatEditField
-          if (!_isPremium && insideChatroomBottomBanner != null && _isBannerAdInitialized)
+          if (!_isPremium && insideChatroomBottomBanner != null && _isBannerAdLoaded)
             Positioned(
               bottom: 60, // Position it 60 pixels from the bottom.
               left: 0,

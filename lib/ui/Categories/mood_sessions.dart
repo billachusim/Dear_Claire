@@ -29,6 +29,9 @@ class _MoodSessionsState extends State<MoodSessions> {
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
   bool _isBannerAdInitialized = false;
+  // Only true after the banner has actually loaded; a banner that failed to
+  // load is disposed and must never be put in an AdWidget.
+  bool _isBannerAdLoaded = false;
 
   /// Get sessions from the category and have been marked to receive public replies.
   /// But not flagged or even archived
@@ -69,10 +72,19 @@ class _MoodSessionsState extends State<MoodSessions> {
                 adUnitId: adState.categorySessionTopBannerAdUnitId, // You can use any of your banner IDs
                 request: AdRequest(),
                 listener: BannerAdListener(
-                  onAdLoaded: (ad) => print('Mood sessions banner loaded.'),
+                  onAdLoaded: (ad) {
+                    print('Mood sessions banner loaded.');
+                    if (mounted) setState(() => _isBannerAdLoaded = true);
+                  },
                   onAdFailedToLoad: (ad, error) {
                     print('Mood sessions banner failed to load: $error');
                     ad.dispose();
+                    if (mounted) {
+                      setState(() {
+                        _isBannerAdLoaded = false;
+                        _bottomBannerAd = null;
+                      });
+                    }
                   },
                 ))
               ..load();
@@ -174,7 +186,7 @@ class _MoodSessionsState extends State<MoodSessions> {
               },
             ),
             // --- ADMOB COMPLIANCE FIX 6: Place a single, compliant banner ad ---
-            if (_bottomBannerAd != null && _isBannerAdInitialized)
+            if (_bottomBannerAd != null && _isBannerAdLoaded)
               Positioned(
                 bottom: 0, // Anchored to the bottom
                 left: 0,

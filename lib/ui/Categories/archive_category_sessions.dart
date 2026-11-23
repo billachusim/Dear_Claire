@@ -25,6 +25,7 @@ class ArchiveCategorySessions extends StatelessWidget {
         .collection(AppString.appFeaturedSessions)
         .where("userId", isEqualTo: currentUser!.uid.toString())
         .where("category1", isEqualTo: visitedCategory.toString())
+        .limit(AppString.allSessionLength)
         .snapshots();
   }
 

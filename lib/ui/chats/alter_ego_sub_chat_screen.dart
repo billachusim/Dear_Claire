@@ -56,6 +56,9 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
   bool _isBannerAdInitialized = false;
+  // Only true after the banner has actually loaded; a banner that failed to
+  // load is disposed and must never be put in an AdWidget.
+  bool _isBannerAdLoaded = false;
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
   bool _isSending = false;
@@ -142,10 +145,19 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
                 adUnitId: adState.insideInsideChatroomBottomBannerAdUnitId,
                 request: AdRequest(),
                 listener: BannerAdListener(
-                  onAdLoaded: (ad) => print('Sub-chat banner loaded.'),
+                  onAdLoaded: (ad) {
+                    print('Sub-chat banner loaded.');
+                    if (mounted) setState(() => _isBannerAdLoaded = true);
+                  },
                   onAdFailedToLoad: (ad, error) {
                     print('Sub-chat banner failed to load: $error');
                     ad.dispose();
+                    if (mounted) {
+                      setState(() {
+                        _isBannerAdLoaded = false;
+                        _bottomBannerAd = null;
+                      });
+                    }
                   },
                 )
             )..load();
@@ -221,7 +233,7 @@ class _AlterEgoSubChatScreenState extends State<AlterEgoSubChatScreen> {
           ),
 
           // Banner Ad
-          if (!_isPremium && _bottomBannerAd != null && _isBannerAdInitialized)
+          if (!_isPremium && _bottomBannerAd != null && _isBannerAdLoaded)
             Positioned(
               bottom: 65,
               left: 0,

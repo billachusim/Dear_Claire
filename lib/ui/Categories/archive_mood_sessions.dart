@@ -26,6 +26,7 @@ class ArchiveMoodSessions extends StatelessWidget {
         .collection(AppString.appFeaturedSessions)
         .where("userId", isEqualTo: currentUser!.uid.toString())
         .where("moodId", isEqualTo: Mood.getMoodId(sessionMood))
+        .limit(AppString.allSessionLength)
         .snapshots();
   }
 

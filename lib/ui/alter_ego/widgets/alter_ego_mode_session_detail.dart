@@ -54,6 +54,9 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
   bool _isBannerAdInitialized = false;
+  // Only true after the banner has actually loaded; a banner that failed to
+  // load is disposed and must never be put in an AdWidget.
+  bool _isBannerAdLoaded = false;
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
   late Future<UserModel> _userFuture;
@@ -139,12 +142,20 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
                 adUnitId: adState.alterEgoModeBottomCommentBannerAdUnitId,
                 request: AdRequest(),
                 listener: BannerAdListener(
-                  onAdLoaded: (ad) =>
-                      print('Alter Ego session detail banner loaded.'),
+                  onAdLoaded: (ad) {
+                    print('Alter Ego session detail banner loaded.');
+                    if (mounted) setState(() => _isBannerAdLoaded = true);
+                  },
                   onAdFailedToLoad: (ad, error) {
                     print(
                         'Alter Ego session detail banner failed to load: $error');
                     ad.dispose();
+                    if (mounted) {
+                      setState(() {
+                        _isBannerAdLoaded = false;
+                        _bottomBannerAd = null;
+                      });
+                    }
                   },
                 )
             )
@@ -273,7 +284,7 @@ class _AlterEgoModeSessionDetailState extends State<AlterEgoModeSessionDetail> {
           ),
 
           // --- ADMOB COMPLIANCE FIX 6: Place a single, compliant banner ad ---
-          if (!_isPremium && _bottomBannerAd != null && _isBannerAdInitialized)
+          if (!_isPremium && _bottomBannerAd != null && _isBannerAdLoaded)
             Positioned(
               bottom: 60, // Position above the ChatEditField
               left: 0,

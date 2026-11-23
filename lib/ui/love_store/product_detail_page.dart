@@ -80,6 +80,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       .doc(product.productId.toString())
                       .collection('comments')
                       .orderBy('timeCreated', descending: false)
+                      .limitToLast(300)
                       .snapshots(),
                   builder: (context, AsyncSnapshot<QuerySnapshot> snapShot) {
                     if (snapShot.hasError) {

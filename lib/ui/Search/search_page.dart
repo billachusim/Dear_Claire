@@ -97,35 +97,47 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Load ads only if they haven't been loaded yet
-    if (searchPageMiddleBanner == null) {
+    if (!_adsRequested) {
+      _adsRequested = true;
       final adState = Provider.of<AdState>(context, listen: false);
       _loadBannerAds(adState);
     }
   }
 
+  bool _adsRequested = false;
+
   void _loadBannerAds(AdState adState) {
     adState.initialization.then((status) {
       if (!mounted) return; // Ensure widget is still in the tree
-      setState(() {
-        searchPageMiddleBanner = _createBannerAd(adState.searchPageMiddleBannerAdUnitId);
-        searchPageBottomBanner = _createBannerAd(adState.searchPageBottomBannerAdUnitId);
-        searchPageMiddleBanner2 = _createBannerAd(adState.searchPageMiddleBannerAdUnitId2);
-        searchPageBottomBanner2 = _createBannerAd(adState.searchPageBottomBannerAdUnitId2);
-      });
+      // Each banner is only stored (and so only shown) once it has loaded.
+      // Showing a banner before load, or after it was disposed on a failed
+      // load, throws "AdWidget requires Ad.load to be called before AdWidget
+      // is inserted into the tree".
+      _createBannerAd(adState.searchPageMiddleBannerAdUnitId, (ad) => searchPageMiddleBanner = ad);
+      _createBannerAd(adState.searchPageBottomBannerAdUnitId, (ad) => searchPageBottomBanner = ad);
+      _createBannerAd(adState.searchPageMiddleBannerAdUnitId2, (ad) => searchPageMiddleBanner2 = ad);
+      _createBannerAd(adState.searchPageBottomBannerAdUnitId2, (ad) => searchPageBottomBanner2 = ad);
     });
   }
 
-  BannerAd _createBannerAd(String adUnitId) {
-    return BannerAd(
+  void _createBannerAd(String adUnitId, void Function(BannerAd) onLoaded) {
+    BannerAd(
       size: AdSize.banner,
       adUnitId: adUnitId,
       request: const AdRequest(),
       listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (!mounted) {
+            ad.dispose();
+            return;
+          }
+          setState(() => onLoaded(ad as BannerAd));
+        },
         onAdFailedToLoad: (ad, error) {
           ad.dispose();
         },
       ),
-    )..load();
+    ).load();
   }
 
   @override
@@ -323,7 +335,10 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     }
 
     return StreamBuilder<QuerySnapshot>(
-      stream: query.snapshots(),
+      // Always cap results: an unfiltered query here once streamed the whole
+      // featured sessions collection over the platform channel and crashed
+      // the app with OutOfMemoryError.
+      stream: query.limit(AppString.appSessionLength).snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

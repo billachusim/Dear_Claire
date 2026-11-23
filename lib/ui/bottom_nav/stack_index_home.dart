@@ -70,7 +70,10 @@ class _HomeDashboardPageState extends State<HomePage>
   String filePath = 'assets/web_games/tictactoe/index2.html';
   String tweets = 'assets/tweet/index.html';
   int _currentIndex = 0;
-  late String _title;
+  String _title = "Dear Claire";
+  // False when initState returned early (no signed-in user). The late fields
+  // below are not set in that case, so build/dispose must not touch them.
+  bool _isInitialized = false;
   String userName = "";
   String userType = "";
   String avatarUrl = "";
@@ -575,6 +578,7 @@ class _HomeDashboardPageState extends State<HomePage>
       });
       return;
     }
+    _isInitialized = true;
 
     _featuredScrollController = ScrollController();
     _archiveScrollController = ScrollController();
@@ -786,6 +790,11 @@ class _HomeDashboardPageState extends State<HomePage>
 
   @override
   void dispose() {
+    if (!_isInitialized) {
+      _audioPlayer.dispose();
+      super.dispose();
+      return;
+    }
     _controller.dispose();
     _flowerTimer?.cancel();
     detector.stopListening();
@@ -805,6 +814,10 @@ class _HomeDashboardPageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      // Redirecting to sign-in; show a plain loader for this frame.
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return Scaffold(
       resizeToAvoidBottomInset: true,
       key: _scaffoldKey,

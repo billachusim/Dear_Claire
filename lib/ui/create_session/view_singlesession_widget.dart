@@ -43,6 +43,9 @@ class _SessionPostDetailsScreenState
   // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
   BannerAd? _bottomBannerAd;
   bool _isBannerAdInitialized = false;
+  // Only true after the banner has actually loaded; a banner that failed to
+  // load is disposed and must never be put in an AdWidget.
+  bool _isBannerAdLoaded = false;
 
   @override
   void initState() {
@@ -118,12 +121,20 @@ class _SessionPostDetailsScreenState
                 adUnitId: adState.egoModeBottomCommentBannerAdUnitId,
                 request: const AdRequest(),
                 listener: BannerAdListener(
-                  onAdLoaded: (ad) =>
-                      print('Session post details banner loaded.'),
+                  onAdLoaded: (ad) {
+                    print('Session post details banner loaded.');
+                    if (mounted) setState(() => _isBannerAdLoaded = true);
+                  },
                   onAdFailedToLoad: (ad, error) {
                     print(
                         'Session post details banner failed to load: $error');
                     ad.dispose();
+                    if (mounted) {
+                      setState(() {
+                        _isBannerAdLoaded = false;
+                        _bottomBannerAd = null;
+                      });
+                    }
                   },
                 ))
               ..load();
@@ -194,7 +205,7 @@ class _SessionPostDetailsScreenState
             ],
           ),
           // --- ADMOB COMPLIANCE FIX 6: Place the single, compliant banner ad ---
-          if (_bottomBannerAd != null && _isBannerAdInitialized)
+          if (_bottomBannerAd != null && _isBannerAdLoaded)
             Positioned(
               bottom: 0, // Anchored to the bottom
               left: 0,

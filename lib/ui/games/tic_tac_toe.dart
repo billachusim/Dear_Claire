@@ -38,6 +38,9 @@ class _TicTacToeState extends State<TicTacToe> {
   // --- ADMOB COMPLIANCE FIX 1: Update ad state variables ---
   BannerAd? _bottomBannerAd;
   bool _isBannerAdInitialized = false;
+  // Only true after the banner has actually loaded; a banner that failed to
+  // load is disposed and must never be put in an AdWidget.
+  bool _isBannerAdLoaded = false;
   InterstitialAd? _interstitialAd;
   int _interstitialLoadAttempts = 0;
 
@@ -129,10 +132,19 @@ class _TicTacToeState extends State<TicTacToe> {
                 adUnitId: adState.tictactoeTopBannerAdUnitId, // Using your unique ID
                 request: AdRequest(),
                 listener: BannerAdListener(
-                  onAdLoaded: (ad) => print('TicTacToe banner loaded.'),
+                  onAdLoaded: (ad) {
+                    print('TicTacToe banner loaded.');
+                    if (mounted) setState(() => _isBannerAdLoaded = true);
+                  },
                   onAdFailedToLoad: (ad, error) {
                     print('TicTacToe banner failed to load: $error');
                     ad.dispose();
+                    if (mounted) {
+                      setState(() {
+                        _isBannerAdLoaded = false;
+                        _bottomBannerAd = null;
+                      });
+                    }
                   },
                 ))
               ..load();
@@ -207,7 +219,7 @@ class _TicTacToeState extends State<TicTacToe> {
             ),
           ),
           // --- ADMOB COMPLIANCE FIX 5: Place a single, compliant banner ad ---
-          if (_bottomBannerAd != null && _isBannerAdInitialized)
+          if (_bottomBannerAd != null && _isBannerAdLoaded)
             Container(
               height: _bottomBannerAd!.size.height.toDouble(),
               width: _bottomBannerAd!.size.width.toDouble(),
