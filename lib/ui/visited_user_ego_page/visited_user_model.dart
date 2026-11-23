@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/services/firebase_services.dart';
 
 class VisitedUserModel {
   String? alterEgoAccessCode;
@@ -14,6 +13,12 @@ class VisitedUserModel {
   Timestamp? timeRegistered;
   String? userId;
   String? userType;
+  int? sessionCount;
+  int? adviseCount;
+  int? totalLoveCount;
+  var currentLoveCount;
+  var withdrawnLoveCount;
+  bool flagged;
 
   VisitedUserModel({
     this.alterEgoAccessCode,
@@ -28,6 +33,12 @@ class VisitedUserModel {
     this.gender,
     this.userId,
     this.userType,
+    this.sessionCount,
+    this.adviseCount,
+    this.totalLoveCount,
+    this.currentLoveCount,
+    this.withdrawnLoveCount,
+    this.flagged = false,
   });
 
   factory VisitedUserModel.fromJson(json) {
@@ -44,6 +55,13 @@ class VisitedUserModel {
       timeRegistered: json['timeRegistered'] ?? '',
       userId: json['userId'] ?? '',
       userType: json['userType'] ?? '',
+      sessionCount: json['sessionCount'] ?? 0,
+      adviseCount: json['adviseCount'] ?? 0,
+      totalLoveCount: json['totalLoveCount'] ?? 0,
+      currentLoveCount: json['currentLoveCount'] ?? 0,
+      withdrawnLoveCount: json['withdrawnLoveCount'] ?? 0,
+      flagged: json['flagged'],
+
     );
   }
 
@@ -61,6 +79,14 @@ class VisitedUserModel {
       timeRegistered: json['timeRegistered'] ?? '',
       userId: json['userId'] ?? '',
       userType: json['userType'] ?? '',
+      sessionCount: json['sessionCount'] ?? 0,
+      adviseCount: json['adviseCount'] ?? 0,
+      totalLoveCount: json['totalLoveCount'] ?? 0,
+      currentLoveCount: json['currentLoveCount'] ?? 0.0,
+      withdrawnLoveCount: json['withdrawnLoveCount'] ?? 0.0,
+      flagged: json['flagged'] ?? false,
+
+
     );
   }
 
@@ -77,5 +103,12 @@ class VisitedUserModel {
     'timeRegistered': timeRegistered,
     'userId': userId,
     'userType': userType,
+    'sessionCount': sessionCount,
+    'adviseCount': adviseCount,
+    'totalLoveCount': totalLoveCount,
+    'currentLoveCount': currentLoveCount,
+    'withdrawnLoveCount': withdrawnLoveCount,
+    'flagged': flagged,
+
   };
 }

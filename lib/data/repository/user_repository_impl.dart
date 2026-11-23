@@ -1,8 +1,8 @@
 
 
-import 'package:dear_claire/data/cache/user_cache.dart';
-import 'package:dear_claire/data/remote/user_remote/user_remote.dart';
-import 'package:dear_claire/data/repository/user_repository.dart';
+import 'package:clairediary/data/cache/user_cache.dart';
+import 'package:clairediary/data/remote/user_remote/user_remote.dart';
+import 'package:clairediary/data/repository/user_repository.dart';
 
 class UserRepositoryImpl extends UserRepository {
   final UserRemote userRemote;

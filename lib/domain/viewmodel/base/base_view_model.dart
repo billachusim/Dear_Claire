@@ -1,4 +1,4 @@
-import 'package:dear_claire/data/core/view_state.dart';
+import 'package:clairediary/data/core/view_state.dart';
 import 'package:flutter/material.dart';
 
 class BaseViewModel extends ChangeNotifier{

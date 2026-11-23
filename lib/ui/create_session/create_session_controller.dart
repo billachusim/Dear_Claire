@@ -1,77 +1,56 @@
+import 'dart:io';
+
+import 'package:clairediary/utils/constant.dart';
+import 'package:get/get.dart';
 import 'dart:math';
-import 'package:flutter/material.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:image_picker/image_picker.dart';
 
-class CreateSessionController extends ChangeNotifier {
-  int _selectedBackgroundColor = 0;
-  int get selectedBackgroundColor => _selectedBackgroundColor;
-  set selectedBackgroundColor(int value) {
-    _selectedBackgroundColor = value;
-    notifyListeners();
+
+
+class CreateSessionController extends GetxController {
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Randomize the background color when the controller is initialized
+    randomizeBackgroundColor();
   }
 
-  bool _isShowSticker = false;
-  bool get isShowSticker => _isShowSticker;
-  set isShowSticker(bool value) {
-    _isShowSticker = value;
-    notifyListeners();
+  randomizeBackgroundColor(){
+    Random random = new Random();
+    // Corrected the range to avoid out-of-bounds errors
+    int randomNumber = random.nextInt(AppConstants.DIARY_COLORS.length);
+    selectedBackgroundColor = randomNumber.obs;
+  }
+  var selectedBackgroundColor;
+
+  var isShowSticker = false.obs;
+  var selectedFontIndex = 0.obs;
+
+  var acceptReplies = false.obs;
+  var followClaire = true.obs;
+  var location = false.obs;
+  var sessionMood = 'Current Mood'.obs;
+
+  changeMood(String value) {
+    sessionMood.value = value;
   }
 
-  int _selectedFontIndex = 0;
-  int get selectedFontIndex => _selectedFontIndex;
-  void selectFont(int index) {
-    _selectedFontIndex = index;
-    notifyListeners();
-  }
+  List<File> images = <File>[];
 
-  bool _acceptReplies = false;
-  bool get acceptReplies => _acceptReplies;
-  set acceptReplies(bool value) {
-    _acceptReplies = value;
-    notifyListeners();
-  }
 
-  bool _followClaire = true;
-  bool get followClaire => _followClaire;
-  set followClaire(bool value) {
-    _followClaire = value;
-    notifyListeners();
-  }
-
-  bool _location = false;
-  bool get location => _location;
-  set location(bool value) {
-    _location = value;
-    notifyListeners();
-  }
-
-  String _sessionMood = 'Current Mood';
-  String get sessionMood => _sessionMood;
-  void changeMood(String value) {
-    _sessionMood = value;
-    notifyListeners();
-  }
-
-  List<XFile> _images = <XFile>[];
-  List<XFile> get images => _images;
-  set images(List<XFile> value) {
-    _images = value;
-    notifyListeners();
-  }
-
-  void randomizeBackgroundColor() {
-    final random = Random();
-    _selectedBackgroundColor = random.nextInt(Constant.DIARY_COLORS.length);
-    notifyListeners();
-  }
 
   void changeColor() {
-    if (_selectedBackgroundColor < 21) {
-      _selectedBackgroundColor++;
+    print(selectedBackgroundColor.value);
+    // Updated the condition to match the length of the DIARY_COLORS list
+    if (selectedBackgroundColor.value < AppConstants.DIARY_COLORS.length - 1) {
+      selectedBackgroundColor++;
     } else {
-      _selectedBackgroundColor = 0;
+      selectedBackgroundColor.value = 0;
     }
-    notifyListeners();
+  }
+
+  void selectFont(int index) {
+    print(index);
+    selectedFontIndex.value = index;
   }
 }

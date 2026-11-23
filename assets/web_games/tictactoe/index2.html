@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Tic Tac Toe</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        :root {
+            --board-bg: #36023D;
+            --line-color: #AD0E4B;
+            --symbol-color: white;
+            --win-line-color: #ffc400; /* A bright yellow for the winning line */
+        }
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: var(--board-bg);
+            display: flex; justify-content: center; align-items: center;
+            font-family: "Balsamiq Sans", cursive;
+        }
+        #game-container {
+            width: 95vmin; height: 95vmin;
+            max-width: 100%; max-height: 100%;
+            position: relative;
+        }
+        canvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+        .message-overlay {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center; align-items: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            text-align: center;
+            padding: 10px;
+        }
+        .message-overlay h1 {
+            color: white;
+            font-size: 13vmin;
+            margin: 0;
+            background: -webkit-linear-gradient(#eee, #fff, #eee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+<div id="game-container"></div>
+<div id="popup" class="message-overlay"><h1></h1></div>
+
+<script>
+    $(document).ready(function() {
+        const SYMBOL = { CIRCLE: 1, CROSS: 2 };
+        const PLAYER = SYMBOL.CROSS;
+        const AI = SYMBOL.CIRCLE;
+        const winPhrases = [ "Gotcha!", "Too good!", "I'm invincible!", "Nice try, human." ];
+        const losePhrases = [ "Beginner's luck!", "Okay, you win... this time.", "I let you win.", "Impossible!" ];
+        const drawPhrases = [ "A worthy opponent!", "Well played!", "A perfect match.", "We think alike." ];
+
+        function createSymbolCanvas(type, size) {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = size; canvas.height = size;
+            ctx.lineWidth = size * 0.1;
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--symbol-color').trim();
+            ctx.lineCap = "round";
+            const p = ctx.lineWidth;
+            if (type === AI) {
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2, size / 2 - p, 0, 2 * Math.PI);
+                ctx.stroke();
+            } else if (type === PLAYER) {
+                ctx.beginPath();
+                ctx.moveTo(p * 1.5, p * 1.5); ctx.lineTo(size - p * 1.5, size - p * 1.5);
+                ctx.moveTo(size - p * 1.5, p * 1.5); ctx.lineTo(p * 1.5, size - p * 1.5);
+                ctx.stroke();
+            }
+            return canvas;
+        }
+
+        function Game(containerId) {
+            const container = $('#' + containerId);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            container.append(canvas);
+            let board, gameOver, cellSize, isPlayerTurn;
+
+            function resetGame(claireStarts = false) {
+                board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+                gameOver = false;
+                resize();
+                if (claireStarts) {
+                    isPlayerTurn = false;
+                    setTimeout(computerMove, 500);
+                } else {
+                    isPlayerTurn = true;
+                }
+            }
+            function resize() {
+                const size = Math.min(container.width(), container.height());
+                canvas.width = size; canvas.height = size;
+                cellSize = size / 3;
+                draw();
+            }
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color').trim();
+                ctx.lineWidth = 8; ctx.lineCap = "round";
+                for (let i = 1; i < 3; i++) {
+                    ctx.beginPath(); ctx.moveTo(i * cellSize, 10); ctx.lineTo(i * cellSize, canvas.height - 10); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(10, i * cellSize); ctx.lineTo(canvas.width - 10, i * cellSize); ctx.stroke();
+                }
+                for (let i = 0; i < 9; i++) {
+                    if (board[i] !== 0) {
+                        const col = i % 3;
+                        const row = Math.floor(i / 3);
+                        const symbolCanvas = createSymbolCanvas(board[i], cellSize * 0.7);
+                        ctx.drawImage(symbolCanvas, col * cellSize + cellSize * 0.15, row * cellSize + cellSize * 0.15);
+                    }
+                }
+            }
+
+            // --- SLOW-MOTION ANIMATED LINE ---
+            function drawWinningLine(line, onComplete) {
+                const [a, b, c] = line;
+                const startPos = { row: Math.floor(a / 3), col: a % 3 };
+                const endPos = { row: Math.floor(c / 3), col: c % 3 };
+                const startX = startPos.col * cellSize + cellSize / 2;
+                const startY = startPos.row * cellSize + cellSize / 2;
+                const endX = endPos.col * cellSize + cellSize / 2;
+                const endY = endPos.row * cellSize + cellSize / 2;
+
+                let animationFrameId;
+                let startTime = null;
+                const animationDuration = 400; // milliseconds for the animation
+
+                function animate(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    const elapsedTime = timestamp - startTime;
+                    const fraction = Math.min(elapsedTime / animationDuration, 1);
+
+                    const currentX = startX + (endX - startX) * fraction;
+                    const currentY = startY + (endY - startY) * fraction;
+
+                    draw(); // Redraw the board and symbols first
+
+                    // Then draw the animated line on top
+                    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--win-line-color').trim();
+                    ctx.lineWidth = 12;
+                    ctx.lineCap = "round";
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(currentX, currentY);
+                    ctx.stroke();
+
+                    if (fraction < 1) {
+                        animationFrameId = requestAnimationFrame(animate);
+                    } else {
+                        onComplete(); // Call the callback when animation is finished
+                    }
+                }
+                animationFrameId = requestAnimationFrame(animate);
+            }
+
+            function handleGameOver(phrases, outcome, winningLine) {
+                gameOver = true;
+
+                const showPopup = () => {
+                    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+                    $('#popup h1').text(randomPhrase);
+                    $('#popup').css('display', 'flex');
+
+                    if (outcome === 'win') {
+                        if (window.Sound) window.Sound.postMessage('win');
+                        if (window.Score) window.Score.postMessage('player_wins');
+                    } else if (outcome === 'loss') {
+                        if (window.Vibration) window.Vibration.postMessage('vibrate');
+                        if (window.Score) window.Score.postMessage('claire_wins');
+
+                        } else if (outcome === 'draw') {
+                            if (window.Score) window.Score.postMessage('draw');
+                        }
+
+                    setTimeout(() => {
+                        $('#popup').css('display', 'none');
+                        resetGame(true);
+                    }, 2200);
+                };
+
+                if (winningLine) {
+                    drawWinningLine(winningLine, showPopup); // Pass showPopup as the callback
+                } else {
+                    showPopup(); // For a draw
+                }
+            }
+
+            const winningLines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+
+            function checkWin(currentBoard, player) {
+                for (const line of winningLines) {
+                    if (line.every(index => currentBoard[index] === player)) {
+                        return line; // Return the winning line
+                    }
+                }
+                return null;
+            }
+
+            function getEmptyCells(currentBoard) {
+                let empty = [];
+                currentBoard.forEach((cell, index) => { if (cell === 0) empty.push(index); });
+                return empty;
+            }
+
+            function computerMove() {
+                if (gameOver) return;
+                let move = -1;
+                for (const line of winningLines) {
+                    const [a, b, c] = line;
+                    if (board[a] === AI && board[b] === AI && board[c] === 0) { move = c; break; }
+                    if (board[a] === AI && board[c] === AI && board[b] === 0) { move = b; break; }
+                    if (board[b] === AI && board[c] === AI && board[a] === 0) { move = a; break; }
+                }
+                if (move === -1) {
+                    for (const line of winningLines) {
+                        const [a, b, c] = line;
+                        if (board[a] === PLAYER && board[b] === PLAYER && board[c] === 0) { move = c; break; }
+                        if (board[a] === PLAYER && board[c] === PLAYER && board[b] === 0) { move = b; break; }
+                        if (board[b] === PLAYER && board[c] === PLAYER && board[a] === 0) { move = a; break; }
+                    }
+                }
+                if (move === -1) {
+                    const emptyCells = getEmptyCells(board);
+                    if(emptyCells.length > 0) {
+                       move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                    }
+                }
+                if (move !== -1) { board[move] = AI; }
+
+                draw();
+                const winningLine = checkWin(board, AI);
+                if (winningLine) {
+                    handleGameOver(winPhrases, 'loss', winningLine);
+                } else if (getEmptyCells(board).length === 0) {
+                    handleGameOver(drawPhrases, 'draw', null);
+                } else {
+                    isPlayerTurn = true;
+                }
+            }
+
+            canvas.addEventListener('click', function(e) {
+                if (gameOver || !isPlayerTurn) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+                const col = Math.floor(x / cellSize); const row = Math.floor(y / cellSize);
+                const index = row * 3 + col;
+                if (board[index] === 0) {
+                    board[index] = PLAYER;
+                    draw();
+                    isPlayerTurn = false;
+                    const winningLine = checkWin(board, PLAYER);
+                    if (winningLine) {
+                        handleGameOver(losePhrases, 'win', winningLine);
+                    } else if (getEmptyCells(board).length === 0) {
+                        handleGameOver(drawPhrases, 'draw', null);
+                    } else {
+                        setTimeout(computerMove, 700);
+                    }
+                }
+            });
+
+            window.claireMakesFirstMove = function() { resetGame(true); }
+            $(window).on('resize', resize);
+            resetGame(false);
+        }
+        new Game('game-container');
+    });
+</script>
+</body>
+</html>

@@ -27,12 +27,10 @@ class AuthenticationService {
     try{
       UserCredential _userCredentials = await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
 
-      if(_userCredentials!=null){
-        isSuccessful=true;
-        _email = _userCredentials.user!.email;
-        _uid =_userCredentials.user!.uid;
-      }
-    }on FirebaseAuthException catch (e) {
+      isSuccessful=true;
+      _email = _userCredentials.user!.email;
+      _uid =_userCredentials.user!.uid;
+        }on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         print('The password provided is too weak.');
       } else if (e.code == 'email-already-in-use') {
@@ -53,11 +51,9 @@ class AuthenticationService {
   try{
     UserCredential _userCredentials = await _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
 
-    if(_userCredentials!=null){
-      isSuccessful=true;
+    isSuccessful=true;
 
-    }
-  }on FirebaseAuthException catch (e) {
+    }on FirebaseAuthException catch (e) {
     if (e.code == 'weak-password') {
       print('The password provided is too weak.');
     } else if (e.code == 'email-already-in-use') {

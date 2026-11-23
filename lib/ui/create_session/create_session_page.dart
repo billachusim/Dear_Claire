@@ -1,31 +1,45 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
-import 'package:dear_claire/Admob/ad_state.dart';
-import 'package:dear_claire/data/models/session_model.dart';
-import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/services/user_model.dart';
-import 'package:dear_claire/ui/create_session/session_model.dart';
-import 'package:dear_claire/ui/create_session/sound/play_sound_widget.dart';
-import 'package:dear_claire/ui/create_session/view_singlesession_widget.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/utils/strings.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
-import 'package:emoji_chooser/emoji_chooser.dart';
+import 'package:clairediary/ui/create_session/quick_session_widget.dart';
+import 'package:clairediary/ui/create_session/session_categorizer.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:clairediary/services/firebase_services.dart';
+import 'package:clairediary/services/user_model.dart';
+import 'package:clairediary/ui/create_session/session_model.dart';
+import 'package:clairediary/ui/create_session/sound/custom_play_sound_widget.dart';
+import 'package:clairediary/ui/create_session/view_singlesession_widget.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/utils/strings.dart';
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:dear_claire/widgets/toast.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
+import 'package:clairediary/widgets/toast.dart';
 import 'package:hive/hive.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
+import '../../data/models/transaction_model.dart' as t_model;
+import '../../services/notification_service.dart';
+import '../../services/transaction_service.dart';
+import '../../widgets/unified_media_widget.dart';
+import '../featured/model/session.dart';
+import '../featured/notified_session_details.dart';
 import 'create_session_controller.dart';
 import 'sound/sound_widget.dart';
 
+
 class CreateSessionPage extends StatefulWidget {
-  const CreateSessionPage({super.key});
+  const CreateSessionPage({Key? key}) : super(key: key);
 
   @override
   _CreateSessionPageState createState() => _CreateSessionPageState();
@@ -34,205 +48,608 @@ class CreateSessionPage extends StatefulWidget {
 const int maxFailedLoadAttempts = 3;
 
 class _CreateSessionPageState extends State<CreateSessionPage> {
-  final TextEditingController _sessionTitleController = TextEditingController();
+  final TransactionService _transactionService = TransactionService();
+  TextEditingController sessionTitleController = TextEditingController();
   final FirebaseServices _firebaseServices = FirebaseServices();
+  final c = Get.find<CreateSessionController>();
 
-  late final Box _box;
+  Session? featuredSessionModel;
 
-  final User? _currentUser = FirebaseAuth.instance.currentUser;
-  UserModel _userModel = UserModel();
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
 
-  final Uuid _uuid = const Uuid();
+  late final int mood;
 
-  final _sessionTextEditingController = TextEditingController();
-  late FocusNode _sessionTextFocusNode;
+  //object for hive database
+  late final box;
 
-  void _appendEmojiToText(EmojiData emoji) {
-    final newText = _sessionTextEditingController.text + emoji.char;
-    _sessionTextEditingController.text = newText;
+  bool isTyping = false;
+
+//obtain user id, nickname and avatarUrl linked to this user
+  var currentUser = FirebaseAuth.instance.currentUser;
+
+  UserModel userModel = UserModel();
+  late Future<UserModel> _userFuture;
+  bool _isPremium = false;
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+  InterstitialAd? _quickInterstitialAd;
+  int _quickInterstitialLoadAttempts = 0;
+
+//used for generating random id for each session
+  var uuid = Uuid();
+
+  //input controller to access session message from user
+  final sessionTextEditingController = TextEditingController();
+  late FocusNode sessionTextFocusNode;
+
+  void setStateIfMounted(f) {
+    if (mounted) setState(f);
   }
 
-  File? _recordFile;
-  final List<XFile> _imageList = <XFile>[];
+//initialize the audio record file that stores user audio record. null by default
+  File? recordFile;
+  File? videoRecordFile;
+  List<File> _videoFiles = [];
 
-  bool _isLoading = false;
-  String? _location = '';
+//initialize the image list stores user selected images.
+  List<File> imageList = <File>[];
 
-  void _randomizeBackgroundColor() {
-    final random = Random();
-    final randomNumber = random.nextInt(Constant.DIARY_COLORS.length);
-    context.read<CreateSessionController>().selectedBackgroundColor = randomNumber;
+//for showing loading indicator when uploading data;
+  bool isLoading = false;
+  bool acceptReplies = false;
+  bool followClaire = true;
+  String sessionMood = 'Current Mood';
+  String _location = '';
+
+
+  // Function to retrieve audio path from Hive
+  void _loadAudioFromHive() {
+    final audioPath = box.get('audio_path');
+    if (audioPath != null && audioPath.isNotEmpty) {
+      final file = File(audioPath);
+      if (file.existsSync()) {
+        setState(() {
+          recordFile = file;
+        });
+      } else {
+        // If file doesn't exist, clear from Hive
+        _deleteAudioFromHive();
+      }
+    }
   }
+
+// Function to delete audio file and clear from Hive
+  Future<void> _deleteAudioFromHive() async {
+    final audioPath = box.get('audio_path');
+    if (audioPath != null) {
+      final fileToDelete = File(audioPath);
+      if (fileToDelete.existsSync()) {
+        await fileToDelete.delete();
+      }
+      await box.delete('audio_path');
+      setState(() {
+        recordFile = null;
+      });
+    }
+  }
+
+
+
+
+  Future<Placemark?> determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.deniedForever) {
+        // Permissions are denied forever, handle appropriately.
+        return Future.error(
+            'Location permissions are permanently denied, we cannot request permissions.');
+      }
+
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    final _response = await Geolocator.getCurrentPosition();
+    return _getAddress(_response.latitude, _response.longitude);
+  }
+
+  Future<Placemark?> _getAddress(double lat, double long) async {
+    Placemark? place;
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
+      place = placemarks[0];
+      setState(() {
+        _location =
+        "in ${place?.administrativeArea.toString()}, ${place?.country.toString()}";
+      });
+      print("Location is: $_location");
+      return place;
+    } catch (e) {
+      logger.e(e);
+    }
+    return place;
+  }
+
+
+
+
+  randomizeBackgroundColor() {
+    Random random = new Random();
+    int randomNumber = random.nextInt(AppConstants.DIARY_COLORS.length);
+    c.selectedBackgroundColor = randomNumber.obs;
+  }
+
 
   @override
   void initState() {
     super.initState();
-    _randomizeBackgroundColor();
-    _initializeDatabaseObject();
-    _sessionTextFocusNode = FocusNode();
-    _createInterstitialAd();
+    _userFuture = _firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createInterstitialAd();
+          _createQuickInterstitialAd();
+        }
+      }
+    });
+    randomizeBackgroundColor();
+    initializeDatabaseObject();
+    sessionTextFocusNode = FocusNode();
+    Future.delayed(Duration(seconds: 8), () {
+      sessionTextFocusNode.requestFocus();
+    });
+    randomizeNewDiarySessionToast();
   }
 
-  void _initializeDatabaseObject() async {
-    _box = await Hive.openBox('draft');
-    final text = _box.get("text");
-    if (text != null && text.isNotEmpty) {
-      _sessionTextEditingController.text = text;
+
+  void initializeDatabaseObject() async {
+    box = await Hive.openBox('draft');
+    // Load text
+    String text = box.get("text", defaultValue: "");
+    if (text.isNotEmpty) {
+      sessionTextEditingController.text = text;
     }
+    // Load audio
+    _loadAudioFromHive();
   }
+
+  randomizeNewDiarySessionToast() async {
+    Random random = new Random();
+    int randomNumber = random.nextInt(AppConstants.TOAST_NUMBERS.length);
+    var message = randomNumber == 1 ? "Go on, Darling, talk to me..." :
+    randomNumber == 2 ? "Start typing or recording anything." :
+    randomNumber == 3 ? "You have come to a safe place." :
+    randomNumber == 4 ? "Everything can be between us." :
+    randomNumber == 5 ? "I'll always be here for you." :
+    randomNumber == 5 ? "Let's have a heart to heart." :
+    randomNumber == 6 ? "Go ahead, type or record anything." :
+    randomNumber == 7 ? "Tell me what's happening, darling?" :
+    randomNumber == 8 ? "Where are you and what's going on?" :
+    randomNumber == 9 ? "You'll never be not truly loved." :
+    randomNumber == 10 ? "A problem shared is..." :
+    randomNumber == 11 ? "You are completely anonymous." :
+    randomNumber == 12 ? "Write or record anything." :
+    randomNumber == 13 ? "Tap the spinning flower after." :
+    randomNumber == 14 ? "It's you and me time." :
+    randomNumber == 15 ? "Start with Dear Claire" :
+    randomNumber == 16 ? "Tap record and say Dear Claire" :
+    randomNumber == 17 ? "I'm ready to listen." :
+    randomNumber == 18 ? "I'm ready to read, listen and reply." :
+    randomNumber == 19 ? "If you don't tell me, I won't know." :
+
+    "Go on, Darling, talk to me...";
+    await  Future.delayed(Duration(seconds: 5), () {
+      Fluttertoast.showToast(
+        toastLength: Toast.LENGTH_LONG,
+        msg: message.toString(),
+        textColor: Colors.white,
+        backgroundColor: Pallet.colorSplashScreen,
+      );    });
+  }
+
 
   @override
   void dispose() {
-    _sessionTextFocusNode.dispose();
-    _sessionTextEditingController.dispose();
-    _sessionTitleController.dispose();
     _interstitialAd?.dispose();
+    _quickInterstitialAd?.dispose();
+    sessionTextFocusNode.dispose();
+    sessionTextEditingController.dispose();
+    sessionTitleController.dispose();
     super.dispose();
   }
 
-  Future<void> _showCardDialog() async {
-    final createSessionController = context.read<CreateSessionController>();
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30.0)),
-          title: const Text('Enter Title', textAlign: TextAlign.center),
-          content: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: _sessionTitleController,
-                    decoration: const InputDecoration(
-                      hintText: 'What\'s this session about?     ️   💌',
-                    ),
-                  ),
-                  Consumer<CreateSessionController>(
-                    builder: (context, controller, child) {
-                      return DropdownButton(
-                        borderRadius: BorderRadius.circular(30.0),
-                        isExpanded: true,
-                        value: controller.sessionMood,
-                        icon: const Icon(Icons.arrow_circle_down_rounded, color: Colors.pink),
-                        items: Constant.USER_SESSION_MOODS.map((String items) {
-                          return DropdownMenuItem(value: items, child: Text(items));
-                        }).toList(),
-                        onChanged: (val) => controller.changeMood(val.toString()),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.lock),
-                      const SizedBox(width: 8),
-                      const Flexible(
-                        child: Text(
-                          "Do you want other users to reply and follow this diary session?",
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Consumer<CreateSessionController>(
-                        builder: (context, controller, child) {
-                          return Switch(
-                            value: controller.acceptReplies,
-                            onChanged: (value) => controller.acceptReplies = value,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Icon(Icons.lock),
-                      const SizedBox(width: 10),
-                      const Flexible(
-                        child: Text(
-                          "Do you want Claire to reply and follow this diary session?",
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Consumer<CreateSessionController>(
-                        builder: (context, controller, child) {
-                          return Switch(
-                            value: controller.followClaire,
-                            onChanged: (value) => controller.followClaire = value,
-                            activeTrackColor: Colors.purpleAccent,
-                            activeColor: Pallet.colorSecondary,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 9),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_sharp),
-                      const SizedBox(width: 9),
-                      const Flexible(
-                        child: Text(
-                          "Do you want to tag your location?",
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Consumer<CreateSessionController>(
-                        builder: (context, controller, child) {
-                          return Switch(
-                            value: controller.location,
-                            onChanged: (value) async {
-                              controller.location = value;
-                              if (value) {
-                                await _firebaseServices.determinePosition();
-                                _location = await _firebaseServices.getUsersLocation();
-                                setState(() {});
-                              }
-                            },
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel', style: TextStyle(color: Colors.red)),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: Consumer<CreateSessionController>(
-                builder: (context, controller, child) {
-                  return Text(
-                    controller.acceptReplies ? "Share and Save" : 'Save',
-                    style: const TextStyle(color: Pallet.colorSecondary),
-                  );
+
+  /// checks if session meets original session rules...
+  /// if it does, then increment necessary counts.
+  Future<bool> isOriginalSession(
+      String sessionText, CreateSessionModel session) async {
+    final _session = sessionText.toString();
+    final _length = _session.length;
+
+    bool isOriginal = false;
+
+    // Condition 1: Original text-based check
+    if (_session.contains("ear") &&
+        _session.contains("laire") &&
+        _length >= 50) {
+      isOriginal = true;
+    }
+    // Condition 2: Simplified check for any audio session
+    else if (session.containsAudio == true) {
+      isOriginal = true;
+    }
+
+    if (isOriginal) {
+      incrementSessionCount();
+
+      if (currentUser != null) {
+        // --- NEW TREASURY LOGIC ---
+        final bool wasApproved = await _firebaseServices.updateTreasuryAndUser(
+          userId: currentUser!.uid,
+          amount: 10,
+          type: t_model.TransactionType.credit,
+          userTransactionDescription:
+          "10 Loves received for an original diary session.",
+          metadata: {'source': 'new_session'},
+        );
+
+        if (!wasApproved) {
+          showToast("Your reward of 10 Loves is pending admin approval.");
+          return true; // Exit gracefully.
+        }
+        // --- END OF NEW TREASURY LOGIC ---
+
+        // --- Send Push Notification (Only if approved) ---
+        try {
+          // 1. Fetch the user's document to get their specific FCM token.
+          final userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser!.uid)
+              .get();
+
+          if (userDoc.exists) {
+            final userToken = userDoc.data()?['fcmId'] as String?;
+            // 2. Check if the token exists before trying to send.
+            if (userToken != null && userToken.isNotEmpty) {
+              // 3. Send notification directly to the user's token.
+              await notificationService.sendNotification({
+                "token": userToken, // Use 'token' instead of 'topic'
+                "notification": {
+                  "title": "You've Earned Love!",
+                  "body": "You received 10 ❤️ for creating an original session."
                 },
-              ),
+                "data": {"route": "wallet"}
+              });
+            }
+          }
+        } catch (e) {
+          print("Failed to send 'Original Session' push notification: $e");
+        }
+      }
+
+      return true;
+    }
+    return false;
+  }
+
+
+
+
+
+  final AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'high_importance_channel', // id
+      'High Importance Notifications', // title
+      importance: Importance.high,
+      playSound: true);
+
+  NotificationDetails? _notificationDetails() {
+    return NotificationDetails(
+        android: AndroidNotificationDetails(
+            channel.id, channel.name,
+            color: Pallet.colorPrimary,
+            playSound: true,
+            icon: '@drawable/claire_icon',
+            enableLights: true,
+            enableVibration: true,
+            showWhen: true,
+            channelShowBadge: true),
+        iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true));
+  }
+
+
+
+  /// Increase session count when user creates new session.
+
+  Future<void> incrementSessionCount() async {
+    FirebaseFirestore.instance.collection('users').doc(currentUser!.uid).set(
+      {
+        'sessionCount': FieldValue.increment(1),
+      },
+      SetOptions(merge: true),
+
+    );
+    logger.d('Successfully increased session count');
+    print('Session Count is: $FieldValue');
+  }
+
+
+  /// Increase total love count when user creates new session or comment.
+
+  Future<void> incrementTotalLoveCount() async {
+    FirebaseFirestore.instance.collection('users').doc(currentUser?.uid).set(
+      {
+        'totalLoveCount': FieldValue.increment(10),
+      },
+      SetOptions(merge: true),
+    );
+    logger.d('Successfully increased total love count');
+    print('Session Count is: $FieldValue');
+  }
+
+
+  /// Ascertain current available love for the user.
+
+  void ascertainCurrentLoveCount() {
+    final totalLove = userModel.totalLoveCount;
+    final withdrawnLove = userModel.withdrawnLoveCount;
+    final currentLoveCount = totalLove! - withdrawnLove!;
+    FirebaseFirestore.instance
+        .collection("users")
+        .doc(currentUser?.uid)
+        .set({
+      "currentLoveCount": currentLoveCount,
+    },
+      SetOptions(merge: true),
+    );
+    logger.d('Got the current love count');
+    print('Current love Count is: $currentLoveCount');
+
+  }
+
+
+  Widget _buildAudioPlayer() {
+    if (recordFile != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        child: Row(
+          children: [
+            Expanded(
+              child: CustomPlaySoundWidget(filePath: recordFile!.path),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete, color: Colors.white70),
               onPressed: () {
-                if (_sessionTextEditingController.text.isNotEmpty && _sessionTitleController.text.isNotEmpty) {
-                  Navigator.of(context).pop();
-                  _createSession();
-                  showToast(AppString.started_new_session);
-                  Future.delayed(const Duration(seconds: 1), () {
-                    _showInterstitialAd();
-                  });
-                } else {
-                  _interstitialAd?.dispose();
-                  showToast(AppString.new_session_error);
-                }
+                // Show a confirmation dialog before deleting
+                showDialog(
+                  context: context,
+                  builder: (ctx) =>
+                      AlertDialog(
+                        title: Text("Delete Recording"),
+                        content: Text(
+                            "Are you sure you want to delete this audio recording?"),
+                        actions: [
+                          TextButton(
+                            child: Text("Cancel"),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                          TextButton(
+                            child: Text("Delete"),
+                            onPressed: () {
+                              _deleteAudioFromHive();
+                              setState(() {
+                                recordFile = null;
+                              });
+                              Navigator.of(ctx).pop();
+                            },
+                          ),
+                        ],
+                      ),
+                );
               },
             ),
           ],
+        ),
+      );
+    }
+    return SizedBox.shrink();
+  }
+
+
+
+
+
+//show up when user clicks on the FAB to create a session
+  Future<void> _showCardDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return Center(
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0)),
+            title: Container(
+              child: Text(AppString.save_or_share_title,
+                  textAlign: TextAlign.center),
+            ),
+            content: SingleChildScrollView(
+              child: Container(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: sessionTitleController,
+                        decoration: InputDecoration(
+                          //border: InputBorder,
+                          hintText: AppString.whats_this_session_about,
+                        ),
+                      ),
+                      Obx(
+                        () => DropdownButton(
+                          borderRadius: BorderRadius.circular(30.0),
+                          isExpanded: true,
+                          value: c.sessionMood.value,
+                          icon: Icon(
+                            Icons.arrow_circle_down_rounded,
+                            color: Colors.pink,
+                          ),
+                          items:
+                              AppConstants.USER_SESSION_MOODS.map((String items) {
+                            return DropdownMenuItem(
+                                value: items, child: Text(items));
+                          }).toList(),
+                          onChanged: (val) => c.changeMood(val.toString()),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 8,
+                      ),
+                      Container(
+                          child: Row(
+                        children: [
+                          Obx(
+                                () => c.acceptReplies.value
+                                ? Icon(Icons.lock_open_outlined)
+                                : Icon(Icons.lock),
+                          ),
+                          SizedBox(width: 8),
+                          Flexible(
+                            child: Text(AppString.do_you_want_other_users,
+                                style: TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.w600)),
+                          ),
+                          Obx(() => Switch(
+                                value: c.acceptReplies.value,
+                                onChanged: (value) {
+                                  c.acceptReplies.value = value;
+                                  acceptReplies = value;
+                                },
+                                // activeTrackColor: Colors.lightGreenAccent,
+                                // activeColor: Colors.green,
+                              ))
+                        ],
+                      )),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Container(
+                          child: Row(
+                        children: [
+                          Obx(
+                                () => c.followClaire.value
+                                ? Icon(Icons.lock_open_outlined)
+                                : Icon(Icons.lock),
+                          ),
+                          SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                                "Do you want Claire to reply and follow this diary session?",
+                                style: TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.w600)),
+                          ),
+                          Obx(() => Switch(
+                                value: c.followClaire.value,
+                                onChanged: (value) {
+                                  c.followClaire.value = value;
+                                },
+                                activeTrackColor: Colors.purpleAccent,
+                                activeThumbColor: Pallet.colorSecondary,
+                              ))
+                        ],
+                      )),
+                      SizedBox(
+                        height: 9,
+                      ),
+                      Container(
+                          child: Row(
+                            children: [
+                              Obx(
+                                    () => c.location.value
+                                    ? Icon(Icons.location_on)
+                                    : Icon(Icons.location_off),
+                              ),
+                              SizedBox(width: 9),
+                              Flexible(
+                                child: Text("Do you want to tag your location?",
+                                    style: TextStyle(
+                                        fontSize: 13, fontWeight: FontWeight.w600)
+                                ),
+                              ),
+                          Obx(() => Switch(
+                                value: c.location.value,
+                                onChanged: (showLocation) async {
+                                  c.location.value = showLocation;
+
+                                  if (showLocation) {
+                                    await determinePosition();
+                                    setState(() {});
+                                  }
+                                },
+                                // activeTrackColor: Colors.lightGreenAccent,
+                                // activeColor: Colors.green,
+                              ))
+                        ],
+                      )),
+                      SizedBox(
+                        height: 10,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Obx(
+                  () => c.acceptReplies.value
+                      ? Text("Share and Save",
+                          style: TextStyle(color: Pallet.colorSecondary, fontSize: 18))
+                      : Text('Save',
+                          style: TextStyle(color: Pallet.colorSecondary, fontSize: 18)),
+                ),
+                onPressed: () {
+                  if (sessionTitleController.text.isNotEmpty) {
+                    Navigator.of(context).pop();
+                    createSession();
+                    showToast(AppString.started_new_session);
+                  } else {
+                    _interstitialAd?.dispose();
+                    showToast(AppString.new_session_error);
+                  }
+                },
+              ),
+            ],
+          ),
         );
       },
     );
@@ -240,278 +657,395 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final createSessionController = context.watch<CreateSessionController>();
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    return SafeArea(
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        backgroundColor: Constant.DIARY_COLORS[createSessionController.selectedBackgroundColor],
-        body: _isLoading
-            ? Center(
-                child: SizedBox(
-                  height: 200,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: const [
-                      RotateImage(70, 70),
-                      SizedBox(height: 10),
-                      Text(
-                        "Please Wait",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            : SizedBox(
-                height: screenHeight,
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          alignment: Alignment.center,
-                          child: AutoSizeTextField(
-                            style: Constant.DIARY_FONT_STYLES[createSessionController.selectedFontIndex],
-                            maxLines: null,
-                            minLines: 1,
-                            onChanged: (value) {
-                              if (value.isNotEmpty) {
-                                _box.put("text", value);
-                              }
-                            },
-                            scrollPadding: const EdgeInsets.all(20.0),
-                            controller: _sessionTextEditingController,
-                            focusNode: _sessionTextFocusNode,
-                            decoration: InputDecoration(
-                              contentPadding: const EdgeInsets.all(10),
-                              focusedBorder: InputBorder.none,
-                              disabledBorder: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              border: InputBorder.none,
-                              focusedErrorBorder: InputBorder.none,
-                              errorBorder: InputBorder.none,
-                              hintText: "Start your text or voice note with Dear Claire",
-                              hintStyle: TextStyle(color: Pallet.colorWhite, fontSize: 12),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_recordFile != null) _recordFileWidget(),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: _imagesGridView(),
-                      ),
-                      SizedBox(height: 30),
-                    ],
-                  ),
-                ),
-              ),
-        bottomSheet: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-          decoration: BoxDecoration(
-            color: Constant.DIARY_COLORS[createSessionController.selectedBackgroundColor],
+    return Obx(
+      () => Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          centerTitle: true,
+          backgroundColor:
+              AppConstants.DIARY_COLORS[c.selectedBackgroundColor.value],
+          title: Text(
+            "Start A Diary Session",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 22,
+              color: Pallet.colorWhite,
+            ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 20,
-                width: 25,
-                child: IconButton(
-                  alignment: Alignment.topCenter,
-                  icon: const Icon(Icons.camera_enhance_rounded, size: 35, color: Pallet.colorWhite),
-                  onPressed: _loadAssets,
-                ),
-              ),
-              const SizedBox(width: 30, height: 40),
-              SizedBox(
-                height: 20,
-                width: 25,
-                child: IconButton(
-                  icon: const Icon(Icons.emoji_emotions_outlined, color: Pallet.colorWhite),
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      builder: (BuildContext subcontext) {
-                        return SingleChildScrollView(
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: EmojiChooser(
-                              onSelected: (emoji) {
-                                _appendEmojiToText(emoji);
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 20),
-              SizedBox(
-                height: 20,
-                width: 25,
-                child: IconButton(
-                  icon: const Icon(Icons.text_fields, color: Pallet.colorWhite),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: const Text('Select Font'),
-                          content: _showFontSelectionDialog(context),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 20),
-              SizedBox(
-                height: 20,
-                width: 25,
-                child: IconButton(
-                  icon: const Icon(Icons.color_lens_rounded, color: Pallet.colorWhite),
-                  onPressed: () => createSessionController.changeColor(),
-                ),
-              ),
-              const SizedBox(width: 15),
-              SizedBox(
-                height: 20,
-                width: 25,
-                child: IconButton(
-                  icon: const Icon(Icons.mic_rounded, size: 35, color: Pallet.colorWhite),
-                  onPressed: () async {
-                    final data = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => SoundRecorderWidget(
-                          onRecordComplete: (recordFile) {},
-                        ),
-                      ),
-                    );
-                    if (data != null) {
-                      _recordFile = data;
-                      setState(() {});
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: 10),
-            ],
-          ),
+          elevation: 0,
         ),
+        backgroundColor:
+            AppConstants.DIARY_COLORS[c.selectedBackgroundColor.value],
+        body: GestureDetector(
+            onTap: () {
+              // Hide keyboard when tapping outside of a text field
+              FocusScope.of(context).unfocus();
+            },
+            child: isLoading
+              ? Center(
+                  child: Container(
+                      height: 200,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          RotateImage(60, 60),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Text("Please Wait, your Diary Session is being created, "
+                              "If you added videos and images, it may take a minute.",
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white))
+                        ],
+                      )))
+              : SingleChildScrollView(
+                child: Container(
+                    height: MediaQuery.of(context).size.height,
+                    padding: EdgeInsets.all(10),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            alignment: Alignment.center,
+                            child: AutoSizeTextField(
+                              style: AppConstants
+                                  .DIARY_FONT_STYLES[c.selectedFontIndex.value],
+                              maxLines: null,
+                              minLines: 1,
+                              onChanged: (text) {
+                                setState(() {
+                                  isTyping = true;
+                                  box.put("text", text);
+                                });
+                                                            },
+
+                              scrollPadding: EdgeInsets.all(20.0),
+                              controller: sessionTextEditingController,
+                              focusNode: sessionTextFocusNode,
+                              decoration: InputDecoration(
+                                contentPadding: EdgeInsets.all(10),
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                border: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                hintText:
+                                    "Start your text or voice note with Dear Claire",
+                                hintStyle: TextStyle(
+                                    color: Pallet.colorWhite, fontSize: 12.sp),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(
+                          width: 15.w,
+                        ),
+
+
+                        _buildVideoSelector(),
+
+                        SizedBox(height: 20,),
+
+                        Align(
+                            alignment: Alignment.center,
+                            child: _imagesGridView()
+                        ),
+
+                        _buildAudioPlayer(),
+
+
+
+                        SizedBox(height: 20,),
+
+
+                        /// Introducing Quick Sessions.
+                        Visibility(
+                          visible: !isTyping,
+                          child: QuickSessionWidget(
+                            sessionTitleController: sessionTitleController,
+                            sessionTextEditingController: sessionTextEditingController,
+                            createQuickSession: (newMood) {
+                              // This anonymous function calls your existing method
+                              // and handles the mood update.
+                              setState(() {
+                                mood = newMood;
+                              });
+                              createQuickSession();
+                            },
+                          ),
+                        ),
+
+                        SizedBox(height: 80,),
+                      ],
+                    ),
+                  ),
+              ),
+        ),
+        bottomSheet: Container(
+            padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
+            decoration: BoxDecoration(
+              color: AppConstants.DIARY_COLORS[c.selectedBackgroundColor.value],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Container(
+                    height: 30.h,
+                    width: 35.w,
+                    child: IconButton(
+                      alignment: Alignment.topCenter,
+                      icon: Icon(Icons.camera_enhance_rounded,
+                          size: 35, color: Pallet.colorWhite),
+                      onPressed: loadAssets,
+                    )),
+                SizedBox(
+                  width: 23.w,
+                ),
+                Container(
+                    height: 30.h,
+                    width: 35.w,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.video_call_rounded,
+                        size: 35,
+                        color: Pallet.colorWhite,
+                      ),
+                      onPressed: pickVideo,
+                    )),
+                SizedBox(
+                  width: 20.w,
+                ),
+                Container(
+                    height: 20.h,
+                    width: 25.w,
+                    child: IconButton(
+                      icon: Icon(Icons.text_fields, color: Pallet.colorWhite),
+                      onPressed: () {
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('Select Font'),
+                                content: showFontSelectionDialog(context),
+                              );
+                            });
+                      },
+                    )),
+                SizedBox(
+                  width: 20.w,
+                ),
+                Container(
+                    height: 20.h,
+                    width: 25.w,
+                    child: IconButton(
+                      icon: Icon(Icons.color_lens_rounded,
+                          color: Pallet.colorWhite),
+                      onPressed: () => c.changeColor(),
+                    )),
+                SizedBox(
+                  width: 20.w,
+                ),
+                Container(
+                    height: 30.h,
+                    width: 35.w,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.mic_rounded,
+                        size: 35,
+                        color: Pallet.colorWhite,
+                      ),
+                      onPressed: _handleMicrophoneTap,
+                    )),
+                SizedBox(
+                  width: 10.w,
+                ),
+              ],
+            )),
         floatingActionButton: FloatingActionButton(
+          heroTag: "sendSession",
           backgroundColor: Pallet.colorSplashScreen,
           onPressed: () {
             _showCardDialog();
           },
           tooltip: 'Send or Save',
-          child: const RotateImage(45, 45),
+          child: const Icon(Icons.send, size: 28, color: Colors.white),
         ),
       ),
     );
   }
 
-  Widget _recordFileWidget() {
-    return SizedBox(
-      height: 60,
-      width: 60,
-      child: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          Center(
-            child: IconButton(
-              icon: const Icon(Icons.play_circle_fill_outlined, color: Colors.white, size: 40),
-              onPressed: () {
-                showDialog<void>(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      content: PlaySoundWidget(
-                        filePath: _recordFile?.path,
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          Positioned(
-            right: -5,
-            top: -9,
-            child: IconButton(
-              icon: const Icon(Icons.cancel, color: Colors.red, size: 24),
-              onPressed: () => setState(() {
-                _recordFile = null;
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Future<void> _loadAssets() async {
-    final imagePicker = ImagePicker();
-    final pickedFiles = await imagePicker.pickMultiImage();
+
+  // This function is correct. It correctly picks files and updates the state.
+  Future<void> loadAssets() async {
+    List<XFile>? pickedFiles;
+    try {
+      pickedFiles = await ImagePicker().pickMultiImage();
+    } catch (e) {
+      print('Error picking images: $e');
+    }
 
     if (!mounted) return;
 
     setState(() {
-      context.read<CreateSessionController>().images = pickedFiles;
+      if (pickedFiles != null) {
+        // This correctly converts XFile to File and updates the controller's list.
+        c.images = pickedFiles.map((file) => File(file.path)).toList();
+      }
+      // The 'else' block seems to assign an old list back.
+      // You might want to remove it if the intention is just to add new images.
+      // else {
+      //   c.images = imageList;
+      // }
     });
   }
 
-  Widget _showFontSelectionDialog(BuildContext context) {
-    final createSessionController = context.read<CreateSessionController>();
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: Constant.ALTER_EGO_FONT_STYLES.map((e) => ListTile(
-        title: e,
-        onTap: () {
-          final index = Constant.ALTER_EGO_FONT_STYLES.indexOf(e);
-          createSessionController.selectFont(index);
-          Navigator.pop(context);
-        },
-      )).toList(),
+
+
+
+  /// Picks multiple videos from the gallery, up to a limit of 3.
+  Future<void> pickVideo() async {
+    // 1. Enforce the max limit before even opening the picker.
+    if (_videoFiles.length >= 3) {
+      showToast("You can select a maximum of 3 videos.");
+      return;
+    }
+
+    try {
+      // 2. Use pickMultipleMedia which is the modern approach.
+      final List<XFile> pickedFiles = await ImagePicker().pickMultipleMedia();
+
+      if (!mounted || pickedFiles.isEmpty) return;
+
+      // 3. IMPORTANT: Filter for video files only.
+      final List<File> selectedVideos = pickedFiles
+          .where((file) {
+        final path = file.path.toLowerCase();
+        return path.endsWith('.mp4') ||
+            path.endsWith('.mov') ||
+            path.endsWith('.avi') ||
+            path.endsWith('.mkv');
+      })
+          .map((file) => File(file.path))
+          .toList();
+
+      if (selectedVideos.isEmpty) {
+        showToast('No video files were selected.');
+        return;
+      }
+
+      // 4. Enforce the 3 video limit after selection.
+      final totalVideos = _videoFiles.length + selectedVideos.length;
+      if (totalVideos > 3) {
+        showToast("You can only add up to 3 videos in total.");
+        final remainingSlots = 3 - _videoFiles.length;
+        _videoFiles.addAll(selectedVideos.take(remainingSlots));
+      } else {
+        _videoFiles.addAll(selectedVideos);
+      }
+
+      setState(() {}); // Refresh the UI
+
+    } catch (e) {
+      print('Error picking videos: $e');
+      showToast('An error occurred while picking videos.');
+    }
+  }
+
+
+
+
+
+
+  /// Builds the UI for video selection and preview using the UnifiedMediaViewer.
+  Widget _buildVideoSelector() {
+    if (_videoFiles.isNotEmpty) {
+      // If videos are selected, show the UnifiedMediaViewer for preview.
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: SizedBox(
+          width: double.infinity, // Prevent layout errors
+          child: UnifiedMediaViewer(
+            // A smaller aspect ratio for a less intrusive preview
+            aspectRatio: 1.4,
+            mediaItems: List.generate(_videoFiles.length, (index) { // <-- Use List.generate
+              final file = _videoFiles[index];
+              return MediaItem(
+                networkUrl: file.path,
+                type: MediaType.video,
+                onDelete: () { // <-- PROVIDE THE FUNCTION
+                  setState(() {
+                    _videoFiles.removeAt(index);
+                  });
+                },
+              );
+            }),
+          ),
+        ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
+
+
+
+  // Font selection dialog.
+
+  Widget showFontSelectionDialog(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: AppConstants.ALTER_EGO_FONT_STYLES
+              .map((e) => ListTile(
+                    title: e,
+                    onTap: () {
+                      var index = AppConstants.ALTER_EGO_FONT_STYLES.indexOf(e);
+                      c.selectFont(index);
+                      Navigator.pop(context);
+                    },
+                  ))
+              .toList()),
     );
   }
 
   Widget _imagesGridView() {
-    final createSessionController = context.watch<CreateSessionController>();
     return Container(
-      width: 500,
+      width: 400,
       alignment: Alignment.center,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       child: GridView.count(
         shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        children: List.generate(createSessionController.images.length, (index) {
-          final image = createSessionController.images[index];
+        physics: NeverScrollableScrollPhysics(),
+        crossAxisCount: 5,
+        children: List.generate(c.images.length, (index) {
+          File imageFile = c.images[index];
           return Stack(
             fit: StackFit.expand,
             children: <Widget>[
-              Image.file(File(image.path)),
+              Image.file(
+                imageFile,
+                width: 200,
+                height: 300,
+                fit: BoxFit.cover,
+              ),
               Positioned(
                 right: -2,
                 top: -9,
                 child: IconButton(
-                  icon: const Icon(Icons.cancel, color: Colors.red, size: 18),
+                  icon: Icon(
+                    Icons.cancel,
+                    color: Colors.red,
+                    size: 18,
+                  ),
                   onPressed: () => setState(() {
-                    createSessionController.images.removeAt(index);
+                    c.images.removeAt(index);
                   }),
                 ),
               ),
@@ -522,59 +1056,272 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     );
   }
 
-  Future<void> _createSession() async {
-    final createSessionController = context.read<CreateSessionController>();
-    setState(() {
-      _isLoading = true;
-    });
+  /// Handles microphone permission and navigation for recording.
+  Future<void> _handleMicrophoneTap() async {
+    // 1. Check the current permission status
+    final PermissionStatus status = await Permission.microphone.status;
 
-    _userModel = await _firebaseServices.getUserInfo();
-    final sessionObject = CreateSessionModel();
-    if (_recordFile != null) {
-      sessionObject.audioUrl = await _firebaseServices.uploadSound(_recordFile!);
+    // 2. Handle the different permission states
+    if (status.isGranted) {
+      // Permission already granted, proceed to record
+      _navigateToRecorder();
+    } else if (status.isPermanentlyDenied) {
+      // Permission permanently denied, show a dialog to open settings
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: const Text('Microphone Permission'),
+          content: const Text(
+              'Microphone permission is required to record audio. Please enable it in app settings.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Open Settings'),
+              onPressed: () {
+                openAppSettings();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Request permission (handles isDenied, isRestricted, etc.)
+      final PermissionStatus requestStatus = await Permission.microphone.request();
+      if (requestStatus.isGranted) {
+        _navigateToRecorder();
+      } else {
+        // Show a toast/snackbar if permission is denied
+        if (!mounted) return;
+        showToast('Microphone permission is required to record audio.');
+      }
+    }
+  }
+
+  /// Navigates to the sound recorder screen.
+  Future<void> _navigateToRecorder() async {
+    if (!mounted) return;
+
+    final data = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SoundRecorderWidget(
+          onRecordComplete: (recordFile) {},
+        ),
+      ),
+    );
+
+    if (data != null) {
+      setState(() {
+        recordFile = data;
+      });
+    }
+  }
+
+
+
+  /// Create quick sessions.
+
+  createQuickSession() async {
+    userModel = await _firebaseServices.getUserInfo();
+
+    CreateSessionModel sessionObject = CreateSessionModel();
+
+    if (recordFile != null) {
+      sessionObject.audioUrl = await _firebaseServices.uploadSound(recordFile!);
+      sessionObject.containsAudio = true;
     }
 
-    final imageDownloadUrls = <String>[];
-    for (final image in _imageList) {
+    List<String> imageDownloadUrls = <String>[];
+    for (var image in imageList) {
       imageDownloadUrls.add(await _firebaseServices.uploadImage(image));
     }
     sessionObject.imageUrls = imageDownloadUrls;
+  
+    sessionObject.userAvatarUrl = userModel.avatarUrl;
+    sessionObject.userNickname = userModel.nickname;
+    sessionObject.title = sessionTitleController.text;
+    sessionObject.private = c.acceptReplies.value;
+    sessionObject.repliesEnabled = false;
+    sessionObject.message = sessionTextEditingController.text;
+    sessionObject.colorHex =
+    AppConstants.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
+    sessionObject.sessionId = uuid.v1();
+    sessionObject.userId = userModel.userId;
+    sessionObject.moodId = mood;
+    sessionObject.location = '#QuickSession';
+    sessionObject.timeCreated = Timestamp.now();
+    sessionObject.timeLastActivity = Timestamp.now();
 
-    if (_sessionTextEditingController.text.contains('love') && _sessionTextEditingController.text.contains('relationship')) {
-      sessionObject.category1 = 'love and relationship';
-      sessionObject.category2 = 'sex and dating';
-      sessionObject.category3 = 'boyfriend and girlfriend';
-      sessionObject.category4 = 'birthdays and anniversary';
-    }
+    bool isSuccessfull =
+    await _firebaseServices.createSession(session: sessionObject);
 
-    sessionObject.userAvatarUrl = _userModel.avatarUrl;
-    sessionObject.userNickname = _userModel.nickname;
-    sessionObject.title = _sessionTitleController.text;
-    sessionObject.private = createSessionController.acceptReplies;
-    sessionObject.repliesEnabled = createSessionController.acceptReplies;
-    sessionObject.message = _sessionTextEditingController.text;
-    sessionObject.colorHex = Constant.DIARY_COLORS_HEXCODE[createSessionController.selectedBackgroundColor];
-    sessionObject.sessionId = _uuid.v1();
-    sessionObject.userId = _currentUser!.uid;
-    sessionObject.moodId = Constant.USER_SESSION_MOODS.indexOf(createSessionController.sessionMood);
-    sessionObject.location = _location;
+    await _firebaseServices.updateUserMoods(mood);
 
-    final isSuccessful = await _firebaseServices.createSession(session: sessionObject);
+    // Call saveUserActivity
+    await _firebaseServices.saveUserActivity(
+      activityType: 'session',
+      activityMessage: "You started a quick diary session: '${sessionObject.title}'.",
+      sessionId: sessionObject.sessionId,
+    );
 
-    _box.remove("draft");
-    _categorize(sessionObject);
+    Future.delayed(Duration(seconds: 4), () {
+      _showQuickInterstitialAd();
+    });
 
-    final newSession = await _firebaseServices.getSingleSession(sessionId: sessionObject.sessionId);
-    _navigateToNewSession(newSession);
+    _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
+
+    _firebaseServices.notifyClaireForSession(userModel.nickname.toString(), sessionObject);
+
   }
 
-  InterstitialAd? _interstitialAd;
-  int _interstitialLoadAttempts = 0;
 
+
+
+
+  /// CREATE NEW SESSION METHOD IS HERE
+  createSession() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      userModel = await _firebaseServices.getUserInfo();
+      CreateSessionModel sessionObject = CreateSessionModel();
+      if (recordFile != null) {
+        sessionObject.audioUrl =
+        await _firebaseServices.uploadSound(recordFile!);
+        sessionObject.containsAudio = true;
+      }
+
+      // --- Image Upload ---
+      try {
+        List<Future<String>> uploadTasks = c.images.map((imageFile) {
+          return _firebaseServices.uploadImage(imageFile);
+        }).toList();
+        List<String> imageDownloadUrls = await Future.wait(uploadTasks);
+        sessionObject.imageUrls = imageDownloadUrls;
+        print('${imageDownloadUrls.length} images uploaded successfully.');
+      } catch (e) {
+        print('Error uploading images: $e');
+        // Optionally, show an error message to the user here.
+      }
+
+      // --- Multi-Video Upload Logic ---
+      if (_videoFiles.isNotEmpty) {
+        List<String> videoDownloadUrls = [];
+        List<String> thumbnailDownloadUrls = [];
+
+        List<Future<List<String>>> allUploadTasks =
+        _videoFiles.map((videoFile) {
+          return Future.wait([
+            _firebaseServices.uploadVideoToStorage(videoFile),
+            _firebaseServices.uploadVideoThumbnailToStorage(videoFile),
+          ]);
+        }).toList();
+
+        List<List<String>> allResults = await Future.wait(allUploadTasks);
+
+        for (var resultPair in allResults) {
+          videoDownloadUrls.add(resultPair[0]);
+          thumbnailDownloadUrls.add(resultPair[1]);
+        }
+
+        sessionObject.videoUrls = videoDownloadUrls;
+        sessionObject.videoThumbnailUrls = thumbnailDownloadUrls;
+        sessionObject.containsVideo = true;
+        print('${videoDownloadUrls.length} videos uploaded successfully.');
+      }
+
+      SessionCategorizer.assignCategories(
+          sessionObject, sessionTextEditingController.text);
+
+      sessionObject.userAvatarUrl = userModel.avatarUrl;
+      sessionObject.userNickname = userModel.nickname;
+      sessionObject.title = sessionTitleController.text;
+      sessionObject.private = c.acceptReplies.value;
+      sessionObject.repliesEnabled = c.acceptReplies.value;
+      sessionObject.message = sessionTextEditingController.text;
+      sessionObject.colorHex = AppConstants.DIARY_COLORS_HEXCODE[c.selectedBackgroundColor.value];
+      sessionObject.sessionId = uuid.v1();
+      sessionObject.userId = userModel.userId;
+      sessionObject.moodId = AppConstants.USER_SESSION_MOODS.indexOf(c.sessionMood.value);
+      sessionObject.location = _location;
+      sessionObject.timeCreated = Timestamp.now();
+      sessionObject.timeLastActivity = Timestamp.now();
+
+      await _firebaseServices.createSession(session: sessionObject);
+
+      await _firebaseServices.updateUserMoods(AppConstants.USER_SESSION_MOODS.indexOf(c.sessionMood.value));
+
+      await _firebaseServices.saveUserActivity(
+        activityType: 'session',
+        activityMessage:
+        "You started a new diary session: '${sessionObject.title}'.",
+        sessionId: sessionObject.sessionId,
+      );
+
+      Hive.box("draft").clear();
+
+      categorize(sessionObject);
+
+      isOriginalSession(sessionTextEditingController.text, sessionObject);
+
+      ascertainCurrentLoveCount();
+
+      Future.delayed(Duration(seconds: 4), () {
+        _showInterstitialAd();
+      });
+
+      _firebaseServices.subscribeToYourSession(userModel.nickname.toString(), sessionObject);
+
+      _firebaseServices.notifyClaireForSession(userModel.nickname.toString(), sessionObject);
+
+      // This will only be called after all previous awaits are complete.
+      if (mounted && sessionObject.sessionId != null && sessionObject.sessionId!.isNotEmpty) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => NotifiedSessionDetails(sessionId: sessionObject.sessionId!),
+          ),
+        );
+      }
+
+    } catch (e) {
+      // If any error occurs during the process, log it.
+      print("An error occurred during session creation: $e");
+      // Optionally, show a toast or dialog to the user that something went wrong.
+
+    } finally {
+      // This block will ALWAYS run, whether the try block succeeds or fails.
+      // This is the perfect place to turn off the loading indicator.
+      if (mounted) { // Check if the widget is still in the tree
+        setState(() {
+          sessionTextEditingController.clear();
+          isLoading = false;
+          imageList.clear();
+          _videoFiles.clear();
+          recordFile = null;
+        });
+      }
+    }
+  }
+
+
+
+  /// Create new session interstitial ad.
   void _createInterstitialAd() {
     InterstitialAd.load(
-      adUnitId: "ca-app-pub-3940256099942544/1033173712",
-      request: const AdRequest(),
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/3729355238"
+          : Platform.isIOS
+              ? "ca-app-pub-2404156870680632/7377790353"
+              : '',
+      request: AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
           _interstitialAd = ad;
@@ -593,35 +1340,210 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   }
 
   void _showInterstitialAd() {
-    if (_interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          _createInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          _createInterstitialAd();
-        },
-      );
-      _interstitialAd!.show();
-    }
+    if (_interstitialAd == null || _isPremium) return;
+
+    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (InterstitialAd ad) {
+        ad.dispose();
+        _createInterstitialAd();
+      },
+      onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+        ad.dispose();
+        _createInterstitialAd();
+      },
+    );
+    _interstitialAd!.show();
   }
 
-  void _navigateToNewSession(CreateSessionModel? session) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SessionPostDetailsScreen(
-          sessionModel: session,
-        ),
+
+
+  // Create quick session interstitial ad.
+  void _createQuickInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: Platform.isAndroid
+          ? "ca-app-pub-2404156870680632/8800174899"
+          : Platform.isIOS
+          ? "ca-app-pub-2404156870680632/1147263196"
+          : '',
+      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _quickInterstitialAd = ad;
+          _quickInterstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _quickInterstitialLoadAttempts += 1;
+          _quickInterstitialAd = null;
+          if (_quickInterstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createQuickInterstitialAd();
+          }
+        },
       ),
     );
   }
 
-  void _categorize(CreateSessionModel createSessionModel) {
-    if (createSessionModel.message!.contains('love') && createSessionModel.message!.contains('relationship')) {
-      _firebaseServices.addToCategory(AppString.loveAndRelationship, createSessionModel);
+  void _showQuickInterstitialAd() {
+    if (_quickInterstitialAd == null || _isPremium) return;
+
+      _quickInterstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          _createQuickInterstitialAd();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          _createQuickInterstitialAd();
+        },
+      );
+      _quickInterstitialAd!.show();
+  }
+
+
+
+  void navigateToNewSession(CreateSessionModel? session) {
+    print('done');
+    Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (_) => SessionPostDetailsScreen(
+                  sessionModel: session,
+                )));
+  }
+
+
+
+  void categorize(CreateSessionModel createSessionModel) {
+    if (createSessionModel.message!.contains('love') &&
+        createSessionModel.message!.contains('relationship')) {
+      _firebaseServices.addToCategory(
+          AppString.loveAndRelationship, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('marriage') &&
+        createSessionModel.message!.contains('family')) {
+      _firebaseServices.addToCategory(
+          AppString.marriageAndFamily, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('sex') &&
+        createSessionModel.message!.contains('dating')) {
+      _firebaseServices.addToCategory(
+          AppString.sexAndDating, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('school') &&
+        createSessionModel.message!.contains('education')) {
+      _firebaseServices.addToCategory(
+          AppString.schoolAndEducation, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('work') &&
+        createSessionModel.message!.contains('career')) {
+      _firebaseServices.addToCategory(
+          AppString.workAndCareer, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('hate') &&
+        createSessionModel.message!.contains('abuse')) {
+      _firebaseServices.addToCategory(
+          AppString.hateAndAbuse, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('friends') &&
+        createSessionModel.message!.contains('fun')) {
+      _firebaseServices.addToCategory(
+          AppString.friendsAndFun, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('depression') &&
+        createSessionModel.message!.contains('anxiety')) {
+      _firebaseServices.addToCategory(
+          AppString.depressionAndAnxiety, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('help') &&
+        createSessionModel.message!.contains('charity')) {
+      _firebaseServices.addToCategory(
+          AppString.helpAndCharity, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('health') &&
+        createSessionModel.message!.contains('fitness')) {
+      _firebaseServices.addToCategory(
+          AppString.healthAndFitness, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('husband') &&
+        createSessionModel.message!.contains('wife')) {
+      _firebaseServices.addToCategory(
+          AppString.husbandAndWife, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('boyfriend') &&
+        createSessionModel.message!.contains('girlfriend')) {
+      _firebaseServices.addToCategory(
+          AppString.boyfriendAndGirlfriend, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('food') &&
+        createSessionModel.message!.contains('drink')) {
+      _firebaseServices.addToCategory(
+          AppString.foodAndDrink, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('birthday') &&
+        createSessionModel.message!.contains('anniversary')) {
+      _firebaseServices.addToCategory(
+          AppString.birthdayAndAnniversary, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('prayer') &&
+        createSessionModel.message!.contains('thanksgiving')) {
+      _firebaseServices.addToCategory(
+          AppString.prayerAndThanksgiving, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('childhood') &&
+        createSessionModel.message!.contains('memory')) {
+      _firebaseServices.addToCategory(
+          AppString.childhoodAndMemory, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('parents') &&
+        createSessionModel.message!.contains('children')) {
+      _firebaseServices.addToCategory(
+          AppString.parentsAndChildren, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('business') &&
+        createSessionModel.message!.contains('entrepreneur')) {
+      _firebaseServices.addToCategory(
+          AppString.businessAndEntrepreneur, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('art') &&
+        createSessionModel.message!.contains('photography')) {
+      _firebaseServices.addToCategory(
+          AppString.artsAndPhotography, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('music') &&
+        createSessionModel.message!.contains('videos')) {
+      _firebaseServices.addToCategory(
+          AppString.musicAndVideos, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('riddles') &&
+        createSessionModel.message!.contains('jokes')) {
+      _firebaseServices.addToCategory(
+          AppString.riddlesAndJokes, createSessionModel);
+    }
+
+    if (createSessionModel.message!.contains('television') &&
+        createSessionModel.message!.contains('movies')) {
+      _firebaseServices.addToCategory(
+          AppString.televisionAndMovies, createSessionModel);
     }
   }
 }

@@ -1,798 +1,490 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/ui/Search/custom_search_card.dart';
-import 'package:dear_claire/ui/splash_screen/custom_rotate_bacground.dart';
-import 'package:dear_claire/ui/splash_screen/splash.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
+import 'package:clairediary/ui/Search/custom_search_card.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+
 import '../../Admob/ad_state.dart';
-import '../../utils/helper.dart';
+import '../../utils/mood.dart';
 import '../../utils/strings.dart';
+import '../Categories/category_sessions.dart';
+import '../Categories/mood_sessions.dart';
 import '../featured/model/session.dart';
-import '../model/session.dart';
-import '../../../widgets/ego_mode_session_card.dart';
+import '../routes/page_router_animation.dart';
+
+// Data class to hold information for each keyword section
+class SearchKeyword {
+  final String title;
+  final String category;
+  final Stream<QuerySnapshot<Map<String, dynamic>>> stream;
+
+  SearchKeyword({required this.title, required this.category, required this.stream});
+}
 
 class SearchPage extends StatefulWidget {
-  SearchPage({Key? key, required this.title, this.record}) : super(key: key);
-
-  final String title;
-  final record;
+  const SearchPage({Key? key, required String title}) : super(key: key);
 
   @override
   _SearchPageState createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
-  List<Session>? _sessionList = [];
-
+class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
+  late final List<SearchKeyword> _keywords;
 
+  // --- Animation Controller for filter icon ---
+  late final AnimationController _filterIconController;
+  late final Animation<double> _filterIconAnimation;
 
-  /// Get Featured sessions for "I'm so happy" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showHappySearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-       // .where("moodId", isEqualTo: 1)
-        .where("category1", isEqualTo: "happy and blessed")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-       // .orderBy('timeLastActivity', descending: true)
-        .limit(AppString.appSessionLength)
-        .snapshots();
+  // --- Filtering State ---
+  String? _selectedContinent;
+  int? _selectedMoodId;
+
+  // --- Admob Ad Units ---
+  BannerAd? searchPageMiddleBanner;
+  BannerAd? searchPageBottomBanner;
+  BannerAd? searchPageMiddleBanner2;
+  BannerAd? searchPageBottomBanner2;
+
+  @override
+  void initState() {
+    super.initState();
+    _keywords = _initializeKeywords();
+    _filterIconController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _filterIconAnimation = Tween<double>(begin: 0.8, end: 1.1).animate(
+      CurvedAnimation(parent: _filterIconController, curve: Curves.easeInOut),
+    );
   }
 
-  /// Get Featured sessions for "Relationship Issues" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showRelationshipIssuesSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "love and relationship")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-       // .orderBy('timeLastActivity', descending: true)
-        .limit(AppString.appSessionLength)
-        .snapshots();
+  // Centralized method to create the list of keywords to avoid repetition
+  List<SearchKeyword> _initializeKeywords() {
+    // Helper to reduce boilerplate
+    Stream<QuerySnapshot<Map<String, dynamic>>> createStream(String category) {
+      return FirebaseFirestore.instance
+          .collection(AppString.appFeaturedSessions)
+          .where("category1", isEqualTo: category)
+          .where("repliesEnabled", isEqualTo: true)
+          .where("archived", isEqualTo: false)
+          .where("flagged", isEqualTo: false)
+          .orderBy('timeLastActivity', descending: true)
+          .limit(AppString.appSessionLength)
+          .snapshots();
+    }
+
+    return [
+      SearchKeyword(title: AppString.im_so_happy, category: "happy and blessed", stream: createStream("happy and blessed")),
+      SearchKeyword(title: AppString.relationship_issues, category: "love and relationship", stream: createStream("love and relationship")),
+      SearchKeyword(title: AppString.sad_and_depressed, category: "sad and depressed", stream: createStream("sad and depressed")),
+      SearchKeyword(title: "School and Work", category: "school and education", stream: createStream("school and education")),
+      SearchKeyword(title: "Make New Friends", category: "friends and fun", stream: createStream("friends and fun")),
+      SearchKeyword(title: "Sick and Tired", category: "health and fitness", stream: createStream("health and fitness")),
+      SearchKeyword(title: "Marriage and Family", category: "marriage and family", stream: createStream("marriage and family")),
+      SearchKeyword(title: "Sex and Dating", category: "sex and dating", stream: createStream("sex and dating")),
+      SearchKeyword(title: "Comedy and Entertainment", category: "comedy and entertainment", stream: createStream("comedy and entertainment")),
+      SearchKeyword(title: "Single and Lonely", category: "single and lonely", stream: createStream("single and lonely")),
+      SearchKeyword(title: "Parents and Children", category: "parents and children", stream: createStream("parents and children")),
+      SearchKeyword(title: "Prayer and Thanksgiving", category: "prayer and thanksgiving", stream: createStream("prayer and thanksgiving")),
+    ];
   }
-
-  /// Get Featured sessions for "Sad and depressed" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showSadAndDepressedSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "sad and depressed")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-    // .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-  /// Get Featured sessions for "School and work" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showSchoolAndWorkSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "school and education")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-    // .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-  /// Get Featured sessions for "Make new friends" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showMakeNewFriendsSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "friends and fun")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-    // .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-
-  /// Get Featured sessions for "Sick and tired" search
-  /// But not flagged or even archived
-  Stream<QuerySnapshot<Map<String, dynamic>>> showSickAndTiredSearches() {
-    return FirebaseFirestore.instance
-        .collection(AppString.appFeaturedSessions)
-        .where("category1", isEqualTo: "health and fitness")
-        .where("repliesEnabled", isEqualTo: true)
-        .where("archived", isEqualTo: false)
-        .where("flagged", isEqualTo: false)
-        .limit(AppString.appSessionLength)
-    // .orderBy('timeCreated', descending: true)
-        .snapshots();
-  }
-
-
-
-  // Admob Ad Units.
-  late BannerAd searchPageMiddleBanner;
-  late BannerAd searchPageBottomBanner;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final adState = Provider.of<AdState>(context);
+    // Load ads only if they haven't been loaded yet
+    if (!_adsRequested) {
+      _adsRequested = true;
+      final adState = Provider.of<AdState>(context, listen: false);
+      _loadBannerAds(adState);
+    }
+  }
 
-    // Implement a top location banner ad unit.
-    adState.initialization.then((status) {
-      setState(() {
-        searchPageMiddleBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.searchPageMiddleBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdFailedToLoad: (ad, error) {
-                ad.dispose();
-              },
-            )
-        )..load();
-      });
-    });
+  bool _adsRequested = false;
 
-    // Implementing a bottom location banner ad unit.
-    super.didChangeDependencies();
+  void _loadBannerAds(AdState adState) {
     adState.initialization.then((status) {
-      setState(() {
-        searchPageBottomBanner = BannerAd(
-            size: AdSize.banner,
-            adUnitId: adState.searchPageBottomBannerAdUnitId,
-            request: AdRequest(),
-            listener: BannerAdListener(
-              onAdFailedToLoad: (ad, error) {
-                ad.dispose();
-              },
-            )
-        )..load();
-      });
+      if (!mounted) return; // Ensure widget is still in the tree
+      // Each banner is only stored (and so only shown) once it has loaded.
+      // Showing a banner before load, or after it was disposed on a failed
+      // load, throws "AdWidget requires Ad.load to be called before AdWidget
+      // is inserted into the tree".
+      _createBannerAd(adState.searchPageMiddleBannerAdUnitId, (ad) => searchPageMiddleBanner = ad);
+      _createBannerAd(adState.searchPageBottomBannerAdUnitId, (ad) => searchPageBottomBanner = ad);
+      _createBannerAd(adState.searchPageMiddleBannerAdUnitId2, (ad) => searchPageMiddleBanner2 = ad);
+      _createBannerAd(adState.searchPageBottomBannerAdUnitId2, (ad) => searchPageBottomBanner2 = ad);
     });
   }
 
+  void _createBannerAd(String adUnitId, void Function(BannerAd) onLoaded) {
+    BannerAd(
+      size: AdSize.banner,
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (!mounted) {
+            ad.dispose();
+            return;
+          }
+          setState(() => onLoaded(ad as BannerAd));
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+        },
+      ),
+    ).load();
+  }
 
-
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _filterIconController.dispose();
+    searchPageMiddleBanner?.dispose();
+    searchPageBottomBanner?.dispose();
+    searchPageMiddleBanner2?.dispose();
+    searchPageBottomBanner2?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(72.5), // Set this height
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: EdgeInsets.only(top: 30),
-                height: 100,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(0),
-                    color: Pallet.colorPrimary),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Align(
-                            alignment:Alignment.centerLeft,
-                            child: GestureDetector(
-                                onTap: (){
-                                  print("Clicking on X");
-                                  Navigator.pop(context);
-                                },
-                                child: SvgPicture.asset("assets/images/ic_close.svg",
-                                  width: 17.0,
-                                  height: 17.0,
-                                color: Colors.white,)
-                            ),
-                          ),
-                          SizedBox(width: 10,),
-                          FloatingActionButton(
-                            onPressed: () => widget.record!(),
-                            mini: true,
-                            backgroundColor: Pallet.colorWhite,
-                            child: Icon(
-                              Icons.mic_rounded,
-                              size: 19,
-                              color: Pallet.colorPrimary,
-                            ),),
-                          Expanded(
-                            child: new ConstrainedBox(
-                              constraints: new BoxConstraints(
-                                minWidth: getDeviceWidth(context),
-                                maxWidth: getDeviceWidth(context),
-                                minHeight: 35.0,
-                                maxHeight: 40.0,
-                              ),
-                              child: Scrollbar(
-                                child: Container(
-                                  padding: EdgeInsets.zero,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(30),
-                                    color: Pallet.colorWhite,
-                                  ),
-                                  child: TextField(
-                                    cursorColor: Pallet.colorSplashScreen,
-                                    keyboardType: TextInputType.text,
-                                    maxLines: 1,
-                                    cursorHeight: 33,
-                                    controller: _searchController,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                      contentPadding:
-                                      EdgeInsets.only(left: 13.0, right: 13.0, top: 5, bottom: 6),
-                                      hintText: AppString.search_bar_hint,
-                                      hintStyle: TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        color: Pallet.colorSecondary,
-                                        fontSize: 22,
-                                      ),
-                                      counterText: '',
-                                    ),
-                                    maxLength: 160,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          FloatingActionButton(
-                              onPressed: () {
-                                if (_searchController.text.isNotEmpty)
-                                  // saveEgoMessage();
-                                  _searchController.clear();
-                              },
-                              mini: true,
-                              backgroundColor: Pallet.colorWhite,
-                              child: SvgPicture.asset(
-                                AppImages.appSend,
-                                color: Pallet.colorPrimary,
-                                height: 20,
-                              )),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final searchBarColor = isDarkMode ? Colors.grey[800] : Colors.grey[200];
+    final searchBarTextColor = isDarkMode ? Colors.white : Colors.black;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Explore Sessions",
+            style: GoogleFonts.lato(
+                fontSize: 25.0,
+                color: Colors.white,
+                fontWeight: FontWeight.w600)),
+        actions: [
+          IconButton(
+            onPressed: _showFilterDialog,
+            icon: ScaleTransition(
+              scale: _filterIconAnimation,
+              child: const Icon(
+                Icons.filter_list,
+                color: Colors.white,
+                size: 35,
               ),
-            ],
+            ),
           ),
-        ),
-        body: Stack(
-           children: [
-             RotateImage(getDeviceHeight(context), getDeviceWidth(context)),
-             ListView(
-              children: [
-                SizedBox(height: 7,),
-                Container(
-                  margin: EdgeInsets.only(bottom: 10),
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Text(
-                        AppString.featured_searches,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 20,
-                        color: Pallet.colorPrimary,
-                      ),
-                    ),
-                  ),
-                ),
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          color: Pallet.colorPrimary,
-                          borderRadius: BorderRadius.circular(25)
-                        ),
-                        child: Container(
-                          height: 18,
-                          width: 200,
-                          decoration: BoxDecoration(
-                            color: Pallet.colorWhite,
-                            borderRadius: BorderRadius.circular(20)
-                          ),
-                          child: Text(
-                            AppString.im_so_happy,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showHappySearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Align(
-                    alignment: Alignment.topLeft,
-                    child: Container(
-                      width: 200,
-                      alignment: Alignment.topLeft,
-                      padding: EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                          color: Pallet.colorPrimary,
-                          borderRadius: BorderRadius.circular(25)
-                      ),
-                      child: Container(
-                        height: 18,
-                        width: 200,
-                        decoration: BoxDecoration(
-                            color: Pallet.colorWhite,
-                            borderRadius: BorderRadius.circular(20)
-                        ),
-                        child: Text(
-                          AppString.relationship_issues,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showRelationshipIssuesSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                            color: Pallet.colorPrimary,
-                            borderRadius: BorderRadius.circular(25)
-                        ),
-                        child: Container(
-                          height: 18,
-                          width: 200,
-                          decoration: BoxDecoration(
-                              color: Pallet.colorWhite,
-                              borderRadius: BorderRadius.circular(20)
-                          ),
-                          child: Text(
-                            AppString.sad_and_depressed,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showSadAndDepressedSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Top ad unit is here
-                if(searchPageMiddleBanner == null)
-                  SizedBox(height: 70)
-                else
-                  Container(
-                    height: 60,
-                    child: AdWidget(ad: searchPageMiddleBanner),
-                  ),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                            color: Pallet.colorPrimary,
-                            borderRadius: BorderRadius.circular(25)
-                        ),
-                        child: Container(
-                          height: 18,
-                          width: 200,
-                          decoration: BoxDecoration(
-                              color: Pallet.colorWhite,
-                              borderRadius: BorderRadius.circular(20)
-                          ),
-                          child: Text(
-                            AppString.school_and_work,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showSchoolAndWorkSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                            color: Pallet.colorPrimary,
-                            borderRadius: BorderRadius.circular(25)
-                        ),
-                        child: Container(
-                          height: 18,
-                          width: 200,
-                          decoration: BoxDecoration(
-                              color: Pallet.colorWhite,
-                              borderRadius: BorderRadius.circular(20)
-                          ),
-                          child: Text(
-                            AppString.make_new_friends,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showMakeNewFriendsSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: Container(
-                        width: 200,
-                        alignment: Alignment.topLeft,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                            color: Pallet.colorPrimary,
-                            borderRadius: BorderRadius.circular(25)
-                        ),
-                        child: Container(
-                          height: 18,
-                          width: 200,
-                          decoration: BoxDecoration(
-                              color: Pallet.colorWhite,
-                              borderRadius: BorderRadius.circular(20)
-                          ),
-                          child: Text(
-                            AppString.sick_and_tired,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      child: StreamBuilder(
-                        stream: showSickAndTiredSearches(),
-                        builder: (context, AsyncSnapshot<QuerySnapshot> session) {
-                          if (session.connectionState == ConnectionState.waiting) {
-                            return RotateImage(70, 70);
-                          }
-                          if (!session.hasData) {
-                            return Center(
-                              child: Text("No Session data",
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.lato(
-                                      fontSize: 15.0,
-                                      color: Pallet.colorBlack,
-                                      //fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600)),
-                            );
-                          }
-                          if (session.hasData) {
-                            // clear list
-                            _sessionList!.clear();
-
-                            session.data!.docs.map((e) {
-                              _sessionList!.add(Session.fromJson(e.data()));
-                            }).toList();
-
-                            return Scrollbar(
-                              child: SizedBox(height: 200,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    ..._sessionList!
-                                        .map((element) =>
-                                        CustomSearchCard(element: element))
-                                        .toList(),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                          return Container();
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Top ad unit is here
-                if(searchPageBottomBanner == null)
-                  SizedBox(height: 70)
-                else
-                  Container(
-                    height: 60,
-                    child: AdWidget(ad: searchPageBottomBanner),
-                  ),
-
-              ],
+        ],
+      ),
+      body: GestureDetector(
+        onTap: () {
+          // Hide keyboard when tapping outside of a text field
+          FocusScope.of(context).unfocus();
+        },
+        child: Column(
+          children: [
+            _buildSearchBar(searchBarColor, searchBarTextColor),
+            Expanded(
+              child: _searchQuery.isNotEmpty || _selectedContinent != null || _selectedMoodId != null
+                  ? _buildSearchResults()
+                  : _buildKeywordSections(),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Filter Sessions'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              // --- Location Filter ---
+              ListTile(
+                leading: const Icon(Icons.location_on),
+                trailing: DropdownButton<String>(
+                  value: _selectedContinent,
+                  hint: const Text('By Continent'),
+                  items: ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Australia']
+                      .map((continent) => DropdownMenuItem(value: continent, child: Text(continent)))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedContinent = value;
+                      _selectedMoodId = null; // Clear other filter
+                    });
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              // --- Mood Filter ---
+              ListTile(
+                leading: const Icon(Icons.mood),
+                trailing: DropdownButton<int>(
+                  value: _selectedMoodId,
+                  hint: const Text('      By Mood'),
+                  items: Mood.MOODS.where((mood) => mood.id != -1 && mood.id != 0)
+                      .map((mood) => DropdownMenuItem(value: mood.id, child: Text(mood.name!)))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      // First, close the dialog
+                      Navigator.of(context).pop();
+                      // Then navigate to the MoodSessionsPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MoodSessions(sessionMood: value),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Widget for the search bar
+  Widget _buildSearchBar(Color? searchBarColor, Color searchBarTextColor) {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: TextField(
+        controller: _searchController,
+        style: TextStyle(color: searchBarTextColor),
+        onChanged: (value) => setState(() {
+          _searchQuery = value;
+          _selectedContinent = null;
+          _selectedMoodId = null;
+        }),
+        decoration: InputDecoration(
+          hintText: "Search sessions...",
+          hintStyle: TextStyle(color: searchBarTextColor.withValues(alpha: 0.6)),
+          prefixIcon: Icon(Icons.search, color: searchBarTextColor),
+          filled: true,
+          fillColor: searchBarColor,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(30.0),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        ),
+      ),
+    );
+  }
+
+  // Widget for displaying the list of keyword sections
+  Widget _buildKeywordSections() {
+    return ListView.builder(
+      itemCount: _keywords.length,
+      padding: const EdgeInsets.only(bottom: 20),
+      itemBuilder: (context, index) {
+        final keyword = _keywords[index];
+        // --- AD INTEGRATION ---
+        if (index == 0 && searchPageMiddleBanner != null) {
+          return Column(children: [_AdWidget(bannerAd: searchPageMiddleBanner), _KeywordSection(keyword: keyword)]);
+        }
+        if (index == 3 && searchPageMiddleBanner2 != null) {
+          return Column(children: [_AdWidget(bannerAd: searchPageMiddleBanner2), _KeywordSection(keyword: keyword)]);
+        }
+        if (index == 7 && searchPageBottomBanner != null) {
+          return Column(children: [_AdWidget(bannerAd: searchPageBottomBanner), _KeywordSection(keyword: keyword)]);
+        }
+        if (index == 10 && searchPageBottomBanner2 != null) {
+          return Column(children: [_AdWidget(bannerAd: searchPageBottomBanner2), _KeywordSection(keyword: keyword)]);
+        }
+        return _KeywordSection(keyword: keyword);
+      },
+    );
+  }
+
+  // Widget for displaying results from search or filtering
+  Widget _buildSearchResults() {
+    Query query = FirebaseFirestore.instance.collection(AppString.appFeaturedSessions);
+
+    if (_searchQuery.isNotEmpty) {
+      query = query
+          .where('title', isGreaterThanOrEqualTo: _searchQuery)
+          .where('title', isLessThan: _searchQuery + 'z');
+    } else if (_selectedContinent != null) {
+      // This is disabled for now, pending data model changes
+      // final countries = _getCountriesForContinent(_selectedContinent!);
+       // query = query.where('location', whereIn: countries);
+    } else if (_selectedMoodId != null) {
+      query = query.where('moodId', isEqualTo: _selectedMoodId);
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      // Always cap results: an unfiltered query here once streamed the whole
+      // featured sessions collection over the platform channel and crashed
+      // the app with OutOfMemoryError.
+      stream: query.limit(AppString.appSessionLength).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text("No sessions found."));
+        }
+
+        final sessionList = snapshot.data!.docs
+            .map((doc) => Session.fromJson(doc.data() as Map<String, dynamic>))
+            .toList();
+
+        return ListView.builder(
+          itemCount: sessionList.length,
+          itemBuilder: (context, index) {
+            return CustomSearchCard(
+              element: sessionList[index],
+              visitedEgoName: '',
+              visitedUsersID: '',
+            );
+          },
+        );
+      },
+    );
+  }
+
+  List<String> _getCountriesForContinent(String continent) {
+    switch (continent) {
+      case 'Africa':
+        return ['Nigeria', 'Ghana', 'Kenya', 'South Africa'];
+      case 'Asia':
+        return ['India', 'China', 'Japan', 'South Korea'];
+      case 'Europe':
+        return ['United Kingdom', 'Germany', 'France', 'Italy'];
+      case 'North America':
+        return ['USA', 'Canada', 'Mexico'];
+      case 'South America':
+        return ['Brazil', 'Argentina', 'Colombia'];
+      case 'Australia':
+        return ['Australia', 'New Zealand'];
+      default:
+        return [];
+    }
+  }
+}
+
+// A reusable widget for each "keyword" section to keep the main build method clean
+class _KeywordSection extends StatelessWidget {
+  const _KeywordSection({Key? key, required this.keyword}) : super(key: key);
+
+  final SearchKeyword keyword;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0, top: 16.0, bottom: 8.0),
+          child: GestureDetector(
+            onTap: () {
+              PageRouter.gotoWidget(
+                  CategorySessions(visitedCategory: keyword.category), context);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+              decoration: BoxDecoration(
+                color: theme.chipTheme.backgroundColor ?? theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(20.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    spreadRadius: 1,
+                    blurRadius: 3,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                keyword.title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: theme.chipTheme.labelStyle?.color ??
+                      (isDarkMode ? Colors.black : Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 200,
+          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: keyword.stream,
+            builder: (context, session) {
+              if (session.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!session.hasData || session.data!.docs.isEmpty) {
+                return Center(
+                  child: Text("No sessions available.",
+                      style: GoogleFonts.lato(fontSize: 15.0, color: Colors.grey)),
+                );
+              }
+
+              final sessionList = session.data!.docs
+                  .map((e) => Session.fromJson(e.data()))
+                  .toList();
+
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                itemCount: sessionList.length,
+                itemBuilder: (context, index) {
+                  return CustomSearchCard(
+                    element: sessionList[index],
+                    visitedEgoName: '',
+                    visitedUsersID: '',
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Helper widget to display an ad banner safely
+class _AdWidget extends StatelessWidget {
+  final BannerAd? bannerAd;
+  const _AdWidget({Key? key, this.bannerAd}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    if (bannerAd != null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        height: 60,
+        child: AdWidget(ad: bannerAd!),
+      );
+    }
+    return const SizedBox.shrink();
   }
 }

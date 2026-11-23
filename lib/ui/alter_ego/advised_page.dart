@@ -1,11 +1,13 @@
-import 'package:dear_claire/ui/alter_ego/widgets/alter_ego_session_card.dart';
-import 'package:dear_claire/ui/featured/model/session.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
-import 'package:dear_claire/widgets/ego_mode_session_card.dart';
+import 'package:clairediary/ui/alter_ego/empty_advising_screen_widget.dart';
+import 'package:clairediary/ui/alter_ego/widgets/alter_ego_session_card.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import '../../utils/helper.dart';
+import '../routes/routes.dart';
+import '../splash_screen/custom_rotate_bacground.dart';
 
 class AdvisedPage extends StatefulWidget {
   const AdvisedPage({Key? key}) : super(key: key);
@@ -14,44 +16,59 @@ class AdvisedPage extends StatefulWidget {
   _AdvisedPageState createState() => _AdvisedPageState();
 }
 
-class _AdvisedPageState extends State<AdvisedPage> {
+class _AdvisedPageState extends State<AdvisedPage> with AutomaticKeepAliveClientMixin {
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: firebaseServices.getAssignedSessions(),
-        builder: (context, AsyncSnapshot<List<Session>> session) {
-          if (session.connectionState == ConnectionState.waiting) {
-            return RotateImage(70, 70);
-          }
-          if (!session.hasData) {
-            return Center(
-              child: Text("You have not advised any Session yet",
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.lato(
-                      fontSize: 15.0,
-                      color: Pallet.colorBlack,
-                      //fontStyle: FontStyle.normal,
-                      fontWeight: FontWeight.w600)),
-            );
-          }
+    super.build(context);
+    return SafeArea(
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          if (didPop) return;
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.alterEgoHomepage,
+                (Route<dynamic> route) => false,
+          );
+        },
+        child: Scaffold(
+          body: Stack(
+            children: [
+              CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
-          if (session.hasError) {
-            return Container();
-          }
+              FutureBuilder(
+                future: firebaseServices.getAssignedSessions(),
+                builder: (context, AsyncSnapshot<List<Session>> session) {
+                  if (session.connectionState == ConnectionState.waiting) {
+                    return RotateImage(70, 70);
+                  }
+                  if (session.data?.length == 0) {
+                    return EmptyAdvisingSessionWidget();
+                  }
 
-          if (session.hasData) {
-            return ListView(
-              children: [
-                ...session.data!
-                    .map((element) => AlterEgoModeSessionCard(element: element))
-                    .toList(),
-              ],
-            );
-          }
-          return Container();
-        }
-        );
+                  if (session.hasError) {
+                    return Container();
+                  }
+
+                  if (session.hasData) {
+                    return ListView(
+                      children: [
+                        ...session.data!
+                            .map((element) => AlterEgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
+                            .toList(),
+                      ],
+                    );
+                  }
+                  return Container();
+                }
+                ),
+        ]
+          ),
+        ),
+      ),
+    );
   }
 }

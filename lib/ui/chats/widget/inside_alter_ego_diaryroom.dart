@@ -1,0 +1,366 @@
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:clairediary/Admob/ad_state.dart';
+import 'package:clairediary/ui/chats/data/chatroompodo.dart';
+import 'package:clairediary/ui/chats/data/chats.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/utils/helper.dart';
+import 'package:clairediary/widgets/chat_edit_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:provider/provider.dart';
+import '../../../helpers/toast_helper.dart';
+import '../../../services/notification_service.dart';
+import '../../../services/user_model.dart';
+import '../../../utils/color.dart';
+import 'alter_ego_chat_widget.dart';
+import 'alter_ego_sub_room_widget.dart';
+
+class Temp {
+  String id;
+  ChatModel chatModel;
+  Temp(this.id, this.chatModel);
+}
+
+class AlterEgoChatScreen extends StatefulWidget {
+  ChatRoomPodo chatRoomPodo;
+  final String? cornerId;
+  AlterEgoChatScreen({Key? key, required this.chatRoomPodo, this.cornerId}) : super(key: key);
+
+  @override
+  _AlterEgoChatScreenState createState() => _AlterEgoChatScreenState(chatRoomPodo);
+}
+const int maxFailedLoadAttempts = 3;
+
+
+class _AlterEgoChatScreenState extends State<AlterEgoChatScreen> {
+  ChatRoomPodo? chatRoomPodo;
+
+  _AlterEgoChatScreenState(this.chatRoomPodo);
+  bool _isSending = false;
+  List<Temp> _chatList = [];
+  User? currentUser = FirebaseAuth.instance.currentUser;
+  late Future<UserModel> _userFuture;
+  bool _isPremium = false;
+
+  // --- ADMOB COMPLIANCE FIX 1: Add new ad state variables ---
+  BannerAd? _bottomBannerAd;
+  bool _isBannerAdInitialized = false;
+  // Only true after the banner has actually loaded; a banner that failed to
+  // load is disposed and must never be put in an AdWidget.
+  bool _isBannerAdLoaded = false;
+  InterstitialAd? _interstitialAd;
+  int _interstitialLoadAttempts = 0;
+
+
+  // Replace the existing initState()
+  @override
+  void initState() {
+    super.initState();
+    _userFuture = firebaseServices.getUserInfo();
+    _userFuture.then((user) {
+      if (mounted) {
+        setState(() {
+          _isPremium = user.isPremium;
+        });
+        if (!_isPremium) {
+          _createNewChatInterstitialAd();
+        }
+      }
+    });
+  }
+
+
+
+  @override
+  void dispose() {
+    if (!_isPremium) {
+      _showNewChatInterstitialAd();
+    }
+    _interstitialAd?.dispose();
+    _bottomBannerAd?.dispose();
+    super.dispose();
+  }
+
+
+  // Create interstitial ad.
+  void _createNewChatInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId:  Platform.isAndroid? "ca-app-pub-2404156870680632/9695244155" :
+      Platform.isIOS? "ca-app-pub-2404156870680632/6685937430" :
+      '',      request: AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          _interstitialAd = ad;
+          _interstitialLoadAttempts = 0;
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print('Failed to load an interstitial ad: ${error.message}');
+          _interstitialLoadAttempts += 1;
+          _interstitialAd = null;
+          if (_interstitialLoadAttempts <= maxFailedLoadAttempts) {
+            _createNewChatInterstitialAd();
+          }
+        },
+      ),
+    );
+  }
+
+  void _showNewChatInterstitialAd() {
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+        },
+      );
+      _interstitialAd!.show();
+      _interstitialAd = null; // Prevent showing the same ad twice
+    }
+  }
+
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isBannerAdInitialized && !_isPremium) {
+      final adState = Provider.of<AdState>(context);
+      adState.initialization.then((status) {
+        if (mounted && !_isPremium) {
+          setState(() {
+            _bottomBannerAd = BannerAd(
+                size: AdSize.banner,
+                adUnitId: adState.insideChatroomBottomBannerAdUnitId,
+                request: AdRequest(),
+                listener: BannerAdListener(
+                  onAdLoaded: (ad) {
+                    print('Alter Ego chat banner loaded.');
+                    if (mounted) setState(() => _isBannerAdLoaded = true);
+                  },
+                  onAdFailedToLoad: (ad, error) {
+                    print('Alter Ego chat banner failed to load: $error');
+                    ad.dispose();
+                    if (mounted) {
+                      setState(() {
+                        _isBannerAdLoaded = false;
+                        _bottomBannerAd = null;
+                      });
+                    }
+                  },
+                )
+            )..load();
+            _isBannerAdInitialized = true;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      backgroundColor: Pallet.colorSecondaryDark,
+      appBar: AppBar(
+        centerTitle: true,
+        backgroundColor: HexColor.fromHex(chatRoomPodo!.hex!),
+        title: Text(chatRoomPodo!.title!),
+        elevation: 0,
+      ),
+        body: GestureDetector(
+          onTap: () {
+            // Hide keyboard when tapping outside of a text field
+            FocusScope.of(context).unfocus();
+          },
+          child: Stack(
+        children: [
+          ListView(
+            children: [
+              AnimationLimiter(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  physics:
+                  BouncingScrollPhysics(parent: NeverScrollableScrollPhysics()),
+                  itemCount: 1,
+                  itemBuilder: (BuildContext c, int i) {
+                    return AnimationConfiguration.staggeredList(
+                      position: i,
+                      delay: Duration(milliseconds: 500),
+                      child: SlideAnimation(
+                        duration: Duration(milliseconds: 2500),
+                        curve: Curves.fastLinearToSlowEaseIn,
+                        horizontalOffset: 30,
+                        verticalOffset: 300.0,
+                        child: FlipAnimation(
+                          duration: Duration(milliseconds: 3000),
+                          curve: Curves.fastLinearToSlowEaseIn,
+                          flipAxis: FlipAxis.y,
+                          child: StreamBuilder(
+                              stream: firebaseServices.getAlterEgoChats(
+                                  chatRoomPodo),
+                              builder: (context,
+                                  AsyncSnapshot<
+                                      QuerySnapshot<Map<String, dynamic>>>
+                                  snapShot) {
+                                if (snapShot.hasData) {
+                                  _chatList
+                                      .clear(); // Clear list before populating
+                                  snapShot.data!.docs
+                                      .map((e) =>
+                                      _chatList
+                                          .add(Temp(
+                                          e.id, ChatModel.fromJson(e.data()))))
+                                      .toList();
+                                  return Column(
+                                    children: [
+                                      AlterEgoSubDiaryRoomWidget(
+                                          element: widget.chatRoomPodo),
+                                      ..._chatList
+                                          .map((element) =>
+                                          AlterEgoChatWidget(
+                                            documentID: element.id,
+                                            chatModel: element.chatModel,
+                                            chatRoomPodo: chatRoomPodo,
+                                          ))
+                                          .toList(),
+                                    ],
+                                  );
+                                }
+                                return Container();
+                              }),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // Adjust space for the input field AND the banner ad
+              SizedBox(height: 120),
+            ],
+          ),
+
+          // --- BANNER AD PLACEMENT ---
+          // Positioned above the ChatEditField.
+          if (!_isPremium && _bottomBannerAd != null && _isBannerAdLoaded)
+            Positioned(
+              bottom: 60, // Position it 60 pixels from the bottom.
+              left: 0,
+              right: 0,
+              child: Container(
+                height: _bottomBannerAd!.size.height.toDouble(),
+                width: _bottomBannerAd!.size.width.toDouble(),
+                child: AdWidget(ad: _bottomBannerAd!),
+                alignment: Alignment.center,
+              ),
+            ),
+
+          // --- CHAT INPUT FIELD ---
+          Stack(
+            children: [
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ChatEditField(
+                  // This is an Alter Ego chat room, so commenting is always open for everyone with an Alter Ego role.
+                  // We pass `canComment: true` to ensure the text field is always visible
+                  // and does not show the "Request Alter Ego Access" button.
+                  canComment: true,
+                  onTap: (v, voiceNote, image1, image2) =>
+                      _sendMessage(v, voiceNote, image1, image2),
+                ),
+              ),
+              // The overlay that shows only when sending
+              if (_isSending)
+                Positioned.fill(
+                  child: Container(
+                    color:Colors.black.withValues(alpha: 0.5), // Semi-transparent overlay
+                    child: const Center(
+                      child: CupertinoActivityIndicator(
+                        color: Colors.white,
+                        radius: 15,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
+        ],
+      ),
+        ),
+    );
+  }
+
+  void _sendMessage(String v, voiceNote, String image1, String image2) async {
+    // --- Prevent sending if already processing or if content is empty ---
+    if (_isSending || (v.isEmpty && voiceNote.isEmpty && image1.isEmpty && image2.isEmpty)) {
+      return;
+    }
+
+    // --- Show loader ---
+    setState(() {
+      _isSending = true;
+    });
+
+    try {
+      final _user = await firebaseServices.getUserWithId(id: currentUser!.uid);
+
+      // --- 1. ADD THE ALTER EGO CORNER (MESSAGE) ---
+      firebaseServices.addAlterEgoMessage(
+          chatRoomPodo!,
+          ChatModel(
+            message: v,
+            colorHex: widget.chatRoomPodo.hex,
+            userId: _user.userId,
+            userNickname: _user.nickname,
+            userAvatarUrl: _user.avatarUrl,
+            timeLastActivity: Timestamp.now(),
+            audioUrl: voiceNote,
+            image1: image1,
+            image2: image2,
+            members: [_user.userId],
+            userType: _user.userType,
+            alterEgoId: _user.alterEgoId,
+          )
+      );
+
+      // --- 2. SAVE USER ACTIVITY ---
+      await firebaseServices.saveUserActivity(
+        activityType: 'room_join',
+        activityMessage: "You started your own Alter Ego corner inside ${widget.chatRoomPodo.title ?? 'Chatrooms'}'.",
+        sessionId: widget.chatRoomPodo.id.toString(),
+      );
+
+      // --- 3. SEND A NOTIFICATION TO THE CREATOR ---
+      await notificationService.sendNotification({
+        "token": _user.fcmId,
+        "notification": {
+          "title": "You started your own Alter Ego corner!",
+          "body": "Other Alter Egos will join your corner soon. Behave.",
+        },
+        "data": {
+          // Ensure the route points to the Alter Ego section
+          'route': 'alterEgoChatRoom',
+          'roomId': widget.chatRoomPodo.id,
+        },
+      });
+
+    } catch (e) {
+      // Handle any potential errors
+      print("Error creating Alter Ego corner: $e");
+      showToast(message: "Failed to start corner. Please try again.");
+    } finally {
+      // --- HIDE LOADER (GUARANTEED) ---
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
+    }
+  }
+
+}

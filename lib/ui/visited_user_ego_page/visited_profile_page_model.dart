@@ -1,18 +1,23 @@
-import 'package:dear_claire/ui/visited_user_ego_page/visited_user_model.dart';
+import 'package:clairediary/ui/visited_user_ego_page/visited_user_model.dart';
 
 class VisitedEgoProfileInfo{
 
   final VisitedUserModel? visitedUserModel;
-  var sessionCount;
+  int? sessionCount;
   var followCount;
-  var advisesCount;
+  int? advisesCount;
   var userType;
+  int? totalLoveCount;
+  int? currentLoveCount;
 
   VisitedEgoProfileInfo(
       { this.visitedUserModel,
         this.sessionCount,
         this.followCount,
         this.advisesCount,
-        this.userType});
+        this.userType,
+        this.totalLoveCount,
+        this.currentLoveCount,
+      });
 
 }

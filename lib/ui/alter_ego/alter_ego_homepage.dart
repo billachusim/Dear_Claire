@@ -1,16 +1,30 @@
-import 'package:dear_claire/ui/alter_ego/advised_page.dart';
-import 'package:dear_claire/ui/alter_ego/all_page.dart';
-import 'package:dear_claire/ui/alter_ego/new_diaries_page.dart';
-import 'package:dear_claire/ui/routes/routes.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
+import 'dart:async';
+import 'package:rxdart/rxdart.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:clairediary/ui/alter_ego/advised_page.dart';
+import 'package:clairediary/ui/alter_ego/alter_ego_all_page.dart';
+import 'package:clairediary/ui/alter_ego/chatrooms.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:dear_claire/utils/helper.dart';
-import '../splash_screen/custom_rotate_bacground.dart';
-import 'chatrooms.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shake/shake.dart';
+import 'package:vibration/vibration.dart';
+import '../../utils/constant.dart';
+import '../../utils/helper.dart';
+import '../../utils/strings.dart';
+import '../ego-profile/claire_loves.dart';
+import '../love_store/create_love_item_page.dart';
+import '../routes/page_router_animation.dart';
+import 'alter_ego_calls_page.dart';
+import 'flagged_sessions_page.dart';
 
 class AlterEgoHomePage extends StatefulWidget {
-  const AlterEgoHomePage({super.key});
+  const AlterEgoHomePage({Key? key}) : super(key: key);
 
   @override
   _AlterEgoHomePageState createState() => _AlterEgoHomePageState();
@@ -18,195 +32,493 @@ class AlterEgoHomePage extends StatefulWidget {
 
 class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  StreamSubscription? _callSubscription;
+  StreamSubscription? _liveSessionSubscription;
+  Stream<int>? _incomingCallCountStream;
   PageController? _pageController;
-  int _currentIndex = 0;
+  int currentIndex = 0;
+  late String _title;
+  String userName = "";
+  String userType = "";
+  String avatarUrl = "";
+  var currentUser = FirebaseAuth.instance.currentUser;
+
+  late ShakeDetector detector;
+
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(keepPage: true);
+    _title = "Alter Ego Mode";
+    _pageController = PageController(initialPage: 0, keepPage: true);
+    shakeDevice();
+
+    // 1. Fetch user data once at startup, not in build()
+    _loadUserData();
+
+    final adminId = "claire_admin";
+    List<String> activeStatuses = ['dialing', 'ringing', 'connecting'];
+
+    Stream<int> audioCountStream = FirebaseFirestore.instance
+        .collection('companion_calls')
+        .where('receiverId', isEqualTo: adminId)
+        .where('status', whereIn: activeStatuses)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+
+    Stream<int> videoCountStream = FirebaseFirestore.instance
+        .collection('live_sessions')
+        .where('receiverId', isEqualTo: adminId)
+        .where('status', whereIn: activeStatuses)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+
+    _incomingCallCountStream = Rx.combineLatest2(
+        audioCountStream, videoCountStream, (a, b) => a + b).asBroadcastStream();
   }
 
-  @override
-  void dispose() {
+  Future<void> _loadUserData() async {
+    if (currentUser == null) return;
+    final doc = await FirebaseFirestore.instance.collection("users").doc(currentUser!.uid).get();
+    if (doc.exists && mounted) {
+      setState(() {
+        userName = doc.data()?["nickname"] ?? "";
+        userType = doc.data()?["userType"] ?? "";
+        avatarUrl = doc.data()?["avatarUrl"] ?? "";
+      });
+    }
+  }
+
+
+  void setTabIndex(int index, {bool updatePage = true}) {
+    if (updatePage) {
+      _pageController?.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+    // This setState triggers the root FutureBuilder to rebuild the UI
+    setState(() {
+      currentIndex = index;
+    });
+  }
+
+
+
+
+
+  shakeDevice() {detector = ShakeDetector.autoStart(
+    shakeThresholdGravity: 5.5,
+    onPhoneShake: (ShakeEvent event) {
+      () async {
+        if (!mounted) return;
+        if (await Vibration.hasVibrator() ?? false) {
+      Vibration.vibrate();
+      }
+      Fluttertoast.showToast(
+      toastLength: Toast.LENGTH_SHORT,
+      msg: "Returning to Ego...",
+      textColor: Colors.white,
+      backgroundColor: Pallet.colorSplashScreen,
+      );
+      detector.stopListening();
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+
+      // COMPLETELY DESTROY the stack when returning to Standard Ego
+      Navigator.of(context).pushNamedAndRemoveUntil(
+      AppRoutes.home,
+      (Route<dynamic> route) => false,
+      );
+    }();
+    },
+    minimumShakeCount: 1,
+  );
+  }
+
+
+  dispose() {
     _pageController!.dispose();
+    detector.stopListening();
     super.dispose();
   }
 
-  void _openEndDrawer() {
-    _scaffoldKey.currentState!.openDrawer();
+  String? getWhatsAppUrl() {
+    return AppString.WHATSAPP_URL;
   }
+
+  onContinueToWhatsAppClicked() {
+    var whatsAppUrl = getWhatsAppUrl();
+    launch(whatsAppUrl!);
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    final deviceHeight = getDeviceHeight(context);
-    final deviceWidth = getDeviceWidth(context);
-
-    return SafeArea(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop) return;
+      },
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         key: _scaffoldKey,
         appBar: AppBar(
           backgroundColor: Pallet.colorBottomNav,
-          title: const Text(
-            "Alter Ego Mode",
-            style: TextStyle(
-              fontSize: 24.0,
-              fontWeight: FontWeight.w600,
-              color: Colors.white70,
-            ),
-          ),
+          title: Text("Alter Ego Mode",
+              style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.w600, color: Colors.white70)),
+          centerTitle: true,
           leading: IconButton(
-            icon: const Icon(
-              Icons.menu,
-              color: Pallet.colorSecondary,
-            ),
-            onPressed: _openEndDrawer,
+            icon: Icon(Icons.menu, color: Pallet.colorSecondary),
+            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
           ),
-          actions: [
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 10),
-              width: 25,
-              height: 25,
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(5)),
-                color: Pallet.colorBottomNav,
-              ),
-              child: const Icon(Icons.search, color: Pallet.colorSecondary),
+              actions: [
+                Container(
+                    margin: EdgeInsets.symmetric(horizontal: 10),
+                    width: 25,
+                    height: 25,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(5)),
+                      color: Pallet.colorBottomNav,
+                    ),
+                    child: Icon(Icons.search, color: Pallet.colorSecondary))
+              ],
             ),
-          ],
-        ),
-        body: Stack(
+        body: PageView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          controller: _pageController,
+          onPageChanged: (index) {
+            // Sync index when swiping
+            if (currentIndex != index) {
+              setState(() {
+                currentIndex = index;
+              });
+            }
+          },
           children: [
-            CustomRotateImage(deviceHeight, deviceWidth),
-            PageView(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              children: const [
-                AdvisedPage(),
-                NewDiariesPage(),
-                AllDiariesPage(),
-                ChatRooms(),
-              ],
-            ),
+            AlterEgoCallsPage(),
+            AdvisedPage(),
+            TheAllPage(),
+            FlaggedDiariesPage(),
+            ChatRooms(),
+            ClaireLoves(),
           ],
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          showSelectedLabels: true,
-          backgroundColor: Pallet.colorBottomNav,
-          selectedLabelStyle: const TextStyle(color: Pallet.colorWhite),
-          unselectedLabelStyle: const TextStyle(color: Pallet.colorWhite),
-          currentIndex: _currentIndex,
-          selectedItemColor: Pallet.colorWhite,
-          showUnselectedLabels: false,
-          onTap: (index) {
-            _pageController!.jumpToPage(index);
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.favorite_border,
-                color: _currentIndex == 0 ? Pallet.colorWhite : Pallet.colorSecondary,
-              ),
-              label: 'Advising',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.calendar_today_outlined,
-                color: _currentIndex == 1 ? Pallet.colorWhite : Pallet.colorSecondary,
-              ),
-              label: 'New Sessions',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.access_time_rounded,
-                color: _currentIndex == 2 ? Pallet.colorWhite : Pallet.colorSecondary,
-              ),
-              label: 'All Sessions',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.messenger,
-                color: _currentIndex == 3 ? Pallet.colorWhite : Pallet.colorSecondary,
-              ),
-              label: 'Rooms',
-            ),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: Pallet.colorSecondary,
-          onPressed: () {
-            Navigator.of(context).pushNamed(AppRoutes.createSessionPage);
-          },
-          tooltip: 'Claire',
-          child: const RotateImage(45, 45),
-        ),
-        drawer: Drawer(
-          child: Container(
-            color: Pallet.colorSecondaryDark,
-            child: Column(
-              children: [
-                UserAccountsDrawerHeader(
-                  decoration: const BoxDecoration(color: Pallet.colorSecondary),
-                  accountEmail: const Text(
-                    "Secret Diary Chat",
-                    style: TextStyle(
-                      color: Pallet.colorWhite,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12.0,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                  accountName: const Text(
-                    "Dear Claire",
-                    style: TextStyle(
-                      color: Pallet.colorWhite,
-                      fontSize: 22.0,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  currentAccountPicture: InkWell(
-                    onTap: () async {
-                      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+            bottomNavigationBar: BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              showSelectedLabels: true,
+              backgroundColor: Pallet.colorBottomNav,
+              selectedLabelStyle: TextStyle(color: Pallet.colorWhite),
+              unselectedLabelStyle: TextStyle(color: Pallet.colorWhite),
+              currentIndex: currentIndex,
+              selectedItemColor: Pallet.colorWhite,
+              showUnselectedLabels: false,
+              onTap: (int index) => setTabIndex(index),
+              items: [
+                BottomNavigationBarItem(
+                  icon: StreamBuilder<int>(
+                    stream: _incomingCallCountStream,
+                    builder: (context, snapshot) {
+                      final count = snapshot.data ?? 0;
+                      final hasCalls = count > 0;
+                      return Badge(
+                        label: Text(count.toString()),
+                        isLabelVisible: hasCalls,
+                        child: Icon(Icons.call,
+                            color: currentIndex == 0
+                                ? Pallet.colorWhite
+                                : Pallet.colorSecondary),
+                      );
                     },
-                    child: const RotateImage(75, 75),
                   ),
+                  label: 'Calls',
                 ),
-                ListTile(
-                  title: const Text("Settings", style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: () {},
-                  leading: const Icon(Icons.settings, color: Pallet.colorWhite),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.favorite,
+                      color: currentIndex == 1
+                          ? Pallet.colorWhite
+                          : Pallet.colorSecondary),
+                  label: 'Advising',
                 ),
-                ListTile(
-                  title: const Text("How Claire Works", style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.of(context).pushNamed(AppRoutes.howClaireWorks);
-                  },
-                  leading: const Icon(Icons.info_rounded, color: Pallet.colorWhite),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.calendar_month_rounded,
+                      color: currentIndex == 2
+                          ? Pallet.colorWhite
+                          : Pallet.colorSecondary),
+                  label: 'All',
                 ),
-                ListTile(
-                  title: const Text("Send Claire to Someone", style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: () {},
-                  leading: const Icon(Icons.share, color: Pallet.colorWhite),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.flag_circle_rounded,
+                      color: currentIndex == 3
+                          ? Pallet.colorWhite
+                          : Pallet.colorSecondary),
+                  label: 'Flagged',
                 ),
-                ListTile(
-                  title: const Text("Contact Us", style: TextStyle(color: Pallet.colorWhite)),
-                  onTap: () {},
-                  leading: const Icon(Icons.email, color: Pallet.colorWhite),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.message_rounded,
+                      color: currentIndex == 4
+                          ? Pallet.colorWhite
+                          : Pallet.colorSecondary),
+                  label: 'Rooms',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.attach_money_rounded,
+                      color: currentIndex == 5
+                          ? Pallet.colorWhite
+                          : Pallet.colorSecondary),
+                  label: 'Loves',
                 ),
               ],
+            ),
+            floatingActionButton: FloatingActionButton(
+              heroTag: "newSessionFromAEM",
+              backgroundColor: Pallet.colorSecondary,
+              onPressed: () {
+                if (userType == 'SUPER_ADMIN') {
+                  _showAdminFabMenu(context);
+                } else {
+                  Navigator.of(context).pushNamed(AppRoutes.createSessionPage);
+                }
+              },
+              tooltip: 'Claire',
+              child: RotateImage(45, 45),
+            ),
+            drawer: Drawer(
+              child: Container(
+                width: 200.w,
+                color: Pallet.colorSecondaryDark,
+                child: Column(
+                  children: [
+                    UserAccountsDrawerHeader(
+                      decoration: BoxDecoration(
+                        color: Pallet.colorPrimary,
+                      ),
+                      accountEmail: Text(
+                        "Influence the world positively.",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      accountName: Text(
+                          userType == 'REGULAR'
+                              ? 'Ego'
+                              : userType == 'ADMIN'
+                              ? 'Alter Ego'
+                              : userType == 'SUPER_ADMIN'
+                              ? 'Super Ego'
+                              : 'Ego',
+                          style: TextStyle(
+                            color: Pallet.colorWhite,
+                            fontSize: 19.0,
+                            fontWeight: FontWeight.w700,
+                          )),
+                      // The FutureBuilder here is now redundant but harmless.
+                      // We can leave it as it is.
+                      currentAccountPicture: Container(
+                        decoration: BoxDecoration(
+                          color: userType == 'REGULAR'
+                              ? Pallet.colorPrimary
+                              : userType == 'ADMIN'
+                              ? Pallet.colorSecondary
+                              : userType == 'SUPER_ADMIN'
+                              ? Pallet.colorSecondary
+                              : Pallet.colorBlue,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        margin: EdgeInsets.only(left: 0),
+                        child: Container(
+                            height: 75,
+                            width: 75,
+                            margin: EdgeInsets.all(4),
+                            child: RotateImage(75.h, 75.w)),
+                      ),
+                      otherAccountsPictures: [
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pushNamed(AppRoutes.home);
+                          },
+                          child: CachedNetworkImage(
+                              width: 60,
+                              height: 60,
+                              imageUrl: avatarUrl,
+                              imageBuilder: (context, imageProvider) =>
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius:
+                                      BorderRadius.circular(100),
+                                      image: DecorationImage(
+                                        image: imageProvider,
+                                        fit: BoxFit.fill,
+                                      ),
+                                    ),
+                                  ),
+                              placeholder: (context, url) =>
+                                  CircularProgressIndicator(),
+                              errorWidget: (context, url, error) =>
+                                  Image.asset(
+                                    "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                                    width: 50,
+                                    height: 50,
+                                  )),
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            lockAlertDialog(context);
+                          },
+                          child: Text(
+                            "LOCK-OUT",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: Pallet.colorSecondaryDark,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    ListTile(
+                      title: Text("Settings",
+                          style: TextStyle(color: Pallet.colorWhite)),
+                      onTap: () {},
+                      leading: Icon(Icons.settings, color: Pallet.colorWhite),
+                    ),
+                    ListTile(
+                      title: Text("How Claire Works",
+                          style: TextStyle(color: Pallet.colorWhite)),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context)
+                            .pushNamed(AppRoutes.howClaireWorks);
+                      },
+                      leading: Icon(Icons.info_rounded, color: Pallet.colorWhite),
+                    ),
+                    ListTile(
+                      title: Text("Send Claire to Someone",
+                          style: TextStyle(color: Pallet.colorWhite)),
+                      onTap: () => sendClaireToSomeone(),
+                      leading: Icon(Icons.share, color: Pallet.colorWhite),
+                    ),
+                    SizedBox(
+                      height: 18,
+                    ),
+                    ListTile(
+                      title: Text("Contact Us",
+                          style: TextStyle(color: Pallet.colorWhite)),
+                      onTap: () => onContinueToWhatsAppClicked(),
+                      leading: Icon(Icons.email, color: Pallet.colorWhite),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+  }
+
+
+
+  lockAlertDialog(BuildContext context) {
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("No, Wait."),
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+    );
+
+    Widget continueButton = TextButton(
+      child: Text("Yes, Lock Out."),
+      onPressed: () {
+        firebaseServices.logUserOut(context);
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("Close and Lock Your Diary?"),
+      content: Text(AppString.lock_out_alert_note),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
     );
   }
+
+  // Add this new method inside the _AlterEgoHomepageState class
+
+  void _showAdminFabMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,    builder: (BuildContext bc) {
+      return SafeArea(
+        child: Container(
+          margin: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                decoration: BoxDecoration(
+                  color: Pallet.colorBottomNav,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.add_business, color: Pallet.colorWhite),
+                      title: Text('New Love Item', style: TextStyle(color: Pallet.colorWhite, fontWeight: FontWeight.bold)),
+                      onTap: () {
+                        Navigator.of(context).pop(); // Close the sheet
+                        PageRouter.gotoWidget(CreateLoveItemPage(), context);
+                      },
+                    ),
+                    Divider(color: Pallet.colorSecondary.withValues(alpha: 0.5), height: 1),
+                    ListTile(
+                      leading: Icon(Icons.edit, color: Pallet.colorWhite),
+                      title: Text('New Diary Session', style: TextStyle(color: Pallet.colorWhite)),
+                      onTap: () {
+                        Navigator.of(context).pop(); // Close the sheet
+                        Navigator.of(context).pushNamed(AppRoutes.createSessionPage);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 10),
+              // Cancel Button
+              Container(
+                decoration: BoxDecoration(
+                  color: Pallet.colorWhite,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: ListTile(
+                  title: Center(child: Text('Cancel', style: TextStyle(color: Pallet.colorPrimary, fontWeight: FontWeight.bold))),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+    );
+  }
+
+
 }

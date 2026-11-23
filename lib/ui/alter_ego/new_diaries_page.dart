@@ -1,10 +1,15 @@
-import 'package:dear_claire/ui/alter_ego/widgets/alter_ego_session_card.dart';
-import 'package:dear_claire/ui/featured/model/session.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/constant.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
+import 'package:clairediary/ui/Categories/category_streams.dart';
+import 'package:clairediary/ui/alter_ego/widgets/alter_ego_session_card.dart';
+import 'package:clairediary/ui/featured/model/session.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/constant.dart';
+import 'package:clairediary/ui/splash_screen/rotate_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import '../../utils/helper.dart';
+import '../routes/routes.dart';
+import '../splash_screen/custom_rotate_bacground.dart';
 
 
 class NewDiariesPage extends StatefulWidget {
@@ -17,51 +22,69 @@ class NewDiariesPage extends StatefulWidget {
 class _NewDiariesPageState extends State<NewDiariesPage> {
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: firebaseServices.getAlterEgoNonAssignedSessions(),
-        builder: (context, AsyncSnapshot<List<Session>> session) {
-          if (session.connectionState == ConnectionState.waiting) {
-            return RotateImage(70, 70);
-          }
-          if (!session.hasData) {
-            return Center(
-              child: Text("There are No Sessions",
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.lato(
-                      fontSize: 15.0,
-                      color: Pallet.colorBlack,
-                      //fontStyle: FontStyle.normal,
-                      fontWeight: FontWeight.w600)),
-            );
-          }
+    return SafeArea(
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          if (didPop) return;
+          Navigator.of(context).pushReplacementNamed(AppRoutes.alterEgoHomepage);
+        },
+        child: Scaffold(
+          body: Stack(
+            children: [
+              CustomRotateImage(getDeviceHeight(context), getDeviceWidth(context)),
 
-          if (session.hasError) {
-            return Container(
-              child: Text(session.error.toString(),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.lato(
-                      fontSize: 15.0,
-                      color: Pallet.colorBlack,
-                      //fontStyle: FontStyle.normal,
-                      fontWeight: FontWeight.w600)),
-            );
-          }
+              FutureBuilder(
+                future: firebaseServices.getAlterEgoNonAssignedSessions(),
+                builder: (context, AsyncSnapshot<List<Session>> session) {
+                  if (session.connectionState == ConnectionState.waiting) {
+                    return RotateImage(40, 40);
+                  }
+                  if (!session.hasData) {
+                    return Center(
+                      child: Text("There are No Sessions",
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.lato(
+                              fontSize: 15.0,
+                              color: Pallet.colorBlack,
+                              //fontStyle: FontStyle.normal,
+                              fontWeight: FontWeight.w600)),
+                    );
+                  }
 
-          if (session.hasData) {
-            return ListView(
-              children: [
-                ...session.data!
-                    .map((element) => AlterEgoModeSessionCard(element: element))
-                    .toList(),
-              ],
-            );
-          }
-          return Container();
-        }
+                  if (session.hasError) {
+                    return Container(
+                      child: Text(session.error.toString(),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.lato(
+                              fontSize: 15.0,
+                              color: Pallet.colorBlack,
+                              //fontStyle: FontStyle.normal,
+                              fontWeight: FontWeight.w600)),
+                    );
+                  }
+
+                  if (session.hasData) {
+                    return ListView(
+                      children: [
+                        CategoryStreams(),
+                        ...session.data!
+                            .map((element) => AlterEgoModeSessionCard(element: element, visitedUsersID: '', visitedEgoName: '',))
+                            .toList(),
+                      ],
+                    );
+                  }
+                  return Container();
+                }
+            ),
+        ]
+          ),
+        ),
+      ),
     );
   }
 }

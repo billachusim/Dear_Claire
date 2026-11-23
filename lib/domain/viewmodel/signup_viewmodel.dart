@@ -1,5 +1,5 @@
 
-import 'package:dear_claire/data/core/view_state.dart';
+import 'package:clairediary/data/core/view_state.dart';
 
 import 'base/base_view_model.dart';
 
@@ -50,9 +50,7 @@ class SignUpViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  /**
-   * signup user
-   */
+  /// signup user
 
   Future<bool> registerUser(
       String email, String secretCode) async {

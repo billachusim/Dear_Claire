@@ -20,8 +20,16 @@ class ChatModel {
   String? userAvatarUrl;
   String? userId;
   String? userNickname;
+  String? image1;
+  String? image2;
+  String? location;
+  String? userType;
+  String? alterEgoId;
   List<dynamic>? members;
   Map<String, dynamic>? subMessage;
+  Map<String, dynamic>? translatedMessage;
+  Map<String, dynamic>? translatedComment;
+
 
   ChatModel(
       {this.archived = false,
@@ -36,20 +44,31 @@ class ChatModel {
       this.repliesEnabled,
       this.respondentUserId,
       this.sessionId,
-      required this.timeCreated,
-      this.timeLastActivity,
+      this.timeCreated,
+      required this.timeLastActivity,
       this.title,
       this.moodId,
       this.subMessage,
       this.userAvatarUrl,
       required this.userId,
       this.members,
-      this.userNickname});
+      this.userNickname,
+      this.image1,
+      this.image2,
+      this.location,
+      this.userType,
+      this.alterEgoId,
+      this.translatedMessage,
+      this.translatedComment,
+      });
 
   ChatModel.fromJson(Map<String, dynamic> json) {
     if (json['imageUrls'] != null) {
       imageUrls = json['imageUrls'].cast<String>();
     }
+
+    userType = json['userType'];
+    alterEgoId = json['alterEgoId'];
 
     repliesEnabled = json['repliesEnabled'];
     if (json['respondentUserId'] != null) {
@@ -65,9 +84,15 @@ class ChatModel {
       timeLastActivity = json['timeLastActivity'];
     }
 
+    if (json['location'] != null) {
+      location = json['location'];
+    }
+
     userAvatarUrl = json['userAvatarUrl'];
     userId = json['userId'];
     userNickname = json['userNickname'];
+    image1 = json["image1"];
+    image2 = json["image2"];
     if (json['repliesEnabled'] != null) {
       repliesEnabled = json['repliesEnabled'];
     }
@@ -90,6 +115,18 @@ class ChatModel {
     if (json['members'] != null) {
       members = json['members'] ?? [];
     }
+
+    if (json['translatedMessage'] != null && json['translatedMessage'] is Map) {
+      translatedMessage = Map<String, dynamic>.from(json['translatedMessage']);
+    } else {
+      translatedMessage = {};
+    }
+
+    if (json['translatedComment'] != null && json['translatedComment'] is Map) {
+      translatedComment = Map<String, dynamic>.from(json['translatedComment']);
+    } else {
+      translatedComment = {};
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -99,6 +136,13 @@ class ChatModel {
     }
     if (moodId != null) {
       data['moodId'] = moodId;
+    }
+
+    data['userType'] = userType;
+    data['alterEgoId'] = alterEgoId;
+
+    if (location != null) {
+      data['location'] = location;
     }
 
     data['repliesEnabled'] = repliesEnabled;
@@ -111,6 +155,8 @@ class ChatModel {
     data['userAvatarUrl'] = userAvatarUrl;
     data['userId'] = userId;
     data['userNickname'] = userNickname;
+    data["image1"] = image1;
+    data["image2"] = image2;
     data['repliesEnabled'] = repliesEnabled;
     data['title'] = title;
     data['archived'] = archived;
@@ -129,6 +175,14 @@ class ChatModel {
     data['message'] = message;
     data['private'] = private;
     data['repliesEnabled'] = repliesEnabled;
+
+    if (this.translatedMessage != null) {
+      data['translatedMessage'] = this.translatedMessage;
+    }
+
+    if (this.translatedComment != null) {
+      data['translatedComment'] = this.translatedComment;
+    }
 
     return data;
   }

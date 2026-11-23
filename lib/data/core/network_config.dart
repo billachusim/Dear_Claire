@@ -1,6 +1,4 @@
-/**
- * this class has all remote service configurations
- */
+/// this class has all remote service configurations
 class NetworkConfig {
   static String BASE_URL = "https://xxx";
   static String CLIENT_ID = "mobile";

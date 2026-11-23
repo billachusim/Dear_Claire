@@ -1,63 +1,111 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/services/firebase_services.dart';
-import 'package:dear_claire/ui/Categories/category_streams.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/ui/splash_screen/rotate_logo.dart';
+import 'dart:async';
+import 'package:clairediary/ui/featured/public_sessions.dart';
+import 'package:clairediary/utils/global_app_state.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
-import 'model/session.dart';
-import '../../widgets/ego_mode_session_card.dart';
+import 'package:flutter/rendering.dart';
 
 class FeaturedPage extends StatefulWidget {
-  const FeaturedPage({super.key, required this.title});
-
   final String title;
+  final ScrollController scrollController; // Exposed for parent control
+
+  FeaturedPage({
+    Key? key,
+    required this.title,
+    required this.scrollController, // Pass controller from parent
+  }) : super(key: key);
 
   @override
   _FeaturedPageState createState() => _FeaturedPageState();
 }
 
-class _FeaturedPageState extends State<FeaturedPage> {
+class _FeaturedPageState extends State<FeaturedPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _heightFactor;
+  Completer<void>? _refreshCompleter;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Animation controller for smooth shrinking/expanding
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _heightFactor = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+
+    _animationController.value = 1.0;
+
+    // Use the controller from the parent widget
+    widget.scrollController.addListener(_scrollListener);
+  }
+
+  void _scrollListener() {
+    // Detect scroll direction
+    if (widget.scrollController.position.userScrollDirection ==
+        ScrollDirection.reverse) {
+      if (_animationController.value != 0.0 &&
+          !_animationController.isAnimating) {
+        _animationController.animateTo(0.0); // Shrink
+      }
+    } else if (widget.scrollController.position.userScrollDirection ==
+        ScrollDirection.forward) {
+      if (_animationController.value != 1.0 &&
+          !_animationController.isAnimating) {
+        _animationController.animateTo(1.0); // Expand
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    // We no longer dispose the scrollController here since it's managed by the parent
+    widget.scrollController.removeListener(_scrollListener);
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  // --- START: PULL-TO-REFRESH LOGIC ---
+  Future<void> _handleRefresh() {
+    _refreshCompleter = Completer<void>();
+    // Trigger the global refresh stream
+    App.refreshFeed.add(true);
+
+    // This simulates a network request delay and completes the completer.
+    // In a real app, you might wait for an actual data fetch confirmation.
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted && _refreshCompleter != null && !_refreshCompleter!.isCompleted) {
+        _refreshCompleter!.complete();
+      }
+    });
+
+    return _refreshCompleter!.future;
+  }
+  // --- END: PULL-TO-REFRESH LOGIC ---
+
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: firebaseServices.getFeaturedSession(),
-      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const RotateImage(70, 70);
-        }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(
-            child: Text(
-              "No Session data",
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.lato(
-                fontSize: 15.0,
-                color: Pallet.colorBlack,
-                fontWeight: FontWeight.w600,
-              ),
+    return SafeArea(
+      child: Scaffold(
+        body: Column(
+          children: [
+            SizeTransition(
+              sizeFactor: _heightFactor,
+              axisAlignment: -1.0,
+              child: FeaturedStatusStreams(),
             ),
-          );
-        }
-
-        final sessionList = snapshot.data!.docs.map((doc) => Session.fromJson(doc.data())).toList();
-
-        return Scrollbar(
-          child: ListView.builder(
-            itemCount: sessionList.length + 2, // +2 for CategoryStreams
-            itemBuilder: (context, index) {
-              if (index == 0 || index == sessionList.length + 1) {
-                return const CategoryStreams();
-              }
-              final session = sessionList[index - 1];
-              return EgoModeSessionCard(element: session, visitedUsersID: '');
-            },
-          ),
-        );
-      },
+            TheFeaturedSessions(
+              scrollController: widget.scrollController,
+              onRefresh: _handleRefresh, // Pass the refresh handler
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

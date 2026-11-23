@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dear_claire/services/firebase_services.dart';
 
 class CreateSessionModel {
+  bool? containsAudio;
+  bool? containsVideo;
   bool? archived;
   String? audioUrl;
+  List<String>? videoUrls;
+  List<String>? videoThumbnailUrls;
   String? colorHex;
   bool? featured;
   bool? flagged;
@@ -13,6 +16,7 @@ class CreateSessionModel {
   int? moodId;
   bool? private;
   bool? repliesEnabled;
+  String? theContext;
   String? respondentUserId;
   String? sessionId;
   Timestamp? timeCreated;
@@ -26,10 +30,17 @@ class CreateSessionModel {
   String? category2;
   String? category3;
   String? category4;
+  List<dynamic>? followers;
+  Map<String, dynamic>? translatedSession;
+  Map<String, dynamic>? translatedTitle;
 
   CreateSessionModel(
       {this.archived = false,
+      this.containsAudio,
+      this.containsVideo,
       this.audioUrl,
+      this.videoUrls,
+      this.videoThumbnailUrls,
       this.colorHex,
       this.featured = false,
       this.flagged = false,
@@ -37,6 +48,7 @@ class CreateSessionModel {
       this.imageUrls,
       this.message,
       this.private,
+      this.theContext,
       this.repliesEnabled,
       this.respondentUserId,
       this.sessionId,
@@ -52,6 +64,9 @@ class CreateSessionModel {
       this.category2,
       this.category3,
       this.category4,
+      this.followers,
+      this.translatedSession,
+      this.translatedTitle,
       }
       );
 
@@ -61,6 +76,9 @@ class CreateSessionModel {
     }
 
     repliesEnabled = json['repliesEnabled'];
+    if (json['theContext'] != null) {
+      theContext = json['theContext'];
+    }
     if (json['respondentUserId'] != null) {
       respondentUserId = json['respondentUserId'];
     }
@@ -80,8 +98,8 @@ class CreateSessionModel {
     if (json['repliesEnabled'] != null) {
       repliesEnabled = json['repliesEnabled'];
     }
-    if (json['locationId'] != null) {
-      location = json['locationId'];
+    if (json['location'] != null) {
+      location = json['location'];
     }
 
     title = json['title'];
@@ -93,7 +111,19 @@ class CreateSessionModel {
 
     if (json['audioUrl'] != null) {
       audioUrl = json['audioUrl'];
+      containsAudio = json['containsAudio'];
     }
+
+    if (json['videoUrls'] != null) {
+      videoUrls = json['videoUrls'];
+      containsVideo = json['containsVideo'];
+    }
+
+    if (json['videoThumbnailUrls'] != null) {
+      videoThumbnailUrls = json['videoThumbnailUrls'];
+      containsVideo = json['containsVideo'];
+    }
+
 
     message = json['message'];
     private = json['private'];
@@ -102,10 +132,30 @@ class CreateSessionModel {
     category2 = json['category2'];
     category3 = json['category3'];
     category4 = json['category4'];
+
+    if (json['followers'] != null) {
+      followers = json['followers'];
+    }
+
+    if (json['translatedSession'] != null && json['translatedSession'] is Map) {
+      translatedSession = Map<String, dynamic>.from(json['translatedSession']);
+    } else {
+      translatedSession = {};
+    }
+
+    if (json['translatedTitle'] != null && json['translatedTitle'] is Map) {
+      translatedTitle = Map<String, dynamic>.from(json['translatedTitle']);
+    } else {
+      translatedTitle = {};
+    }
+
   }
+
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
+
+    // --- All your existing data assignments ---
     if (imageUrls != null) {
       data['imageUrls'] = imageUrls!.map((e) => e.toString()).toList();
     }
@@ -113,43 +163,61 @@ class CreateSessionModel {
       data['moodId'] = moodId;
     }
     if (location != null) {
-      data['locationId'] = location;
+      data['location'] = location;
     }
 
     data['repliesEnabled'] = repliesEnabled;
+    data['theContext'] = theContext;
     data['respondentUserId'] = respondentUserId;
     data['sessionId'] = sessionId;
-    data['timeCreated'] = Timestamp.now();
+    data['timeCreated'] = timeCreated;
     data['timeLastActivity'] = timeLastActivity;
     data['userAvatarUrl'] = userAvatarUrl;
     data['userId'] = userId;
     data['userNickname'] = userNickname;
-    data['repliesEnabled'] = repliesEnabled;
     data['title'] = title;
     data['archived'] = archived;
     data['colorHex'] = colorHex;
     data['featured'] = featured;
     data['flagged'] = flagged;
+
     if (font == null) {
       data['font'] = '';
     } else {
       data['font'] = font;
     }
+
     if (audioUrl != null) {
       data['audioUrl'] = audioUrl;
+      data['containsAudio'] = containsAudio;
+    }
+
+    if (videoUrls != null && videoUrls!.isNotEmpty) {
+      data['videoUrls'] = videoUrls;
+      data['containsVideo'] = true;
+    }
+    if (videoThumbnailUrls != null && videoThumbnailUrls!.isNotEmpty) {
+      data['videoThumbnailUrls'] = videoThumbnailUrls;
     }
 
     data['category1'] = category1;
     data['category2'] = category2;
     data['category3'] = category3;
     data['category4'] = category4;
-
-
-
+    data['followers'] = followers;
     data['message'] = message;
     data['private'] = private;
-    data['repliesEnabled'] = repliesEnabled;
+
+    if (translatedSession != null) {
+      data['translatedSession'] = translatedSession;
+    }
+
+    if (translatedTitle != null) {
+      data['translatedTitle'] = translatedTitle;
+    }
 
     return data;
+
   }
+
 }

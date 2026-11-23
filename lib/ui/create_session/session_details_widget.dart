@@ -1,13 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dear_claire/ui/create_session/session_model.dart';
-import 'package:dear_claire/utils/color.dart';
-import 'package:dear_claire/utils/helper.dart';
-import 'package:dear_claire/utils/mood.dart';
-import 'package:dear_claire/widgets/follow_button.dart';
-import 'package:dear_claire/widgets/metoo_button.dart';
-import 'package:dear_claire/widgets/share_button.dart';
+import 'package:clairediary/ui/create_session/session_model.dart';
+import 'package:clairediary/ui/create_session/sound/custom_play_sound_widget.dart';
+import 'package:clairediary/utils/color.dart';
+import 'package:clairediary/utils/helper.dart';
+import 'package:clairediary/utils/mood.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import '../../widgets/custom_image_widget.dart';
+import '../routes/page_router_animation.dart';
 
 class SessionDetailsWidget extends StatelessWidget {
   CreateSessionModel? singleSessionModel;
@@ -17,10 +18,11 @@ class SessionDetailsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
       decoration:
-          BoxDecoration(color: HexColor.fromHex(singleSessionModel!.colorHex!)),
+          BoxDecoration(color: isDarkMode ? Pallet.colorSecondary : HexColor.fromHex(singleSessionModel!.colorHex!)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -44,7 +46,7 @@ class SessionDetailsWidget extends StatelessWidget {
                   placeholder: (context, url) =>
                       Center(child: CircularProgressIndicator()),
                   errorWidget: (context, url, error) => Image.asset(
-                        "assets/images/brown_boy_mask.png",
+                    "assets/images/Speak_No_Evil_Monkey_Emoji.png",
                         width: 48,
                         height: 48,
                       ) //Icon(Icons.error),
@@ -62,7 +64,7 @@ class SessionDetailsWidget extends StatelessWidget {
                         maxLines: 1,
                         style: GoogleFonts.lato(
                             fontSize: 16.0,
-                            color: Pallet.colorWhite,
+                            color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                             fontWeight: FontWeight.w700)),
                     SizedBox(
                       height: 5,
@@ -72,7 +74,7 @@ class SessionDetailsWidget extends StatelessWidget {
                         maxLines: 1,
                         style: GoogleFonts.lato(
                             fontSize: 13.0,
-                            color: Pallet.colorWhite,
+                            color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                             fontWeight: FontWeight.normal)),
                   ],
                 ),
@@ -87,7 +89,7 @@ class SessionDetailsWidget extends StatelessWidget {
                         maxLines: 1,
                         style: GoogleFonts.lato(
                             fontSize: 15.0,
-                            color: Pallet.colorWhite,
+                            color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                             fontWeight: FontWeight.w700)),
                     SizedBox(
                       height: 5,
@@ -97,7 +99,7 @@ class SessionDetailsWidget extends StatelessWidget {
                         maxLines: 1,
                         style: GoogleFonts.lato(
                             fontSize: 13.0,
-                            color: Pallet.colorWhite,
+                            color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                             fontWeight: FontWeight.normal)),
                   ],
                 ),
@@ -113,7 +115,7 @@ class SessionDetailsWidget extends StatelessWidget {
                 maxLines: 1,
                 style: GoogleFonts.lato(
                     fontSize: 18.0,
-                    color: Pallet.colorWhite,
+                    color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                     fontWeight: FontWeight.w700)),
           ),
           SizedBox(
@@ -127,69 +129,68 @@ class SessionDetailsWidget extends StatelessWidget {
                   textAlign: TextAlign.justify,
                   style: GoogleFonts.lato(
                       fontSize: 16.0,
-                      color: Pallet.colorWhite,
+                      color: isDarkMode ? Pallet.colorWhite : Pallet.colorBlack,
                       fontWeight: FontWeight.normal),
                 ),
               ),
-              Visibility(
-                  visible: singleSessionModel!.imageUrls!.isNotEmpty,
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 10,
-                      ),
-                      CachedNetworkImage(
-                          height: 73,
-                          width: 73,
-                          imageUrl: singleSessionModel!.imageUrls!.isNotEmpty
-                              ? singleSessionModel!.imageUrls!.first
-                              : '',
-                          imageBuilder: (context, imageProvider) => Container(
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
+            ],
+          ),
+
+
+          Visibility(
+            visible: singleSessionModel!.audioUrl != null,
+            child: Container(
+              child: singleSessionModel!.audioUrl != null
+                  ? CustomPlaySoundWidget(filePath: singleSessionModel?.audioUrl)
+                  : SizedBox.shrink(),
+            ),
+          ),
+
+          Visibility(
+            visible: singleSessionModel!.imageUrls!.isNotEmpty,
+            child: GridView.count(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              crossAxisCount: 5,
+              children: List.generate(singleSessionModel!.imageUrls!.length, (index) {
+                String image = singleSessionModel!.imageUrls![index].toString();
+                return Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    GestureDetector(
+                      onTap: () {
+                        PageRouter.gotoWidget(CustomImageWidget(imageUrl: image), context);
+                      },
+                      child: Container(
+                        child: CachedNetworkImage(
+                            height: 200,
+                            width: 200,
+                            imageUrl: image,
+                            imageBuilder: (context, imageProvider) => Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(25),
+                                image: DecorationImage(
                                     image: imageProvider,
-                                    fit: BoxFit.fill,
-                                  ),
+                                    fit: BoxFit.cover
                                 ),
                               ),
-                          placeholder: (context, url) =>
-                              Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, error) => Image.asset(
-                                "assets/images/brown_boy_mask.png",
-                                width: 48,
-                                height: 48,
-                              ) //Icon(Icons.error),
-                          ),
-                    ],
-                  )),
-              SizedBox(
-                width: 23,
-              ),
-            ],
+                            ),
+                            placeholder: (context, url) =>
+                                Center(child: CircularProgressIndicator()),
+                            errorWidget: (context, url, error) => Image.asset(
+                              "assets/images/Speak_No_Evil_Monkey_Emoji.png",
+                              width: 48,
+                              height: 48,
+                            ) //Icon(Icons.error),
+                        ),
+                        margin: EdgeInsets.all(3),
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
           ),
-          SizedBox(
-            height: 5,
-          ),
-          Row(
-            children: [
-              MetooButton(
-                cheers: 0,
-                onReactionChanged: (reaction, int) {},
-                color: Pallet.colorWhite,
-              ),
-              new Spacer(),
-              FollowButton(
-                text: 'Follow',
-                onPressed: () {},
-                count: null,
-              ),
-              new Spacer(),
-              ShareButton(
-                onPressed: () {},
-                color: Pallet.colorWhite,
-              ),
-            ],
-          )
         ],
       ),
     );

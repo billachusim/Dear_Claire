@@ -1,4 +1,4 @@
-import 'package:dear_claire/utils/color.dart';
+import 'package:clairediary/utils/color.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -14,27 +14,28 @@ class CommentsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return CupertinoButton(
         padding: EdgeInsets.zero,
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 2.5, horizontal: 5),
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white)),
-          child: Row(
-            children: [
-              Icon(
-                Icons.chat,
-                size: 15,
-                color: Pallet.colorWhite,
-              ),
-              Text(
-                  '$count  Advises',
-                  style: GoogleFonts.lato(
-                      fontSize: 13.0,
-                      color: Pallet.colorWhite,
-                      fontWeight: FontWeight.w900)
-              ),
-            ],
-          ),
+        child: Row(
+          children: [
+            Text(
+                '$count ',
+                style: GoogleFonts.lato(
+                    fontSize: 15.0,
+                    color: Pallet.colorWhite,
+                    fontWeight: FontWeight.w900)
+            ),
+            Text(
+                'Advises ',
+                style: GoogleFonts.lato(
+                    fontSize: 15.0,
+                    color: Pallet.colorWhite,
+                    fontWeight: FontWeight.w900)
+            ),
+            Icon(
+              Icons.mark_unread_chat_alt_outlined,
+              size: 17,
+              color: Pallet.colorWhite,
+            ),
+          ],
         ),
         onPressed: onPressed);
   }
