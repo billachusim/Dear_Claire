@@ -1,4 +1,5 @@
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:clairediary/services/age_signals_service.dart';
 import 'package:clairediary/services/firebase_services.dart';
 import 'package:clairediary/ui/create_session/session_model.dart';import 'package:clairediary/utils/constant.dart';
 import 'package:clairediary/utils/color.dart';
@@ -70,6 +71,17 @@ class _CompanionCallPageState extends State<CompanionCallPage> {
   @override
   void initState() {
     super.initState();
+    // Live calls are adults only (teen mode).
+    if (AgeSignalsService.instance.isMinor) {
+      _isEnding = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Live calls are only available to users aged 18 and over.')));
+        Navigator.of(context).maybePop();
+      });
+      return;
+    }
     if (widget.incomingCall != null) {
       // SCENARIO B: We are JOINING an existing call from an admin
       print("Joining an existing companion call...");

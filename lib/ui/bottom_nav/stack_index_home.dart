@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:clairediary/services/age_signals_service.dart';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
@@ -567,6 +568,10 @@ class _HomeDashboardPageState extends State<HomePage>
     AppTrackingTransparency.requestTrackingAuthorization();
   }
 
+  void _onAgeBandChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
@@ -579,6 +584,11 @@ class _HomeDashboardPageState extends State<HomePage>
       return;
     }
     _isInitialized = true;
+    // Ask the store for the user's age band (required in CA/BR/TX).
+    AgeSignalsService.instance.band.addListener(_onAgeBandChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AgeSignalsService.instance.start();
+    });
 
     _featuredScrollController = ScrollController();
     _archiveScrollController = ScrollController();
@@ -790,6 +800,7 @@ class _HomeDashboardPageState extends State<HomePage>
 
   @override
   void dispose() {
+    AgeSignalsService.instance.band.removeListener(_onAgeBandChanged);
     if (!_isInitialized) {
       _audioPlayer.dispose();
       super.dispose();
@@ -817,6 +828,9 @@ class _HomeDashboardPageState extends State<HomePage>
     if (!_isInitialized) {
       // Redirecting to sign-in; show a plain loader for this frame.
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (AgeSignalsService.instance.isUnder13) {
+      return const _Under13Screen();
     }
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -1836,6 +1850,34 @@ class _FabMenuOverlayState extends State<_FabMenuOverlay>
           ),
         );
       },
+    );
+  }
+}
+
+
+/// Shown when the store reports the user is under 13. Dear Claire is a
+/// public, anonymous diary with chat and calls, so it is not offered to
+/// children.
+class _Under13Screen extends StatelessWidget {
+  const _Under13Screen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: Center(
+            child: Text(
+              'Dear Claire is for people aged 13 and over.\n\n'
+              'Your Google Play account says you are under 13, so this app '
+              'is not available on this account.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

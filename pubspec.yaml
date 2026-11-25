@@ -3,7 +3,7 @@ description: A secret diary chat.
 
 publish_to: 'none'
 
-version: 15.3.3+156
+version: 15.4.0+157
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -96,6 +96,7 @@ dependencies:
   agora_rtc_engine: ^6.5.4
   in_app_review: ^2.0.12
   collection: ^1.19.1
+  age_range_signals: ^0.11.2
 
 dev_dependencies:
   flutter_test:

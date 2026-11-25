@@ -32,7 +32,7 @@ android {
     defaultConfig {
         applicationId = "com.mobymagic.clairediary"
         // Ensure minSdk >= 21 for desugaring
-        minSdk = if (flutter.minSdkVersion >= 21) flutter.minSdkVersion else 21
+        minSdk = if (flutter.minSdkVersion >= 24) flutter.minSdkVersion else 24 // Play Age Signals needs 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
