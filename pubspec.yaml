@@ -96,7 +96,7 @@ dependencies:
   agora_rtc_engine: ^6.5.4
   in_app_review: ^2.0.12
   collection: ^1.19.1
-  age_range_signals: ^0.11.2
+  age_range_signals: ^0.5.1
 
 dev_dependencies:
   flutter_test:

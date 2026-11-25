@@ -81,20 +81,24 @@ class AgeSignalsService {
       final plugin = AgeRangeSignals.instance;
       await plugin.initialize(ageGates: const [13, 16, 18]);
 
-      final access = await plugin.requestAgeSignalsAccess();
-      if (access == AgeSignalsAccessStatus.verificationRequired) {
-        await _save(AgeBand.unknown, verification: true);
-        return;
-      }
-      if (access != AgeSignalsAccessStatus.shared) {
-        // User or parent chose not to share. Keep any band we already knew.
-        verificationRequired = false;
-        return;
-      }
-
       final result = await plugin.checkAgeSignals();
-      await _save(_bandFrom(result.ageLower, result.ageUpper),
-          verification: false);
+      switch (result.status) {
+        case AgeSignalsStatus.verified:
+          // Verified 18+ (Android) or meets the highest gate (iOS).
+          await _save(
+              result.ageLower != null || result.ageUpper != null
+                  ? _bandFrom(result.ageLower, result.ageUpper)
+                  : AgeBand.adult,
+              verification: false);
+        case AgeSignalsStatus.declined:
+        case AgeSignalsStatus.unknown:
+          // Not shared or not available here. Keep any band we already knew.
+          verificationRequired = false;
+        default:
+          // Supervised, declared, or approval pending/denied: use the range.
+          await _save(_bandFrom(result.ageLower, result.ageUpper),
+              verification: false);
+      }
     } on AgeSignalsException catch (e) {
       // Unsupported OS version, no Play Store, offline, etc.
       debugPrint('AgeSignals: ${e.runtimeType}: $e');
