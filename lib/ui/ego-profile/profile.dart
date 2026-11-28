@@ -33,6 +33,7 @@ import '../routes/page_router_animation.dart';
 import '../splash_screen/rotate_logo.dart';
 import '../visited_user_ego_page/visited_user_ego_page.dart';
 import 'clairevatar.dart';
+import '../../utils/anonymity.dart';
 
 class EgoProfilePage extends StatefulWidget {
   final String title;
@@ -1167,7 +1168,7 @@ class _EgoProfilePageState extends State<EgoProfilePage>
                         advisesCount: data?["adviseCount"].toString() ?? "0",
                         totalLoveCount: data?["totalLoveCount"].toString() ?? "0",
                         userType: data?["userType"] ?? "Ego",
-                        avatarUrl: data?["avatarUrl"] ?? " ",
+                        avatarUrl: safeAvatarUrl(data?["avatarUrl"] ?? " "),
                       );
                     }
                     return SizedBox(

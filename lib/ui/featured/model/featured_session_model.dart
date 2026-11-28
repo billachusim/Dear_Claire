@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../utils/anonymity.dart';
 
 class FeaturedSessionModel {
   String? title;
@@ -47,7 +48,7 @@ class FeaturedSessionModel {
       colorHex: json['colorHex'] ?? '',
       userNickname: json['userNickname'] ?? '',
       timeCreated: json['timeCreated'],
-      userAvatarUrl: json['userAvatarUrl'] ?? '',
+      userAvatarUrl: safeAvatarUrl(json['userAvatarUrl']),
       imageUrls: json['imageUrls'] ?? [],
       meTooFollowCount: json['meTooFollowCount'] ?? 0,
       userId: json['userId'] ?? '',

@@ -22,6 +22,7 @@ import '../love_store/create_love_item_page.dart';
 import '../routes/page_router_animation.dart';
 import 'alter_ego_calls_page.dart';
 import 'flagged_sessions_page.dart';
+import '../../utils/anonymity.dart';
 
 class AlterEgoHomePage extends StatefulWidget {
   const AlterEgoHomePage({Key? key}) : super(key: key);
@@ -84,7 +85,7 @@ class _AlterEgoHomePageState extends State<AlterEgoHomePage> {
       setState(() {
         userName = doc.data()?["nickname"] ?? "";
         userType = doc.data()?["userType"] ?? "";
-        avatarUrl = doc.data()?["avatarUrl"] ?? "";
+        avatarUrl = safeAvatarUrl(doc.data()?["avatarUrl"] ?? "");
       });
     }
   }

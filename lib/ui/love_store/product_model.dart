@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../utils/anonymity.dart';
 
 class Product {
   String? productId;
@@ -71,7 +72,7 @@ class Product {
       productId: json['productId'],
       sellerId: json['sellerId'],
       sellerNickname: json['sellerNickname'],
-      sellerAvatarUrl: json['sellerAvatarUrl'],
+      sellerAvatarUrl: safeAvatarUrlOrNull(json['sellerAvatarUrl']),
       title: json['title'],
       description: json['description'],
       loveAmount: json['loveAmount'],

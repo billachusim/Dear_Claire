@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../utils/anonymity.dart';
 
 class CommentSessionModel {
   String? alterEgoId;
@@ -78,7 +79,7 @@ class CommentSessionModel {
         image1: json['image1'] ?? '',
         image2: json['image2'] ?? '',
         timeCreated: json['timeCreated'],
-        userAvatarUrl: json['userAvatarUrl'] ?? '',
+        userAvatarUrl: safeAvatarUrl(json['userAvatarUrl']),
         imageUrls: json['imageUrls'] ?? [],
         flagged: json['flagged'] ?? false,
         isUserAdmin: json['isUserAdmin'] ?? false,

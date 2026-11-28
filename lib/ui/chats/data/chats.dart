@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../utils/anonymity.dart';
 
 class ChatModel {
   bool? archived;
@@ -88,7 +89,7 @@ class ChatModel {
       location = json['location'];
     }
 
-    userAvatarUrl = json['userAvatarUrl'];
+    userAvatarUrl = safeAvatarUrlOrNull(json['userAvatarUrl']);
     userId = json['userId'];
     userNickname = json['userNickname'];
     image1 = json["image1"];

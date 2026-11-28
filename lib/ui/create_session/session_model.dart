@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../utils/anonymity.dart';
 
 class CreateSessionModel {
   bool? containsAudio;
@@ -92,7 +93,7 @@ class CreateSessionModel {
       timeLastActivity = json['timeLastActivity'];
     }
 
-    userAvatarUrl = json['userAvatarUrl'];
+    userAvatarUrl = safeAvatarUrlOrNull(json['userAvatarUrl']);
     userId = json['userId'];
     userNickname = json['userNickname'];
     if (json['repliesEnabled'] != null) {
