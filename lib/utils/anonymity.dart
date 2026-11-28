@@ -56,21 +56,3 @@ String safeAvatarUrl(String? url) {
 
 /// Nullable variant of [safeAvatarUrl] for models whose field may be null.
 String? safeAvatarUrlOrNull(String? url) => url == null ? null : safeAvatarUrl(url);
-
-const List<String> _nickAdjectives = [
-  'Gentle', 'Quiet', 'Brave', 'Kind', 'Sunny', 'Calm', 'Hopeful', 'Bright',
-  'Soft', 'Golden', 'Lucky', 'Cosy', 'Dreamy', 'Sweet', 'Wise', 'Silver',
-];
-const List<String> _nickNouns = [
-  'Moon', 'Petal', 'Sparrow', 'Star', 'River', 'Cloud', 'Rose', 'Breeze',
-  'Dove', 'Lily', 'Pearl', 'Robin', 'Meadow', 'Willow', 'Ember', 'Daisy',
-];
-
-/// An anonymous nickname such as "Gentle Moon 482", used for Google and
-/// Apple sign-ups instead of the account's real name. Users can change it
-/// in their profile.
-String randomAnonymousNickname() {
-  final String adj = _nickAdjectives[_random.nextInt(_nickAdjectives.length)];
-  final String noun = _nickNouns[_random.nextInt(_nickNouns.length)];
-  return '$adj $noun ${100 + _random.nextInt(900)}';
-}

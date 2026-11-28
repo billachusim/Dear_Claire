@@ -280,7 +280,8 @@ class _SignUpPage extends State<SignUpPage> {
           isSigningIn = true;
         });
 
-        await _firebaseServices.signInWithGoogle(context);
+        await _firebaseServices.signInWithGoogle(context,
+            nickname: _egoNameController.text.trim());
 
         if (mounted) {
           setState(() {
@@ -337,7 +338,8 @@ class _SignUpPage extends State<SignUpPage> {
             isSigningIn = true;
           });
 
-          await _firebaseServices.signInWithApple(context);
+          await _firebaseServices.signInWithApple(context,
+            nickname: _egoNameController.text.trim());
 
           if (mounted) {
             setState(() {
