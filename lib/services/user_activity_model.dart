@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/anonymity.dart';
 
 class UserActivityModel {
   String? userActivityId;
@@ -39,9 +40,9 @@ class UserActivityModel {
       dateCreated: json['dateCreated'],
       activityType: json['activityType'],
       sessionId: json['sessionId'],
-      clientAvatarUrl: json['clientAvatarUrl'], // Corrected this from 'avatarUrl'
+      clientAvatarUrl: safeAvatarUrlOrNull(json['clientAvatarUrl']), // Corrected this from 'avatarUrl'
       userNickname: json['userNickname'],
-      userAvatarUrl: json['userAvatarUrl'],
+      userAvatarUrl: safeAvatarUrlOrNull(json['userAvatarUrl']),
       involvedUsers: json['involvedUsers'] != null ? List<String>.from(json['involvedUsers']) : [],
     );
   }

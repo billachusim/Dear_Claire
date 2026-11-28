@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../utils/anonymity.dart';
 
 class VisitedUserModel {
   String? alterEgoAccessCode;
@@ -45,7 +46,7 @@ class VisitedUserModel {
     return VisitedUserModel(
       alterEgoAccessCode: json['alterEgoAccessCode'] ?? '',
       alterEgoId: json['alterEgoId'] ?? '',
-      avatarUrl: json['avatarUrl'] ?? '',
+      avatarUrl: safeAvatarUrl(json['avatarUrl']),
       email: json['email'] ?? '',
       fcmId: json['fcmId'] ?? '',
       gender: json['gender'] ?? '',
@@ -69,7 +70,7 @@ class VisitedUserModel {
     return VisitedUserModel(
       alterEgoAccessCode: json['alterEgoAccessCode'] ?? '',
       alterEgoId: json['alterEgoId'] ?? '',
-      avatarUrl: json['avatarUrl'] ?? '',
+      avatarUrl: safeAvatarUrl(json['avatarUrl']),
       email: json['email'] ?? '',
       fcmId: json['fcmId'] ?? '',
       gender: json['gender'] ?? '',

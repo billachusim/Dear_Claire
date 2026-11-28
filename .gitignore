@@ -68,3 +68,6 @@ lib/generated_plugin_registrant.dart
 # Symbolication/Obfuscation
 app.*.symbols
 app.*.map.json
+
+# Cleanup backups contain real names; never commit
+anonymize-backup-*.json
