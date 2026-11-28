@@ -20,8 +20,7 @@ void main() {
     expect(safeAvatarUrlOrNull(null), isNull);
   });
 
-  test('new sign-ups get an anonymous nickname and a Clairevatar', () {
-    expect(randomAnonymousNickname(), matches(RegExp(r'^[A-Z][a-z]+ [A-Z][a-z]+ \d{3}$')));
+  test('new sign-ups get a default Clairevatar', () {
     expect(kDefaultClairevatarUrls, contains(randomClairevatarUrl()));
   });
 }

@@ -35,6 +35,7 @@ import '../ui/love_store/order_model.dart';
 import '../ui/love_store/product_model.dart';
 import 'data/notification_model.dart' as pushNotification;
 import '../utils/anonymity.dart';
+import '../widgets/nickname_dialog.dart';
 
 
 final firebase_storage.FirebaseStorage _storage = firebase_storage.FirebaseStorage.instance; // Add this line
@@ -853,7 +854,7 @@ class FirebaseServices extends ChangeNotifier {
   }
 
   /// Sign in with Google
-  Future<bool> signInWithGoogle(BuildContext context) async {
+  Future<bool> signInWithGoogle(BuildContext context, {String? nickname}) async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return false;
@@ -878,15 +879,30 @@ class FirebaseServices extends ChangeNotifier {
             .doc(user.uid)
             .get();
         if (!doc.exists) {
+          // New user: they type their own nickname. Never use the
+          // Google/Apple account name: the app is anonymous.
+          final String randomAvatarUrl = randomClairevatarUrl();
+          String chosenNickname = (nickname ?? '').trim();
+          if (chosenNickname.isEmpty) {
+            final typed = context.mounted
+                ? await askForNickname(context, avatarUrl: randomAvatarUrl)
+                : null;
+            if (typed == null || typed.isEmpty) {
+              // Cancelled: sign out so no profile is half-created.
+              await FirebaseAuth.instance.signOut();
+              await GoogleSignIn().signOut().catchError((_) => null);
+              return false;
+            }
+            chosenNickname = typed;
+          }
           // Initialize user data if it's a new user
           String? fcmToken = await FirebaseMessaging.instance.getToken();
 
-          final String randomAvatarUrl = randomClairevatarUrl();
 
           final userData = {
             "isPremium": false,
             // Never copy the Google account's real name or photo: the app is anonymous.
-            "nickname": randomAnonymousNickname(),
+            "nickname": chosenNickname,
             "avatarUrl": randomAvatarUrl,
             "userId": user.uid,
             "languagePreference": "en", // Default
@@ -927,7 +943,7 @@ class FirebaseServices extends ChangeNotifier {
   }
 
   /// Sign in with Apple
-  Future<bool> signInWithApple(BuildContext context) async {
+  Future<bool> signInWithApple(BuildContext context, {String? nickname}) async {
     try {
       final appleCredential = await SignInWithApple.getAppleIDCredential(
         scopes: [
@@ -955,15 +971,30 @@ class FirebaseServices extends ChangeNotifier {
             .doc(user.uid)
             .get();
         if (!doc.exists) {
+          // New user: they type their own nickname. Never use the
+          // Google/Apple account name: the app is anonymous.
+          final String randomAvatarUrl = randomClairevatarUrl();
+          String chosenNickname = (nickname ?? '').trim();
+          if (chosenNickname.isEmpty) {
+            final typed = context.mounted
+                ? await askForNickname(context, avatarUrl: randomAvatarUrl)
+                : null;
+            if (typed == null || typed.isEmpty) {
+              // Cancelled: sign out so no profile is half-created.
+              await FirebaseAuth.instance.signOut();
+              await GoogleSignIn().signOut().catchError((_) => null);
+              return false;
+            }
+            chosenNickname = typed;
+          }
           // Initialize user data if it's a new user
           String? fcmToken = await FirebaseMessaging.instance.getToken();
 
-          final String randomAvatarUrl = randomClairevatarUrl();
 
           final userData = {
             "isPremium": false,
             // Never copy the Apple ID's real name or photo: the app is anonymous.
-            "nickname": randomAnonymousNickname(),
+            "nickname": chosenNickname,
             "avatarUrl": randomAvatarUrl,
             "userId": user.uid,
             "languagePreference": "en", // Default
